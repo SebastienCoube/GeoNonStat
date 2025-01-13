@@ -1,0 +1,26 @@
+{
+    "id": "00001ABC",
+    "path": "~/Documents/GeoNonStat/Bidart/R/mcmc_nngp_initialize_nonstationary.R",
+    "project_path": "Bidart/R/mcmc_nngp_initialize_nonstationary.R",
+    "type": "r_source",
+    "hash": "2895076708",
+    "contents": "",
+    "dirty": false,
+    "created": 1736241672433.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "329,50",
+        "scrollLine": "315"
+    },
+    "folds": "1|1|39|0|\n249|7|252|6|\n255|7|258|6|\n321|22|324|6|\n",
+    "lastKnownWriteTime": 1736258322,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1736258322575,
+    "read_only": false,
+    "read_only_alternatives": []
+}
