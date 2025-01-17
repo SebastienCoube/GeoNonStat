@@ -50,41 +50,22 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' @param anisotropic anisotropic covariance
 #' @param sphere Boolean, indicating lon-lat data
 #' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
+#' @param scale_X a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
 #' @param range_X a data.frame of covariates explaining the Gaussian process range through fixed linear effects
 #' @param noise_beta_mean vector indicating the prior mean for the regression coefficients explaining the Gaussian noise variance through fixed linear effects. Filled automatically if NULL. The number of rows is equal to the number of variables in X_noise after adding an intercept and expanding the factors, the number of columns is 1.
+#' @param scale_beta_mean vector indicating the prior mean for the regression coefficients explaining the Gaussian process marginal variance through fixed linear effects. Filled automatically if NULL. The number of rows is equal to the number of variables in X_scale after adding an intercept, the number of columns is 1.
 #' @param range_beta_mean vector (3-columns matrix in anisotropy case) indicating the prior mean for the regression coefficients explaining the Gaussian process range through fixed linear effects. Filled automatically if NULL.The number of rows is equal to the number of variables in X_range after adding an intercept, the number of columns is 1 if isotropic function or 3 if anisotropic function.
 #' @param noise_beta_precision matrix for the prior precision for the regression coefficients explaining the Gaussian noise variance through fixed linear effects. Filled automatically if NULL.
+#' @param scale_beta_precision matrix for the prior precision for the regression coefficients explaining the Gaussian process marginal variance through fixed linear effects. Filled automatically if NULL.
 #' @param range_beta_precision matrix for the prior precision for the regression coefficients explaining the Gaussian process range through fixed linear effects. Filled automatically if NULL. In anisotropic case, the matrix has size 3*n_var, each 3-block indicating the precision for a determinant-direction-direction 3-uplet: intecrept-det, intercept-dir, intercept-dir, V1-det, V1-dir, V1-dir, etc...
-#' @param noise_log_var_prior 1 times 2 matrix for the prior on the log-variance of the noise PP field. 
-#' @param range_log_var_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. 
+#' @param noise_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the noise PP field. 
+#' @param scale_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the scale PP field. 
+#' @param range_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. 
 #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix. 
- 
-
-observed_locs = cbind(runif(10000), runif(10000))
-observed_field = rnorm(10000)
-X = NULL # Covariates per observation
-m = 10 #number of Nearest Neighbors
-nu =1.5 #Matern smoothness
-anisotropic = F 
-sphere = F
-PP = NULL
-n_chains = 2  # number of MCMC chains
-noise_PP = F
-noise_X = NULL
-noise_beta_mean = NULL
-noise_beta_precision = NULL
-noise_log_var_prior = NULL
-range_PP = F
-range_X = NULL
-range_beta_mean = NULL
-range_beta_precision = NULL
-range_log_var_prior = NULL 
-seed = 1
-log_gp_var_prior = NULL
 
 mcmc_nngp_initialize_nonstationary = 
-  function(observed_locs, #spatial locations
-           observed_field, # Response variable
+  function(observed_locs = NULL, #spatial locations
+           observed_field = NULL, # Response variable
            X = NULL, # Covariates per observation
            m = 10, #number of Nearest Neighbors
            nu =1.5, #Matern smoothness
@@ -92,9 +73,9 @@ mcmc_nngp_initialize_nonstationary =
            sphere = F, 
            PP = NULL, 
            n_chains = 2,  # number of MCMC chains
-           noise_PP = F, noise_X = NULL, noise_beta_mean = NULL, noise_beta_precision = NULL, noise_log_var_prior = NULL, 
-           range_PP = F, range_X = NULL, range_beta_mean = NULL, range_beta_precision = NULL, range_log_var_prior = NULL, 
-           log_gp_var_prior = NULL, 
+           noise_PP = F, noise_X = NULL, noise_beta_mean = NULL, noise_beta_precision = NULL, noise_log_scale_prior = NULL, 
+           scale_PP = F, scale_X = NULL, scale_beta_mean = NULL, scale_beta_precision = NULL, scale_log_scale_prior = NULL, 
+           range_PP = F, range_X = NULL, range_beta_mean = NULL, range_beta_precision = NULL, range_log_scale_prior = NULL, 
            seed = 1
   )
   {
@@ -116,35 +97,34 @@ mcmc_nngp_initialize_nonstationary =
     if(!is.data.frame(X) & !is.null(X))stop("X should be a data.frame or NULL")
     
     if(!is.data.frame(noise_X) & !is.null(noise_X))stop("noise_X should be a data.frame or NULL")
+    if(!is.data.frame(scale_X) & !is.null(scale_X))stop("scale_X should be a data.frame or NULL")
     if(!is.data.frame(range_X) & !is.null(range_X))stop("range_X should be a data.frame or NULL")
     
-    if((is.null(PP)) & (noise_PP | range_PP))stop("either noise_PP or range_PP is TRUE, while nothing was provided for PP")
+    if((is.null(PP)) & (noise_PP | range_PP | scale_PP))stop("either noise_PP, range_PP, or scale_PP is TRUE, while nothing was provided for PP")
     
     if(!is.null(noise_beta_mean))if(!is.matrix(noise_beta_mean))stop("noise_beta_mean should be a matrix or NULL")
+    if(!is.null(scale_beta_mean))if(!is.matrix(scale_beta_mean))stop("scale_beta_mean should be a matrix or NULL")
     if(!is.null(range_beta_mean))if(!is.matrix(range_beta_mean))stop("range_beta_mean should be a matrix or NULL")
     
     if(!is.null(noise_beta_precision))if(!is.matrix(noise_beta_precision))stop("noise_beta_precision should be a matrix or NULL")
+    if(!is.null(scale_beta_precision))if(!is.matrix(scale_beta_precision))stop("scale_beta_precision should be a matrix or NULL")
     if(!is.null(range_beta_precision))if(!is.matrix(range_beta_precision))stop("range_beta_precision should be a matrix or NULL")
-    
-    if(!is.null(log_gp_var_prior)){
-      if(length(log_gp_var_prior)!=2)  stop("log_gp_var_prior must be a numeric vector of length 2 or NULL")
-      if(!is.numeric(log_gp_var_prior))stop("log_gp_var_prior must be a numeric vector of length 2 or NULL")
-    }
-    
     #length of observations
     if(
       !all(unique(c(
         length(observed_field),
         nrow(observed_locs),
         nrow(X),
+        nrow(scale_X),
         nrow(noise_X),
         nrow(range_X),
         length(PP$idx)
-        )) %in% c(0, length(observed_field))
+      )) %in% c(0, length(observed_field))
       )) stop(
         paste("Lengths are not matching : observed_field has", length(observed_field), "observations,",
               "observed_locs has", nrow(observed_locs), "rows,", 
               "X has", nrow(X), "rows,", 
+              "scale_X has", nrow(scale_X), "rows (can only be either 0 or the length of the observations),", 
               "noise_X has", nrow(noise_X), "rows (can only be either 0 or the length of the observations),", 
               "range_X has", nrow(range_X), "rows (can only be either 0 or the length of the observations),", 
               "PP has", length(PP$idx), "locations (can only be either 0 or the length of the observations)"
@@ -153,8 +133,8 @@ mcmc_nngp_initialize_nonstationary =
     
     # smoothness
     if (!nu %in% c(1.5, .5))stop("only nu = 1.5 or nu = 0.5")
-
-  
+    
+    
     ###############
     # Re-ordering #
     ###############
@@ -227,6 +207,9 @@ mcmc_nngp_initialize_nonstationary =
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X, observed_locs, vecchia_approx, explicit_PP_basis, range_PP)
     if(!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))stop("The covariates range_X cannot vary within one spatial location of observed_locs")
+    # fixed effects and PP for scale
+    covariates$scale_X = process_covariates(scale_X, observed_locs, vecchia_approx, explicit_PP_basis, scale_PP)
+    if(!identical(covariates$scale_X$which_locs, seq(ncol(covariates$scale_X$X))))stop("The covariates scale_X cannot vary within one spatial location of observed_locs")
     # fixed effects and PP for noise
     covariates$noise_X = process_covariates(noise_X, observed_locs, vecchia_approx, explicit_PP_basis, noise_PP)
     # explicit PP basis removal
@@ -244,43 +227,49 @@ mcmc_nngp_initialize_nonstationary =
     hierarchical_model$PP = PP
     if(is.null(hierarchical_model$PP)) hierarchical_model$PP = list("n_PP" = 0)
     hierarchical_model$noise_PP = noise_PP
+    hierarchical_model$scale_PP = scale_PP
     hierarchical_model$range_PP = range_PP
     
-    if(is.null(noise_log_var_prior)&noise_PP)
-      {
-      message("noise_log_var_prior was automatically set to an uniform on (-6, 2)")
-      noise_log_var_prior = c(-6, 2)
-      }
-    if(!is.null(noise_log_var_prior))hierarchical_model$noise_log_var_prior = matrix(noise_log_var_prior)
-    if(is.null(range_log_var_prior)&range_PP)
-      {
-      message("range_log_var_prior was automatically set to an uniform on (-6, 2)")
-      hierarchical_model$range_log_var_prior = c(-6, 2)
-      }
-    if(!is.null(range_log_var_prior))hierarchical_model$range_log_var_prior = matrix(range_log_var_prior)
-    
-    
+    if(is.null(noise_log_scale_prior)&noise_PP)
+    {
+      message("noise_log_scale_prior was automatically set to an uniform on (-6, 2)")
+      noise_log_scale_prior = c(-6, 2)
+    }
+    if(!is.null(noise_log_scale_prior))hierarchical_model$noise_log_scale_prior = matrix(noise_log_scale_prior)
+    if(is.null(scale_log_scale_prior)&scale_PP)
+    {
+      message("scale_log_scale_prior was automatically set to an uniform on (-6, 2)")
+      scale_log_scale_prior = c(-6, 2)
+    }
+    if(!is.null(scale_log_scale_prior))hierarchical_model$scale_log_scale_prior = matrix(scale_log_scale_prior)
+    if(is.null(range_log_scale_prior)&range_PP)
+    {
+      message("range_log_scale_prior was automatically set to an uniform on (-6, 2)")
+      hierarchical_model$range_log_scale_prior = c(-6, 2)
+    }
+    if(!is.null(range_log_scale_prior))hierarchical_model$range_log_scale_prior = matrix(range_log_scale_prior)
     
     # OLS to get residual variance to make a guess 
     naive_ols =  lm(observed_field~covariates$X$X-1)
     lm_fit = as.vector(covariates$X$X%*%matrix(naive_ols$coefficients, ncol = 1))
     lm_residuals = as.vector(observed_field- lm_fit)
     
-    if(is.null(log_gp_var_prior))hierarchical_model$log_gp_var_prior = c(log(var(lm_residuals))-log(100), log(var(lm_residuals)))
-    hierarchical_model$log_gp_var_prior = sort(hierarchical_model$log_gp_var_prior) 
-      
     hierarchical_model$beta_priors$noise_beta_mean = noise_beta_mean
+    hierarchical_model$beta_priors$scale_beta_mean = scale_beta_mean
     hierarchical_model$beta_priors$range_beta_mean = range_beta_mean
     # Default mean prior computed from a reasonable case. 
     # The intercept is set to reasonable value and the rest is set to 0
     if(is.null(noise_beta_mean)) hierarchical_model$beta_priors$noise_beta_mean = matrix(c(log(var(lm_residuals)) - log(2),                     rep(0, covariates$noise_X$n_regressors-1)), ncol=1)
+    if(is.null(scale_beta_mean)) hierarchical_model$beta_priors$scale_beta_mean = matrix(c(log(var(lm_residuals)) - log(2),                     rep(0, covariates$scale_X$n_regressors-1)), ncol=1)
     if(is.null(range_beta_mean)) hierarchical_model$beta_priors$range_beta_mean = matrix(0, covariates$range_X$n_regressors, 1 + 2*anisotropic)
-    hierarchical_model$beta_priors$range_beta_mean[1,1] = c(log(max(dist(locs[seq(1000), seq(2)])))-log(50))
+    if(is.null(range_beta_mean)) hierarchical_model$beta_priors$range_beta_mean[1,1] = c(log(max(dist(locs[seq(1000), seq(2)])))-log(50))
     hierarchical_model$beta_priors$noise_beta_precision = noise_beta_precision
+    hierarchical_model$beta_priors$scale_beta_precision = scale_beta_precision
     hierarchical_model$beta_priors$range_beta_precision = range_beta_precision
     if(is.null(noise_beta_precision)) hierarchical_model$beta_priors$noise_beta_precision =diag(.01, covariates$noise_X$n_regressors, covariates$noise_X$n_regressors)
+    if(is.null(scale_beta_precision)) hierarchical_model$beta_priors$scale_beta_precision =diag(.01, covariates$scale_X$n_regressors, covariates$scale_X$n_regressors)
     if(is.null(range_beta_precision)) 
-      {
+    {
       hierarchical_model$beta_priors$range_beta_precision = diag(.01, covariates$range_X$n_regressors, covariates$range_X$n_regressors)
       hierarchical_model$beta_priors$range_beta_precision = hierarchical_model$beta_priors$range_beta_precision %x% diag(1, (1+2*anisotropic))
     }
@@ -306,30 +295,6 @@ mcmc_nngp_initialize_nonstationary =
       # HMC momenta
       states[[i]]$momenta = list()
       
-      ######################
-      # Transition kernels #  
-      ######################
-      
-      # Starting points for transition kernels, will be adaptively tuned
-      states[[i]]$transition_kernels = list()
-      # Transition kernel state
-      # transition kernel variance is given as the log
-      # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size 
-      # have an ancillary and a sufficient version when applicable
-      # range
-      states[[i]]$transition_kernels$range_log_var_sufficient = -4
-      states[[i]]$transition_kernels$range_log_var_ancillary =  -4
-      if(anisotropic){
-        states[[i]]$transition_kernels$aniso_sufficient = c(-4)
-        states[[i]]$transition_kernels$aniso_ancillary  = c(-4)
-      }
-      # range-var ratio
-      states[[i]]$transition_kernels$kappa_sufficient = c(-4, 0)
-      states[[i]]$transition_kernels$kappa_ancillary  = c(-4, 0)
-      # noise variance
-      states[[i]]$transition_kernels$noise_beta    = -4
-      states[[i]]$transition_kernels$noise_log_var = -4
-      
       #########
       # Range #
       #########
@@ -345,14 +310,39 @@ mcmc_nngp_initialize_nonstationary =
       if(!range_PP)row.names(states[[i]]$params$range_beta) = c(colnames(covariates$range_X$X_locs))
       if(range_PP)
       {
-        if(!anisotropic) states[[i]]$params$range_log_var =   runif(1, hierarchical_model$range_log_var_prior[1], hierarchical_model$range_log_var_prior[2])
-        if( anisotropic) states[[i]]$params$range_log_var = c(runif(3, hierarchical_model$range_log_var_prior[1], hierarchical_model$range_log_var_prior[2]), rep(0,3))
-        states[[i]]$momenta$range_log_var_ancillary  = rnorm(length(states[[i]]$params$range_log_var))
-        states[[i]]$momenta$range_log_var_sufficient = rnorm(length(states[[i]]$params$range_log_var))
+        if(!anisotropic) states[[i]]$params$range_log_scale =   runif(1, hierarchical_model$range_log_scale_prior[1], hierarchical_model$range_log_scale_prior[2])
+        if( anisotropic) states[[i]]$params$range_log_scale = c(runif(3, hierarchical_model$range_log_scale_prior[1], hierarchical_model$range_log_scale_prior[2]), rep(0,3))
+        states[[i]]$momenta$range_log_scale_ancillary  = rnorm(length(states[[i]]$params$range_log_scale))
+        states[[i]]$momenta$range_log_scale_sufficient = rnorm(length(states[[i]]$params$range_log_scale))
       }
-      states[[i]]$momenta$range_beta_ancillary =  matrix(rnorm(length(states[[i]]$params$range_beta)), nrow(states[[i]]$params$range_beta))
+      states[[i]]$momenta$range_beta_ancillary = matrix(rnorm(length(states[[i]]$params$range_beta)), nrow(states[[i]]$params$range_beta))
       states[[i]]$momenta$range_beta_sufficient = matrix(rnorm(length(states[[i]]$params$range_beta)), nrow(states[[i]]$params$range_beta))
-        
+      
+      ######################
+      # Transition kernels #  
+      ######################
+      
+      # Starting points for transition kernels, will be adaptively tuned
+      states[[i]]$transition_kernels = list()
+      # Transition kernel state
+      # transition kernel variance is given as the log
+      # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size 
+      # have an ancillary and a sufficient version when applicable
+      # range
+      states[[i]]$transition_kernels$range_log_scale_sufficient = -4
+      states[[i]]$transition_kernels$range_log_scale_ancillary =  -4
+      states[[i]]$transition_kernels$range_beta_sufficient = c(-4, -4)
+      states[[i]]$transition_kernels$range_beta_ancillary  = c(-4, -4)
+      # scale
+      states[[i]]$transition_kernels$scale_beta_sufficient_mala = -4
+      states[[i]]$transition_kernels$scale_beta_ancillary_mala  = -4
+      states[[i]]$transition_kernels$scale_log_scale_sufficient = -4
+      states[[i]]$transition_kernels$scale_log_scale_ancillary =  -4
+      # noise variance
+      states[[i]]$transition_kernels$noise_beta_mala = -4
+      states[[i]]$transition_kernels$noise_log_scale = -4
+      
+      states[[i]]$transition_kernels$range_scale_blocked_KHR =  -4
       ###################################
       # Linear regression coefficients  #
       ###################################
@@ -377,9 +367,23 @@ mcmc_nngp_initialize_nonstationary =
       states[[i]]$momenta$noise_beta = rnorm(ncol(covariates$noise_X$X)+noise_PP*hierarchical_model$PP$n_PP)
       # effective variance field, shall be used in density computations
       states[[i]]$sparse_chol_and_stuff$noise = variance_field(beta = states[[i]]$params$noise_beta, PP = PP, use_PP = noise_PP, X = covariates$noise_X$X)
-      # log var if latent field
-      if(noise_PP)states[[i]]$params$noise_log_var = runif(1, hierarchical_model$noise_log_var_prior[1], hierarchical_model$noise_log_var_prior[2])
+      # log scale if latent field
+      if(noise_PP)states[[i]]$params$noise_log_scale = runif(1, hierarchical_model$noise_log_scale_prior[1], hierarchical_model$noise_log_scale_prior[2])
       
+      #########
+      # Scale #
+      #########
+      # beta is just an intercept in stationary case
+      states[[i]]$params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP, ncol = 1) #random starting values
+      states[[i]]$momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
+      states[[i]]$momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
+      states[[i]]$params$scale_beta[1] = log(var(states[[i]]$sparse_chol_and_stuff$lm_residuals)) - log(2) + rnorm(1, 0, .5) # setting sensible value for the intercept
+      if(!scale_PP)row.names(states[[i]]$params$scale_beta) = colnames(covariates$scale_X$X_locs)
+      if(scale_PP)row.names(states[[i]]$params$scale_beta) = c(colnames(covariates$scale_X$X_locs),  paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
+      if(scale_PP)states[[i]]$params$scale_log_scale = runif(1, hierarchical_model$scale_log_scale_prior[1], hierarchical_model$scale_log_scale_prior[2])
+      # effective variance field, shall be used in density computations
+      states[[i]]$sparse_chol_and_stuff$scale = variance_field(beta = states[[i]]$params$scale_beta, PP = PP, use_PP = scale_PP, X = covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
+      #######
       
       ####################
       # NNGP sparse chol #
@@ -397,7 +401,7 @@ mcmc_nngp_initialize_nonstationary =
       ################
       # Latent field #
       ################
-      states[[i]]$params$field = exp(states[[i]]$params$log_gp_var) * as.vector(Matrix::solve(states[[i]]$sparse_chol_and_stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+      states[[i]]$params$field = sqrt(states[[i]]$sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(states[[i]]$sparse_chol_and_stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
     }
     
     #######################
