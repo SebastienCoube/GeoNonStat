@@ -119,6 +119,8 @@ mcmc_nngp_update_Gaussian = function(data,
     
     
     
+    
+    
     ###############
     # Range beta  #
     ###############
@@ -131,8 +133,9 @@ mcmc_nngp_update_Gaussian = function(data,
     current_U =
       (
         - Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
+                                      chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+                                      beta0_mean = hierarchical_model$range_beta0_mean, 
+                                      beta0_var =  hierarchical_model$range_beta0_var, 
                                       log_scale = state$params$range_log_scale) # normal prior
         + .5 * sum((state$sparse_chol_and_stuff$lm_residuals -  state$params$field[vecchia_approx$locs_match])^2/state$sparse_chol_and_stuff$noise) # observation ll
       )
@@ -143,10 +146,12 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - 
       as.matrix(
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-              - Bidart::beta_prior_log_dens_derivative(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                                       beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                                       beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                                       log_scale = state$params$range_log_scale) # normal prior
+              - Bidart::beta_prior_log_dens_derivative(
+                beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+                chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+                beta0_mean = hierarchical_model$range_beta0_mean,
+                beta0_var =  hierarchical_model$range_beta0_var, 
+                log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
               + Bidart::X_PP_crossprod(
                 X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
@@ -260,8 +265,9 @@ mcmc_nngp_update_Gaussian = function(data,
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
               - Bidart::beta_prior_log_dens_derivative
               (beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
+                chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+                beta0_mean = hierarchical_model$range_beta0_mean,
+                beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               #normal prior derivative                
               + Bidart::X_PP_crossprod(
@@ -287,10 +293,12 @@ mcmc_nngp_update_Gaussian = function(data,
     current_K = sum (state$momenta$range_beta_ancillary ^2) / 2
     proposed_U =
       (
-        - Bidart::beta_prior_log_dens(beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                      log_scale = state$params$range_log_scale) # normal prior
+        - Bidart::beta_prior_log_dens(
+          beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+          chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+          beta0_mean = hierarchical_model$range_beta0_mean,
+          beta0_var =  hierarchical_model$range_beta0_var, 
+          log_scale = state$params$range_log_scale) # normal prior
         # normal prior 
         + .5 * sum((state$sparse_chol_and_stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/state$sparse_chol_and_stuff$noise) # observation ll
       )
@@ -322,10 +330,12 @@ mcmc_nngp_update_Gaussian = function(data,
     q = data$covariates$range$chol_crossprod_X_locs %*% state$params$range_beta # whitening wrt covariates of the range
     current_U =
       (
-        - Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                      log_scale = state$params$range_log_scale) # normal prior
+        - Bidart::beta_prior_log_dens(
+          beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+          chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+          beta0_mean = hierarchical_model$range_beta0_mean,
+          beta0_var =  hierarchical_model$range_beta0_var, 
+          log_scale = state$params$range_log_scale) # normal prior
         # normal prior 
         + .5* sum((state$sparse_chol_and_stuff$sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale)))^2)
         - sum(log(state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][,1]))
@@ -340,8 +350,9 @@ mcmc_nngp_update_Gaussian = function(data,
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
               - Bidart::beta_prior_log_dens_derivative
               (beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
+                chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+                beta0_mean = hierarchical_model$range_beta0_mean,
+                beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
               + Bidart::X_PP_crossprod(
@@ -433,8 +444,9 @@ mcmc_nngp_update_Gaussian = function(data,
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
               - Bidart::beta_prior_log_dens_derivative
               (beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
+                chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+                beta0_mean = hierarchical_model$range_beta0_mean,
+                beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
               + Bidart::X_PP_crossprod(
@@ -452,10 +464,12 @@ mcmc_nngp_update_Gaussian = function(data,
     current_K = sum (state$momenta$range_beta_sufficient ^2) / 2
     proposed_U =
       (
-        - Bidart::beta_prior_log_dens(beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                      log_scale = state$params$range_log_scale) # normal prior
+        - Bidart::beta_prior_log_dens(
+          beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+          chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+          beta0_mean = hierarchical_model$range_beta0_mean,
+          beta0_var =  hierarchical_model$range_beta0_var, 
+          log_scale = state$params$range_log_scale) # normal prior
         + .5* sum((new_sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale)))^2)
         - sum(log(new_compressed_sparse_chol_and_grad[[1]][,1]))
       )
@@ -601,14 +615,18 @@ mcmc_nngp_update_Gaussian = function(data,
           all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
           all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2]))&
           (
-            + Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                          beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                          beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                          log_scale = new_range_log_scale)
-            - Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                          beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                          beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                          log_scale = state$params$range_log_scale) 
+            + Bidart::beta_prior_log_dens(
+              beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+              chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+              beta0_mean = hierarchical_model$range_beta0_mean,
+              beta0_var =  hierarchical_model$range_beta0_var, 
+              log_scale = new_range_log_scale)
+            - Bidart::beta_prior_log_dens(
+              beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+              chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+              beta0_mean = hierarchical_model$range_beta0_mean,
+              beta0_var =  hierarchical_model$range_beta0_var, 
+              log_scale = state$params$range_log_scale) 
             > log(runif(1))
           )
           
@@ -745,14 +763,18 @@ mcmc_nngp_update_Gaussian = function(data,
           all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
           all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2]))&
           (
-            + Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                          beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                          beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                          log_scale = new_range_log_scale)
-            - Bidart::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
-                                          beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
-                                          beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
-                                          log_scale = state$params$range_log_scale) 
+            + Bidart::beta_prior_log_dens(
+              beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+              chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+              beta0_mean = hierarchical_model$range_beta0_mean,
+              beta0_var =  hierarchical_model$range_beta0_var, 
+              log_scale = new_range_log_scale)
+            - Bidart::beta_prior_log_dens(
+              beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+              chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
+              beta0_mean = hierarchical_model$range_beta0_mean,
+              beta0_var =  hierarchical_model$range_beta0_var, 
+              log_scale = state$params$range_log_scale) 
             > log(runif(1))
           )
           
@@ -783,10 +805,12 @@ mcmc_nngp_update_Gaussian = function(data,
     q = data$covariates$noise_X$chol_crossprod_X %*% state$params$noise_beta
     current_U =
       (
-        - Bidart::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
-                                      log_scale = state$params$noise_log_scale) # normal prior 
+        - Bidart::beta_prior_log_dens(
+          beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+          chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+          beta0_mean = hierarchical_model$noise_beta0_mean,
+          beta0_var =  hierarchical_model$noise_beta0_var, 
+          log_scale = state$params$noise_log_scale) # normal prior 
         +.5* sum(log(state$sparse_chol_and_stuff$noise)) # det
         +.5*sum(squared_residuals/state$sparse_chol_and_stuff$noise) # observations
       )
@@ -798,10 +822,12 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - exp(state$transition_kernels$noise_beta_mala) *
       (
         + solve(t(data$covariates$noise_X$chol_crossprod_X), # solving by prior chol because of whitening
-                - Bidart::beta_prior_log_dens_derivative(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                                         beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                                         beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
-                                                         log_scale = state$params$noise_log_scale) # normal prior
+                - Bidart::beta_prior_log_dens_derivative(
+                  beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+                  chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+                  beta0_mean = hierarchical_model$noise_beta0_mean,
+                  beta0_var =  hierarchical_model$noise_beta0_var, 
+                  log_scale = state$params$noise_log_scale) # normal prior
                 + Bidart::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
                                          Y = 
                                            (
@@ -853,10 +879,12 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - exp(state$transition_kernels$noise_beta_mala) *
       (
         + solve(t(data$covariates$noise_X$chol_crossprod_X), # solving by prior sparse chol because of whitening
-                - Bidart::beta_prior_log_dens_derivative(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                                         beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                                         beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
-                                                         log_scale = state$params$noise_log_scale) # normal prior  
+                - Bidart::beta_prior_log_dens_derivative(
+                  beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+                  chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+                  beta0_mean = hierarchical_model$noise_beta0_mean,
+                  beta0_var =  hierarchical_model$noise_beta0_var, 
+                  log_scale = state$params$noise_log_scale) # normal prior  
                 + Bidart::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
                                          (
                                            + .5 # determinant part of normal likelihood
@@ -869,8 +897,9 @@ mcmc_nngp_update_Gaussian = function(data,
     proposed_U = 
       (
         - Bidart::beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                      beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                      beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
+                                      chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+                                      beta0_mean = hierarchical_model$noise_beta0_mean,
+                                      beta0_var =  hierarchical_model$noise_beta0_var, 
                                       log_scale = state$params$noise_log_scale) # normal prior        
         +.5* sum(log(new_noise)) # det
         +.5*sum(squared_residuals/new_noise) # observations
@@ -934,12 +963,14 @@ mcmc_nngp_update_Gaussian = function(data,
         if(
           (
             + Bidart::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                          beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                          beta_precision = hierarchical_model$beta_priors$noise_beta_precision, 
+                                          chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+                                          beta0_mean = hierarchical_model$noise_beta0_mean,
+                                          beta0_var =  hierarchical_model$noise_beta0_var, 
                                           log_scale = new_noise_log_scale) - 
             Bidart::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
-                                        beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
-                                        beta_precision = hierarchical_model$beta_priors$noise_beta_precision, 
+                                        chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
+                                        beta0_mean = hierarchical_model$noise_beta0_mean,
+                                        beta0_var =  hierarchical_model$noise_beta0_var, 
                                         log_scale = state$params$noise_log_scale)
           ) > log(runif(1))
           &(new_noise_log_scale > hierarchical_model$noise_log_scale_prior[1])
@@ -965,8 +996,9 @@ mcmc_nngp_update_Gaussian = function(data,
       current_U =
         (
           - Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
-                                        beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
-                                        beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
+                                        chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
+                                        beta0_mean = hierarchical_model$scale_beta0_mean,
+                                        beta0_var =  hierarchical_model$scale_beta0_var, 
                                         log_scale = state$params$scale_log_scale) # normal prior 
           +0.5*sum(log(state$sparse_chol_and_stuff$scale))# determinant part
           +0.5*sum(as.vector(sparse_chol_diag_field%*%sqrt(1/state$sparse_chol_and_stuff$scale))^2)# covmat product part
@@ -979,8 +1011,9 @@ mcmc_nngp_update_Gaussian = function(data,
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by t chol because of whitening
                   - Bidart::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
-                                                           beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
-                                                           beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
+                                                           chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
+                                                           beta0_mean = hierarchical_model$scale_beta0_mean,
+                                                           beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior
                   +  Bidart::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                             Y = (
@@ -1000,8 +1033,9 @@ mcmc_nngp_update_Gaussian = function(data,
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
                   - Bidart::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
-                                                           beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
-                                                           beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
+                                                           chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
+                                                           beta0_mean = hierarchical_model$scale_beta0_mean,
+                                                           beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior  
                   + Bidart::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (
@@ -1014,6 +1048,7 @@ mcmc_nngp_update_Gaussian = function(data,
       proposed_U = 
         (
           - Bidart::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                        chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                         log_scale = state$params$scale_log_scale) # normal prior 
@@ -1040,6 +1075,7 @@ mcmc_nngp_update_Gaussian = function(data,
       current_U =
         (
           - Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                        chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                         log_scale = state$params$scale_log_scale) # normal prior 
@@ -1053,8 +1089,9 @@ mcmc_nngp_update_Gaussian = function(data,
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior chol because of whitening
                   - Bidart::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
-                                                           beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
-                                                           beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
+                                                           chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
+                                                           beta0_mean = hierarchical_model$scale_beta0_mean,
+                                                           beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior 
                   + Bidart::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (.5 * state$params$field * 
@@ -1074,8 +1111,9 @@ mcmc_nngp_update_Gaussian = function(data,
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
                   - Bidart::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
-                                                           beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
-                                                           beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
+                                                           chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
+                                                           beta0_mean = hierarchical_model$scale_beta0_mean,
+                                                           beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior  
                   + Bidart::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (.5 * new_field * 
@@ -1089,6 +1127,7 @@ mcmc_nngp_update_Gaussian = function(data,
       proposed_U = 
         (
           - Bidart::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                        chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                         log_scale = state$params$scale_log_scale) # normal prior  
@@ -1153,10 +1192,12 @@ mcmc_nngp_update_Gaussian = function(data,
           if(
             (
               + Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = new_scale_log_scale)     
               - Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = state$params$scale_log_scale)     
@@ -1205,10 +1246,12 @@ mcmc_nngp_update_Gaussian = function(data,
           if(
             (
               + Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = new_scale_log_scale)     
               - Bidart::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = state$params$scale_log_scale)     
