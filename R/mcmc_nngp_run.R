@@ -46,7 +46,7 @@ mcmc_nngp_run_nonstationary_socket = function(mcmc_nngp_list,
   
   if(!is.null(lib.loc)){
     parallel::clusterEvalQ(cl = cl, expr = library(GpGp, lib.loc =   lib.loc))
-    parallel::clusterEvalQ(cl = cl, expr = library(Bidart, lib.loc = lib.loc))
+    parallel::clusterEvalQ(cl = cl, expr = library(GeoNonStat, lib.loc = lib.loc))
     parallel::clusterEvalQ(cl = cl, expr = library(expm, lib.loc =   lib.loc))
     parallel::clusterEvalQ(cl = cl, expr = library(Matrix, lib.loc =   lib.loc))
   }

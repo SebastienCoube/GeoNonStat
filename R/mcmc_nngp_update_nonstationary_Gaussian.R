@@ -35,7 +35,7 @@ mcmc_nngp_update_Gaussian = function(data,
   params_records = lapply(state$params, function(x)array(0, c(dim(as.matrix(x)), round(thinning * n_iterations_update))))
   #par(mfrow = c(2, 1))
   
-  library(Bidart, lib.loc = lib.loc)
+  library(GeoNonStat, lib.loc = lib.loc)
   library(expm, lib.loc = lib.loc)
   library(Matrix, lib.loc = lib.loc)
   # do NOT remove or the code will bug in parallel. This is magic

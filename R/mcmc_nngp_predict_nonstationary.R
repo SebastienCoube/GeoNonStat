@@ -163,7 +163,7 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
     parallel::clusterExport(cl = cl, varlist = setdiff(ls(envir = environment()),c("cl", "mcmc_nngp_list")), envir = environment())
     if(!is.null(lib.loc)){
       parallel::clusterEvalQ(cl = cl, expr = library(GpGp, lib.loc =   lib.loc))
-      parallel::clusterEvalQ(cl = cl, expr = library(Bidart, lib.loc = lib.loc))
+      parallel::clusterEvalQ(cl = cl, expr = library(GeoNonStat, lib.loc = lib.loc))
       parallel::clusterEvalQ(cl = cl, expr = library(expm, lib.loc =   lib.loc))
       parallel::clusterEvalQ(cl = cl, expr = library(Matrix, lib.loc =   lib.loc))
     }
@@ -224,7 +224,7 @@ predict_fixed_effects = function(mcmc_nngp_list, X_pred = NULL, burn_in = .5,  l
   
   if(!is.null(lib.loc)){
     parallel::clusterEvalQ(cl = cl, expr = library(GpGp, lib.loc =   lib.loc))
-    parallel::clusterEvalQ(cl = cl, expr = library(Bidart, lib.loc = lib.loc))
+    parallel::clusterEvalQ(cl = cl, expr = library(GeoNonStat, lib.loc = lib.loc))
     parallel::clusterEvalQ(cl = cl, expr = library(expm, lib.loc =   lib.loc))
     parallel::clusterEvalQ(cl = cl, expr = library(Matrix, lib.loc =   lib.loc))
   }
