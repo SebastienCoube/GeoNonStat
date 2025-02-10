@@ -1,7 +1,0 @@
-useDynLib(Bidart, .registration=TRUE)
-importFrom(Rcpp, evalCpp)
-exportPattern("^[[:alpha:]]+")
-import(expm)
-import(ellipse)
-import(Rcpp)
-import(BH)
