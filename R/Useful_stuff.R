@@ -1,4 +1,15 @@
+#' Title
+#'
+#' @param derivatives 
+#' @param left_vector 
+#' @param right_vector 
+#' @param NNarray 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 derivative_sandwiches = function(
     derivatives, 
     left_vector, 
@@ -16,7 +27,15 @@ derivative_sandwiches = function(
   M
 }
 
+#' Title
+#'
+#' @param sparse_chol_and_grad 
+#' @param NNarray 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
 log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 {
   M = matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
@@ -74,8 +93,12 @@ variance_field = function(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
 #' @param nu Matern smoothness
 #' @param locs_idx match between PP basis function and locs
-
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 compute_sparse_chol = function(range_beta, 
                                NNarray, 
                                locs, 
@@ -167,7 +190,20 @@ compute_sparse_chol = function(range_beta,
 ### points(locs[,1], M[,1], pch=3)
 #########
 
+
+#' Title
+#'
+#' @param observed_locs 
+#' @param matern_range 
+#' @param lonlat 
+#' @param n_PP 
+#' @param m 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 {
   locs_ = observed_locs[! duplicated(observed_locs),]
@@ -189,7 +225,20 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
   return(list("knots" = knots, "unique_reordered_locs" = locs_, "idx" = idx, "lonlat" = lonlat, "m" = m, "matern_range" = matern_range, "sparse_chol" = sparse_chol, "NNarray" = NNarray, "n_PP" = n_PP))
 }
 
+
+#' Title
+#'
+#' @param beta 
+#' @param n_PP 
+#' @param beta_mean 
+#' @param beta_precision 
+#' @param log_scale 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   if(n_PP>0) 
@@ -240,7 +289,20 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #  )
 #}
 
+
+#' Title
+#'
+#' @param beta 
+#' @param n_PP 
+#' @param beta_mean 
+#' @param beta_precision 
+#' @param log_scale 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   
@@ -279,7 +341,20 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
 
 #PP$idx : match between the non redundant locations of PP and the redundant observed locations
 #locs_idx : match between the redundant observed locations and those of X
+
+#' Title
+#'
+#' @param X 
+#' @param PP 
+#' @param use_PP 
+#' @param locs_idx 
+#' @param Y 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
 {
   if(is.null(locs_idx))if(!is.null(X))locs_idx = seq(nrow(X))
@@ -298,7 +373,20 @@ X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
   res
 }
 
+
+#' Title
+#'
+#' @param X 
+#' @param PP 
+#' @param use_PP 
+#' @param Y 
+#' @param locs_idx 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 {
   if(is.null(locs_idx))locs_idx = seq(nrow(X))
@@ -365,8 +453,15 @@ X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 ###     )
 ###   ))
 
-
+#' Title
+#'
+#' @param coords 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 derivative_chol_expmat = function(coords)
 {
   dimres = 1
@@ -382,7 +477,16 @@ derivative_chol_expmat = function(coords)
   res
 }
 
+#' Title
+#'
+#' @param field 
+#' @param coords 
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
