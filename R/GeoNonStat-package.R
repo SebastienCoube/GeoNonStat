@@ -5,14 +5,14 @@
 #' @name GeoNonStat
 #'
 #' @import Rcpp
-#' @import abind
-#' @import Matrix
-#' @import GpGp
+#' @importFrom abind abind
+#' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol 
+#' @importFrom GpGp find_ordered_nn order_maxmin vecchia_Linv matern_isotropic fast_Gp_sim
 #' @import parallel
 #' @import fields
-#' @import expm
-#' @import ellipse
+#' @importFrom ellipse ellipse
 #' @import BH
+#' @importFrom expm expm
 #' @importFrom Rcpp evalCpp
 #' @importFrom methods as
 #' @importFrom stats rnorm runif
