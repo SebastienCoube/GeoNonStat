@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 deps_*.png
+src/*.o
+src/*.so
