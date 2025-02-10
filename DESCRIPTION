@@ -7,8 +7,20 @@ Author: Seb Coube-Sisqueille
 Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
 Description: 
 License:
-Imports: Rcpp (>= 1.0.7), abind, Matrix, GpGp, parallel, fields, expm, ellipse, BH
-LinkingTo: Rcpp, RcppArmadillo
+Imports: 
+    Rcpp (>= 1.0.7), 
+    abind, 
+    Matrix, 
+    GpGp, 
+    parallel, 
+    fields, 
+    expm, 
+    ellipse, 
+    BH
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
 RoxygenNote: 7.3.2
+SystemRequirements: C++11
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs

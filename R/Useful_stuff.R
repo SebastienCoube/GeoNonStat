@@ -106,16 +106,16 @@ compute_sparse_chol = function(range_beta,
       locs_idx = locs_idx))
   #GeoNonStat::plot_ellipses(locs, log_range)
   # exp locally isotropic
-  if((!anisotropic)&(nu==0.5))res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if((!anisotropic)&(nu==0.5))res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # matern locally isotropic
-  if((!anisotropic)&(nu==1.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if((!anisotropic)&(nu==1.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # exp locally anisotropic
-  if(( anisotropic)&(nu==0.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if(( anisotropic)&(nu==0.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # matern locally anisotropic
-  if(( anisotropic)&(nu==1.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if(( anisotropic)&(nu==1.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   res[[2]] = lapply(res[[2]], function(x)x*2)
   return(res)
 }

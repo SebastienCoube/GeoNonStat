@@ -166,6 +166,7 @@ get_colors = function(x){
 #' @param field interest variable
 #' @param main main title
 #' @param cex shrinks or inflates the points
+#' @export
 plot_pointillist_painting = function(locs, field, cex = 1, main = NULL, add = F)
 {
   if(!add)plot(locs, col = get_colors(field), main = main, pch = 15, cex = cex, xlab  ="", ylab = "")
