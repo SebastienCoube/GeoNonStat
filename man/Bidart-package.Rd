@@ -1,24 +1,24 @@
-\name{Bidart-package}
-\alias{Bidart-package}
-\alias{Bidart}
+\name{GeoNonStat-package}
+\alias{GeoNonStat-package}
+\alias{GeoNonStat}
 \docType{package}
 \title{
-\packageTitle{Bidart}
+\packageTitle{GeoNonStat}
 }
 \description{
-\packageDescription{Bidart}
+\packageDescription{GeoNonStat}
 }
 \details{
 
 The DESCRIPTION file:
-\packageDESCRIPTION{Bidart}
-\packageIndices{Bidart}
+\packageDESCRIPTION{GeoNonStat}
+\packageIndices{GeoNonStat}
 ~~ An overview of how to use the package, including the most important functions ~~
 }
 \author{
-\packageAuthor{Bidart}
+\packageAuthor{GeoNonStat}
 
-Maintainer: \packageMaintainer{Bidart}
+Maintainer: \packageMaintainer{GeoNonStat}
 }
 \references{
 ~~ Literature or other references for background information ~~
