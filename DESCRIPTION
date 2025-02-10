@@ -5,8 +5,8 @@ Version: 1.1
 Date: 2021-04-20
 Author: Seb Coube-Sisqueille
 Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
-Description: 
-License:
+Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process
+License: GPL-3
 Imports: 
     Rcpp (>= 1.0.7), 
     abind, 
