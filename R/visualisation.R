@@ -6,11 +6,11 @@ compare_PP_NNGP = function(PP){
 #' @param PP a Predictive Process object
   seed_vector =  rnorm(PP$n_PP + nrow(PP$unique_reordered_locs))
   par(mfrow = c(1,2))
-  GoNonStat::plot_pointillist_painting( 
+  GeoNonStat::plot_pointillist_painting( 
     PP$unique_reordered_locs[PP$idx,], 
-    GoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3, main ="NNGP into PP")
+    GeoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3, main ="NNGP into PP")
   points(PP$knots, pch = 3, cex = .3)
-  GoNonStat::plot_pointillist_painting(rbind(PP$knots, PP$unique_reordered_locs), as.vector(Matrix::solve(PP$sparse_chol, seed_vector)), cex = .3, main = "NNGP")
+  GeoNonStat::plot_pointillist_painting(rbind(PP$knots, PP$unique_reordered_locs), as.vector(Matrix::solve(PP$sparse_chol, seed_vector)), cex = .3, main = "NNGP")
   par(mfrow = c(1,1))
 }
 
@@ -31,7 +31,7 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
       c(1/sqrt(2), 1/sqrt(2),  0, 
         1/sqrt(2), -1/sqrt(2), 0,
         0,       0,        1), 3)*sqrt(2)
-    matrices = lapply(split(log_range, row(log_range)), GoNonStat::expmat)
+    matrices = lapply(split(log_range, row(log_range)), GeoNonStat::expmat)
   }
   if(ncol(log_range) ==1)matrices = lapply(log_range, function(x)diag(exp(x#/sqrt(2)
                                                                           ), 2))
@@ -65,7 +65,7 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
 #     i = row(NNarray)[!is.na(NNarray)], 
 #     j = NNarray[!is.na(NNarray)], 
 #     x = 
-#       GoNonStat::compute_sparse_chol(
+#       GeoNonStat::compute_sparse_chol(
 #         range_beta = range_beta, 
 #         NNarray = NNarray, locs = locs, 
 #         anisotropic = T, 
@@ -84,7 +84,7 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
 #     i = row(NNarray)[!is.na(NNarray)], 
 #     j = NNarray[!is.na(NNarray)], 
 #     x = 
-#       GoNonStat::compute_sparse_chol(
+#       GeoNonStat::compute_sparse_chol(
 #         range_beta = range_beta[,1,drop=F], 
 #         NNarray = NNarray, locs = locs, 
 #         anisotropic = F, 
@@ -101,7 +101,7 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
 # 
 # log_range = 
 #   (
-#     GoNonStat::X_PP_mult_right(
+#     GeoNonStat::X_PP_mult_right(
 #       X = matrix(1, nrow(locs)), 
 #       PP = 0, use_PP = F, 
 #       locs_idx = NULL, 
@@ -118,11 +118,11 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
 # cor_aniso = Matrix::tcrossprod(Matrix::solve(sparse_chol_aniso))[,1]
 # w_iso = as.vector(Matrix::solve(sparse_chol_iso, z))
 # cor_iso = Matrix::tcrossprod(Matrix::solve(sparse_chol_iso))[,1]
-# GoNonStat::plot_pointillist_painting(locs, log_range[,1])
-# GoNonStat::plot_pointillist_painting(locs, w_aniso)
-# GoNonStat::plot_pointillist_painting(locs, w_iso)
-# GoNonStat::plot_pointillist_painting(locs, cor_aniso)
-# GoNonStat::plot_pointillist_painting(locs, cor_iso)
+# GeoNonStat::plot_pointillist_painting(locs, log_range[,1])
+# GeoNonStat::plot_pointillist_painting(locs, w_aniso)
+# GeoNonStat::plot_pointillist_painting(locs, w_iso)
+# GeoNonStat::plot_pointillist_painting(locs, cor_aniso)
+# GeoNonStat::plot_pointillist_painting(locs, cor_iso)
 # 
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
@@ -343,13 +343,13 @@ plot_log_scale = function(log_scale_arrays, iterations, starting_proportion = .5
     #marginal_logvars = lapply(log_scale_arrays, function(x)
     #  apply(x[,,kept_iterations], 2, function(x) diag(
     #    rbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1)) %*%
-    #      GoNonStat::symmat(x) %*%
+    #      GeoNonStat::symmat(x) %*%
     #      cbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1)) 
     #    ))
     #)
     marginal_logvars = lapply(log_scale_arrays, function(x)
       apply(x[,,kept_iterations], 2, function(x) diag(
-          GoNonStat::symmat(x)
+          GeoNonStat::symmat(x)
           )
     ))
     plot(iterations[kept_iterations], iterations[kept_iterations], 
@@ -413,7 +413,7 @@ plot_beta = function(beta_arrays, iterations, starting_proportion = .5, varname,
 #   res[,1,] = rnorm(length(res[,1,]))
 #   res
 # })
-#GoNonStat::plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "tatato", var_names = c(1, 2))
+#GeoNonStat::plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "tatato", var_names = c(1, 2))
 
 
 #' Represents the samples and the Gelman-Rubin-Brooks diagnostics.

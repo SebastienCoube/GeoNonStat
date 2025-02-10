@@ -57,7 +57,7 @@ mcmc_nngp_run_nonstationary_socket = function(mcmc_nngp_list,
   samples = 
     parallel::parLapply(cl = cl, X = seq(length(mcmc_nngp_list$states)), 
                         fun 
-                        = function(i)GoNonStat::mcmc_nngp_update_Gaussian(
+                        = function(i)GeoNonStat::mcmc_nngp_update_Gaussian(
                           data = mcmc_nngp_list_$data, 
                           hierarchical_model = mcmc_nngp_list_$hierarchical_model, 
                           vecchia_approx = mcmc_nngp_list_$vecchia_approx, 
@@ -124,7 +124,7 @@ mcmc_nngp_run_nonstationary_nonpar = function(
   samples = 
     lapply(X = seq(length(mcmc_nngp_list$states)), 
            FUN =  
-             function(i)GoNonStat::mcmc_nngp_update_Gaussian(
+             function(i)GeoNonStat::mcmc_nngp_update_Gaussian(
                data = mcmc_nngp_list_$data, 
                hierarchical_model = mcmc_nngp_list_$hierarchical_model, 
                vecchia_approx = mcmc_nngp_list_$vecchia_approx, 

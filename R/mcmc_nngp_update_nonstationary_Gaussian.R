@@ -39,7 +39,7 @@ mcmc_nngp_update_Gaussian = function(data,
   library(expm, lib.loc = lib.loc)
   library(Matrix, lib.loc = lib.loc)
   # do NOT remove or the code will bug in parallel. This is magic
-  if(!is.null(state$params$range_log_scale))GoNonStat::expmat(state$params$range_log_scale)
+  if(!is.null(state$params$range_log_scale))GeoNonStat::expmat(state$params$range_log_scale)
   Matrix::t(state$sparse_chol_and_stuff$sparse_chol) %*% matrix(rep(1, vecchia_approx$n_locs))
   #################
   # Gibbs sampler #
@@ -132,7 +132,7 @@ mcmc_nngp_update_Gaussian = function(data,
     q = data$covariates$range$chol_crossprod_X_locs %*% state$params$range_beta # whitening wrt covariates of the range
     current_U =
       (
-        - GoNonStat::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+        - GeoNonStat::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
                                       chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
                                       beta0_mean = hierarchical_model$range_beta0_mean, 
                                       beta0_var =  hierarchical_model$range_beta0_var, 
@@ -146,19 +146,19 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - 
       as.matrix(
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-              - GoNonStat::beta_prior_log_dens_derivative(
+              - GeoNonStat::beta_prior_log_dens_derivative(
                 beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
                 chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
                 beta0_mean = hierarchical_model$range_beta0_mean,
                 beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
-              + GoNonStat::X_PP_crossprod(
+              + GeoNonStat::X_PP_crossprod(
                 X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
                 Y = # Jacobian of range field wrt range_beta
                   (
                     # natural gradient of obs likelihood wrt range field
-                    GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+                    GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                                   left_vector = as.vector(
                                                     Matrix::solve(
                                                       Matrix::t(state$sparse_chol_and_stuff$sparse_chol), 
@@ -175,7 +175,7 @@ mcmc_nngp_update_Gaussian = function(data,
     
     #######testing the gradient
     ##source("Bidart/R/Useful_stuff.R")
-    ##d1 =         - GoNonStat::beta_prior_log_dens_derivative(
+    ##d1 =         - GeoNonStat::beta_prior_log_dens_derivative(
     ##  beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
     ##  beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
     ##  beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
@@ -184,12 +184,12 @@ mcmc_nngp_update_Gaussian = function(data,
     ##beta_[2, 2] = beta_[2, 2] + 1/10000
     ##d2 = 10000*(
     ##  -
-    ##  GoNonStat::beta_prior_log_dens(beta = beta_, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+    ##  GeoNonStat::beta_prior_log_dens(beta = beta_, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
     ##                        beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
     ##                        beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
     ##                        log_scale = state$params$range_log_scale) # normal prior
     ##  + 
-    ##  GoNonStat::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
+    ##  GeoNonStat::beta_prior_log_dens(beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
     ##                        beta_mean = hierarchical_model$beta_priors$range_beta_mean, 
     ##                        beta_precision =  hierarchical_model$beta_priors$range_beta_precision, 
     ##                        log_scale = state$params$range_log_scale) # normal prior
@@ -202,7 +202,7 @@ mcmc_nngp_update_Gaussian = function(data,
     #### range_beta_[i,j] = state$params$range_beta[i,j] + .0001
     #### 
     #### compressed_sparse_chol_and_grad_ = 
-    ####   GoNonStat::compute_sparse_chol(
+    ####   GeoNonStat::compute_sparse_chol(
     ####     num_threads = num_threads, 
     ####     anisotropic = hierarchical_model$anisotropic, 
     ####     sphere = hierarchical_model$sphere, 
@@ -222,12 +222,12 @@ mcmc_nngp_update_Gaussian = function(data,
     #### )
     #### 
     #### 
-    #### + GoNonStat::X_PP_crossprod(
+    #### + GeoNonStat::X_PP_crossprod(
     ####   X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
     ####   Y = # Jacobian of range field wrt range_beta
     ####     (
     ####       # natural gradient of obs likelihood wrt range field
-    ####       GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+    ####       GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
     ####                                     left_vector = as.vector(
     ####                                       Matrix::solve(
     ####                                         Matrix::t(state$sparse_chol_and_stuff$sparse_chol), 
@@ -246,7 +246,7 @@ mcmc_nngp_update_Gaussian = function(data,
     new_range_beta = state$params$range_beta
     new_range_beta = solve(data$covariates$range_X$chol_crossprod_X_locs, q )
     new_compressed_sparse_chol_and_grad = 
-      GoNonStat::compute_sparse_chol(
+      GeoNonStat::compute_sparse_chol(
         num_threads = num_threads, 
         anisotropic = hierarchical_model$anisotropic, 
         sphere = hierarchical_model$sphere, 
@@ -263,19 +263,19 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - 
       as.matrix(
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-              - GoNonStat::beta_prior_log_dens_derivative
+              - GeoNonStat::beta_prior_log_dens_derivative
               (beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
                 chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
                 beta0_mean = hierarchical_model$range_beta0_mean,
                 beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               #normal prior derivative                
-              + GoNonStat::X_PP_crossprod(
+              + GeoNonStat::X_PP_crossprod(
                 X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
                 Y = # Jacobian of range field wrt range_beta
                   (
                     # natural gradient of obs likelihood wrt range field
-                    GoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+                    GeoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                                   left_vector = as.vector(
                                                     Matrix::solve(
                                                       Matrix::t(new_sparse_chol), 
@@ -293,7 +293,7 @@ mcmc_nngp_update_Gaussian = function(data,
     current_K = sum (state$momenta$range_beta_ancillary ^2) / 2
     proposed_U =
       (
-        - GoNonStat::beta_prior_log_dens(
+        - GeoNonStat::beta_prior_log_dens(
           beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
           chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
           beta0_mean = hierarchical_model$range_beta0_mean,
@@ -330,7 +330,7 @@ mcmc_nngp_update_Gaussian = function(data,
     q = data$covariates$range$chol_crossprod_X_locs %*% state$params$range_beta # whitening wrt covariates of the range
     current_U =
       (
-        - GoNonStat::beta_prior_log_dens(
+        - GeoNonStat::beta_prior_log_dens(
           beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
           chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
           beta0_mean = hierarchical_model$range_beta0_mean,
@@ -348,23 +348,23 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - 
       as.matrix(
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-              - GoNonStat::beta_prior_log_dens_derivative
+              - GeoNonStat::beta_prior_log_dens_derivative
               (beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
                 chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
                 beta0_mean = hierarchical_model$range_beta0_mean,
                 beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
-              + GoNonStat::X_PP_crossprod(
+              + GeoNonStat::X_PP_crossprod(
                 X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
                 Y = # Jacobian of range field wrt range_beta
                   (# natural gradient of obs likelihood wrt range field
-                    GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+                    GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                                   left_vector = as.vector(state$sparse_chol_and_stuff$sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
                                                   right_vector = state$params$field/sqrt(state$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                                                   NNarray = vecchia_approx$NNarray  
                     )
-                    - GoNonStat::log_determinant_derivatives(sparse_chol_and_grad = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
+                    - GeoNonStat::log_determinant_derivatives(sparse_chol_and_grad = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
                   ))))%*% eps_mat/ 2
     #### Checking the gradient
     ##      source("Bidart/R/Useful_stuff.R")
@@ -387,7 +387,7 @@ mcmc_nngp_update_Gaussian = function(data,
     ##         Y = # Jacobian of range field wrt range_beta
     ##           (
     ##             # natural gradient of obs likelihood wrt range field
-    ##             GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+    ##             GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
     ##                                           left_vector = as.vector(state$sparse_chol_and_stuff$sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
     ##                                           right_vector = state$params$field/sqrt(state$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
     ##                                           NNarray = vecchia_approx$NNarray  
@@ -426,7 +426,7 @@ mcmc_nngp_update_Gaussian = function(data,
     new_range_beta = state$params$range_beta
     new_range_beta = solve(data$covariates$range_X$chol_crossprod_X_locs, q)
     new_compressed_sparse_chol_and_grad =
-      GoNonStat::compute_sparse_chol(
+      GeoNonStat::compute_sparse_chol(
         num_threads = num_threads, 
         anisotropic = hierarchical_model$anisotropic, 
         sphere = hierarchical_model$sphere, 
@@ -442,29 +442,29 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - 
       as.matrix(
         solve(t(data$covariates$range$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-              - GoNonStat::beta_prior_log_dens_derivative
+              - GeoNonStat::beta_prior_log_dens_derivative
               (beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
                 chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
                 beta0_mean = hierarchical_model$range_beta0_mean,
                 beta0_var =  hierarchical_model$range_beta0_var, 
                 log_scale = state$params$range_log_scale) # normal prior
               # normal prior derivative                
-              + GoNonStat::X_PP_crossprod(
+              + GeoNonStat::X_PP_crossprod(
                 X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
                 Y = # Jacobian of range field wrt range_beta
                   (# natural gradient of obs likelihood wrt range field
-                    GoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+                    GeoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                                   left_vector = as.vector(new_sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
                                                   right_vector = state$params$field/sqrt(state$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                                                   NNarray = vecchia_approx$NNarray  
                     )
-                    - GoNonStat::log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
+                    - GeoNonStat::log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
                   )))) %*% eps_mat / 2
     # Evaluate potential and kinetic energies at start and end of trajectory
     current_K = sum (state$momenta$range_beta_sufficient ^2) / 2
     proposed_U =
       (
-        - GoNonStat::beta_prior_log_dens(
+        - GeoNonStat::beta_prior_log_dens(
           beta = new_range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
           chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
           beta0_mean = hierarchical_model$range_beta0_mean,
@@ -507,22 +507,22 @@ mcmc_nngp_update_Gaussian = function(data,
       p = state$momenta$range_log_scale_sufficient
       # Make a half step for momentum at the beginning
       d_beta_d_scale = 
-        GoNonStat::derivative_field_wrt_scale(
+        GeoNonStat::derivative_field_wrt_scale(
           state$params$range_beta[-seq(data$covariates$range_X$n_regressors),,drop = F], 
           state$params$range_log_scale
         )
       # derivative of potential wrt range beta
       d_potential_d_beta = as.matrix(
-        + GoNonStat::X_PP_crossprod(
+        + GeoNonStat::X_PP_crossprod(
           X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
           Y = # Jacobian of range field wrt range_beta
             (# natural gradient of obs likelihood wrt range field
-              GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+              GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                             left_vector = as.vector(state$sparse_chol_and_stuff$sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
                                             right_vector = state$params$field/sqrt(state$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                                             NNarray = vecchia_approx$NNarray  
               )
-              - GoNonStat::log_determinant_derivatives(sparse_chol_and_grad = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
+              - GeoNonStat::log_determinant_derivatives(sparse_chol_and_grad = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
             ))[-seq(data$covariates$range_X$n_regressors),,drop = F]
       )
       p = p - exp(state$transition_kernels$range_log_scale_sufficient) *
@@ -534,10 +534,10 @@ mcmc_nngp_update_Gaussian = function(data,
       q = q + exp(state$transition_kernels$range_log_scale_sufficient) * p
       new_range_beta = state$params$range_beta
       new_range_beta[-seq(data$covariates$range_X$n_regressors),] = new_range_beta[-seq(data$covariates$range_X$n_regressors),] %*% 
-        solve(chol(GoNonStat::expmat(state$params$range_log_scale))) %*% chol(GoNonStat::expmat(q))
+        solve(chol(GeoNonStat::expmat(state$params$range_log_scale))) %*% chol(GeoNonStat::expmat(q))
       
       new_compressed_sparse_chol_and_grad =
-        GoNonStat::compute_sparse_chol(
+        GeoNonStat::compute_sparse_chol(
           num_threads = num_threads, 
           anisotropic = hierarchical_model$anisotropic, 
           sphere = hierarchical_model$sphere, 
@@ -551,22 +551,22 @@ mcmc_nngp_update_Gaussian = function(data,
       new_sparse_chol = Matrix::sparseMatrix(i = vecchia_approx$sparse_chol_row_idx, j = vecchia_approx$sparse_chol_column_idx, x = new_compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA], triangular = T)
       # Make a half step for momentum at the end.
       d_beta_d_scale = 
-        GoNonStat::derivative_field_wrt_scale(
+        GeoNonStat::derivative_field_wrt_scale(
           new_range_beta[-seq(data$covariates$range_X$n_regressors),,drop = F], 
           q
         )
       # derivative of potential wrt range beta
       d_potential_d_beta = as.matrix(
-        + GoNonStat::X_PP_crossprod(
+        + GeoNonStat::X_PP_crossprod(
           X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
           Y = # Jacobian of range field wrt range_beta
             (# natural gradient of obs likelihood wrt range field
-              GoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+              GeoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                             left_vector = as.vector(new_sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
                                             right_vector = state$params$field/sqrt(state$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                                             NNarray = vecchia_approx$NNarray  
               )
-              - GoNonStat::log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
+              - GeoNonStat::log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = vecchia_approx$NNarray)# derivative of determinant
             ))[-seq(data$covariates$range_X$n_regressors),,drop = F]
       )
       p = p - exp(state$transition_kernels$range_log_scale_sufficient) *
@@ -587,7 +587,7 @@ mcmc_nngp_update_Gaussian = function(data,
         if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
         {
           state$transition_kernels$range_log_scale_sufficient  = state$transition_kernels$range_log_scale_sufficient + 20/(iter_start + iter + 100)
-          new_eigen = eigen(GoNonStat::expmat(q))$values
+          new_eigen = eigen(GeoNonStat::expmat(q))$values
           if(
             all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
             all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2])))
@@ -609,19 +609,19 @@ mcmc_nngp_update_Gaussian = function(data,
       for(i in seq(10))
       {
         new_range_log_scale = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
-        old_eigen = eigen(GoNonStat::expmat(state$params$range_log_scale))$values
-        new_eigen = eigen(GoNonStat::expmat(new_range_log_scale))$values
+        old_eigen = eigen(GeoNonStat::expmat(state$params$range_log_scale))$values
+        new_eigen = eigen(GeoNonStat::expmat(new_range_log_scale))$values
         if(
           all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
           all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2]))&
           (
-            + GoNonStat::beta_prior_log_dens(
+            + GeoNonStat::beta_prior_log_dens(
               beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
               chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
               beta0_mean = hierarchical_model$range_beta0_mean,
               beta0_var =  hierarchical_model$range_beta0_var, 
               log_scale = new_range_log_scale)
-            - GoNonStat::beta_prior_log_dens(
+            - GeoNonStat::beta_prior_log_dens(
               beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
               chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
               beta0_mean = hierarchical_model$range_beta0_mean,
@@ -646,17 +646,17 @@ mcmc_nngp_update_Gaussian = function(data,
       p = state$momenta$range_log_scale_ancillary
       # Make a half step for momentum at the beginning
       d_beta_d_scale = 
-        GoNonStat::derivative_field_wrt_scale(
+        GeoNonStat::derivative_field_wrt_scale(
           state$params$range_beta[-seq(data$covariates$range_X$n_regressors),,drop = F], 
           state$params$range_log_scale
         )
       # derivative of potential wrt range beta
-      d_potential_d_beta = GoNonStat::X_PP_crossprod(
+      d_potential_d_beta = GeoNonStat::X_PP_crossprod(
         X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
         Y = # Jacobian of range field wrt range_beta
           (
             # natural gradient of obs likelihood wrt range field
-            GoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+            GeoNonStat::derivative_sandwiches(derivatives = state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                           left_vector = as.vector(
                                             Matrix::solve(
                                               Matrix::t(state$sparse_chol_and_stuff$sparse_chol), 
@@ -676,10 +676,10 @@ mcmc_nngp_update_Gaussian = function(data,
       q = q + exp(state$transition_kernels$range_log_scale_ancillary) * p
       new_range_beta = state$params$range_beta
       new_range_beta[-seq(data$covariates$range_X$n_regressors),] = new_range_beta[-seq(data$covariates$range_X$n_regressors),] %*% 
-        solve(chol(GoNonStat::expmat(state$params$range_log_scale))) %*% chol(GoNonStat::expmat(q))
+        solve(chol(GeoNonStat::expmat(state$params$range_log_scale))) %*% chol(GeoNonStat::expmat(q))
       
       new_compressed_sparse_chol_and_grad =
-        GoNonStat::compute_sparse_chol(
+        GeoNonStat::compute_sparse_chol(
           num_threads = num_threads,
           anisotropic = hierarchical_model$anisotropic, 
           sphere = hierarchical_model$sphere, 
@@ -694,17 +694,17 @@ mcmc_nngp_update_Gaussian = function(data,
       new_field = sqrt(state$sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(new_sparse_chol, state$sparse_chol_and_stuff$sparse_chol %*% (state$params$field/sqrt(state$sparse_chol_and_stuff$scale))))
       # Make a half step for momentum at the end.
       d_beta_d_scale = 
-        GoNonStat::derivative_field_wrt_scale(
+        GeoNonStat::derivative_field_wrt_scale(
           new_range_beta[-seq(data$covariates$range_X$n_regressors),,drop = F], 
           q
         )
       # derivative of potential wrt range beta
-      d_potential_d_beta = GoNonStat::X_PP_crossprod(
+      d_potential_d_beta = GeoNonStat::X_PP_crossprod(
         X = data$covariates$range_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, locs_idx = vecchia_approx$hctam_scol_1,
         Y = # Jacobian of range field wrt range_beta
           (
             # natural gradient of obs likelihood wrt range field
-            GoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
+            GeoNonStat::derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
                                           left_vector = as.vector(
                                             Matrix::solve(
                                               Matrix::t(new_sparse_chol), 
@@ -733,7 +733,7 @@ mcmc_nngp_update_Gaussian = function(data,
       {
         if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
         {
-          new_eigen = eigen(GoNonStat::expmat(q))$values
+          new_eigen = eigen(GeoNonStat::expmat(q))$values
           if(
             all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
             all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2])))
@@ -757,19 +757,19 @@ mcmc_nngp_update_Gaussian = function(data,
       for(i in seq(10))
       {
         new_range_log_scale = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
-        old_eigen = eigen(GoNonStat::expmat(state$params$range_log_scale))$values
-        new_eigen = eigen(GoNonStat::expmat(new_range_log_scale))$values
+        old_eigen = eigen(GeoNonStat::expmat(state$params$range_log_scale))$values
+        new_eigen = eigen(GeoNonStat::expmat(new_range_log_scale))$values
         if(
           all(min(new_eigen)>exp(hierarchical_model$range_log_scale_prior[1]))&
           all(max(new_eigen)<exp(hierarchical_model$range_log_scale_prior[2]))&
           (
-            + GoNonStat::beta_prior_log_dens(
+            + GeoNonStat::beta_prior_log_dens(
               beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
               chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
               beta0_mean = hierarchical_model$range_beta0_mean,
               beta0_var =  hierarchical_model$range_beta0_var, 
               log_scale = new_range_log_scale)
-            - GoNonStat::beta_prior_log_dens(
+            - GeoNonStat::beta_prior_log_dens(
               beta = state$params$range_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$range_PP, 
               chol_crossprod_X = data$covariates$range_X$chol_crossprod_X,
               beta0_mean = hierarchical_model$range_beta0_mean,
@@ -794,7 +794,7 @@ mcmc_nngp_update_Gaussian = function(data,
     # Noise beta #
     ##############
     # recomputation in order to avoid errors
-    state$sparse_chol_and_stuff$noise = GoNonStat::variance_field(
+    state$sparse_chol_and_stuff$noise = GeoNonStat::variance_field(
       beta = state$params$noise_beta, X = data$covariates$noise_X$X, 
       PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
       locs_idx = NULL
@@ -805,7 +805,7 @@ mcmc_nngp_update_Gaussian = function(data,
     q = data$covariates$noise_X$chol_crossprod_X %*% state$params$noise_beta
     current_U =
       (
-        - GoNonStat::beta_prior_log_dens(
+        - GeoNonStat::beta_prior_log_dens(
           beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
           chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
           beta0_mean = hierarchical_model$noise_beta0_mean,
@@ -822,13 +822,13 @@ mcmc_nngp_update_Gaussian = function(data,
     p = p - exp(state$transition_kernels$noise_beta_mala) *
       (
         + solve(t(data$covariates$noise_X$chol_crossprod_X), # solving by prior chol because of whitening
-                - GoNonStat::beta_prior_log_dens_derivative(
+                - GeoNonStat::beta_prior_log_dens_derivative(
                   beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
                   chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
                   beta0_mean = hierarchical_model$noise_beta0_mean,
                   beta0_var =  hierarchical_model$noise_beta0_var, 
                   log_scale = state$params$noise_log_scale) # normal prior
-                + GoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
+                + GeoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
                                          Y = 
                                            (
                                              + .5 # determinant part of normal likelihood
@@ -840,13 +840,13 @@ mcmc_nngp_update_Gaussian = function(data,
     #### idx = 200
     #### noise_beta_ = state$params$noise_beta 
     #### noise_beta_[idx] = noise_beta_[idx] + 0.0000001
-    #### noise_ = GoNonStat::variance_field(
+    #### noise_ = GeoNonStat::variance_field(
     ####   beta = noise_beta_, X = data$covariates$noise_X$X, 
     ####   PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP
     #### )
     #### U_ =
     ####   (
-    ####     - GoNonStat::beta_prior_log_dens(beta = noise_beta_, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+    ####     - GeoNonStat::beta_prior_log_dens(beta = noise_beta_, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
     ####                                   beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
     ####                                   beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
     ####                                   log_scale = state$params$noise_log_scale) # normal prior 
@@ -855,11 +855,11 @@ mcmc_nngp_update_Gaussian = function(data,
     ####   )
     #### print(
     ####   (
-    ####             - GoNonStat::beta_prior_log_dens_derivative(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+    ####             - GeoNonStat::beta_prior_log_dens_derivative(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
     ####                                                      beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
     ####                                                      beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
     ####                                                      log_scale = state$params$noise_log_scale) # normal prior
-    ####             + GoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
+    ####             + GeoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
     ####                                      Y = 
     ####                                        (
     ####                                          + .5 # determinant part of normal likelihood
@@ -873,19 +873,19 @@ mcmc_nngp_update_Gaussian = function(data,
     # Make a full step for the position
     q = q + exp(state$transition_kernels$noise_beta_mala) * p
     new_noise_beta = solve(data$covariates$noise_X$chol_crossprod_X, q)
-    new_noise = GoNonStat::variance_field(beta = new_noise_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
+    new_noise = GeoNonStat::variance_field(beta = new_noise_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
                                        X = data$covariates$noise_X$X, locs_idx = NULL)
     # Make a half step for momentum at the end
     p = p - exp(state$transition_kernels$noise_beta_mala) *
       (
         + solve(t(data$covariates$noise_X$chol_crossprod_X), # solving by prior sparse chol because of whitening
-                - GoNonStat::beta_prior_log_dens_derivative(
+                - GeoNonStat::beta_prior_log_dens_derivative(
                   beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
                   chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
                   beta0_mean = hierarchical_model$noise_beta0_mean,
                   beta0_var =  hierarchical_model$noise_beta0_var, 
                   log_scale = state$params$noise_log_scale) # normal prior  
-                + GoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
+                + GeoNonStat::X_PP_crossprod(X = data$covariates$noise_X$X, PP = hierarchical_model$PP, use_PP = hierarchical_model$noise_PP, 
                                          (
                                            + .5 # determinant part of normal likelihood
                                            - (squared_residuals/new_noise)/2 # exponential part of normal likelihood
@@ -896,7 +896,7 @@ mcmc_nngp_update_Gaussian = function(data,
     current_K = sum (state$momenta$noise_beta ^2) / 2
     proposed_U = 
       (
-        - GoNonStat::beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+        - GeoNonStat::beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
                                       chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
                                       beta0_mean = hierarchical_model$noise_beta0_mean,
                                       beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -929,7 +929,7 @@ mcmc_nngp_update_Gaussian = function(data,
       new_noise_beta = state$params$noise_beta
       new_noise_beta[-seq(data$covariates$noise_X$n_regressors)] = new_noise_beta[-seq(data$covariates$noise_X$n_regressors)] *
         exp((new_noise_log_scale - state$params$noise_log_scale)/2)
-      new_noise =GoNonStat::variance_field(beta = new_noise_beta, PP = hierarchical_model$PP, 
+      new_noise =GeoNonStat::variance_field(beta = new_noise_beta, PP = hierarchical_model$PP, 
                                         use_PP = hierarchical_model$noise_PP, X = data$covariates$noise_X$X, 
                                         locs_idx = NULL)
       ll_ratio = (
@@ -962,12 +962,12 @@ mcmc_nngp_update_Gaussian = function(data,
         new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, .1)
         if(
           (
-            + GoNonStat::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+            + GeoNonStat::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
                                           chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
                                           beta0_mean = hierarchical_model$noise_beta0_mean,
                                           beta0_var =  hierarchical_model$noise_beta0_var, 
                                           log_scale = new_noise_log_scale) - 
-            GoNonStat::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+            GeoNonStat::beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
                                         chol_crossprod_X = data$covariates$noise_X$chol_crossprod_X,
                                         beta0_mean = hierarchical_model$noise_beta0_mean,
                                         beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -995,7 +995,7 @@ mcmc_nngp_update_Gaussian = function(data,
       q = data$covariates$scale_X$chol_crossprod_X_locs %*% state$params$scale_beta
       current_U =
         (
-          - GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+          - GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                         chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta0_mean = hierarchical_model$scale_beta0_mean,
                                         beta0_var =  hierarchical_model$scale_beta0_var, 
@@ -1010,12 +1010,12 @@ mcmc_nngp_update_Gaussian = function(data,
       p = p - exp(state$transition_kernels$scale_beta_sufficient_mala) *
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by t chol because of whitening
-                  - GoNonStat::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                  - GeoNonStat::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                                            beta0_mean = hierarchical_model$scale_beta0_mean,
                                                            beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior
-                  +  GoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
+                  +  GeoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                             Y = (
                                               .5  # determinant part 
                                               -.5 * sqrt(1/state$sparse_chol_and_stuff$scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/state$sparse_chol_and_stuff$scale)))# natural derivative
@@ -1025,19 +1025,19 @@ mcmc_nngp_update_Gaussian = function(data,
       # Make a full step for the position
       q = q + exp(state$transition_kernels$scale_beta_sufficient_mala) * p
       new_scale_beta = solve(data$covariates$scale_X$chol_crossprod_X_locs, q)
-      new_scale =GoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
+      new_scale =GeoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
                                         X = data$covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
       
       # Make a half step for momentum at the end.
       p = p - exp(state$transition_kernels$scale_beta_sufficient_mala) *
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-                  - GoNonStat::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                  - GeoNonStat::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                                            beta0_mean = hierarchical_model$scale_beta0_mean,
                                                            beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior  
-                  + GoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
+                  + GeoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (
                                              .5  # determinant part 
                                              -.5 * sqrt(1/new_scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/new_scale)))# natural derivative
@@ -1047,7 +1047,7 @@ mcmc_nngp_update_Gaussian = function(data,
       current_K = sum (state$momenta$scale_beta_sufficient ^2) / 2
       proposed_U = 
         (
-          - GoNonStat::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+          - GeoNonStat::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                         chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
@@ -1074,7 +1074,7 @@ mcmc_nngp_update_Gaussian = function(data,
       q = data$covariates$scale_X$chol_crossprod_X_locs %*% state$params$scale_beta
       current_U =
         (
-          - GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+          - GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                         chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
@@ -1088,12 +1088,12 @@ mcmc_nngp_update_Gaussian = function(data,
       p = p - exp(state$transition_kernels$scale_beta_ancillary_mala) *
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior chol because of whitening
-                  - GoNonStat::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                  - GeoNonStat::beta_prior_log_dens_derivative(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                                            beta0_mean = hierarchical_model$scale_beta0_mean,
                                                            beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior 
-                  + GoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
+                  + GeoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (.5 * state$params$field * 
                                               as.vector(vecchia_approx$locs_match_matrix %*% 
                                                           ((state$params$field[vecchia_approx$locs_match] - state$sparse_chol_and_stuff$lm_residuals)/
@@ -1103,19 +1103,19 @@ mcmc_nngp_update_Gaussian = function(data,
       # Make a full step for the position
       q = q + exp(state$transition_kernels$scale_beta_ancillary_mala) * p
       new_scale_beta = solve(data$covariates$scale_X$chol_crossprod_X_locs, q)
-      new_scale =GoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
+      new_scale =GeoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
                                         X = data$covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
       new_field  = state$params$field*sqrt(new_scale)/sqrt(state$sparse_chol_and_stuff$scale)
       # Make a half step for momentum at the end.
       p = p - exp(state$transition_kernels$scale_beta_ancillary_mala) *
         (
           + solve(t(data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
-                  - GoNonStat::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+                  - GeoNonStat::beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                                            chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                                            beta0_mean = hierarchical_model$scale_beta0_mean,
                                                            beta0_var =  hierarchical_model$scale_beta0_var, 
                                                            log_scale = state$params$scale_log_scale) # normal prior  
-                  + GoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
+                  + GeoNonStat::X_PP_crossprod(X = data$covariates$scale_X$X_locs, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, locs_idx = vecchia_approx$hctam_scol_1,
                                            (.5 * new_field * 
                                               as.vector(vecchia_approx$locs_match_matrix %*% 
                                                           ((new_field[vecchia_approx$locs_match] - state$sparse_chol_and_stuff$lm_residuals)/
@@ -1126,7 +1126,7 @@ mcmc_nngp_update_Gaussian = function(data,
       current_K = sum (state$momenta$scale_beta_ancillary ^2) / 2
       proposed_U = 
         (
-          - GoNonStat::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+          - GeoNonStat::beta_prior_log_dens(beta = new_scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                         chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                         beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                         beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
@@ -1157,7 +1157,7 @@ mcmc_nngp_update_Gaussian = function(data,
         new_scale_beta = state$params$scale_beta
         new_scale_beta[-seq(data$covariates$scale_X$n_regressors)] = new_scale_beta[-seq(data$covariates$scale_X$n_regressors)] *
           exp((new_scale_log_scale - state$params$scale_log_scale)/2)
-        new_scale = GoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, 
+        new_scale = GeoNonStat::variance_field(beta = new_scale_beta, PP = hierarchical_model$PP, 
                                            use_PP = hierarchical_model$scale_PP, X = data$covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
         state$transition_kernels$scale_log_scale_sufficient = state$transition_kernels$scale_log_scale_sufficient - .25/sqrt(iter_start + iter +100)
         if(
@@ -1191,12 +1191,12 @@ mcmc_nngp_update_Gaussian = function(data,
           new_scale_log_scale = state$params$scale_log_scale + rnorm(1, 0, .1)
           if(
             (
-              + GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+              + GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                             chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = new_scale_log_scale)     
-              - GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+              - GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                             chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
@@ -1215,7 +1215,7 @@ mcmc_nngp_update_Gaussian = function(data,
         new_scale_beta = state$params$scale_beta
         new_scale_beta[-seq(data$covariates$scale_X$n_regressors)] = new_scale_beta[-seq(data$covariates$scale_X$n_regressors)] *
           exp((new_scale_log_scale - state$params$scale_log_scale)/2)
-        new_scale =GoNonStat::variance_field(new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
+        new_scale =GeoNonStat::variance_field(new_scale_beta, PP = hierarchical_model$PP, use_PP = hierarchical_model$scale_PP, 
                                           X = data$covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
         new_field = state$params$field * sqrt(new_scale)/sqrt(state$sparse_chol_and_stuff$scale)
         state$transition_kernels$scale_log_scale_ancillary = state$transition_kernels$scale_log_scale_ancillary - .25/sqrt(iter_start + iter +100)
@@ -1245,12 +1245,12 @@ mcmc_nngp_update_Gaussian = function(data,
           new_scale_log_scale = state$params$scale_log_scale + rnorm(1, 0, .1)
           if(
             (
-              + GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+              + GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                             chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 
                                             log_scale = new_scale_log_scale)     
-              - GoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
+              - GeoNonStat::beta_prior_log_dens(beta = state$params$scale_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$scale_PP, 
                                             chol_crossprod_X = data$covariates$scale_X$chol_crossprod_X,
                                             beta_mean = hierarchical_model$beta_priors$scale_beta_mean, 
                                             beta_precision =  hierarchical_model$beta_priors$scale_beta_precision, 

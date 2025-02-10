@@ -79,8 +79,8 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
     PP_$idx = c(PP$idx, nrow(PP$unique_reordered_locs)+locs_match)
     #### testing PP
     ## seed_vector =  rnorm(PP_$n_PP + nrow(PP_$unique_reordered_locs))
-    ## GoNonStat::plot_pointillist_painting(PP_$unique_reordered_locs[PP_$idx,], GoNonStat::X_PP_mult_right(PP = PP_, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
-    ## GoNonStat::plot_pointillist_painting(PP$unique_reordered_locs[PP$idx,], GoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
+    ## GeoNonStat::plot_pointillist_painting(PP_$unique_reordered_locs[PP_$idx,], GeoNonStat::X_PP_mult_right(PP = PP_, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
+    ## GeoNonStat::plot_pointillist_painting(PP$unique_reordered_locs[PP$idx,], GeoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
   }
   
   # burn in
@@ -109,7 +109,7 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
           i = sparse_chol_row_idx, 
           j = sparse_chol_column_idx, 
           x = 
-            GoNonStat::compute_sparse_chol(
+            GeoNonStat::compute_sparse_chol(
               range_beta = matrix(chain$range_beta[,,i_start + i_predict], nrow =dim(chain$range_beta)[1]), 
               NNarray = NNarray, locs = locs, 
               anisotropic = hierarchical_model$anisotropic, 
@@ -125,14 +125,14 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
         )
       res$log_range[,,i_predict] = 
         (
-          GoNonStat::X_PP_mult_right(
+          GeoNonStat::X_PP_mult_right(
             X = X_range, 
             PP = PP_, use_PP = hierarchical_model$range_PP, 
             locs_idx = c(vecchia_approx$hctam_scol_1, vecchia_approx$n_obs+hctam_scol_1), 
             Y = matrix(chain$range_beta[,,i_start + i_predict], nrow =dim(chain$range_beta)[1])
           )[-seq(vecchia_approx$n_locs),,drop = F]
         )
-      scale_field = GoNonStat::variance_field(
+      scale_field = GeoNonStat::variance_field(
         beta = chain$scale_beta[,,i_start + i_predict], PP = PP_, use_PP = hierarchical_model$scale_PP,  
         locs_idx =  c(vecchia_approx$hctam_scol_1, vecchia_approx$n_obs+hctam_scol_1),
         X = X_scale
@@ -187,7 +187,7 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
   {
     predicted_samples_[[name]] = Reduce(f = function(x, y)abind::abind(x, y, along = 3), x = lapply(predicted_samples, function(y)y[[name]]))
   }
-  summaries = parallel::parLapply(cl = cl, X = predicted_samples_, fun = GoNonStat::get_array_summary)
+  summaries = parallel::parLapply(cl = cl, X = predicted_samples_, fun = GeoNonStat::get_array_summary)
   for(name in names(predicted_samples[[1]]))
   {
     predicted_samples_[[name]] = predicted_samples_[[name]][locs_match,,,drop=F]
@@ -246,7 +246,7 @@ predict_fixed_effects = function(mcmc_nngp_list, X_pred = NULL, burn_in = .5,  l
   predicted_samples_ = list()
   library(abind())
   predicted_samples_ = do.call("abind", predicted_samples)
-  summaries = GoNonStat::get_array_summary(predicted_samples_)
+  summaries = GeoNonStat::get_array_summary(predicted_samples_)
   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries))
 }
 
@@ -321,7 +321,7 @@ predict_noise = function(mcmc_nngp_list, X_noise_pred = NULL, burn_in = .5, pred
         # looping over saved observations
         for(i_predict in seq(n_samples))
         {
-          res[,,i_predict] = GoNonStat::X_PP_mult_right(
+          res[,,i_predict] = GeoNonStat::X_PP_mult_right(
             X = as.matrix(rbind(mcmc_nngp_list$data$covariates$noise_X$X, X_noise_pred)), 
             PP = PP_, 
             use_PP = mcmc_nngp_list$hierarchical_model$noise_PP, 
@@ -334,7 +334,7 @@ predict_noise = function(mcmc_nngp_list, X_noise_pred = NULL, burn_in = .5, pred
   summaries = list()
   predicted_samples_ = list()
   predicted_samples_ = Reduce(f = function(x, y)abind::abind(x, y, along = 3), x = predicted_samples)
-  summaries = GoNonStat::get_array_summary(predicted_samples_)
+  summaries = GeoNonStat::get_array_summary(predicted_samples_)
   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries, "predicted_locs" = predicted_locs))
 }
 
@@ -356,14 +356,14 @@ estimate_parameters = function(mcmc_nngp_list, burn_in = .5, get_samples = F, li
   parallel::clusterExport(cl, c("kept_iterations"), envir = environment())
   # matched latent field 
   x = Reduce(f = function(x, y)abind::abind(x, y, along = 3), x = parallel::parLapply(cl, mcmc_nngp_list$records, function(y)array(y$field[,,kept_iterations], dim = c(dim(y$field)[1], 1 , length(kept_iterations)))))
-  summaries$field_at_observed_locs = GoNonStat::get_array_summary(x)[,mcmc_nngp_list$vecchia_approx$locs_match,,drop=F]
+  summaries$field_at_observed_locs = GeoNonStat::get_array_summary(x)[,mcmc_nngp_list$vecchia_approx$locs_match,,drop=F]
   if(get_samples)samples$field_at_observed_locs = x[mcmc_nngp_list$vecchia_approx$locs_match,,,drop=F]
   for(name in names(mcmc_nngp_list$records[[1]]))
   {
     parallel::clusterExport(cl, "name", envir = environment())
     x = Reduce(f = function(x, y)abind::abind(x, y, along = 3), x = parallel::parLapply(cl, mcmc_nngp_list$records, function(y)array(y[[name]][,,kept_iterations], dim = c(dim(y[[name]])[c(1, 2)], length(kept_iterations)))))
     if(get_samples)samples[[name]] = x
-    summaries[[name]] = GoNonStat::get_array_summary(x)
+    summaries[[name]] = GeoNonStat::get_array_summary(x)
   }
   parallel::stopCluster(cl)
   list("summaries" = summaries, "samples" = samples)
@@ -384,7 +384,7 @@ DIC = function(mcmc_nngp_list, burn_in = .5)
   {
     for(j in seq(length(mcmc_nngp_list$states)))
     {
-      noise = GoNonStat::variance_field(
+      noise = GeoNonStat::variance_field(
         beta = mcmc_nngp_list$records[[j]]$noise_beta[,,i], 
         PP = mcmc_nngp_list$hierarchical_model$PP, use_PP = mcmc_nngp_list$hierarchical_model$noise_PP, 
         X = mcmc_nngp_list$data$covariates$noise_X$X, 

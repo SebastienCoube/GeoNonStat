@@ -7,7 +7,7 @@ derivative_sandwiches = function(
 )
 {
   M = matrix(0, length(left_vector), length(derivatives))
-  for( i in seq(length(derivatives)))M[,i] = GoNonStat::derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
+  for( i in seq(length(derivatives)))M[,i] = GeoNonStat::derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
   # changing basis between det/aniso and canonical
   if(ncol(M)==3) M = M %*% t(matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
@@ -20,7 +20,7 @@ derivative_sandwiches = function(
 log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 {
   M = matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
-  for( i in seq(length(sparse_chol_and_grad[[2]])))M[,i] = GoNonStat::log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], compressed_sparse_chol = sparse_chol_and_grad[[1]], NNarray = NNarray)
+  for( i in seq(length(sparse_chol_and_grad[[2]])))M[,i] = GeoNonStat::log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], compressed_sparse_chol = sparse_chol_and_grad[[1]], NNarray = NNarray)
   if(ncol(M)==3) M = M %*% matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
       1/sqrt(2), -1/sqrt(2), 0,
@@ -98,24 +98,24 @@ compute_sparse_chol = function(range_beta,
   if(ncol(range_beta)==1)range_beta = range_beta# / sqrt(2)
   
   log_range = as.matrix(
-    GoNonStat::X_PP_mult_right(
+    GeoNonStat::X_PP_mult_right(
       X = range_X, 
       PP = PP, 
       Y = range_beta,  
       use_PP = use_PP, 
       locs_idx = locs_idx))
-  #GoNonStat::plot_ellipses(locs, log_range)
+  #GeoNonStat::plot_ellipses(locs, log_range)
   # exp locally isotropic
-  if((!anisotropic)&(nu==0.5))res = GoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if((!anisotropic)&(nu==0.5))res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # matern locally isotropic
-  if((!anisotropic)&(nu==1.5)) res = GoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if((!anisotropic)&(nu==1.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # exp locally anisotropic
-  if(( anisotropic)&(nu==0.5)) res = GoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if(( anisotropic)&(nu==0.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   
   # matern locally anisotropic
-  if(( anisotropic)&(nu==1.5)) res = GoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if(( anisotropic)&(nu==1.5)) res = GeoNonStat::nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
   res[[2]] = lapply(res[[2]], function(x)x*2)
   return(res)
 }
@@ -130,7 +130,7 @@ compute_sparse_chol = function(range_beta,
 ###       Matrix::sparseMatrix(
 ###         i = row(NNarray)[!is.na(NNarray)],
 ###         j = (NNarray)[!is.na(NNarray)],
-###         x= GoNonStat::compute_sparse_chol(
+###         x= GeoNonStat::compute_sparse_chol(
 ###           range_beta = matrix(.5/sqrt(2),1,1), 
 ###           NNarray = NNarray, 
 ###           locs = locs,
@@ -152,7 +152,7 @@ compute_sparse_chol = function(range_beta,
 ###       Matrix::sparseMatrix(
 ###         i = row(NNarray)[!is.na(NNarray)],
 ###         j = (NNarray)[!is.na(NNarray)],
-###         x= GoNonStat::compute_sparse_chol(
+###         x= GeoNonStat::compute_sparse_chol(
 ###           range_beta = matrix(c(.5,0,0),1), 
 ###           NNarray = NNarray, 
 ###           locs = locs,
@@ -194,7 +194,7 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   if(n_PP>0) 
   {
-    scale_mat = GoNonStat::expmat(-log_scale)
+    scale_mat = GeoNonStat::expmat(-log_scale)
     return(
       (
         # PP coefficients follow N(0, scale_mat)
@@ -219,7 +219,7 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #{
 #  if(n_PP>0) 
 #  {
-#    scale_mat = GoNonStat::expmat(-log_scale)
+#    scale_mat = GeoNonStat::expmat(-log_scale)
 #    return(
 #      matrix(
 #        c(
@@ -252,7 +252,7 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
   )
   if(n_PP>0) 
   {
-    scale_mat = GoNonStat::expmat(-log_scale)
+    scale_mat = GeoNonStat::expmat(-log_scale)
     res = rbind(res, 
                 -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
     )
@@ -331,14 +331,14 @@ X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 ### range= .1
 ### n_PP = 50
 ### PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
+### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
 ### points(PP$knots, pch = 16, cex = .5)
 ### n_PP = 100
 ### PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
+### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
 ### points(PP$knots, pch = 16, cex = .5)
 ### # ploting one PP basis
-### GoNonStat::plot_pointillist_painting(locs, 
+### GeoNonStat::plot_pointillist_painting(locs, 
 ###                                   Matrix::solve(PP$sparse_chol, 
 ###                                                 Matrix::sparseMatrix(
 ###                                                   i = seq(nrow(PP$knots)), 
@@ -372,12 +372,12 @@ derivative_chol_expmat = function(coords)
   dimres = 1
   if(length(coords)==6)dimres = 3
   res = array(data = 0, dim = c(dimres, dimres, length(coords)))
-  chol_expmat = chol(GoNonStat::expmat(coords))
+  chol_expmat = chol(GeoNonStat::expmat(coords))
   for(i in seq(length(coords)))
   {
     coords_ = coords
     coords_[i] = coords_[i] + 0.00001
-    res[,,i] = 100000 * (chol(GoNonStat::expmat(coords_)) - chol_expmat)
+    res[,,i] = 100000 * (chol(GeoNonStat::expmat(coords_)) - chol_expmat)
   }
   res
 }
@@ -386,7 +386,7 @@ derivative_chol_expmat = function(coords)
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
-  white_field = field %*% solve(chol(GoNonStat::expmat(coords)))
+  white_field = field %*% solve(chol(GeoNonStat::expmat(coords)))
   res = array(0, dim = c(dim(field), length(coords)))
   for(i in seq(length(coords)))
   {

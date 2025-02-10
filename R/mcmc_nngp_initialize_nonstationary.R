@@ -189,7 +189,7 @@ mcmc_nngp_initialize_nonstationary =
     covariates$X = process_covariates(X, observed_locs, vecchia_approx)  
     # explicit PP basis
     explicit_PP_basis = NULL
-    if(!is.null(PP))explicit_PP_basis = GoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
+    if(!is.null(PP))explicit_PP_basis = GeoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X, observed_locs, vecchia_approx, explicit_PP_basis, range_PP)
     if(!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))stop("The covariates range_X cannot vary within one spatial location of observed_locs")
@@ -355,7 +355,7 @@ mcmc_nngp_initialize_nonstationary =
       # NNGP sparse chol #
       ####################
       states[[i]]$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = 
-        GoNonStat::compute_sparse_chol(anisotropic = anisotropic,
+        GeoNonStat::compute_sparse_chol(anisotropic = anisotropic,
                                     sphere = sphere, 
                                     range_X = covariates$range_X$X_locs, 
                                     range_beta = states[[i]]$params$range_beta, 
