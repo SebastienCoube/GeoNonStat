@@ -42,6 +42,8 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 
 #' Initializes a list containing the observations, the hierarchical model, and the MCMC chains.
 #' 
+#' @export
+#' 
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
@@ -57,7 +59,7 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' @param range_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. 
 #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix. 
 
-mcmc_nngp_initialize_nonstationary = 
+initialize = 
   function(observed_locs = NULL, #spatial locations
            observed_field = NULL, # Response variable
            X = NULL, # Covariates per observation
@@ -256,119 +258,115 @@ mcmc_nngp_initialize_nonstationary =
     # for each chain, creating sub-lists in order to stock all the stuff that is related to one chain, including : 
     # transition_kernel_sd : a list that stocks the (current) automatically-tuned transition kernels standard deviations
     # params : a list that stocks the (current) parameters of the model, including covariance parameters, the value of the sampled field, etc
-    # records : records of the MCMC iterations
+    # record : record of the MCMC iterations
     
-    states = list()
-    # creating sub-list : each sub-list is a chain
-    for(i in seq(n_chains))
+    state = list()
+    #parameters of interest to the model
+    state$params = list()
+    #stuff that is useful for computations
+    state$sparse_chol_and_stuff = list()
+    # HMC momenta
+    state$momenta = list()
+    # Starting points for transition kernels, will be adaptively tuned
+    state$transition_kernels = list()
+    
+    
+    ######################
+    # Transition kernels #  
+    ######################
+    
+    # Transition kernel state
+    # transition kernel variance is given as the log
+    # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size 
+    # have an ancillary and a sufficient version when applicable
+    # range
+    state$transition_kernels$range_log_scale_sufficient = -4
+    state$transition_kernels$range_log_scale_ancillary =  -4
+    state$transition_kernels$range_beta_sufficient = c(-4, -4)
+    state$transition_kernels$range_beta_ancillary  = c(-4, -4)
+    # scale
+    state$transition_kernels$scale_beta_sufficient_mala = -4
+    state$transition_kernels$scale_beta_ancillary_mala  = -4
+    state$transition_kernels$scale_log_scale_sufficient = -4
+    state$transition_kernels$scale_log_scale_ancillary =  -4
+    # noise variance
+    state$transition_kernels$noise_beta_mala = -4
+    state$transition_kernels$noise_log_scale = -4
+    
+    ###################################
+    # Linear regression coefficients  #
+    ###################################
+    #starting points for regression coeffs
+    perturb = t(chol(vcov(naive_ols)))%*%rnorm(length(naive_ols$coefficients))
+    state$params[["beta"]] = naive_ols$coefficients + perturb
+    row.names(state$params[["beta"]]) = colnames(covariates$X$X)
+    # Residuals of the OLS model that have to be explained by the latent field and the noise
+    state$sparse_chol_and_stuff$lm_fit = as.vector(covariates$X$X%*%matrix(state$params[["beta"]], ncol = 1))
+    state$sparse_chol_and_stuff$lm_fit_locs = as.vector(covariates$X$X_locs%*%matrix(state$params[["beta"]][covariates$X$which_locs], ncol = 1))
+    state$sparse_chol_and_stuff$lm_residuals = as.vector(observed_field-  state$sparse_chol_and_stuff$lm_fit)
+    #########
+    # Range #
+    #########
+    # range beta
+    state$params$range_beta = matrix(0, ncol(covariates$range_X$X) + range_PP * PP$n_PP, 1 + 2*anisotropic)
+    if(!range_PP) row.names(state$params$range_beta) = colnames(covariates$range_X$X)
+    if(range_PP ) row.names(state$params$range_beta) = c(colnames(covariates$range_X$X), paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
+    state$params$range_beta[1,1] = hierarchical_model$range_beta0_mean
+    state$momenta$range_beta_ancillary = matrix(rnorm(length(state$params$range_beta)), nrow(state$params$range_beta))
+    state$momenta$range_beta_sufficient = matrix(rnorm(length(state$params$range_beta)), nrow(state$params$range_beta))
+    # range log scale
+    if(range_PP)
     {
-      states[[paste("chain", i, sep = "_")]] = list()
-      #parameters of interest to the model
-      states[[i]]$params = list()
-      #stuff that is useful for computations
-      states[[i]]$sparse_chol_and_stuff = list()
-      # HMC momenta
-      states[[i]]$momenta = list()
-      
-
-      ######################
-      # Transition kernels #  
-      ######################
-      
-      # Starting points for transition kernels, will be adaptively tuned
-      states[[i]]$transition_kernels = list()
-      # Transition kernel state
-      # transition kernel variance is given as the log
-      # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size 
-      # have an ancillary and a sufficient version when applicable
-      # range
-      states[[i]]$transition_kernels$range_log_scale_sufficient = -4
-      states[[i]]$transition_kernels$range_log_scale_ancillary =  -4
-      states[[i]]$transition_kernels$range_beta_sufficient = c(-4, -4)
-      states[[i]]$transition_kernels$range_beta_ancillary  = c(-4, -4)
-      # scale
-      states[[i]]$transition_kernels$scale_beta_sufficient_mala = -4
-      states[[i]]$transition_kernels$scale_beta_ancillary_mala  = -4
-      states[[i]]$transition_kernels$scale_log_scale_sufficient = -4
-      states[[i]]$transition_kernels$scale_log_scale_ancillary =  -4
-      # noise variance
-      states[[i]]$transition_kernels$noise_beta_mala = -4
-      states[[i]]$transition_kernels$noise_log_scale = -4
-      
-      ###################################
-      # Linear regression coefficients  #
-      ###################################
-      #starting points for regression coeffs
-      perturb = t(chol(vcov(naive_ols)))%*%rnorm(length(naive_ols$coefficients))
-      states[[i]]$params[["beta"]] = naive_ols$coefficients + perturb
-      row.names(states[[i]]$params[["beta"]]) = colnames(covariates$X$X)
-      # Residuals of the OLS model that have to be explained by the latent field and the noise
-      states[[i]]$sparse_chol_and_stuff$lm_fit = as.vector(covariates$X$X%*%matrix(states[[i]]$params[["beta"]], ncol = 1))
-      states[[i]]$sparse_chol_and_stuff$lm_fit_locs = as.vector(covariates$X$X_locs%*%matrix(states[[i]]$params[["beta"]][covariates$X$which_locs], ncol = 1))
-      states[[i]]$sparse_chol_and_stuff$lm_residuals = as.vector(observed_field-  states[[i]]$sparse_chol_and_stuff$lm_fit)
-      #########
-      # Range #
-      #########
-      # range beta
-      states[[i]]$params$range_beta = matrix(0, ncol(covariates$range_X$X) + range_PP * PP$n_PP, 1 + 2*anisotropic)
-      if(!range_PP) row.names(states[[i]]$params$range_beta) = colnames(covariates$range_X$X)
-      if(range_PP ) row.names(states[[i]]$params$range_beta) = c(colnames(covariates$range_X$X), paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
-      states[[i]]$params$range_beta[1,1] = rnorm(1, hierarchical_model$range_beta0_mean, sqrt(hierarchical_model$range_beta0_var^.5))
-      states[[i]]$momenta$range_beta_ancillary = matrix(rnorm(length(states[[i]]$params$range_beta)), nrow(states[[i]]$params$range_beta))
-      states[[i]]$momenta$range_beta_sufficient = matrix(rnorm(length(states[[i]]$params$range_beta)), nrow(states[[i]]$params$range_beta))
-      # range log scale
-      if(range_PP)
-      {
-        if(!anisotropic) states[[i]]$params$range_log_scale =   hierarchical_model$range_log_scale_prior[1]
-        if( anisotropic) states[[i]]$params$range_log_scale = c(rep(hierarchical_model$range_log_scale_prior[1], 3), rep(0, 3))
-        states[[i]]$momenta$range_log_scale_ancillary  = rnorm(length(states[[i]]$params$range_log_scale))
-        states[[i]]$momenta$range_log_scale_sufficient = rnorm(length(states[[i]]$params$range_log_scale))
-      }
-      ##################
-      # Noise variance #
-      ##################
-      # beta is just an intercept in stationary case
-      states[[i]]$params$noise_beta    = matrix(rep(0, ncol(covariates$noise_X$X)+noise_PP*hierarchical_model$PP$n_PP), ncol = 1) #random starting values
-      if(!noise_PP) row.names(states[[i]]$params$noise_beta) = colnames(covariates$noise_X$X)
-      if(noise_PP ) row.names(states[[i]]$params$noise_beta) = c(colnames(covariates$noise_X$X), paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
-      states[[i]]$params$noise_beta[1] = rnorm(1, hierarchical_model$noise_beta0_mean, sqrt(hierarchical_model$noise_beta0_var))
-      states[[i]]$momenta$noise_beta = rnorm(ncol(covariates$noise_X$X)+noise_PP*hierarchical_model$PP$n_PP)
-      # noise log scale
-      if(noise_PP)states[[i]]$params$noise_log_scale = hierarchical_model$noise_log_scale_prior[1]
-      # effective variance field, shall be used in density computations
-      states[[i]]$sparse_chol_and_stuff$noise = variance_field(beta = states[[i]]$params$noise_beta, PP = PP, use_PP = noise_PP, X = covariates$noise_X$X)
-      
-      #########
-      # Scale #
-      #########
-      states[[i]]$params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP, ncol = 1) 
-      if(!scale_PP)row.names(states[[i]]$params$scale_beta) = colnames(covariates$scale_X$X_locs)
-      if(scale_PP)row.names(states[[i]]$params$scale_beta) = c(colnames(covariates$scale_X$X_locs),  paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
-      states[[i]]$params$scale_beta[1] = rnorm(1, hierarchical_model$scale_beta0_mean, sqrt(hierarchical_model$scale_beta0_var))
-      states[[i]]$momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
-      states[[i]]$momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
-      # variance
-      if(scale_PP)states[[i]]$params$scale_log_scale = hierarchical_model$scale_log_scale_prior[1]
-      # effective variance field, shall be used in density computations
-      states[[i]]$sparse_chol_and_stuff$scale = variance_field(beta = states[[i]]$params$scale_beta, PP = PP, use_PP = scale_PP, X = covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
-      ####################
-      # NNGP sparse chol #
-      ####################
-      states[[i]]$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = 
-        GeoNonStat::compute_sparse_chol(anisotropic = anisotropic,
-                                    sphere = sphere, 
-                                    range_X = covariates$range_X$X_locs, 
-                                    range_beta = states[[i]]$params$range_beta, 
-                                    PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, 
-                                    NNarray = vecchia_approx$NNarray, locs_idx = vecchia_approx$hctam_scol_1, 
-                                    locs = locs, nu = nu, num_threads = max(1, parallel::detectCores()-2))
-      states[[i]]$sparse_chol_and_stuff$sparse_chol = Matrix::sparseMatrix(x =  states[[i]]$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA], i = vecchia_approx$sparse_chol_row_idx, j = vecchia_approx$sparse_chol_column_idx, triangular = T)
-      states[[i]]$sparse_chol_and_stuff$precision_diag = as.vector((states[[i]]$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(vecchia_approx$sparse_chol_column_idx)), j = vecchia_approx$sparse_chol_column_idx, x = rep(1, length(vecchia_approx$sparse_chol_row_idx))))
-      ################
-      # Latent field #
-      ################
-      states[[i]]$params$field = sqrt(states[[i]]$sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(states[[i]]$sparse_chol_and_stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+      if(!anisotropic) state$params$range_log_scale =   hierarchical_model$range_log_scale_prior[1]
+      if( anisotropic) state$params$range_log_scale = c(rep(hierarchical_model$range_log_scale_prior[1], 3), rep(0, 3))
+      state$momenta$range_log_scale_ancillary  = rnorm(length(state$params$range_log_scale))
+      state$momenta$range_log_scale_sufficient = rnorm(length(state$params$range_log_scale))
     }
+    ##################
+    # Noise variance #
+    ##################
+    # beta is just an intercept in stationary case
+    state$params$noise_beta    = matrix(rep(0, ncol(covariates$noise_X$X)+noise_PP*hierarchical_model$PP$n_PP), ncol = 1) #random starting values
+    if(!noise_PP) row.names(state$params$noise_beta) = colnames(covariates$noise_X$X)
+    if(noise_PP ) row.names(state$params$noise_beta) = c(colnames(covariates$noise_X$X), paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
+    state$params$noise_beta[1] = hierarchical_model$noise_beta0_mean
+    state$momenta$noise_beta = rnorm(ncol(covariates$noise_X$X)+noise_PP*hierarchical_model$PP$n_PP)
+    # noise log scale
+    if(noise_PP)state$params$noise_log_scale = hierarchical_model$noise_log_scale_prior[1]
+    # effective variance field, shall be used in density computations
+    state$sparse_chol_and_stuff$noise = variance_field(beta = state$params$noise_beta, PP = PP, use_PP = noise_PP, X = covariates$noise_X$X)
+    
+    #########
+    # Scale #
+    #########
+    state$params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP, ncol = 1) 
+    if(!scale_PP)row.names(state$params$scale_beta) = colnames(covariates$scale_X$X_locs)
+    if(scale_PP)row.names(state$params$scale_beta) = c(colnames(covariates$scale_X$X_locs),  paste("PP", seq(hierarchical_model$PP$n_PP), sep = "_"))
+    state$params$scale_beta[1] = hierarchical_model$scale_beta0_mean
+    state$momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
+    state$momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + scale_PP * hierarchical_model$PP$n_PP)
+    # variance
+    if(scale_PP)state$params$scale_log_scale = hierarchical_model$scale_log_scale_prior[1]
+    # effective variance field, shall be used in density computations
+    state$sparse_chol_and_stuff$scale = variance_field(beta = state$params$scale_beta, PP = PP, use_PP = scale_PP, X = covariates$scale_X$X_locs, locs_idx = vecchia_approx$hctam_scol_1)
+    ####################
+    # NNGP sparse chol #
+    ####################
+    state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = 
+      GeoNonStat::compute_sparse_chol(anisotropic = anisotropic,
+                                  sphere = sphere, 
+                                  range_X = covariates$range_X$X_locs, 
+                                  range_beta = state$params$range_beta, 
+                                  PP = hierarchical_model$PP, use_PP = hierarchical_model$range_PP, 
+                                  NNarray = vecchia_approx$NNarray, locs_idx = vecchia_approx$hctam_scol_1, 
+                                  locs = locs, nu = nu, num_threads = max(1, parallel::detectCores()-2))
+    state$sparse_chol_and_stuff$sparse_chol = Matrix::sparseMatrix(x =  state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA], i = vecchia_approx$sparse_chol_row_idx, j = vecchia_approx$sparse_chol_column_idx, triangular = T)
+    state$sparse_chol_and_stuff$precision_diag = as.vector((state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(vecchia_approx$sparse_chol_column_idx)), j = vecchia_approx$sparse_chol_column_idx, x = rep(1, length(vecchia_approx$sparse_chol_row_idx))))
+    ################
+    # Latent field #
+    ################
+    state$params$field = sqrt(state$sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(state$sparse_chol_and_stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+    
     
     #######################
     # Chain records setup #
@@ -377,20 +375,20 @@ mcmc_nngp_initialize_nonstationary =
     # records is a list that stocks the recorded parameters of the model, including covariance parameters, the value of the sampled field, etc. In terms of RAM, those are the biggest bit !
     # iteration is a 2-colums matrix that records the iteration at the end of each chains join and the associated CPU time
     records = list()
-    for(i in seq(n_chains))
-    {
-      records[[paste("chain", i, sep = "_")]] = list()
-      records[[i]] =  sapply(states[[i]]$params, function(x)NULL)
-      
-    }
+    records =  sapply(state$params, function(x)NULL)
     iterations = list()
     iterations$checkpoints =  matrix(c(0, as.numeric(Sys.time()-t_begin, unit = "mins")), ncol = 2)
     colnames(iterations$checkpoints) = c("iteration", "time")
     iterations$thinning = c()
     
     ##########
-    
+    res = list("data" = 
+                 list("locs" = locs, "observed_field" = observed_field, "observed_locs" = observed_locs, "covariates" = covariates), 
+               "hierarchical_model" = hierarchical_model, 
+               "vecchia_approx" = vecchia_approx, 
+               "state" = state, "records" = records, 
+               "t_begin" = t_begin, "seed" = seed, "iterations" = iterations)
+    class(res) = "MCMC_NNGP"
     message(paste("Setup done,", as.numeric(Sys.time()- t_begin, units = "secs"), "s elapsed" ))
-    return(list("data" = list("locs" = locs, "observed_field" = observed_field, "observed_locs" = observed_locs, "covariates" = covariates), "hierarchical_model" = hierarchical_model, 
-                "vecchia_approx" = vecchia_approx, "states" = states, "records" = records, "t_begin" = t_begin, "seed" = seed, "iterations" = iterations))
+    return(res)
   }  
