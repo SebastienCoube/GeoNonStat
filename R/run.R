@@ -13,7 +13,7 @@
 #'
 #' @returns a list
 #' @export
-mcmc_nngp_run_nonstationary_socket = function(mcmc_nngp_list, 
+run_socket = function(mcmc_nngp_list, 
                                               burn_in = .5, seed = 1, # MCMC parameters
                                               n_cores = NULL, thinning = .1,
                                               plot_diags = T, 
