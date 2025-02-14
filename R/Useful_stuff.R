@@ -5,7 +5,7 @@
 #' @param right_vector 
 #' @param NNarray 
 #'
-#' @returns
+#' @returns a matrix
 #' @export
 #'
 #' @examples
@@ -32,10 +32,11 @@ derivative_sandwiches = function(
 #' @param sparse_chol_and_grad 
 #' @param NNarray 
 #'
-#' @returns
+#' @returns a matrix
 #' @export
 #'
 #' @examples
+#' \dontrun{TODO}
 log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 {
   M = matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
@@ -47,7 +48,16 @@ log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
   M
 }
 
+
+#' Title
+#'
+#' @param coords 
+#'
+#' @returns a matrix
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 expmat = function(coords)
 {
   res = expm::expm(symmat(coords)) 
@@ -72,7 +82,20 @@ symmat = function(coords)
   logm
 }
 
+
+#' Title
+#'
+#' @param beta 
+#' @param PP 
+#' @param use_PP 
+#' @param X 
+#' @param locs_idx 
+#'
+#' @returns a vector
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 variance_field = function(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 {
   as.vector(exp(X_PP_mult_right(X = X, PP = PP, use_PP = use_PP, locs_idx = locs_idx, Y = beta)))
@@ -94,7 +117,7 @@ variance_field = function(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 #' @param nu Matern smoothness
 #' @param locs_idx match between PP basis function and locs
 #'
-#' @returns
+#' @returns a list
 #' @export
 #'
 #' @examples
@@ -199,7 +222,7 @@ compute_sparse_chol = function(range_beta,
 #' @param n_PP 
 #' @param m 
 #'
-#' @returns
+#' @returns a list
 #' @export
 #'
 #' @examples
@@ -234,7 +257,7 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 #' @param beta_precision 
 #' @param log_scale 
 #'
-#' @returns
+#' @returns a numeric value
 #' @export
 #'
 #' @examples
@@ -298,7 +321,7 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #' @param beta_precision 
 #' @param log_scale 
 #'
-#' @returns
+#' @returns an array
 #' @export
 #'
 #' @examples
@@ -350,7 +373,7 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
 #' @param locs_idx 
 #' @param Y 
 #'
-#' @returns
+#' @returns a matrix
 #' @export
 #'
 #' @examples
@@ -382,7 +405,7 @@ X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
 #' @param Y 
 #' @param locs_idx 
 #'
-#' @returns
+#' @returns a matrix
 #' @export
 #'
 #' @examples
@@ -457,7 +480,7 @@ X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 #'
 #' @param coords 
 #'
-#' @returns
+#' @returns an array
 #' @export
 #'
 #' @examples
@@ -482,7 +505,7 @@ derivative_chol_expmat = function(coords)
 #' @param field 
 #' @param coords 
 #'
-#' @returns
+#' @returns an array
 #' @export
 #'
 #' @examples

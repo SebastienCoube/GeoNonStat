@@ -38,6 +38,12 @@ compute_sparse_chol(
 
 \item{locs_idx}{match between PP basis function and locs}
 }
+\value{
+a list
+}
 \description{
 Computes a Vecchia sparse Cholesky factor
+}
+\examples{
+\dontrun{TODO}
 }

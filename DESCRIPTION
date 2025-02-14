@@ -7,6 +7,7 @@ Author: Seb Coube-Sisqueille
 Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
 Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process
 License: GPL-3
+Encoding: UTF-8
 Imports: 
     Rcpp (>= 1.0.7), 
     abind, 
