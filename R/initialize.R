@@ -1,3 +1,15 @@
+#' process_covariates TODO
+#'
+#' @param X TODO
+#' @param observed_locs TODO
+#' @param vecchia_approx TODO
+#' @param explicit_PP_basis TODO
+#' @param use_PP TODO
+#'
+#' @returns a list
+#'
+#' @examples
+#' \dontrun{TODO}
 process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basis = NULL, use_PP = F)
 {
   # covariates in the observed field #
@@ -39,26 +51,33 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
   res
 }
 
+#' initialize TODO Title
 
-#' Initializes a list containing the observations, the hierarchical model, and the MCMC chains.
-#' 
-#' @export
-#' 
-#' @param observed_locs a matrix of spatial coordinates where observations are done
+#' @param observed_locs a matrix of spatial coordinates where observations are done 
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
 #' @param m number of nearest neighbors to do Vecchia's approximation
 #' @param nu Matern smoothness, either 0.5 or 1.5
 #' @param anisotropic anisotropic covariance
 #' @param sphere Boolean, indicating lon-lat data
+#' @param PP TODO
+#' @param n_chains TODO
+#' @param noise_PP TODO
 #' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
-#' @param scale_X a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
-#' @param range_X a data.frame of covariates explaining the Gaussian process range through fixed linear effects
-#' @param noise_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the noise PP field. 
-#' @param scale_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the scale PP field. 
-#' @param range_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. 
-#' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix. 
-
+#' @param noise_log_scale_prior  1 times 2 matrix for the prior on the log-variance of the noise PP field. 
+#' @param scale_PP 
+#' @param scale_X  a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
+#' @param scale_log_scale_prior  1 times 2 matrix for the prior on the log-variance of the scale PP field. 
+#' @param range_PP TODO
+#' @param range_X  a data.frame of covariates explaining the Gaussian process range through fixed linear effects
+#' @param range_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix. 
+#' @param seed TODO
+#'
+#' @returns a list
+#' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 initialize = 
   function(observed_locs = NULL, #spatial locations
            observed_field = NULL, # Response variable
