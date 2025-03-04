@@ -12,7 +12,13 @@ ESS(mcmc_nngp_list, burn_in = 0.5)
 
 \item{burn_in}{between 0.01 and .99, the proportion of samples discarded for the burn-in}
 }
+\value{
+a list
+}
 \description{
 Prints the Effective Sample Size of a MCMC run.
 The proportion of the burn-in is adjustable.
+}
+\examples{
+\dontrun{TODO}
 }

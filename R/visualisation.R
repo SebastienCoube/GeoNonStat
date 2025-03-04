@@ -153,27 +153,53 @@ plot_ellipses = function(locs, log_range, shrink = .1, main = "ellipses", add  =
 
 
 
+
+#' Title get_colors TODO
+#'
+#' @param x a vector
+#'
+#' @returns a vector of colors
 #' @export
+#'
+#' @examples
+#' get_colors(c(1,2,3))
 get_colors = function(x){
   colors = rep(1, length(x))
   colors[!is.na(x)] = heat.colors(100)[round((x[!is.na(x)] - min(x[!is.na(x)]))/(max(x[!is.na(x)])-min(x[!is.na(x)]))*90)+1]
   colors
 }
 
-#' Plots a spatial variable like a pointillist painting
-#' using R base's points. Stupid, but handy. 
+
+#' Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy. 
+#' 
 #' @param locs spatial locations
 #' @param field interest variable
 #' @param main main title
 #' @param cex shrinks or inflates the points
+#' @param add logical (default to FALSE)
+#'
+#' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
-plot_pointillist_painting = function(locs, field, cex = 1, main = NULL, add = F)
+#'
+#' @examples
+#' plot_pointillist_painting(locs=c(2,3,6), field=c(1,2,3))
+plot_pointillist_painting = function(locs, field, cex = 1, main = NULL, add = FALSE)
 {
   if(!add)plot(locs, col = get_colors(field), main = main, pch = 15, cex = cex, xlab  ="", ylab = "")
   if(add)points(locs, col = get_colors(field), pch = 15, cex = cex, xlab  ="", ylab = "")
 }
 
+#' Plot the scale of colors for a given variable
+#' 
+#' @param field interest variable, a vector
+#' @param scalename vector, default to ""
+#'
+#' @returns a plot
+#'
+#' @examples
+#' pointillist_colorscale(field=c(1,2,3))
 pointillist_colorscale = function(field, scalename = ""){
+  origmar <- par("mar")
   par(mar = c(0,0,0,0))
   plot(0,0, type = "n", xaxt='n', yaxt='n', xlim = c(-.007, .005), ylim = c(0, 100), frame=FALSE, xlab ="", ylab="")
   barplot(rep(.005, 100), col = (heat.colors(101)), width = rep(1, 100),space = 0,
@@ -184,9 +210,20 @@ pointillist_colorscale = function(field, scalename = ""){
   text(y = 50,  -.004,format(signif(min(field) +(max(field) - min(field))/2  ),trim = 4, width = 4))
   text(y = 25,  -.004,format(signif(min(field) +(max(field) - min(field))*1/4),trim = 4, width = 4))
   text(y = 1,  -.004,format(signif(min(field)                               ),trim = 4, width = 4))
+  par(mar=origmar)
 }
 
+
+#' Cumulative sum of an array
+#'
+#' @param x an array of more than 2 dimensions
+#'
+#' @returns an array, the same dimension as x
 #' @export
+#'
+#' @examples
+#' myarray <- array(abs(rnorm(200)), dim = c(10, 10, 2))
+#' array_cumsum(myarray)
 array_cumsum = function(x)
 {
   res = array(0, dim = dim(x))
@@ -200,7 +237,17 @@ array_cumsum = function(x)
   res
 }
 
+
+#' Title TODO
+#'
+#' @param x  an array of 3 dimensions
+#' @param M a sparse matrix ? (TODO)
+#'
+#' @returns an array of 3 dimensions
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 array_multiply_3 = function(x, M)
 {
   res = array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
@@ -214,7 +261,16 @@ array_multiply_3 = function(x, M)
   res
 }
 
+#' Title TODO
+#'
+#' @param x an array of 3 dimensions
+#' @param M a sparse matrix ? (TODO)
+#'
+#' @returns an array of 3 dimensions
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 array_multiply_2 = function(x, M)
 {
   res = array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
@@ -228,7 +284,16 @@ array_multiply_2 = function(x, M)
   res
 }
 
+#' Title TODO
+#'
+#' @param x an array of 3 dimensions
+#' @param M a sparse matrix ? (TODO)
+#'
+#' @returns an array of 3 dimensions
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 array_multiply_1 = function(x, M)
 {
   res = array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
@@ -242,7 +307,24 @@ array_multiply_1 = function(x, M)
   res
 }
 
+
+#' Title TODO
+#'
+#' @param record_arrays a list of arrays, each of dimension 3
+#' @param iterations TODO
+#' @param burn_in a numeric, default to 0.5 TODO
+#' @param starting_proportion a numeric, default to 0.5 TODO
+#'
+#' @returns a list
 #' @export
+#'
+#' @examples
+#' myarrays <- list(
+#'   array(rnorm(100000)+10, dim = c(10, 10, 1000)),
+#'   array(rnorm(100000)+10, dim = c(10, 10, 1000)),
+#'   array(rnorm(100000)+10, dim = c(10, 10, 1000))
+#' )
+#' test <- grb_diags_field(myarrays, iterations = seq(1000)*10)
 grb_diags_field = function(record_arrays, iterations, burn_in = .5, starting_proportion = .5)
 {
   cumsums = lapply(record_arrays, array_cumsum)
@@ -278,26 +360,45 @@ grb_diags_field = function(record_arrays, iterations, burn_in = .5, starting_pro
 }
 
 
-#arrays =                   list(
-#  array(rnorm(10000000)+10, dim = c(10, 10, 100000)),
-#  array(rnorm(10000000)+10, dim = c(10, 10, 100000)),
-#  array(rnorm(10000000)+10, dim = c(10, 10, 100000))
-#)
-#test = grb_diags_field(iterations = seq(100000)*10, record_arrays = arrays, burn_in = .5, starting_proportion = .5)
-
-
-
+#' Title TODO
+#'
+#' @param PSRF TODO 
+#' @param individual_varnames TODO !! NOT USED IN CODE
+#' @param varname name of the variable
+#'
+#' @returns a plot
 #' @export
+#'
+#' @examples
+#' myarrays = list(
+#'   array(rnorm(600), dim = c(4, 2, 100)),
+#'   array(rnorm(600), dim = c(4, 2, 100)),
+#'   array(rnorm(600), dim = c(4, 2, 100))
+#' )
+#' test = grb_diags_field(iterations = seq(100), record_arrays = arrays, burn_in = .5, starting_proportion = .5)
+#' plot_PSRF(test, varname = "Example")
 plot_PSRF = function(PSRF, individual_varnames = NULL, varname = "")
 {
   if(any(is.infinite(PSRF$PSRF)) | any(is.na(PSRF$PSRF)))
   {
-    plot(0, 0, type = "n", main = paste("PSRF of", varname, "not represented because of infinite GRB diags"), xlab = "iterations", ylab = "PSRF quantiles")
+    plot(0, 0, type = "n", 
+         main = paste("PSRF of", 
+                      varname, "not represented because of infinite GRB diags"), 
+         xlab = "iterations", 
+         ylab = "PSRF quantiles")
     return()
   }
   
-  
-  plot(PSRF$iterations, PSRF$PSRF_quantiles[1,], ylim = c(1, max(PSRF$PSRF_quantiles[1,])), main = paste("Quantiles of PSRF of", varname), type = "l", xlab = "iterations", ylab = "PSRF quantiles",  log="y")
+  plot(
+    PSRF$iterations, 
+    PSRF$PSRF_quantiles[1,], 
+    ylim = c(1, max(PSRF$PSRF_quantiles[1,])), 
+    main = paste("Quantiles of PSRF of", varname), 
+    type = "l", 
+    xlab = "iterations", 
+    ylab = "PSRF quantiles",  
+    log="y"
+  )
   for(i in seq(1, dim(PSRF$PSRF)[1]))
   {
     for(j in seq(1, dim(PSRF$PSRF)[2]))
@@ -312,17 +413,24 @@ plot_PSRF = function(PSRF, individual_varnames = NULL, varname = "")
   
   abline(h = 1)
 }
-#arrays =                   list(
-#  array(rnorm(600), dim = c(4, 2, 100)),
-#  array(rnorm(600), dim = c(4, 2, 100)),
-#  array(rnorm(600), dim = c(4, 2, 100))
-#)
-#test = grb_diags_field(iterations = seq(100), record_arrays = arrays, burn_in = .5, starting_proportion = .5)
-#plot_PSRF(test, individual_varnames = seq(4), varname = "tatato")
 
-
-
+#' Title TODO
+#'
+#' @param log_scale_arrays list of arrays TODO
+#' @param iterations a vector TODO
+#' @param starting_proportion numeric value, default to 0.5 TODO
+#' @param varname name of the variable TODO
+#'
+#' @returns a plot
 #' @export
+#'
+#' @examples
+#' arrays = list(
+#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
+#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
+#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000))
+#' )
+#' plot_log_scale(arrays, iterations = seq(1000), starting_proportion = .5, varname="Example")
 plot_log_scale = function(log_scale_arrays, iterations, starting_proportion = .5, varname)
 {
   kept_iterations = which(iterations>starting_proportion*iterations[length(iterations)])
@@ -367,18 +475,31 @@ plot_log_scale = function(log_scale_arrays, iterations, starting_proportion = .5
   }
 }
 
-#arrays =                   list(
-#  array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
-#  array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
-#  array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000))
-#)
-#
-#plot_log_scale(log_scale_arrays = arrays, iterations = seq(1000), starting_proportion = .5)
 
-
-
-
+#' Title TODO
+#'
+#' @param beta_arrays list of arrays TODO
+#' @param iterations numerical vector TODO
+#' @param starting_proportion numeric value, default to 0.5 TODO
+#' @param varname name of variable
+#' @param var_names ? TODO
+#'
+#' @returns a plot
 #' @export
+#'
+#' @examples
+#' beta_arrays = list(
+#'   array(rnorm(400), dim = c(2, 2, 100)),
+#'   array(rnorm(400), dim = c(2, 2, 100)),
+#'   array(rnorm(400), dim = c(2, 2, 100))
+#' )
+#' plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "Example", var_names = c(1, 2))
+#' beta_arrays = lapply(seq(3), function(i){
+#'    res = array(data = 0, dim = c(10, 3, 100))
+#'    res[,1,] = rnorm(length(res[,1,]))
+#'    res
+#'  })
+#' plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "Example", var_names = c(1, 2))
 plot_beta = function(beta_arrays, iterations, starting_proportion = .5, varname, var_names = NULL)
 {
   #if(dim(beta_arrays[[1]])[2]==3)beta_arrays = lapply(beta_arrays, function(x)array_multiply_2(x, matrix(c(1/sqrt(2), 1/sqrt(2), 0, 1/sqrt(2), -1/sqrt(2), 0, 0, 0, 1), 3)))
@@ -403,28 +524,22 @@ plot_beta = function(beta_arrays, iterations, starting_proportion = .5, varname,
   }
 }
 
-#beta_arrays = list(
-#  array(rnorm(400), dim = c(2, 2, 100)),
-#  array(rnorm(400), dim = c(2, 2, 100)),
-#  array(rnorm(400), dim = c(2, 2, 100))
-#)
-
-# beta_arrays = lapply(seq(3), function(i){
-#   res = array(data = 0, dim = c(10, 3, 100))
-#   res[,1,] = rnorm(length(res[,1,]))
-#   res
-# })
-#GeoNonStat::plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "tatato", var_names = c(1, 2))
-
 
 #' Represents the samples and the Gelman-Rubin-Brooks diagnostics.
 #' The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply. 
 #' Note that GRB curves are given in order to avoid spurious green lights. 
 #' @param mcmc_nngp_list a mcmc_nngp_list created using mcmc_nngp_isitialize and run using mcmc_nngp_run
+#' @param plot_PSRF_fields logical(default to FALSE)
 #' @param burn_in between 0.01 and .99, the proportion of samples discarded for the burn-in
 #' @param starting_proportion between 0.01 and .99, the proportion of iterations that is used
 #' @export
-diagnostic_plots = function(mcmc_nngp_list, plot_PSRF_fields = F, burn_in = .5, starting_proportion = .5)
+#'
+#' @returns plots TODO
+#' @export
+#'
+#' @examples
+#' \dontrun{TODO}
+diagnostic_plots = function(mcmc_nngp_list, plot_PSRF_fields = FALSE, burn_in = .5, starting_proportion = .5)
 {
   records_names = names(mcmc_nngp_list$records$chain_1)
   if(!plot_PSRF_fields)records_names = records_names[-grep("field", records_names)]
@@ -456,11 +571,17 @@ diagnostic_plots = function(mcmc_nngp_list, plot_PSRF_fields = F, burn_in = .5, 
   }
 }
 
+
 #' Prints the Effective Sample Size of a MCMC run.
 #' The proportion of the burn-in is adjustable. 
 #' @param mcmc_nngp_list a mcmc_nngp_list created and run by the package
 #' @param burn_in between 0.01 and .99, the proportion of samples discarded for the burn-in
+#' 
+#' @returns a list
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 ESS = function(mcmc_nngp_list, burn_in = .5){
   iterations = mcmc_nngp_list$iterations
   iter_start_idx = match(TRUE, iterations$thinning>(iterations$checkpoints[nrow(iterations$checkpoints), 1]*burn_in))

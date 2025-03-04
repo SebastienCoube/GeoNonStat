@@ -2,7 +2,7 @@
 % Please edit documentation in R/initialize.R
 \name{initialize}
 \alias{initialize}
-\title{Initializes a list containing the observations, the hierarchical model, and the MCMC chains.}
+\title{initialize TODO Title}
 \usage{
 initialize(
   observed_locs = NULL,
@@ -41,19 +41,36 @@ initialize(
 
 \item{sphere}{Boolean, indicating lon-lat data}
 
+\item{PP}{TODO}
+
+\item{n_chains}{TODO}
+
+\item{noise_PP}{TODO}
+
 \item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
 
 \item{noise_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
+
+\item{scale_PP}{}
 
 \item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
 
 \item{scale_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
 
+\item{range_PP}{TODO}
+
 \item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
 
-\item{range_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the range PP field. 
-In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+\item{range_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+
+\item{seed}{TODO}
+}
+\value{
+a list
 }
 \description{
-Initializes a list containing the observations, the hierarchical model, and the MCMC chains.
+initialize TODO Title
+}
+\examples{
+\dontrun{TODO}
 }

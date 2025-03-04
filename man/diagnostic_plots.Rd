@@ -8,7 +8,7 @@ Note that GRB curves are given in order to avoid spurious green lights.}
 \usage{
 diagnostic_plots(
   mcmc_nngp_list,
-  plot_PSRF_fields = F,
+  plot_PSRF_fields = FALSE,
   burn_in = 0.5,
   starting_proportion = 0.5
 )
@@ -16,12 +16,20 @@ diagnostic_plots(
 \arguments{
 \item{mcmc_nngp_list}{a mcmc_nngp_list created using mcmc_nngp_isitialize and run using mcmc_nngp_run}
 
+\item{plot_PSRF_fields}{logical(default to FALSE)}
+
 \item{burn_in}{between 0.01 and .99, the proportion of samples discarded for the burn-in}
 
 \item{starting_proportion}{between 0.01 and .99, the proportion of iterations that is used}
+}
+\value{
+plots TODO
 }
 \description{
 Represents the samples and the Gelman-Rubin-Brooks diagnostics.
 The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply. 
 Note that GRB curves are given in order to avoid spurious green lights.
+}
+\examples{
+\dontrun{TODO}
 }
