@@ -7,18 +7,30 @@
 plot_ellipses(locs, log_range, shrink = 0.1, main = "ellipses", add = F)
 }
 \arguments{
-\item{locs}{ellipses centers}
+\item{locs}{ellipses centers. A matrix with 2 columns, 1 row  for each ellipse}
 
-\item{log_range}{log_range at the ellipse centers, can hae 1 or 3 columns}
+\item{log_range}{log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.}
 
-\item{shrink}{shrinks or inflates the ellipses. shrink = 1 gives the 
-Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to 
+\item{shrink}{numeric, shrinks or inflates the ellipses. shrink = 1 gives the
+Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 correlation  = .1 (rho following INLA's terminology)}
 
-\item{main}{main title}
+\item{main}{character, main title of the plot. Not used if add is TRUE.}
 
-\item{add}{ad on existing plot ? cancels main}
+\item{add}{logical, add on existing plot ? cancels main. Default to FALSE}
+}
+\value{
+a plot object
 }
 \description{
 Plots range ellipses for nonstationary covariance functions.
+}
+\examples{
+locs <- matrix(rnorm(20), ncol=2)
+log_range <- matrix(rnorm(30), ncol=3)
+plot_ellipses(locs, log_range, shrink=0.1)
+
+locs <- matrix(rnorm(20), ncol=2)
+log_range <- matrix(rnorm(10), ncol=1)
+plot_ellipses(locs, log_range, shrink=0.1)
 }

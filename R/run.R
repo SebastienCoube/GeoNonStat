@@ -14,13 +14,15 @@
 #' @returns a list
 #' @export
 run_socket = function(mcmc_nngp_list, 
-                                              burn_in = .5, seed = 1, # MCMC parameters
-                                              n_cores = NULL, thinning = .1,
-                                              plot_diags = T, 
-                                              plot_PSRF_fields = F, 
-                                              debug_outfile = NULL, 
-                                              num_threads_per_chain = 1, 
-                                              lib.loc = NULL
+                      burn_in = .5, 
+                      seed = 1, # MCMC parameters
+                      n_cores = NULL, 
+                      thinning = .1,
+                      plot_diags = T, 
+                      plot_PSRF_fields = F, 
+                      debug_outfile = NULL, 
+                      num_threads_per_chain = 1, 
+                      lib.loc = NULL
 )
 {
   t_start = Sys.time()

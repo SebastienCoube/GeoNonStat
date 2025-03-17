@@ -2,7 +2,7 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{get_PP}
 \alias{get_PP}
-\title{Title}
+\title{Title TODO}
 \usage{
 get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 }
@@ -21,8 +21,9 @@ get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 a list
 }
 \description{
-Title
+Title TODO
 }
 \examples{
-\dontrun{TODO}
+obs_locs <- matrix(rnorm(20), ncol=2)
+get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
 }

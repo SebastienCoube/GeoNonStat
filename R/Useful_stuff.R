@@ -214,7 +214,7 @@ compute_sparse_chol = function(range_beta,
 #########
 
 
-#' Title
+#' Title TODO
 #'
 #' @param observed_locs 
 #' @param matern_range 
@@ -226,7 +226,8 @@ compute_sparse_chol = function(range_beta,
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' obs_locs <- matrix(rnorm(20), ncol=2)
+#' get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
 get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 {
   locs_ = observed_locs[! duplicated(observed_locs),]

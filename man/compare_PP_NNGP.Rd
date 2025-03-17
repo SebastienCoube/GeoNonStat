@@ -2,17 +2,27 @@
 % Please edit documentation in R/visualisation.R
 \name{compare_PP_NNGP}
 \alias{compare_PP_NNGP}
-\title{Allows to see if a Predictive Process has enough knots.  
-Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from. 
+\title{Comparison between PP and NNGP
+Allows to see if a Predictive Process has enough knots.
+Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
 If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.}
 \usage{
 compare_PP_NNGP(PP)
 }
 \arguments{
-\item{PP}{a Predictive Process object}
+\item{PP}{a Predictive Process object (produced by `get_PP()`)}
+}
+\value{
+a plot
 }
 \description{
-Allows to see if a Predictive Process has enough knots.  
-Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from. 
+Comparison between PP and NNGP
+Allows to see if a Predictive Process has enough knots.
+Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
 If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.
+}
+\examples{
+obs_locs <- matrix(rnorm(20), ncol=2)
+ex_PP <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
+compare_PP_NNGP(ex_PP)
 }

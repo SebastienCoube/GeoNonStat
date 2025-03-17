@@ -3,7 +3,7 @@
 \name{diagnostic_plots}
 \alias{diagnostic_plots}
 \title{Represents the samples and the Gelman-Rubin-Brooks diagnostics.
-The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply. 
+The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply.
 Note that GRB curves are given in order to avoid spurious green lights.}
 \usage{
 diagnostic_plots(
@@ -27,7 +27,7 @@ plots TODO
 }
 \description{
 Represents the samples and the Gelman-Rubin-Brooks diagnostics.
-The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply. 
+The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply.
 Note that GRB curves are given in order to avoid spurious green lights.
 }
 \examples{
