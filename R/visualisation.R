@@ -705,7 +705,7 @@ plot_beta = function(beta_arrays,
 #' The proportion of iterations used for the plotting and the proportion of the burn-in are adjustable. They multiply.
 #' Note that GRB curves are given in order to avoid spurious green lights.
 #' @param mcmc_nngp_list a mcmc_nngp_list created using mcmc_nngp_isitialize and run using mcmc_nngp_run
-#' @param plot_PSRF_fields logical(default to FALSE)
+#' @param plot_PSRF_fields logical(default to FALSE) TODO
 #' @param burn_in between 0.01 and .99, the proportion of samples discarded for the burn-in
 #' @param starting_proportion between 0.01 and .99, the proportion of iterations that is used
 #' @export
