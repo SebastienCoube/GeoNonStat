@@ -405,7 +405,7 @@ initialize =
                  list("locs" = locs, "observed_field" = observed_field, "observed_locs" = observed_locs, "covariates" = covariates), 
                "hierarchical_model" = hierarchical_model, 
                "vecchia_approx" = vecchia_approx, 
-               "state" = state, "records" = records, 
+               "states" = state, "records" = records, 
                "t_begin" = t_begin, "seed" = seed, "iterations" = iterations)
     class(res) = "MCMC_NNGP"
     message(paste("Setup done,", as.numeric(Sys.time()- t_begin, units = "secs"), "s elapsed" ))
