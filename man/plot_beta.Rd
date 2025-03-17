@@ -24,7 +24,7 @@ plot_beta(
 \item{var_names}{? TODO}
 }
 \value{
-a plot
+several plots
 }
 \description{
 Title TODO

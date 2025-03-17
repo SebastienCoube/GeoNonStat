@@ -25,6 +25,7 @@ chol_precision =
     anisotropic = T # anisotropy
   )[[1]]
 # putting coefficients in precision Cholesly
+
 chol_precision = Matrix::sparseMatrix(
   x = chol_precision[!is.na(NNarray_aniso)], 
   i = row(NNarray_aniso)[!is.na(NNarray_aniso)], 
