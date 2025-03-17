@@ -44,8 +44,7 @@ run_socket = function(mcmc_nngp_list,
   # parallelization
   if (!is.numeric(n_cores))
     stop("n_cores must be a positive round number")
-  if ((floor(n_cores) != n_cores) |
-      n_cores < 1)
+  if ((floor(n_cores) != n_cores) | n_cores < 1)
     stop("n_cores must be a positive round number")
   # iterations and thinning
   if (!is.numeric(thinning))
@@ -86,7 +85,7 @@ run_socket = function(mcmc_nngp_list,
       X = seq(length(mcmc_nngp_list$states)),
       fun
       = function(i)
-        GeoNonStat::mcmc_nngp_update_Gaussian(
+        mcmc_nngp_update_Gaussian(
           data = mcmc_nngp_list_$data,
           hierarchical_model = mcmc_nngp_list_$hierarchical_model,
           vecchia_approx = mcmc_nngp_list_$vecchia_approx,
@@ -185,17 +184,17 @@ mcmc_nngp_run_nonstationary_nonpar = function(mcmc_nngp_list,
       X = seq(length(mcmc_nngp_list$states)),
       FUN =
         function(i)
-          GeoNonStat::mcmc_nngp_update_Gaussian(
-            data = mcmc_nngp_list_$data,
-            hierarchical_model = mcmc_nngp_list_$hierarchical_model,
-            vecchia_approx = mcmc_nngp_list_$vecchia_approx,
-            state = mcmc_nngp_list$states[[i]],
+          mcmc_nngp_update_Gaussian(
+            mcmc_nngp_list,
+            # hierarchical_model = mcmc_nngp_list_$hierarchical_model,
+            # vecchia_approx = mcmc_nngp_list_$vecchia_approx,
+            # state = mcmc_nngp_list$states[[i]],
             n_iterations_update = 100,
-            thinning = thinning,
-            iter_start = iter_start,
-            seed = seed + iter_start + i,
-            num_threads = num_threads_per_chain,
-            lib.loc = lib.loc
+            # thinning = thinning, # TODO : not used !
+            # iter_start = iter_start,
+            # seed = seed + iter_start + i,
+            num_threads = num_threads_per_chain #,
+            # lib.loc = lib.loc
           )
     )
   gc()

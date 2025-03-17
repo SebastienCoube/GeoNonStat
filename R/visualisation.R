@@ -14,14 +14,14 @@
 compare_PP_NNGP = function(PP) {
   seed_vector =  rnorm(PP$n_PP + nrow(PP$unique_reordered_locs))
   par(mfrow = c(1, 2))
-  GeoNonStat::plot_pointillist_painting(
+  plot_pointillist_painting(
     PP$unique_reordered_locs[PP$idx, ],
-    GeoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]),
+    X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]),
     cex = .3,
     main = "NNGP into PP"
   )
   points(PP$knots, pch = 3, cex = .3)
-  GeoNonStat::plot_pointillist_painting(
+  plot_pointillist_painting(
     rbind(PP$knots, PP$unique_reordered_locs),
     as.vector(Matrix::solve(PP$sparse_chol, seed_vector)),
     cex = .3,
@@ -61,7 +61,7 @@ plot_ellipses = function(locs,
     #to match parametrization in compute sparse chol
     log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
                                          sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
-    matrices = lapply(split(log_range, row(log_range)), GeoNonStat::expmat)
+    matrices = lapply(split(log_range, row(log_range)), expmat)
   }
   if (ncol(log_range) == 1) {
     matrices = lapply(log_range, function(x)
@@ -107,7 +107,7 @@ plot_ellipses = function(locs,
 #     i = row(NNarray)[!is.na(NNarray)],
 #     j = NNarray[!is.na(NNarray)],
 #     x =
-#       GeoNonStat::compute_sparse_chol(
+#       compute_sparse_chol(
 #         range_beta = range_beta,
 #         NNarray = NNarray, locs = locs,
 #         anisotropic = T,
@@ -126,7 +126,7 @@ plot_ellipses = function(locs,
 #     i = row(NNarray)[!is.na(NNarray)],
 #     j = NNarray[!is.na(NNarray)],
 #     x =
-#       GeoNonStat::compute_sparse_chol(
+#       compute_sparse_chol(
 #         range_beta = range_beta[,1,drop=F],
 #         NNarray = NNarray, locs = locs,
 #         anisotropic = F,
@@ -143,7 +143,7 @@ plot_ellipses = function(locs,
 #
 # log_range =
 #   (
-#     GeoNonStat::X_PP_mult_right(
+#     X_PP_mult_right(
 #       X = matrix(1, nrow(locs)),
 #       PP = 0, use_PP = F,
 #       locs_idx = NULL,
@@ -160,11 +160,11 @@ plot_ellipses = function(locs,
 # cor_aniso = Matrix::tcrossprod(Matrix::solve(sparse_chol_aniso))[,1]
 # w_iso = as.vector(Matrix::solve(sparse_chol_iso, z))
 # cor_iso = Matrix::tcrossprod(Matrix::solve(sparse_chol_iso))[,1]
-# GeoNonStat::plot_pointillist_painting(locs, log_range[,1])
-# GeoNonStat::plot_pointillist_painting(locs, w_aniso)
-# GeoNonStat::plot_pointillist_painting(locs, w_iso)
-# GeoNonStat::plot_pointillist_painting(locs, cor_aniso)
-# GeoNonStat::plot_pointillist_painting(locs, cor_iso)
+# plot_pointillist_painting(locs, log_range[,1])
+# plot_pointillist_painting(locs, w_aniso)
+# plot_pointillist_painting(locs, w_iso)
+# plot_pointillist_painting(locs, cor_aniso)
+# plot_pointillist_painting(locs, cor_iso)
 #
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
@@ -598,13 +598,13 @@ plot_log_scale = function(log_scale_arrays,
     #marginal_logvars = lapply(log_scale_arrays, function(x)
     #  apply(x[,,kept_iterations], 2, function(x) diag(
     #    rbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1)) %*%
-    #      GeoNonStat::symmat(x) %*%
+    #      symmat(x) %*%
     #      cbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1))
     #    ))
     #)
     marginal_logvars = lapply(log_scale_arrays, function(x)
       apply(x[, , kept_iterations], 2, function(x)
-        diag(GeoNonStat::symmat(x))))
+        diag(symmat(x))))
     plot(
       iterations[kept_iterations],
       iterations[kept_iterations],

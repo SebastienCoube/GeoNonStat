@@ -7,16 +7,18 @@
 array_multiply_3(x, M)
 }
 \arguments{
-\item{x}{an array of 3 dimensions}
+\item{x}{a 3 dimensional array}
 
-\item{M}{a sparse matrix ? (TODO)}
+\item{M}{a Matrix (TODO)}
 }
 \value{
-an array of 3 dimensions
+an 3 dimensional array, of dimension `(dim(x)[1], dim(x)[2], M@Dim[2])`
 }
 \description{
 Title TODO
 }
 \examples{
-\dontrun{TODO}
+x <- array(1:12, dim = c(2, 2, 3))
+M <- Matrix::Matrix(matrix(1:9, nrow = 3, ncol = 3), sparse = TRUE)
+result <- array_multiply_3(x, M)
 }

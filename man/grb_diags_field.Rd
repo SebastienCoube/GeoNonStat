@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualisation.R
 \name{grb_diags_field}
 \alias{grb_diags_field}
-\title{Title TODO}
+\title{Title TODO ? Retourne les valeurs nécessaires pour les diagnostics ?}
 \usage{
 grb_diags_field(
   record_arrays,
@@ -24,7 +24,7 @@ grb_diags_field(
 a list
 }
 \description{
-Title TODO
+Title TODO ? Retourne les valeurs nécessaires pour les diagnostics ?
 }
 \examples{
 myarrays <- list(

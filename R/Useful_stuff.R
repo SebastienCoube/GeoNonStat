@@ -18,7 +18,9 @@ derivative_sandwiches = function(
 )
 {
   M = matrix(0, length(left_vector), length(derivatives))
-  for( i in seq(length(derivatives)))M[,i] = GeoNonStat::derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
+  for( i in seq(length(derivatives))) {
+    M[,i] = derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
+  }
   # changing basis between det/aniso and canonical
   if(ncol(M)==3) M = M %*% t(matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
@@ -40,7 +42,11 @@ derivative_sandwiches = function(
 log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 {
   M = matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
-  for( i in seq(length(sparse_chol_and_grad[[2]])))M[,i] = GeoNonStat::log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], compressed_sparse_chol = sparse_chol_and_grad[[1]], NNarray = NNarray)
+  for( i in seq(length(sparse_chol_and_grad[[2]]))) {
+    M[,i] = log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], 
+                                       compressed_sparse_chol = sparse_chol_and_grad[[1]], 
+                                       NNarray = NNarray)
+  }
   if(ncol(M)==3) M = M %*% matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
       1/sqrt(2), -1/sqrt(2), 0,
@@ -144,7 +150,7 @@ compute_sparse_chol = function(range_beta,
   if(ncol(range_beta)==1)range_beta = range_beta# / sqrt(2)
   
   log_range = as.matrix(
-    GeoNonStat::X_PP_mult_right(
+    X_PP_mult_right(
       X = range_X, 
       PP = PP, 
       Y = range_beta,  
@@ -211,7 +217,6 @@ compute_sparse_chol = function(range_beta,
 ###     )
 ###   ) 
 ### points(locs[,1], M[,1], pch=3)
-#########
 
 
 #' Title TODO
@@ -267,7 +272,7 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   if(n_PP>0) 
   {
-    scale_mat = GeoNonStat::expmat(-log_scale)
+    scale_mat = expmat(-log_scale)
     return(
       (
         # PP coefficients follow N(0, scale_mat)
@@ -338,7 +343,7 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
   )
   if(n_PP>0) 
   {
-    scale_mat = GeoNonStat::expmat(-log_scale)
+    scale_mat = expmat(-log_scale)
     res = rbind(res, 
                 -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
     )
@@ -491,12 +496,12 @@ derivative_chol_expmat = function(coords)
   dimres = 1
   if(length(coords)==6)dimres = 3
   res = array(data = 0, dim = c(dimres, dimres, length(coords)))
-  chol_expmat = chol(GeoNonStat::expmat(coords))
+  chol_expmat = chol(expmat(coords))
   for(i in seq(length(coords)))
   {
     coords_ = coords
     coords_[i] = coords_[i] + 0.00001
-    res[,,i] = 100000 * (chol(GeoNonStat::expmat(coords_)) - chol_expmat)
+    res[,,i] = 100000 * (chol(expmat(coords_)) - chol_expmat)
   }
   res
 }
@@ -514,7 +519,7 @@ derivative_chol_expmat = function(coords)
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
-  white_field = field %*% solve(chol(GeoNonStat::expmat(coords)))
+  white_field = field %*% solve(chol(expmat(coords)))
   res = array(0, dim = c(dim(field), length(coords)))
   for(i in seq(length(coords)))
   {

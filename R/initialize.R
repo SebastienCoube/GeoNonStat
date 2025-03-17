@@ -81,7 +81,7 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' @examples
 #' set.seed(100)
 #' locs = cbind(runif(10000), runif(10000))
-#' PP = GeoNonStat::get_PP(
+#' PP = get_PP(
 #'   observed_locs = locs[seq(10000),], # spatial sites
 #'   matern_range = .1,
 #'   n_PP = 50, # number of knots
@@ -114,7 +114,7 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' aniso_latent_field = as.vector(Matrix::solve(chol_precision, seed_vector)) 
 #' aniso_observed_field = aniso_latent_field + .8*rnorm(10000)
 #' #plot_pointillist_painting(locs, aniso_latent_field)
-#' MCMC_NNGP = GeoNonStat::initialize(
+#' MCMC_NNGP = initialize(
 #'   observed_locs = locs[seq(10000),], observed_field = aniso_observed_field, 
 #'   nu = 1.5, n_chains = 5,
 #'   range_PP = T, PP = PP, # use PP for range
@@ -245,7 +245,7 @@ initialize =
     covariates$X = process_covariates(X, observed_locs, vecchia_approx)  
     # explicit PP basis
     explicit_PP_basis = NULL
-    if(!is.null(PP))explicit_PP_basis = GeoNonStat::X_PP_mult_right(PP = PP, use_PP = T, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
+    if(!is.null(PP))explicit_PP_basis = X_PP_mult_right(PP = PP, use_PP = T, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X, observed_locs, vecchia_approx, explicit_PP_basis, range_PP)
     if(!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))stop("The covariates range_X cannot vary within one spatial location of observed_locs")
@@ -397,7 +397,7 @@ initialize =
     # NNGP sparse chol #############################################
     
     state$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = 
-      GeoNonStat::compute_sparse_chol(anisotropic = anisotropic,
+      compute_sparse_chol(anisotropic = anisotropic,
                                   sphere = sphere, 
                                   range_X = covariates$range_X$X_locs, 
                                   range_beta = state$params$range_beta, 

@@ -2,21 +2,23 @@
 % Please edit documentation in R/visualisation.R
 \name{array_multiply_1}
 \alias{array_multiply_1}
-\title{Title TODO}
+\title{Multiply a matrix M with each column of a 3 dimensional array.}
 \usage{
 array_multiply_1(x, M)
 }
 \arguments{
-\item{x}{an array of 3 dimensions}
+\item{x}{an 3 dimensional array}
 
-\item{M}{a sparse matrix ? (TODO)}
+\item{M}{a matrix}
 }
 \value{
-an array of 3 dimensions
+a 3 dimensional array of dimensions `(dim(M)[1], dim(x)[2], dim(x)[3]).`
 }
 \description{
-Title TODO
+Multiply a matrix M with each column of a 3 dimensional array.
 }
 \examples{
-\dontrun{TODO}
+M <- matrix(1:6, nrow = 3, ncol = 2)
+x <- array(1:24, dim = c(2, 3, 4))
+result <- array_multiply_1(x, M)
 }

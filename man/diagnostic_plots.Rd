@@ -16,7 +16,7 @@ diagnostic_plots(
 \arguments{
 \item{mcmc_nngp_list}{a mcmc_nngp_list created using mcmc_nngp_isitialize and run using mcmc_nngp_run}
 
-\item{plot_PSRF_fields}{logical(default to FALSE)}
+\item{plot_PSRF_fields}{logical(default to FALSE) TODO}
 
 \item{burn_in}{between 0.01 and .99, the proportion of samples discarded for the burn-in}
 

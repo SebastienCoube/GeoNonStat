@@ -12,11 +12,13 @@ array_multiply_2(x, M)
 \item{M}{a sparse matrix ? (TODO)}
 }
 \value{
-an array of 3 dimensions
+a 3 dimansional array of dimensions `(dim(x)[1], dim(M)[2], dim(x)[3])`
 }
 \description{
 Title TODO
 }
 \examples{
-\dontrun{TODO}
+x <- array(1:24, dim = c(3, 2, 4))
+M <- matrix(1:10, nrow = 2, ncol = 5)
+result <- array_multiply_2(x, M)
 }
