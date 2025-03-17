@@ -327,14 +327,16 @@ array_cumsum = function(x)
 
 #' Title TODO
 #'
-#' @param x  an array of 3 dimensions
-#' @param M a sparse matrix ? (TODO)
+#' @param x  a 3 dimensional array
+#' @param M a Matrix (TODO)
 #'
-#' @returns an array of 3 dimensions
+#' @returns an 3 dimensional array, of dimension `(dim(x)[1], dim(x)[2], M@Dim[2])`
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' x <- array(1:12, dim = c(2, 2, 3))
+#' M <- Matrix::Matrix(matrix(1:9, nrow = 3, ncol = 3), sparse = TRUE)
+#' result <- array_multiply_3(x, M)
 array_multiply_3 = function(x, M)
 {
   res = array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
@@ -353,11 +355,13 @@ array_multiply_3 = function(x, M)
 #' @param x an array of 3 dimensions
 #' @param M a sparse matrix ? (TODO)
 #'
-#' @returns an array of 3 dimensions
+#' @returns a 3 dimansional array of dimensions `(dim(x)[1], dim(M)[2], dim(x)[3])`
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' x <- array(1:24, dim = c(3, 2, 4))
+#' M <- matrix(1:10, nrow = 2, ncol = 5)
+#' result <- array_multiply_2(x, M)
 array_multiply_2 = function(x, M)
 {
   res = array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
@@ -371,16 +375,18 @@ array_multiply_2 = function(x, M)
   res
 }
 
-#' Title TODO
+#' Multiply a matrix M with each column of a 3 dimensional array.
 #'
-#' @param x an array of 3 dimensions
-#' @param M a sparse matrix ? (TODO)
+#' @param x an 3 dimensional array
+#' @param M a matrix
 #'
-#' @returns an array of 3 dimensions
+#' @returns a 3 dimensional array of dimensions `(dim(M)[1], dim(x)[2], dim(x)[3]).`
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' M <- matrix(1:6, nrow = 3, ncol = 2)
+#' x <- array(1:24, dim = c(2, 3, 4))
+#' result <- array_multiply_1(x, M)
 array_multiply_1 = function(x, M)
 {
   res = array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
@@ -395,7 +401,7 @@ array_multiply_1 = function(x, M)
 }
 
 
-#' Title TODO
+#' Title TODO ? Retourne les valeurs nécessaires pour les diagnostics ?
 #'
 #' @param record_arrays a list of arrays, each of dimension 3
 #' @param iterations TODO
@@ -637,7 +643,7 @@ plot_log_scale = function(log_scale_arrays,
 #' @param varname name of variable
 #' @param var_names ? TODO
 #'
-#' @returns a plot
+#' @returns several plots
 #' @export
 #'
 #' @examples
