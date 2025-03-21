@@ -29,7 +29,15 @@ predict_latent_field(
 \item{num_threads_per_chain}{Number of OMP threads for the predictions}
 
 \item{lib.loc}{Location of libraries if installed in manually specified folder}
+
+\item{parallel}{logical. Use parallel processing ? Default to TRUE}
+}
+\value{
+a list
 }
 \description{
 Predicts the latent field at unobserved locations
+}
+\examples{
+\dontrun{TODO}
 }

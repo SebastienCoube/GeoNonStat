@@ -14,18 +14,22 @@ log_score_Gaussian(
 )
 }
 \arguments{
+\item{observed_field}{TODO ??}
+
 \item{latent_field_samples}{Samples of the latent field, either given by predict_latent_field or estimate_parameters}
 
 \item{log_noise_samples}{Samples of the log noise variance, given by predict_noise}
 
 \item{fixed_effects_samples}{Samples of the fixed effects, given by predict_fixed_effects}
-
-\item{mcmc_nngp_list}{A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run}
-
-\item{burn_in}{MCMC burn-in}
+}
+\value{
+a list with per observation score and total score.
 }
 \description{
 Log-density of observations with respect to the model.
 Gives a training score when the observations are used in the model.
 Gives a validation score when the observations are not used in the model.
+}
+\examples{
+\dontrun{TODO}
 }

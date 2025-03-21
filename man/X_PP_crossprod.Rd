@@ -2,27 +2,33 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{X_PP_crossprod}
 \alias{X_PP_crossprod}
-\title{Title}
+\title{Title TODO}
 \usage{
 X_PP_crossprod(X, PP = NULL, use_PP = F, Y, locs_idx = NULL)
 }
 \arguments{
-\item{X}{}
+\item{X}{TODO}
 
-\item{PP}{}
+\item{PP}{TODO}
 
-\item{use_PP}{}
+\item{use_PP}{logical, use PP ? Default to FALSE}
 
-\item{Y}{}
+\item{Y}{TODO}
 
-\item{locs_idx}{}
+\item{locs_idx}{TODO}
 }
 \value{
 a matrix
 }
 \description{
-Title
+Title TODO
 }
 \examples{
-\dontrun{TODO}
+set.seed(123)
+locs = cbind(runif(100), runif(100))
+PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = 50, m = 15)
+X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+Y = matrix(rnorm(nrow(X)*3), ncol=3)
+res <- X_PP_crossprod(X = X, PP = PP, use_PP = T, Y = Y)
+res <- X_PP_crossprod(X = X, Y = Y)
 }

@@ -2,27 +2,33 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{beta_prior_log_dens}
 \alias{beta_prior_log_dens}
-\title{Title}
+\title{Compute prior logarithmic density of a matrix
+TODO A reformater.}
 \usage{
 beta_prior_log_dens(beta, n_PP, beta_mean, beta_precision, log_scale)
 }
 \arguments{
-\item{beta}{}
+\item{beta}{TODO}
 
-\item{n_PP}{}
+\item{n_PP}{TODO}
 
-\item{beta_mean}{}
+\item{beta_mean}{TODO}
 
-\item{beta_precision}{}
+\item{beta_precision}{TODO}
 
-\item{log_scale}{}
+\item{log_scale}{TODO}
 }
 \value{
 a numeric value
 }
 \description{
-Title
+Compute prior logarithmic density of a matrix
+TODO A reformater.
 }
 \examples{
-\dontrun{TODO}
+beta = matrix(rnorm(10))
+bm = matrix(rnorm(5), 5, 1)
+bp = diag(exp(rnorm(5)), 5, 5)
+ls = rnorm(1)
+beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 }

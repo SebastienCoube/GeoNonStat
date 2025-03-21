@@ -2,15 +2,21 @@
 % Please edit documentation in R/predict.R
 \name{DIC}
 \alias{DIC}
-\title{Deviance Information Criterion}
+\title{Title}
 \usage{
 DIC(mcmc_nngp_list, burn_in = 0.5)
 }
 \arguments{
 \item{mcmc_nngp_list}{A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run}
 
-\item{burn_in}{MCMC burn-in}
+\item{burn_in}{Numeric, between 0 and 1. MCMC burn in. Default to 0.5}
+}
+\value{
+a nummeric value (? TODO)
 }
 \description{
-Deviance Information Criterion
+Title
+}
+\examples{
+\dontrun{TODO}
 }

@@ -2,24 +2,24 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{derivative_sandwiches}
 \alias{derivative_sandwiches}
-\title{Title}
+\title{Title TODO}
 \usage{
 derivative_sandwiches(derivatives, left_vector, right_vector, NNarray)
 }
 \arguments{
-\item{derivatives}{}
+\item{derivatives}{TODO}
 
-\item{left_vector}{}
+\item{left_vector}{TODO}
 
-\item{right_vector}{}
+\item{right_vector}{TOSO}
 
-\item{NNarray}{}
+\item{NNarray}{TODO}
 }
 \value{
 a matrix
 }
 \description{
-Title
+Title TODO
 }
 \examples{
 \dontrun{TODO}

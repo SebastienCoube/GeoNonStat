@@ -2,27 +2,33 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{X_PP_mult_right}
 \alias{X_PP_mult_right}
-\title{Title}
+\title{Title TODO}
 \usage{
-X_PP_mult_right(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
+X_PP_mult_right(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL, Y)
 }
 \arguments{
-\item{X}{}
+\item{X}{TODO}
 
-\item{PP}{}
+\item{PP}{TODO}
 
-\item{use_PP}{}
+\item{use_PP}{Logical, use PP ? Default to FALSE}
 
-\item{locs_idx}{}
+\item{locs_idx}{TODO}
 
-\item{Y}{}
+\item{Y}{TODO}
 }
 \value{
 a matrix
 }
 \description{
-Title
+Title TODO
 }
 \examples{
-\dontrun{TODO}
+locs = cbind(runif(100), runif(100))
+par(mfrow = c(1,2))
+# comparing several PP approximations and testing PP mult
+range= .1
+n_PP = 50
+PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
+res <- X_PP_mult_right(PP = PP, use_PP = TRUE, Y = rnorm(n_PP))
 }

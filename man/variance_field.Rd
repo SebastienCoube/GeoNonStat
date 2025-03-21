@@ -2,27 +2,32 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{variance_field}
 \alias{variance_field}
-\title{Title}
+\title{Title TODO}
 \usage{
 variance_field(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 }
 \arguments{
-\item{beta}{}
+\item{beta}{TODO}
 
-\item{PP}{}
+\item{PP}{predictive process obtained through get_PP}
 
-\item{use_PP}{}
+\item{use_PP}{should the PP be used ? Default to FALSE}
 
-\item{X}{}
+\item{X}{TODO}
 
-\item{locs_idx}{}
+\item{locs_idx}{match between PP basis function and locs.}
 }
 \value{
-a vector
+a numeric vector
 }
 \description{
-Title
+Title TODO
 }
 \examples{
-\dontrun{TODO}
+locs = cbind(runif(100), runif(100))
+n_PP = 50
+PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+res <- variance_field(beta = rnorm(n_PP), PP = PP, use_PP = TRUE, X = X)
+res <- variance_field(beta = rnorm(n_PP), X = X)
 }

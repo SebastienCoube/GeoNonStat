@@ -81,7 +81,7 @@ expmat = function(coords, eps = .0001)
 #'
 #' @param coords a numeric vector, of length 1, 3 or 6
 #'
-#' @returns
+#' @returns a matrix
 #' @export
 #'
 #' @examples

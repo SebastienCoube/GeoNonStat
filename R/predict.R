@@ -45,7 +45,7 @@ get_array_summary = function(samples)
 #' @param lib.loc Location of libraries if installed in manually specified folder
 #' @param parallel logical. Use parallel processing ? Default to TRUE
 #'
-#' @returns
+#' @returns a list
 #' @export
 #'
 #' @examples

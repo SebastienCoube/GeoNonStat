@@ -4,17 +4,19 @@
 \alias{derivative_chol_expmat}
 \title{Title}
 \usage{
-derivative_chol_expmat(coords)
+derivative_chol_expmat(coords, eps = 1e-05)
 }
 \arguments{
-\item{coords}{}
+\item{coords}{a numeric vector of length 1 or 6}
+
+\item{eps}{a numeric value, default to 0.00001}
 }
 \value{
-an array
+an 3 dimensional array
 }
 \description{
 Title
 }
 \examples{
-\dontrun{TODO}
+derivative_chol_expmat(c(1,2,3, 3,2,4))
 }

@@ -34,9 +34,15 @@ compute_sparse_chol(
 
 \item{compute_derivative}{logical, indicates if derivatives of Vecchia factors are to be computed}
 
-\item{nu}{Matern smoothness}
+\item{nu}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
 
-\item{locs_idx}{match between PP basis function and locs}
+\item{anisotropic}{Logical, default to FALSE. TODO}
+
+\item{sphere}{Logical, default to FALSE. TODO}
+
+\item{num_threads}{numerical, number of treads to use. Default to 1.}
+
+\item{locs_idx}{match between PP basis function and locs.}
 }
 \value{
 a list
@@ -45,5 +51,16 @@ a list
 Computes a Vecchia sparse Cholesky factor
 }
 \examples{
-\dontrun{TODO}
+locs = cbind(seq(100)/10, 0)
+NNarray = GpGp::find_ordered_nn(locs, 10)
+res <- compute_sparse_chol(
+          range_beta = matrix(.5/sqrt(2),1,1), 
+          NNarray = NNarray, 
+          locs = locs,
+          use_PP = F, 
+          num_threads = 1, 
+          anisotropic = F,
+          range_X = matrix(1, nrow(locs), 1), 
+          nu = 1.5
+        )
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{beta_prior_log_dens_derivative}
 \alias{beta_prior_log_dens_derivative}
-\title{Title}
+\title{Compute gradient of logarithmic density prior}
 \usage{
 beta_prior_log_dens_derivative(
   beta,
@@ -13,22 +13,26 @@ beta_prior_log_dens_derivative(
 )
 }
 \arguments{
-\item{beta}{}
+\item{beta}{a numerical matrix of spatial coordinates.}
 
-\item{n_PP}{}
+\item{n_PP}{number of prediction points.}
 
-\item{beta_mean}{}
+\item{beta_mean}{TODO}
 
-\item{beta_precision}{}
+\item{beta_precision}{TODO}
 
-\item{log_scale}{}
+\item{log_scale}{TODO}
 }
 \value{
 an array
 }
 \description{
-Title
+Compute gradient of logarithmic density prior
 }
 \examples{
-\dontrun{TODO}
+beta = matrix(rnorm(10))
+bm = matrix(rnorm(5), 5, 1)
+bp = diag(exp(rnorm(5)), 5, 5)
+ls = rnorm(1)
+beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 }

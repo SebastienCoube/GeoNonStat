@@ -20,6 +20,12 @@ predict_fixed_effects(
 
 \item{lib.loc}{Location of libraries if installed in manually specified folder}
 }
+\value{
+a list with predicted samples and summaries
+}
 \description{
 Predicts the fixed effects, whatever the locations
+}
+\examples{
+\dontrun{TODO}
 }

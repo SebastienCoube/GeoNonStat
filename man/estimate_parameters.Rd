@@ -20,6 +20,12 @@ estimate_parameters(
 
 \item{lib.loc}{Location of libraries if installed in manually specified folder}
 }
+\value{
+a list with summaries and samples
+}
 \description{
 Estimates the parameters from mcmc_nngp_list
+}
+\examples{
+\dontrun{TODO}
 }

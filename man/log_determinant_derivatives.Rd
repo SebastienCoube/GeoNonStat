@@ -2,20 +2,20 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{log_determinant_derivatives}
 \alias{log_determinant_derivatives}
-\title{Title}
+\title{Title TODO}
 \usage{
 log_determinant_derivatives(sparse_chol_and_grad, NNarray)
 }
 \arguments{
-\item{sparse_chol_and_grad}{}
+\item{sparse_chol_and_grad}{TODO}
 
-\item{NNarray}{}
+\item{NNarray}{TODO}
 }
 \value{
 a matrix
 }
 \description{
-Title
+Title TODO
 }
 \examples{
 \dontrun{TODO}

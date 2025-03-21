@@ -2,19 +2,21 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{expmat}
 \alias{expmat}
-\title{Title}
+\title{Exponential of a square matrix, adding a small numeric value on the diagonal}
 \usage{
-expmat(coords)
+expmat(coords, eps = 1e-04)
 }
 \arguments{
-\item{coords}{}
+\item{coords}{a numeric vector}
+
+\item{eps}{a numeric value, default to .0001}
 }
 \value{
-a matrix
+a square matrix
 }
 \description{
-Title
+Exponential of a square matrix, adding a small numeric value on the diagonal
 }
 \examples{
-\dontrun{TODO}
+expmat(c(1,2,3,4,5,6))
 }

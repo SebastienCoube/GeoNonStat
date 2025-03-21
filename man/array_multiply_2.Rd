@@ -18,7 +18,7 @@ a 3 dimansional array of dimensions `(dim(x)[1], dim(M)[2], dim(x)[3])`
 Title TODO
 }
 \examples{
-x <- array(1:24, dim = c(3, 2, 4))
-M <- matrix(1:10, nrow = 2, ncol = 5)
+x <- array(1:24, dim = c(2, 3, 4))
+M <- matrix(1:6, nrow = 2, ncol = 3)
 result <- array_multiply_2(x, M)
 }

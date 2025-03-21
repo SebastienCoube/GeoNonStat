@@ -20,6 +20,12 @@ predict_noise(
 
 \item{predicted_locs}{A set of predicted locations, who can be the same as the locations in mcmc_nngp_list}
 }
+\value{
+a list with predicted samples, summaries and predicted locations TODO QUESTION : useless to output predicted_locs?
+}
 \description{
 Predicts the noise variance at unobserved locations
+}
+\examples{
+\dontrun{TODO}
 }

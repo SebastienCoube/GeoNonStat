@@ -25,6 +25,6 @@ myarrays = list(
   array(rnorm(600), dim = c(4, 2, 100)),
   array(rnorm(600), dim = c(4, 2, 100))
 )
-test = grb_diags_field(iterations = seq(100), record_arrays = arrays, burn_in = .5, starting_proportion = .5)
+test = grb_diags_field(record_arrays = myarrays, iterations = seq(100), burn_in = .5, starting_proportion = .5)
 plot_PSRF(test, varname = "Example")
 }

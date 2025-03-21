@@ -2,26 +2,26 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{get_PP}
 \alias{get_PP}
-\title{Title TODO}
+\title{Get prediction points (PP) for useful for vecchia}
 \usage{
 get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 }
 \arguments{
-\item{observed_locs}{}
+\item{observed_locs}{a matrix of observed locations. TODO}
 
-\item{matern_range}{}
+\item{matern_range}{a numeric vector. TODO}
 
-\item{lonlat}{}
+\item{lonlat}{logical, default to FALSE. TODO}
 
-\item{n_PP}{}
+\item{n_PP}{a numerical value. Number of prediction points, default to 20.}
 
-\item{m}{}
+\item{m}{a numerical value. TODO}
 }
 \value{
 a list
 }
 \description{
-Title TODO
+Get prediction points (PP) for useful for vecchia
 }
 \examples{
 obs_locs <- matrix(rnorm(20), ncol=2)
