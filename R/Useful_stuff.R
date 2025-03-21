@@ -72,7 +72,7 @@ log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 expmat = function(coords, eps = .0001)
 {
   res = expm::expm(symmat(coords))
-  if(addnum != 0) diag(res) <- diag(res) + eps
+  if(eps != 0) diag(res) <- diag(res) + eps
   return(res)
 }
 
