@@ -1,9 +1,9 @@
-#' Title
+#' Title TODO
 #'
-#' @param derivatives 
-#' @param left_vector 
-#' @param right_vector 
-#' @param NNarray 
+#' @param derivatives TODO
+#' @param left_vector TODO
+#' @param right_vector TOSO
+#' @param NNarray TODO
 #'
 #' @returns a matrix
 #' @export
@@ -17,22 +17,24 @@ derivative_sandwiches = function(
     NNarray
 )
 {
-  M = matrix(0, length(left_vector), length(derivatives))
+  M <- matrix(0, length(left_vector), length(derivatives))
   for( i in seq(length(derivatives))) {
-    M[,i] = derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
+    M[,i] <- derivative_sandwich(derivatives[[i]], left_vector, right_vector, NNarray)
   }
   # changing basis between det/aniso and canonical
-  if(ncol(M)==3) M = M %*% t(matrix(
+  if(ncol(M)==3) {
+    M <- M %*% t(matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
       1/sqrt(2), -1/sqrt(2), 0,
       0,       0,        1), 3))*sqrt(2)
-  M
+  }
+  return(M)
 }
 
-#' Title
+#' Title TODO
 #'
-#' @param sparse_chol_and_grad 
-#' @param NNarray 
+#' @param sparse_chol_and_grad TODO
+#' @param NNarray TODO
 #'
 #' @returns a matrix
 #' @export
@@ -41,70 +43,97 @@ derivative_sandwiches = function(
 #' \dontrun{TODO}
 log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 {
-  M = matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
+  M <- matrix(0, nrow(NNarray), length(sparse_chol_and_grad[[2]]))
   for( i in seq(length(sparse_chol_and_grad[[2]]))) {
-    M[,i] = log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], 
+    M[,i] <- log_determinant_derivative(derivative = sparse_chol_and_grad[[2]][[i]], 
                                        compressed_sparse_chol = sparse_chol_and_grad[[1]], 
                                        NNarray = NNarray)
   }
-  if(ncol(M)==3) M = M %*% matrix(
+  if(ncol(M)==3) {
+    M <- M %*% matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
       1/sqrt(2), -1/sqrt(2), 0,
       0,       0,        1), 3)*sqrt(2)
-  M
+  }
+  return(M)
 }
 
 
-#' Title
+#' Title expmat TODO
 #'
-#' @param coords 
+#' @param coords a numeric vector, of length 1, 3 or 6
 #'
 #' @returns a matrix
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' expmat(c(1,2,3,4,5,6))
 expmat = function(coords)
 {
   res = expm::expm(symmat(coords)) 
-  res + diag(.0001,nrow(res), ncol(res))
+  return(res + diag(.0001,nrow(res), ncol(res)))
 }
 
+
+#' Create symetric matrix from coordinates
+#'
+#' @param coords a numeric vector, of length 1, 3 or 6
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' symmat(c(1,2,3,4,5,6))
 symmat = function(coords)
 {
-  if(length(coords)==1)logm = matrix(coords)
-  if(length(coords)==3)
-  {
-    logm = matrix(coords [c(1, 3, 3, 2)] , 2)
+  # Trouver la taille n de la matrice symétrique n x n
+  # Longueur du vecteur doit être égale à n + n*(n-1)/2 = n*(n+1)/2
+  n <- (sqrt(8 * length(coords) + 1) - 1) / 2
+  if (n != floor(n)) {
+    stop("length of coords incompatible with a symetric matrix.")
   }
-  if(length(coords)==6)
-  {
-    logm = matrix(0, 3, 3)
-    diag(logm) = coords[seq(3)]
-    logm[lower.tri(logm)] = coords[-seq(3)]
-    logm[upper.tri(logm)] = logm[lower.tri(logm)]
-  }
-  logm
+  mat <- matrix(0, n, n)
+  
+  diag_indices <- which(row(mat) == col(mat))
+  lower_indices <- which(lower.tri(mat))
+
+  # 1st fill diagonal elements
+  mat[diag_indices] <- coords[1:n]
+  # Then lower and upper mat
+  mat[lower_indices] <- coords[(n + 1):length(coords)]
+  mat[upper.tri(mat)] <- t(mat)[upper.tri(mat)]
+  
+  return(mat)
 }
 
-
-#' Title
+#' Title TODO
 #'
-#' @param beta 
-#' @param PP 
-#' @param use_PP 
-#' @param X 
-#' @param locs_idx 
+#' @param beta TODO
+#' @param PP predictive process obtained through get_PP
+#' @param use_PP should the PP be used ? Default to FALSE
+#' @param X TODO
+#' @param locs_idx match between PP basis function and locs.
 #'
 #' @returns a vector
 #' @export
 #'
 #' @examples
 #' \dontrun{TODO}
-variance_field = function(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
+variance_field = function(beta,
+                          PP = NULL,
+                          use_PP = F,
+                          X,
+                          locs_idx = NULL)
 {
-  as.vector(exp(X_PP_mult_right(X = X, PP = PP, use_PP = use_PP, locs_idx = locs_idx, Y = beta)))
+  as.vector(exp(
+    X_PP_mult_right(
+      X = X,
+      PP = PP,
+      use_PP = use_PP,
+      locs_idx = locs_idx,
+      Y = beta
+    )
+  ))
 }
 
 
@@ -120,8 +149,11 @@ variance_field = function(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 #' @param PP predictive process obtained through get_PP
 #' @param use_PP should the PP be used ?
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
-#' @param nu Matern smoothness
-#' @param locs_idx match between PP basis function and locs
+#' @param nu Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
+#' @param anisotropic Logical, default to FALSE. TODO
+#' @param sphere Logical, default to FALSE. TODO
+#' @param num_threads numerical, number of treads to use. Default to 1.
+#' @param locs_idx match between PP basis function and locs.
 #'
 #' @returns a list
 #' @export
@@ -143,11 +175,15 @@ compute_sparse_chol = function(range_beta,
 {
   if (!nu%in%c(.5, 1.5)) stop("nu must be equal to 0.5 or 1.5")
   # converting to canonical basis
-  if(ncol(range_beta)==3)range_beta = range_beta %*% matrix(
+  if(ncol(range_beta)==3) {
+    range_beta = range_beta %*% matrix(
     c(1/sqrt(2), 1/sqrt(2),  0, 
       1/sqrt(2), -1/sqrt(2), 0,
       0,       0,        1), 3)*sqrt(2)
-  if(ncol(range_beta)==1)range_beta = range_beta# / sqrt(2)
+  }
+  if(ncol(range_beta)==1) {
+    range_beta = range_beta# / sqrt(2)
+  }
   
   log_range = as.matrix(
     X_PP_mult_right(
@@ -158,16 +194,23 @@ compute_sparse_chol = function(range_beta,
       locs_idx = locs_idx))
   #GeoNonStat::plot_ellipses(locs, log_range)
   # exp locally isotropic
-  if((!anisotropic)&(nu==0.5))res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
-  
+  covfun_name <- NULL
+  if((!anisotropic) & (nu==0.5)) covfun_name <- "nonstationary_exponential_isotropic" 
   # matern locally isotropic
-  if((!anisotropic)&(nu==1.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_isotropic"  , sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
-  
+  if((!anisotropic) & (nu==1.5)) covfun_name <- "nonstationary_matern_isotropic"  
   # exp locally anisotropic
-  if(( anisotropic)&(nu==0.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_exponential_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
-  
+  if(( anisotropic) & (nu==0.5)) covfun_name <- "nonstationary_exponential_anisotropic"
   # matern locally anisotropic
-  if(( anisotropic)&(nu==1.5)) res = nonstat_vecchia_Linv(num_threads=num_threads,log_range = log_range*2, covfun_name = "nonstationary_matern_anisotropic", sphere = sphere, locs = locs, NNarray = NNarray, compute_derivative = compute_derivative)
+  if(( anisotropic) & (nu==1.5)) covfun_name <- "nonstationary_matern_anisotropic"
+  
+  res <- nonstat_vecchia_Linv(num_threads=num_threads,
+                              log_range = log_range*2, 
+                              covfun_name = covfun_name  , 
+                              sphere = sphere, 
+                              locs = locs, 
+                              NNarray = NNarray, 
+                              compute_derivative = compute_derivative)
+  
   res[[2]] = lapply(res[[2]], function(x)x*2)
   return(res)
 }
@@ -255,13 +298,13 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 }
 
 
-#' Title
+#' Title TODO
 #'
-#' @param beta 
-#' @param n_PP 
-#' @param beta_mean 
-#' @param beta_precision 
-#' @param log_scale 
+#' @param beta TODO
+#' @param n_PP TODO
+#' @param beta_mean TODO
+#' @param beta_precision TODO
+#' @param log_scale TODO
 #'
 #' @returns a numeric value
 #' @export
@@ -319,13 +362,13 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #}
 
 
-#' Title
+#' Title TODO
 #'
-#' @param beta 
-#' @param n_PP 
-#' @param beta_mean 
-#' @param beta_precision 
-#' @param log_scale 
+#' @param beta TODO
+#' @param n_PP TODO
+#' @param beta_mean TODO
+#' @param beta_precision TODO
+#' @param log_scale TODO
 #'
 #' @returns an array
 #' @export
