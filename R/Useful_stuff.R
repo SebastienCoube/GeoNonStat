@@ -59,19 +59,20 @@ log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 }
 
 
-#' Title expmat TODO
+#' Exponential of a square matrix, adding a small numeric value on the diagonal
 #'
-#' @param coords a numeric vector, of length 1, 3 or 6
+#' @param coords a numeric vector
 #'
-#' @returns a matrix
+#' @returns a square matrix
 #' @export
 #'
 #' @examples
 #' expmat(c(1,2,3,4,5,6))
-expmat = function(coords)
+expmat = function(coords, addnum = .0001)
 {
-  res = expm::expm(symmat(coords)) 
-  return(res + diag(.0001,nrow(res), ncol(res)))
+  res = expm::expm(symmat(coords))
+  if(addnum != 0) diag(res) <- diag(res) + addnum
+  return(res)
 }
 
 
@@ -159,7 +160,18 @@ variance_field = function(beta,
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' locs = cbind(seq(100)/10, 0)
+#' NNarray = GpGp::find_ordered_nn(locs, 10)
+#' res <- compute_sparse_chol(
+#'           range_beta = matrix(.5/sqrt(2),1,1), 
+#'           NNarray = NNarray, 
+#'           locs = locs,
+#'           use_PP = F, 
+#'           num_threads = 1, 
+#'           anisotropic = F,
+#'           range_X = matrix(1, nrow(locs), 1), 
+#'           nu = 1.5
+#'         )
 compute_sparse_chol = function(range_beta, 
                                NNarray, 
                                locs, 
@@ -262,13 +274,13 @@ compute_sparse_chol = function(range_beta,
 ### points(locs[,1], M[,1], pch=3)
 
 
-#' Title TODO
+#' Get prediction points (PP) for useful for vecchia 
 #'
-#' @param observed_locs 
-#' @param matern_range 
-#' @param lonlat 
-#' @param n_PP 
-#' @param m 
+#' @param observed_locs a matrix of observed locations. TODO
+#' @param matern_range a numeric vector. TODO
+#' @param lonlat logical, default to FALSE. TODO
+#' @param n_PP a numerical value. Number of prediction points, default to 20.
+#' @param m  a numerical value. TODO
 #'
 #' @returns a list
 #' @export
@@ -278,27 +290,46 @@ compute_sparse_chol = function(range_beta,
 #' get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
 get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 {
+  # Suppress duplicates in observed points.
   locs_ = observed_locs[! duplicated(observed_locs),]
+  # Random sample. 
   locs_ = locs_[order(runif(nrow(locs_))),]
-  locs_[seq(min(nrow(locs_), 100000)),] = locs_[GpGp::order_maxmin(locs_[seq(min(nrow(locs_), 100000)),]),]
+  # Reordonate first 100000 points to help spatial coverage of vecchia. 
+  locs_[seq(min(nrow(locs_), 100000)),] <- locs_[GpGp::order_maxmin(locs_[seq(min(nrow(locs_), 100000)),]),]
+  # Corresponding locations
   idx = match(split(observed_locs, row(observed_locs)), split(locs_, row(locs_)))
   
-  
-  knots = kmeans(locs_[seq(min(nrow(locs_), 100000)),], n_PP, algorithm = "Hartigan-Wong", iter.max = 50)$centers
+  # Extract n_PP ordered prediction points with kmeans. 
+  knots = kmeans(locs_[seq(min(nrow(locs_), 100000)),], 
+                 n_PP, algorithm = "Hartigan-Wong", iter.max = 50)$centers
   knots = knots[GpGp::order_maxmin(knots),]
   
+  # Get the m closed neighbors (ordered)
   NNarray = GpGp::find_ordered_nn(rbind(knots, locs_), m, lonlat = lonlat)
+  # Lower triangular matrix of inversed cholesky factor 
   sparse_chol = Matrix::sparseMatrix(
     i = row(NNarray)[!is.na(NNarray)], 
     j = NNarray[!is.na(NNarray)], 
     x = GpGp::vecchia_Linv(covparms = c(1, matern_range, .0001), covfun_name = "matern15_isotropic", locs = rbind(knots, locs_), NNarray = NNarray)[!is.na(NNarray)], 
     triangular = T
   )
-  return(list("knots" = knots, "unique_reordered_locs" = locs_, "idx" = idx, "lonlat" = lonlat, "m" = m, "matern_range" = matern_range, "sparse_chol" = sparse_chol, "NNarray" = NNarray, "n_PP" = n_PP))
+  return(
+    list(
+      "knots" = knots,
+      "unique_reordered_locs" = locs_,
+      "idx" = idx,
+      "lonlat" = lonlat,
+      "m" = m,
+      "matern_range" = matern_range,
+      "sparse_chol" = sparse_chol,
+      "NNarray" = NNarray,
+      "n_PP" = n_PP
+    )
+  )
 }
 
-
-#' Title TODO
+#' Compute prior logarithmic density of a matrix
+#' TODO A reformater.
 #'
 #' @param beta TODO
 #' @param n_PP TODO
@@ -310,7 +341,11 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' beta = matrix(rnorm(10))
+#' bm = matrix(rnorm(5), 5, 1)
+#' bp = diag(exp(rnorm(5)), 5, 5)
+#' ls = rnorm(1)
+#' beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   if(n_PP>0) 
@@ -362,10 +397,10 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #}
 
 
-#' Title TODO
+#' Compute gradient of logarithmic density prior
 #'
-#' @param beta TODO
-#' @param n_PP TODO
+#' @param beta a numerical matrix of spatial coordinates. 
+#' @param n_PP number of prediction points.
 #' @param beta_mean TODO
 #' @param beta_precision TODO
 #' @param log_scale TODO
@@ -374,7 +409,11 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' beta = matrix(rnorm(10))
+#' bm = matrix(rnorm(5), 5, 1)
+#' bp = diag(exp(rnorm(5)), 5, 5)
+#' ls = rnorm(1)
+#' beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 {
   
@@ -384,8 +423,7 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
     ), 
     nrow(beta)-n_PP
   )
-  if(n_PP>0) 
-  {
+  if(n_PP>0) {
     scale_mat = expmat(-log_scale)
     res = rbind(res, 
                 -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
@@ -414,29 +452,35 @@ beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision,
 #PP$idx : match between the non redundant locations of PP and the redundant observed locations
 #locs_idx : match between the redundant observed locations and those of X
 
-#' Title
+#' Title TODO
 #'
-#' @param X 
-#' @param PP 
-#' @param use_PP 
-#' @param locs_idx 
-#' @param Y 
+#' @param X TODO
+#' @param PP TODO
+#' @param use_PP Logical, use PP ? Default to FALSE
+#' @param locs_idx TODO
+#' @param Y TODO
 #'
 #' @returns a matrix
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
-X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
+#' locs = cbind(runif(100), runif(100))
+#' par(mfrow = c(1,2))
+#' # comparing several PP approximations and testing PP mult
+#' range= .1
+#' n_PP = 50
+#' PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
+#' res <- X_PP_mult_right(PP = PP, use_PP = TRUE, Y = rnorm(n_PP))
+X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL, Y)
 {
-  if(is.null(locs_idx))if(!is.null(X))locs_idx = seq(nrow(X))
-  if(is.null(locs_idx))if(!is.null(PP))locs_idx = seq(length(PP$idx))
+  if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
+  if(is.null(locs_idx)) if(!is.null(X)) locs_idx = seq(nrow(X))
+  if(is.null(locs_idx)) if(!is.null(PP)) locs_idx = seq(length(PP$idx))
   Y = as.matrix(Y)
   res = matrix(0, length(locs_idx), ncol(Y))
-  if(!is.null(X))res = res + X  %*% Y[seq(ncol(X)),]
-  if(use_PP)
-  {
-    if(!is.null(X))Y =  Y[-seq(ncol(X)),, drop = F] 
+  if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
+  if(use_PP) {
+    if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
     V[seq(nrow(Y)),] = Y
     res = res + as.matrix(Matrix::solve(PP$sparse_chol, V, triangular = T))[-seq(nrow(PP$knots)),,drop =F][PP$idx[locs_idx],,drop =F]
@@ -446,19 +490,25 @@ X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = F, locs_idx = NULL, Y)
 }
 
 
-#' Title
+#' Title TODO
 #'
-#' @param X 
-#' @param PP 
-#' @param use_PP 
-#' @param Y 
-#' @param locs_idx 
+#' @param X TODO
+#' @param PP TODO
+#' @param use_PP logical, use PP ? Default to FALSE
+#' @param Y TODO
+#' @param locs_idx TODO 
 #'
 #' @returns a matrix
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' set.seed(123)
+#' locs = cbind(runif(100), runif(100))
+#' PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = 50, m = 15)
+#' X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+#' Y = matrix(rnorm(nrow(X)*3), ncol=3)
+#' res <- X_PP_crossprod(X = X, PP = PP, use_PP = T, Y = Y)
+#' res <- X_PP_crossprod(X = X, Y = Y)
 X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 {
   if(is.null(locs_idx))locs_idx = seq(nrow(X))
