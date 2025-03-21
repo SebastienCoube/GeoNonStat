@@ -12,6 +12,7 @@
 #' ex_PP <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
 #' compare_PP_NNGP(ex_PP)
 compare_PP_NNGP = function(PP) {
+  op <- par("mfrow")
   seed_vector =  rnorm(PP$n_PP + nrow(PP$unique_reordered_locs))
   par(mfrow = c(1, 2))
   plot_pointillist_painting(
@@ -27,7 +28,7 @@ compare_PP_NNGP = function(PP) {
     cex = .3,
     main = "NNGP"
   )
-  par(mfrow = c(1, 1))
+  par(mfrow = op)
 }
 
 
@@ -359,11 +360,12 @@ array_multiply_3 = function(x, M)
 #' @export
 #'
 #' @examples
-#' x <- array(1:24, dim = c(3, 2, 4))
-#' M <- matrix(1:10, nrow = 2, ncol = 5)
+#' x <- array(1:24, dim = c(2, 3, 4))
+#' M <- matrix(1:6, nrow = 2, ncol = 3)
 #' result <- array_multiply_2(x, M)
 array_multiply_2 = function(x, M)
 {
+  # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon
   res = array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
   for (i in seq(dim(res)[1]))
   {
@@ -492,7 +494,7 @@ grb_diags_field = function(record_arrays,
 #'   array(rnorm(600), dim = c(4, 2, 100)),
 #'   array(rnorm(600), dim = c(4, 2, 100))
 #' )
-#' test = grb_diags_field(iterations = seq(100), record_arrays = arrays, burn_in = .5, starting_proportion = .5)
+#' test = grb_diags_field(record_arrays = myarrays, iterations = seq(100), burn_in = .5, starting_proportion = .5)
 #' plot_PSRF(test, varname = "Example")
 plot_PSRF = function(PSRF,
                      individual_varnames = NULL,
@@ -690,19 +692,19 @@ plot_beta = function(beta_arrays,
       xlab = "iteration",
       ylim = c(lower_window, upper_window)
     )
-    for (j in seq(dim(beta_arrays[[1]])[1]))
-    {
+    for (j in seq(dim(beta_arrays[[1]])[1])) {
       for (x in beta_arrays)
         lines(iterations[kept_iterations], x[j, i, kept_iterations], col = c(1, 3, 4, 6, 7, 8)[(j) %%
                                                                                                  6])
     }
-    if (!is.null(var_names))
+    if (!is.null(var_names)) {
       legend(
         bg = "white",
         "topleft",
         legend = var_names,
         fill = c(1, 3, 4, 6, 7, 8)[(seq(dim(beta_arrays[[1]])[1])) %% 6]
       )
+    }
   }
 }
 
