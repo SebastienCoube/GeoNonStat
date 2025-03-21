@@ -1,20 +1,39 @@
+#' Summarize an array TODO
+#'
+#' @param samples an array
+#'
+#' @returns an array
 #' @export
+#'
+#' @examples
+#' myarray <- array(abs(rnorm(8)), dim = c(2, 2, 2))
+#' get_array_summary(myarray)
 get_array_summary = function(samples)
 {
-  if(any(is.na(samples)))message("there are NAs in the samples")
-  if(is.null(samples))return(NULL)
+  if(any(is.na(samples))) message("there are NAs in the samples")
+  if(is.null(samples)) return(NULL)
   if(dim(samples)[2]>1 |  length(dim(samples))==2){
-      out = apply(X = samples, MARGIN = c(1, 2), FUN = function(x)c(mean(x, na.rm = T), quantile(x, c(0.025, 0.5, 0.975), na.rm = T), sd(x, na.rm = T)))
+      out = apply(X = samples, 
+                  MARGIN = c(1, 2), 
+                  FUN = function(x)c(mean(x, na.rm = T), 
+                                     quantile(x, c(0.025, 0.5, 0.975), na.rm = T), 
+                                     sd(x, na.rm = T)))
   }
   if(dim(samples)[2]==1){
     cl = parallel::makeCluster(parallel::detectCores()-1)
-    out = parallel::parApply(cl = cl, X = samples, MARGIN = c(1), FUN = function(x)c(mean(x, na.rm = T), quantile(x, c(0.025, 0.5, 0.975), na.rm = T), sd(x, na.rm = T)))
+    out = parallel::parApply(cl = cl, 
+                             X = samples, 
+                             MARGIN = c(1), 
+                             FUN = function(x)c(mean(x, na.rm = T), 
+                                                quantile(x, c(0.025, 0.5, 0.975), na.rm = T), 
+                                                sd(x, na.rm = T)))
     parallel::stopCluster(cl)
     out = array(out, dim = c(nrow(out), ncol(out), 1))
   }
   dimnames(out)[[1]] = c("mean", "q0.025", "median", "q0.975", "sd")
   out
 }
+
 
 #' Predicts the latent field at unobserved locations
 #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
@@ -23,8 +42,14 @@ get_array_summary = function(samples)
 #' @param X_scale_pred Covariates for the marginal variance observed at predicted_locs
 #' @param burn_in MCMC burn-in
 #' @param num_threads_per_chain Number of OMP threads for the predictions
-#' @param  lib.loc Location of libraries if installed in manually specified folder
+#' @param lib.loc Location of libraries if installed in manually specified folder
+#' @param parallel logical. Use parallel processing ? Default to TRUE
+#'
+#' @returns
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = NULL, X_scale_pred = NULL, burn_in = .5, num_threads_per_chain = 1, lib.loc = NULL, parallel = T)
 {
   # Sanity checks
@@ -197,12 +222,18 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
   return(list("predicted_locs_unique" = predicted_locs_unique,"predicted_samples" = predicted_samples_, "summaries" = summaries))
 }
 
+
 #' Predicts the fixed effects, whatever the locations
 #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 #' @param X_pred New covariates
 #' @param burn_in MCMC burn-in
 #' @param  lib.loc Location of libraries if installed in manually specified folder
+#'
+#' @returns a list with predicted samples and summaries
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 predict_fixed_effects = function(mcmc_nngp_list, X_pred = NULL, burn_in = .5,  lib.loc = NULL)
 {
   n_cores = min(parallel::detectCores()-1, length(mcmc_nngp_list$records))
@@ -250,23 +281,54 @@ predict_fixed_effects = function(mcmc_nngp_list, X_pred = NULL, burn_in = .5,  l
   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries))
 }
 
+
 #' Predicts the noise variance at unobserved locations
 #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 #' @param predicted_locs A set of predicted locations, who can be the same as the locations in mcmc_nngp_list
 #' @param X_noise_pred Covariates for the noise observed at predicted_locs
 #' @param burn_in MCMC burn-in
+#'
+#' @returns a list with predicted samples, summaries and predicted locations TODO QUESTION : useless to output predicted_locs? 
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 predict_noise = function(mcmc_nngp_list, X_noise_pred = NULL, burn_in = .5, predicted_locs = NULL)
 {
-  if(mcmc_nngp_list$hierarchical_model$noise_PP & is.null(predicted_locs))stop("no predicted locs were provided, yet there is a GP prior for the noise")
-  if(!is.null(X_noise_pred)){if(identical(X_noise_pred, "No covariates were provided")){X_noise_pred = NULL}}
-  if(!is.null(X_noise_pred))if(nrow(predicted_locs)!= nrow(X_noise_pred))stop("X_noise_pred and predicted_locs should have the same Number of rows")
-  if(is.null(X_noise_pred)&(!identical(mcmc_nngp_list$data$covariates$noise_X$arg,"No covariates were provided"))) stop("No covariates were provided for prediction, while covariates were provided for fit")
-  if(!is.null(X_noise_pred)&(identical(mcmc_nngp_list$data$covariates$noise_X$arg, "No covariates were provided"))) stop("Covariates were provided for prediction, while no covariates were provided for fit")
-  if(!is.null(X_noise_pred)) if(ncol(X_noise_pred)!=ncol(mcmc_nngp_list$data$covariates$noise_X$arg))stop("The Number of provided covariates does not match")
+  if (mcmc_nngp_list$hierarchical_model$noise_PP &
+      is.null(predicted_locs))
+    stop("no predicted locs were provided, yet there is a GP prior for the noise")
+  if (!is.null(X_noise_pred)) {
+    if (identical(X_noise_pred, "No covariates were provided")) {
+      X_noise_pred = NULL
+    }
+  }
+  if (!is.null(X_noise_pred))
+    if(nrow(predicted_locs) != nrow(X_noise_pred))
+      stop("X_noise_pred and predicted_locs should have the same Number of rows")
+  if (is.null(X_noise_pred) &
+      (
+        !identical(
+          mcmc_nngp_list$data$covariates$noise_X$arg,
+          "No covariates were provided"
+        )
+      ))
+    stop("No covariates were provided for prediction, while covariates were provided for fit")
+  if (!is.null(X_noise_pred) &
+      (
+        identical(
+          mcmc_nngp_list$data$covariates$noise_X$arg,
+          "No covariates were provided"
+        )
+      ))
+    stop("Covariates were provided for prediction, while no covariates were provided for fit")
+  if (!is.null(X_noise_pred))
+    if (ncol(X_noise_pred) != ncol(mcmc_nngp_list$data$covariates$noise_X$arg))
+      stop("The Number of provided covariates does not match")
+  
   # adding intercept to prediction regressors
-  if(!is.null(X_noise_pred))X_noise_pred = cbind(rep(1, nrow(X_noise_pred)), X_noise_pred)
-  if(is.null(X_noise_pred))X_noise_pred = matrix(1, nrow(predicted_locs), 1)
+  if(!is.null(X_noise_pred)) X_noise_pred = cbind(rep(1, nrow(X_noise_pred)), X_noise_pred)
+  if(is.null(X_noise_pred)) X_noise_pred = matrix(1, nrow(predicted_locs), 1)
   colnames(X_noise_pred) = colnames(mcmc_nngp_list$data$covariates$noise_X$X)
 
   # GP if needed
@@ -333,17 +395,23 @@ predict_noise = function(mcmc_nngp_list, X_noise_pred = NULL, burn_in = .5, pred
       })
   summaries = list()
   predicted_samples_ = list()
-  predicted_samples_ = Reduce(f = function(x, y)abind::abind(x, y, along = 3), x = predicted_samples)
+  predicted_samples_ = Reduce(f = function(x, y) abind::abind(x, y, along = 3), x = predicted_samples)
   summaries = get_array_summary(predicted_samples_)
   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries, "predicted_locs" = predicted_locs))
 }
+
 
 #' Estimates the parameters from mcmc_nngp_list
 #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 #' @param burn_in MCMC burn-in
 #' @param get_samples return Samples of the latent field 
 #' @param lib.loc Location of libraries if installed in manually specified folder
+#'
+#' @returns a list with summaries and samples
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 estimate_parameters = function(mcmc_nngp_list, burn_in = .5, get_samples = F, lib.loc = NULL)
 {
   # burn in
@@ -369,10 +437,17 @@ estimate_parameters = function(mcmc_nngp_list, burn_in = .5, get_samples = F, li
   list("summaries" = summaries, "samples" = samples)
 }
 
-#' Deviance Information Criterion
+
+#' Title
+#'
 #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
-#' @param burn_in MCMC burn-in
+#' @param burn_in Numeric, between 0 and 1. MCMC burn in. Default to 0.5
+#'
+#' @returns a nummeric value (? TODO)
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 DIC = function(mcmc_nngp_list, burn_in = .5)
 {
   kept_iterations = seq(length(mcmc_nngp_list$iterations$thinning))[which(mcmc_nngp_list$iterations$thinning > mcmc_nngp_list$iterations$checkpoints[nrow(mcmc_nngp_list$iterations$checkpoints), 1]* burn_in)]
@@ -405,17 +480,25 @@ DIC = function(mcmc_nngp_list, burn_in = .5)
   mean_beta  = mean_beta  / (length(kept_iterations)*length(mcmc_nngp_list$states))
   ll_ = sum(dnorm(mcmc_nngp_list$data$observed_field - mean_field[mcmc_nngp_list$vecchia_approx$locs_match]-mcmc_nngp_list$data$covariates$X$X%*%mean_beta, 0, sqrt(mean_noise), log = T))
   -2 * (2 * mean(ll) - ll_)
+  return(ll_)
 }
+
 
 #' Log-density of observations with respect to the model.
 #' Gives a training score when the observations are used in the model.
 #' Gives a validation score when the observations are not used in the model.
-#' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
-#' @param burn_in MCMC burn-in
+# @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
+# @param burn_in MCMC burn-in
+#' @param observed_field TODO ??
 #' @param latent_field_samples Samples of the latent field, either given by predict_latent_field or estimate_parameters
 #' @param log_noise_samples Samples of the log noise variance, given by predict_noise
 #' @param fixed_effects_samples Samples of the fixed effects, given by predict_fixed_effects
+#'
+#' @returns a list with per observation score and total score.
 #' @export
+#'
+#' @examples
+#' \dontrun{TODO}
 log_score_Gaussian = function(observed_field, latent_field_samples, log_noise_samples, fixed_effects_samples)
 {
   nsamples =  dim(latent_field_samples)[3]
