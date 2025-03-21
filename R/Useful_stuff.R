@@ -62,16 +62,17 @@ log_determinant_derivatives = function(sparse_chol_and_grad, NNarray)
 #' Exponential of a square matrix, adding a small numeric value on the diagonal
 #'
 #' @param coords a numeric vector
+#' @param eps a numeric value, default to .0001
 #'
 #' @returns a square matrix
 #' @export
 #'
 #' @examples
 #' expmat(c(1,2,3,4,5,6))
-expmat = function(coords, addnum = .0001)
+expmat = function(coords, eps = .0001)
 {
   res = expm::expm(symmat(coords))
-  if(addnum != 0) diag(res) <- diag(res) + addnum
+  if(addnum != 0) diag(res) <- diag(res) + eps
   return(res)
 }
 
@@ -115,11 +116,16 @@ symmat = function(coords)
 #' @param X TODO
 #' @param locs_idx match between PP basis function and locs.
 #'
-#' @returns a vector
+#' @returns a numeric vector
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' locs = cbind(runif(100), runif(100))
+#' n_PP = 50
+#' PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+#' X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+#' res <- variance_field(beta = rnorm(n_PP), PP = PP, use_PP = TRUE, X = X)
+#' res <- variance_field(beta = rnorm(n_PP), X = X)
 variance_field = function(beta,
                           PP = NULL,
                           use_PP = F,
@@ -577,23 +583,24 @@ X_PP_crossprod = function(X, PP = NULL, use_PP = F,  Y, locs_idx = NULL)
 
 #' Title
 #'
-#' @param coords 
+#' @param coords a numeric vector of length 1 or 6
+#' @param eps a numeric value, default to 0.00001
 #'
-#' @returns an array
+#' @returns an 3 dimensional array
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
-derivative_chol_expmat = function(coords)
+#' derivative_chol_expmat(c(1,2,3, 3,2,4))
+derivative_chol_expmat = function(coords, eps=0.00001)
 {
   dimres = 1
-  if(length(coords)==6)dimres = 3
+  if(length(coords)==6) dimres = 3
   res = array(data = 0, dim = c(dimres, dimres, length(coords)))
   chol_expmat = chol(expmat(coords))
   for(i in seq(length(coords)))
   {
     coords_ = coords
-    coords_[i] = coords_[i] + 0.00001
+    coords_[i] = coords_[i] + eps
     res[,,i] = 100000 * (chol(expmat(coords_)) - chol_expmat)
   }
   res

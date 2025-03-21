@@ -25,3 +25,6 @@ RoxygenNote: 7.3.2
 SystemRequirements: C++11
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
