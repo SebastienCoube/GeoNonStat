@@ -144,23 +144,30 @@ variance_field = function(beta,
 }
 
 
-# NB : computes sparse chol wrt determinant/anisotropy basis of range, 
-# but gives derivatives wrt canonical
-
-#' Computes a Vecchia sparse Cholesky factor
+#' Computes a Vecchia sparse Cholesky factor and its derivatives
 #' 
-#' @param range_beta parameter for the range. If a stationary covariance is used, the parameter is passed to the exponential. Else, 
+#' The function uses range_beta one one hand, and range_X and PP on the other hand, to compute nonstationary range parameters. 
+#' The Vecchia approximation of the sparse Cholesky factor of the precision is then computed. 
+#' Derivatives can be computed too. 
+#' Warning (for developing users) : the sparse cholesky factor is computed using the radius/anisotropy parametrization for range_beta.  
+#' However, for efficiency of implementation, the derivatives are given along the canonical parametrization.  
+#' Re-parametrization is done automatically in GeoNonStat::derivative_sandwiches
+#' 
+#' @param range_beta parameter for the range.
+#' If the covariance is anisotropic, it must have 3 columns. It the covariance is isotropic, it must have 1 column. 
+#' The first coefficients are multiplied with range_X 
+#' The last coefficients are multiplied with the spatial basis functions of PP
 #' @param NNarray Vecchia parents array provided by GpGp::find_ordered_nn
 #' @param locs matrix of spatial sites
 #' @param range_X covariates for range
 #' @param PP predictive process obtained through get_PP
-#' @param use_PP should the PP be used ?
+#' @param use_PP should the PP be used ? (redundant when using the function "by hand", but handy when automating)
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
 #' @param nu Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
 #' @param anisotropic Logical, default to FALSE. TODO
 #' @param sphere Logical, default to FALSE. TODO
 #' @param num_threads numerical, number of treads to use. Default to 1.
-#' @param locs_idx match between PP basis function and locs.
+#' @param locs_idx match between the duplicated locations used to buile the PP basis function and the non-redundant locs used to compute the sparse chol
 #'
 #' @returns a list
 #' @export
@@ -178,6 +185,90 @@ variance_field = function(beta,
 #'           range_X = matrix(1, nrow(locs), 1), 
 #'           nu = 1.5
 #'         )
+#' \dontrun{
+#' 
+#' set.seed(1)
+#' observed_locs =  cbind(runif(10000), runif(10000))  # creating spatial locations 
+#' observed_locs = rbind(observed_locs, observed_locs) 
+#' observed_locs = observed_locs[order(runif(nrow(observed_locs))),]# duplicating observed_locs
+#' unique_locs = observed_locs[!duplicated(observed_locs),]# getting unique spatial locations
+#' hctam_scol_1 =  
+#'   match(
+#'     split(unique_locs, row(unique_locs)), 
+#'     split(observed_locs, row(observed_locs)), 
+#'   )  # match between unique observed_locs and duplicated observed_locs (reverse of locs_match)
+#' NNarray = GpGp::find_ordered_nn(unique_locs, 10)  # Vecchia Nearest Neighbor Array
+#' range_X = cbind(1, unique_locs) # Covariates for the range
+#' PP = GeoNonStat::get_PP(observed_locs = observed_locs, matern_range = .1, lonlat = F, n_PP = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
+#' 
+#' 
+#' # sampling white noise to reuse 
+#' v = rnorm(nrow(unique_locs))
+#' 
+#' # anisotropic case 
+#' range_beta = matrix(rnorm(23*3), 23, 3) # regression coefficients for the range
+#' # Note : range_beta has 3 col because aniso
+#' range_beta[1,1] = -4
+#' sparse_chol = compute_sparse_chol(
+#'   range_beta =  range_beta, NNarray = NNarray, 
+#'   locs = unique_locs, range_X = range_X, 
+#'   PP = PP, use_PP = T, compute_derivative = T, 
+#'   nu = 1.5, anisotropic = T,# Note : anisotropic is T
+#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#' # plotting a sample generated from sparse chol
+#' GeoNonStat::plot_pointillist_painting(
+#'   unique_locs, 
+#'   Matrix::solve(Matrix::sparseMatrix(
+#'     i = row(NNarray)[!is.na(NNarray)], 
+#'     j = (NNarray[!is.na(NNarray)]), 
+#'     x = (sparse_chol[[1]][!is.na(NNarray)]), 
+#'     triangular = T
+#'   ), v)
+#' )
+#' 
+#' 
+#' # Showing that anisotropic case comprises isotropic case 
+#' range_beta[,-1] = 0
+#' sparse_chol = compute_sparse_chol(
+#'   range_beta =  range_beta, NNarray = NNarray, 
+#'   locs = unique_locs, range_X = range_X, 
+#'   PP = PP, use_PP = T, compute_derivative = T, 
+#'   nu = 1.5, anisotropic = T,# Note : anisotropic is T
+#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#' # plotting a sample generated from sparse chol. It is locally isotropic, and the same as the next !
+#' GeoNonStat::plot_pointillist_painting(
+#'   unique_locs, 
+#'   Matrix::solve(Matrix::sparseMatrix(
+#'     i = row(NNarray)[!is.na(NNarray)], 
+#'     j = (NNarray[!is.na(NNarray)]), 
+#'     x = (sparse_chol[[1]][!is.na(NNarray)]), 
+#'     triangular = T
+#'   ), v)
+#' )
+#' 
+#' 
+#' # isotropic case 
+#' range_beta = range_beta[,1,drop = F] # regression coefficients for the range
+#' # Note : range_beta has 1 col because iso
+#' range_beta[1,1] = -4
+#' sparse_chol = compute_sparse_chol(
+#'   range_beta =  range_beta, NNarray = NNarray, 
+#'   locs = unique_locs, range_X = range_X, 
+#'   PP = PP, use_PP = T, compute_derivative = T, 
+#'   nu = 1.5, anisotropic = F, 
+#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#' # plotting a sample generated from sparse chol
+#' GeoNonStat::plot_pointillist_painting(
+#'   unique_locs, 
+#'   Matrix::solve(Matrix::sparseMatrix(
+#'     i = row(NNarray)[!is.na(NNarray)], 
+#'     j = (NNarray[!is.na(NNarray)]), 
+#'     x = (sparse_chol[[1]][!is.na(NNarray)]), 
+#'     triangular = T
+#'   ), v)
+#' )
+#' 
+#' }
 compute_sparse_chol = function(range_beta, 
                                NNarray, 
                                locs, 
@@ -354,55 +445,34 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10, se
 #' bp = diag(exp(rnorm(5)), 5, 5)
 #' ls = rnorm(1)
 #' beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
-beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
-{
+beta_prior_log_dens = function(beta, 
+                               n_PP, 
+                               beta0_mean,
+                               beta0_var,
+                               chol_crossprod_X, 
+                               log_scale){
+  PP_prior = 0
   if(n_PP>0) 
   {
-    scale_mat = expmat(-log_scale)
-    return(
-      (
-        # PP coefficients follow N(0, scale_mat)
-        +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
-        -sum(.5 * c(c(t(beta[seq(nrow(beta)-n_PP),, drop = F])-t(beta_mean)) %*% beta_precision) * c(t(beta[seq(nrow(beta)-n_PP),,drop = F])-t(beta_mean)))
-        -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
-      )
+    scale_mat = GeoNonStat::expmat(-log_scale)
+    PP_prior = (
+      # PP coefficients follow N(0, scale_mat)
+      +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
+      -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
     )
   }
+  chol_crossprod_X_ = chol_crossprod_X[seq(nrow(beta)-n_PP),seq(nrow(beta)-n_PP),drop = F]
+  chol_crossprod_X_[1,] = chol_crossprod_X_[1,]/chol_crossprod_X_[1,1]
+  M = solve(chol_crossprod_X_)
+  
   return(
-    sum(
-      c(
-        -.5 * (c(t(beta[seq(nrow(beta)-n_PP),,drop=F])-t(beta_mean)) %*% beta_precision) * c(t(beta[seq(nrow(beta)-n_PP),,drop=F])-t(beta_mean))
-      )
-    )
+    PP_prior + 
+      sum(
+        -.5 * (M %*% beta[seq(nrow(beta)-n_PP),] - c(beta0_mean, rep(0, length(beta[seq(nrow(beta)-n_PP),])-1)))^2/c(beta0_var, rep(10, length(beta[seq(nrow(beta)-n_PP),])-1))
+      )  
   )
 }
 
-
-# #' @export
-#beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision, log_scale)
-#{
-#  if(n_PP>0) 
-#  {
-#    scale_mat = GeoNonStat::expmat(-log_scale)
-#    return(
-#      matrix(
-#        c(
-#          -(c(t(beta[seq(nrow(beta)-n_PP),,drop=F])-t(beta_mean)) %*% beta_precision),
-#          -c(t(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat))
-#        ), 
-#        nrow(beta)
-#      )
-#    )
-#  }
-#  return(
-#    matrix(
-#      c(
-#        -(c(t(beta[seq(nrow(beta)-n_PP),])-t(beta_mean)) %*% beta_precision)
-#      ), 
-#      nrow(beta)
-#    )
-#  )
-#}
 
 
 #' Compute gradient of logarithmic density prior
@@ -421,24 +491,30 @@ beta_prior_log_dens = function(beta, n_PP, beta_mean, beta_precision, log_scale)
 #' bm = matrix(rnorm(5), 5, 1)
 #' bp = diag(exp(rnorm(5)), 5, 5)
 #' ls = rnorm(1)
-#' beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
-beta_prior_log_dens_derivative = function(beta, n_PP, beta_mean, beta_precision, log_scale)
-{
-  
-  res = matrix(
-    c(
-      -(c(t(beta[seq(nrow(beta)-n_PP),, drop = F])-t(beta_mean)) %*% beta_precision)
-    ), 
-    nrow(beta)-n_PP
-  )
-  if(n_PP>0) {
-    scale_mat = expmat(-log_scale)
-    res = rbind(res, 
-                -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
-    )
-  }
-  res
+#' # TODO q corriger beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
+beta_prior_log_dens_derivative = 
+  function(beta, n_PP, 
+           beta0_mean,
+           beta0_var,
+           chol_crossprod_X, 
+           log_scale){
+    chol_crossprod_X_ = chol_crossprod_X[seq(nrow(beta)-n_PP),seq(nrow(beta)-n_PP),drop = F]
+    chol_crossprod_X_[1,] = chol_crossprod_X_[1,]/chol_crossprod_X_[1,1]
+    M = solve(chol_crossprod_X_)
+    res = t(M) %*% matrix(
+      -(M%*%beta[seq(nrow(beta)-n_PP),,drop=F] - c(beta0_mean, rep(0, length(beta[seq(nrow(beta)-n_PP),,drop=F])-1)))/c(beta0_var, rep(10, length(beta[seq(nrow(beta)-n_PP),,drop=F])-1)),
+      ncol = ncol(beta)
+    ) 
+    if(n_PP>0) 
+    {
+      scale_mat = GeoNonStat::expmat(-log_scale)
+      res = rbind(res, 
+                  -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
+      )
+    }
+    res
 }
+
 
 
 ## beta = matrix(rnorm(10))

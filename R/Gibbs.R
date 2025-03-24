@@ -155,15 +155,15 @@ mcmc_nngp_update_Gaussian = function(
                   (
                     # natural gradient of obs likelihood wrt range field
                     derivative_sandwiches(derivatives = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                                  left_vector = as.vector(
-                                                    Matrix::solve(
-                                                      Matrix::t(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol), 
-                                                      - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
-                                                                    ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
-                                                      * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
-                                                    )), 
-                                                  right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                          left_vector = as.vector(
+                                            Matrix::solve(
+                                              Matrix::t(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol), 
+                                              - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
+                                                            ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
+                                              * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
+                                            )), 
+                                          right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
                     )
                   ))
         ))%*%eps_mat/ 2
@@ -272,15 +272,15 @@ mcmc_nngp_update_Gaussian = function(
                   (
                     # natural gradient of obs likelihood wrt range field
                     derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                                  left_vector = as.vector(
-                                                    Matrix::solve(
-                                                      Matrix::t(new_sparse_chol), 
-                                                      - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
-                                                                    ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
-                                                      * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
-                                                    )), 
-                                                  right_vector = new_field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                          left_vector = as.vector(
+                                            Matrix::solve(
+                                              Matrix::t(new_sparse_chol), 
+                                              - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
+                                                            ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
+                                              * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
+                                            )), 
+                                          right_vector = new_field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
                     )
                   )
               )
@@ -356,9 +356,9 @@ mcmc_nngp_update_Gaussian = function(
                 Y = # Jacobian of range field wrt range_beta
                   (# natural gradient of obs likelihood wrt range field
                     derivative_sandwiches(derivatives = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                                  left_vector = as.vector(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
-                                                  right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                          left_vector = as.vector(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
+                                          right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
                     )
                     - log_determinant_derivatives(sparse_chol_and_grad = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = MCMC_NNGP$vecchia_approx$NNarray)# derivative of determinant
                   ))))%*% eps_mat/ 2
@@ -450,9 +450,9 @@ mcmc_nngp_update_Gaussian = function(
                 Y = # Jacobian of range field wrt range_beta
                   (# natural gradient of obs likelihood wrt range field
                     derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                                  left_vector = as.vector(new_sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
-                                                  right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                          left_vector = as.vector(new_sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
+                                          right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
                     )
                     - log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = MCMC_NNGP$vecchia_approx$NNarray)# derivative of determinant
                   )))) %*% eps_mat / 2
@@ -514,9 +514,9 @@ mcmc_nngp_update_Gaussian = function(
           Y = # Jacobian of range field wrt range_beta
             (# natural gradient of obs likelihood wrt range field
               derivative_sandwiches(derivatives = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                            left_vector = as.vector(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
-                                            right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                            NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                    left_vector = as.vector(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
+                                    right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                    NNarray = MCMC_NNGP$vecchia_approx$NNarray  
               )
               - log_determinant_derivatives(sparse_chol_and_grad = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad, NNarray = MCMC_NNGP$vecchia_approx$NNarray)# derivative of determinant
             ))[-seq(MCMC_NNGP$data$covariates$range_X$n_regressors),,drop = F]
@@ -558,9 +558,9 @@ mcmc_nngp_update_Gaussian = function(
           Y = # Jacobian of range field wrt range_beta
             (# natural gradient of obs likelihood wrt range field
               derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                            left_vector = as.vector(new_sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
-                                            right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                            NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                    left_vector = as.vector(new_sparse_chol %*% (MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale))), # left vector = whitened latent field
+                                    right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                    NNarray = MCMC_NNGP$vecchia_approx$NNarray  
               )
               - log_determinant_derivatives(sparse_chol_and_grad = new_compressed_sparse_chol_and_grad, NNarray = MCMC_NNGP$vecchia_approx$NNarray)# derivative of determinant
             ))[-seq(MCMC_NNGP$data$covariates$range_X$n_regressors),,drop = F]
@@ -653,15 +653,15 @@ mcmc_nngp_update_Gaussian = function(
           (
             # natural gradient of obs likelihood wrt range field
             derivative_sandwiches(derivatives = MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                          left_vector = as.vector(
-                                            Matrix::solve(
-                                              Matrix::t(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol), 
-                                              - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
-                                                            ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
-                                              * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
-                                            )), 
-                                          right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                  left_vector = as.vector(
+                                    Matrix::solve(
+                                      Matrix::t(MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol), 
+                                      - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
+                                                    ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
+                                      * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
+                                    )), 
+                                  right_vector = MCMC_NNGP$states$params$field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
             )
           ))[-seq(MCMC_NNGP$data$covariates$range_X$n_regressors),,drop = F]
       p = p - exp(MCMC_NNGP$states$transition_kernels$range_log_scale_ancillary) *
@@ -701,15 +701,15 @@ mcmc_nngp_update_Gaussian = function(
           (
             # natural gradient of obs likelihood wrt range field
             derivative_sandwiches(derivatives = new_compressed_sparse_chol_and_grad[[2]], # derivative of the (unscaled) NNGP factor
-                                          left_vector = as.vector(
-                                            Matrix::solve(
-                                              Matrix::t(new_sparse_chol), 
-                                              - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
-                                                            ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
-                                              * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
-                                            )), 
-                                          right_vector = new_field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-                                          NNarray = MCMC_NNGP$vecchia_approx$NNarray  
+                                  left_vector = as.vector(
+                                    Matrix::solve(
+                                      Matrix::t(new_sparse_chol), 
+                                      - as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*%  # gradient of  Gaussian observations ll wrt latent field
+                                                    ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals) / MCMC_NNGP$states$sparse_chol_and_stuff$noise))
+                                      * sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale) # part of sparse chol
+                                    )), 
+                                  right_vector = new_field/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+                                  NNarray = MCMC_NNGP$vecchia_approx$NNarray  
             )
           )
       )[-seq(MCMC_NNGP$data$covariates$range_X$n_regressors),,drop = F]
@@ -825,11 +825,11 @@ mcmc_nngp_update_Gaussian = function(
                   beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
                   log_scale = MCMC_NNGP$states$params$noise_log_scale) # normal prior
                 + X_PP_crossprod(X = MCMC_NNGP$data$covariates$noise_X$X, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$noise_PP, 
-                                         Y = 
-                                           (
-                                             + .5 # determinant part of normal likelihood
-                                             - (squared_residuals/MCMC_NNGP$states$sparse_chol_and_stuff$noise)/2 # exponential part of normal likelihood
-                                           ))
+                                 Y = 
+                                   (
+                                     + .5 # determinant part of normal likelihood
+                                     - (squared_residuals/MCMC_NNGP$states$sparse_chol_and_stuff$noise)/2 # exponential part of normal likelihood
+                                   ))
         ))/ 2
     # checking gradient with finite differences, to update
     
@@ -870,7 +870,7 @@ mcmc_nngp_update_Gaussian = function(
     q = q + exp(MCMC_NNGP$states$transition_kernels$noise_beta_mala) * p
     new_noise_beta = solve(MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X, q)
     new_noise = variance_field(beta = new_noise_beta, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$noise_PP, 
-                                       X = MCMC_NNGP$data$covariates$noise_X$X, locs_idx = NULL)
+                               X = MCMC_NNGP$data$covariates$noise_X$X, locs_idx = NULL)
     # Make a half step for momentum at the end
     p = p - exp(MCMC_NNGP$states$transition_kernels$noise_beta_mala) *
       (
@@ -882,10 +882,10 @@ mcmc_nngp_update_Gaussian = function(
                   beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
                   log_scale = MCMC_NNGP$states$params$noise_log_scale) # normal prior  
                 + X_PP_crossprod(X = MCMC_NNGP$data$covariates$noise_X$X, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$noise_PP, 
-                                         (
-                                           + .5 # determinant part of normal likelihood
-                                           - (squared_residuals/new_noise)/2 # exponential part of normal likelihood
-                                         ))
+                                 (
+                                   + .5 # determinant part of normal likelihood
+                                   - (squared_residuals/new_noise)/2 # exponential part of normal likelihood
+                                 ))
         ))/ 2
     
     # Evaluate potential and kinetic energies at start and end of trajectory
@@ -893,10 +893,10 @@ mcmc_nngp_update_Gaussian = function(
     proposed_U = 
       (
         - beta_prior_log_dens(beta = new_noise_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$noise_PP, 
-                                      chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
-                                      beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
-                                      beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
-                                      log_scale = MCMC_NNGP$states$params$noise_log_scale) # normal prior        
+                              chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
+                              beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
+                              beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
+                              log_scale = MCMC_NNGP$states$params$noise_log_scale) # normal prior        
         +.5* sum(log(new_noise)) # det
         +.5*sum(squared_residuals/new_noise) # observations
       )
@@ -926,8 +926,8 @@ mcmc_nngp_update_Gaussian = function(
       new_noise_beta[-seq(MCMC_NNGP$data$covariates$noise_X$n_regressors)] = new_noise_beta[-seq(MCMC_NNGP$data$covariates$noise_X$n_regressors)] *
         exp((new_noise_log_scale - MCMC_NNGP$states$params$noise_log_scale)/2)
       new_noise =variance_field(beta = new_noise_beta, PP = MCMC_NNGP$hierarchical_model$PP, 
-                                        use_PP = MCMC_NNGP$hierarchical_model$noise_PP, X = MCMC_NNGP$data$covariates$noise_X$X, 
-                                        locs_idx = NULL)
+                                use_PP = MCMC_NNGP$hierarchical_model$noise_PP, X = MCMC_NNGP$data$covariates$noise_X$X, 
+                                locs_idx = NULL)
       ll_ratio = (
         -.5* sum(log(new_noise)) 
         -.5*sum(squared_residuals/new_noise)
@@ -959,15 +959,15 @@ mcmc_nngp_update_Gaussian = function(
         if(
           (
             + beta_prior_log_dens(beta = MCMC_NNGP$states$params$noise_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$noise_PP, 
-                                          chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
-                                          beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
-                                          beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
-                                          log_scale = new_noise_log_scale) - 
+                                  chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
+                                  beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
+                                  beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
+                                  log_scale = new_noise_log_scale) - 
             beta_prior_log_dens(beta = MCMC_NNGP$states$params$noise_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$noise_PP, 
-                                        chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
-                                        beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
-                                        beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
-                                        log_scale = MCMC_NNGP$states$params$noise_log_scale)
+                                chol_crossprod_X = MCMC_NNGP$data$covariates$noise_X$chol_crossprod_X,
+                                beta0_mean = MCMC_NNGP$hierarchical_model$noise_beta0_mean,
+                                beta0_var =  MCMC_NNGP$hierarchical_model$noise_beta0_var, 
+                                log_scale = MCMC_NNGP$states$params$noise_log_scale)
           ) > log(runif(1))
           &(new_noise_log_scale > MCMC_NNGP$hierarchical_model$noise_log_scale_prior[1])
           &(new_noise_log_scale < MCMC_NNGP$hierarchical_model$noise_log_scale_prior[2])
@@ -992,10 +992,10 @@ mcmc_nngp_update_Gaussian = function(
       current_U =
         (
           - beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                        beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
-                                        beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
-                                        log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
+                                chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
+                                beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
+                                log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
           +0.5*sum(log(MCMC_NNGP$states$sparse_chol_and_stuff$scale))# determinant part
           +0.5*sum(as.vector(sparse_chol_diag_field%*%sqrt(1/MCMC_NNGP$states$sparse_chol_and_stuff$scale))^2)# covmat product part
         )
@@ -1007,47 +1007,47 @@ mcmc_nngp_update_Gaussian = function(
         (
           + solve(t(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs), # solving by t chol because of whitening
                   - beta_prior_log_dens_derivative(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                                           chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                                           beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
-                                                           beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
-                                                           log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior
+                                                   chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                                   beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
+                                                   beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
+                                                   log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior
                   +  X_PP_crossprod(X = MCMC_NNGP$data$covariates$scale_X$X_locs, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1,
-                                            Y = (
-                                              .5  # determinant part 
-                                              -.5 * sqrt(1/MCMC_NNGP$states$sparse_chol_and_stuff$scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/MCMC_NNGP$states$sparse_chol_and_stuff$scale)))# natural derivative
-                                            ))
+                                    Y = (
+                                      .5  # determinant part 
+                                      -.5 * sqrt(1/MCMC_NNGP$states$sparse_chol_and_stuff$scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/MCMC_NNGP$states$sparse_chol_and_stuff$scale)))# natural derivative
+                                    ))
           ))/ 2
       
       # Make a full step for the position
       q = q + exp(MCMC_NNGP$states$transition_kernels$scale_beta_sufficient_mala) * p
       new_scale_beta = solve(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs, q)
       new_scale =variance_field(beta = new_scale_beta, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
+                                X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
       
       # Make a half step for momentum at the end.
       p = p - exp(MCMC_NNGP$states$transition_kernels$scale_beta_sufficient_mala) *
         (
           + solve(t(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
                   - beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                                           chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                                           beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
-                                                           beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
-                                                           log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
+                                                   chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                                   beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
+                                                   beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
+                                                   log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
                   + X_PP_crossprod(X = MCMC_NNGP$data$covariates$scale_X$X_locs, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1,
-                                           (
-                                             .5  # determinant part 
-                                             -.5 * sqrt(1/new_scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/new_scale)))# natural derivative
-                                           ))
+                                   (
+                                     .5  # determinant part 
+                                     -.5 * sqrt(1/new_scale) * as.vector(Matrix::crossprod(sparse_chol_diag_field, sparse_chol_diag_field %*% sqrt(1/new_scale)))# natural derivative
+                                   ))
           ))/ 2
       # Evaluate potential and kinetic energies at start and end of trajectory
       current_K = sum (MCMC_NNGP$states$momenta$scale_beta_sufficient ^2) / 2
       proposed_U = 
         (
           - beta_prior_log_dens(beta = new_scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                        beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                        beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                        log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
+                                chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
           +0.5*sum(log(new_scale))# determinant part
           +0.5*sum(as.vector(sparse_chol_diag_field%*%sqrt(1/new_scale))^2)# covmat product part
         )
@@ -1071,10 +1071,10 @@ mcmc_nngp_update_Gaussian = function(
       current_U =
         (
           - beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                        beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                        beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                        log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
+                                chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
           +.5 * sum((MCMC_NNGP$data$observed_field - MCMC_NNGP$states$sparse_chol_and_stuff$lm_fit - MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] )^2/MCMC_NNGP$states$sparse_chol_and_stuff$noise)
         )
       # MALA whitened
@@ -1085,48 +1085,48 @@ mcmc_nngp_update_Gaussian = function(
         (
           + solve(t(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior chol because of whitening
                   - beta_prior_log_dens_derivative(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                                           chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                                           beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
-                                                           beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
-                                                           log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
+                                                   chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                                   beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
+                                                   beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
+                                                   log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior 
                   + X_PP_crossprod(X = MCMC_NNGP$data$covariates$scale_X$X_locs, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1,
-                                           (.5 * MCMC_NNGP$states$params$field * 
-                                              as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*% 
-                                                          ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals)/
-                                                             MCMC_NNGP$states$sparse_chol_and_stuff$noise)
-                                              )))
+                                   (.5 * MCMC_NNGP$states$params$field * 
+                                      as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*% 
+                                                  ((MCMC_NNGP$states$params$field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals)/
+                                                     MCMC_NNGP$states$sparse_chol_and_stuff$noise)
+                                      )))
           ))/ 2
       # Make a full step for the position
       q = q + exp(MCMC_NNGP$states$transition_kernels$scale_beta_ancillary_mala) * p
       new_scale_beta = solve(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs, q)
       new_scale =variance_field(beta = new_scale_beta, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
+                                X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
       new_field  = MCMC_NNGP$states$params$field*sqrt(new_scale)/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale)
       # Make a half step for momentum at the end.
       p = p - exp(MCMC_NNGP$states$transition_kernels$scale_beta_ancillary_mala) *
         (
           + solve(t(MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X_locs), # solving by prior sparse chol because of whitening
                   - beta_prior_log_dens_derivative(beta = new_scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                                           chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                                           beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
-                                                           beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
-                                                           log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
+                                                   chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                                   beta0_mean = MCMC_NNGP$hierarchical_model$scale_beta0_mean,
+                                                   beta0_var =  MCMC_NNGP$hierarchical_model$scale_beta0_var, 
+                                                   log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
                   + X_PP_crossprod(X = MCMC_NNGP$data$covariates$scale_X$X_locs, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1,
-                                           (.5 * new_field * 
-                                              as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*% 
-                                                          ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals)/
-                                                             MCMC_NNGP$states$sparse_chol_and_stuff$noise)
-                                              )))
+                                   (.5 * new_field * 
+                                      as.vector(MCMC_NNGP$vecchia_approx$locs_match_matrix %*% 
+                                                  ((new_field[MCMC_NNGP$vecchia_approx$locs_match] - MCMC_NNGP$states$sparse_chol_and_stuff$lm_residuals)/
+                                                     MCMC_NNGP$states$sparse_chol_and_stuff$noise)
+                                      )))
           ))/ 2
       # Evaluate potential and kinetic energies at start and end of trajectory
       current_K = sum (MCMC_NNGP$states$momenta$scale_beta_ancillary ^2) / 2
       proposed_U = 
         (
           - beta_prior_log_dens(beta = new_scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                        chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                        beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                        beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                        log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
+                                chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                log_scale = MCMC_NNGP$states$params$scale_log_scale) # normal prior  
           +.5 * sum((MCMC_NNGP$data$observed_field - MCMC_NNGP$states$sparse_chol_and_stuff$lm_fit - new_field[MCMC_NNGP$vecchia_approx$locs_match] )^2/MCMC_NNGP$states$sparse_chol_and_stuff$noise)
         )
       proposed_K = sum(p^2) / 2
@@ -1154,7 +1154,7 @@ mcmc_nngp_update_Gaussian = function(
         new_scale_beta[-seq(MCMC_NNGP$data$covariates$scale_X$n_regressors)] = new_scale_beta[-seq(MCMC_NNGP$data$covariates$scale_X$n_regressors)] *
           exp((new_scale_log_scale - MCMC_NNGP$states$params$scale_log_scale)/2)
         new_scale = variance_field(beta = new_scale_beta, PP = MCMC_NNGP$hierarchical_model$PP, 
-                                           use_PP = MCMC_NNGP$hierarchical_model$scale_PP, X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
+                                   use_PP = MCMC_NNGP$hierarchical_model$scale_PP, X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
         MCMC_NNGP$states$transition_kernels$scale_log_scale_sufficient = MCMC_NNGP$states$transition_kernels$scale_log_scale_sufficient - .25/sqrt(iter_start + iter +100)
         if(
           (
@@ -1188,15 +1188,15 @@ mcmc_nngp_update_Gaussian = function(
           if(
             (
               + beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                            chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                            beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                            beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                            log_scale = new_scale_log_scale)     
+                                    chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                    beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                    beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                    log_scale = new_scale_log_scale)     
               - beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                            chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                            beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                            beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                            log_scale = MCMC_NNGP$states$params$scale_log_scale)     
+                                    chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                    beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                    beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                    log_scale = MCMC_NNGP$states$params$scale_log_scale)     
               > log(runif(1))
             )
             &(new_scale_log_scale > MCMC_NNGP$hierarchical_model$scale_log_scale_prior[1])
@@ -1212,7 +1212,7 @@ mcmc_nngp_update_Gaussian = function(
         new_scale_beta[-seq(MCMC_NNGP$data$covariates$scale_X$n_regressors)] = new_scale_beta[-seq(MCMC_NNGP$data$covariates$scale_X$n_regressors)] *
           exp((new_scale_log_scale - MCMC_NNGP$states$params$scale_log_scale)/2)
         new_scale =variance_field(new_scale_beta, PP = MCMC_NNGP$hierarchical_model$PP, use_PP = MCMC_NNGP$hierarchical_model$scale_PP, 
-                                          X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
+                                  X = MCMC_NNGP$data$covariates$scale_X$X_locs, locs_idx = MCMC_NNGP$vecchia_approx$hctam_scol_1)
         new_field = MCMC_NNGP$states$params$field * sqrt(new_scale)/sqrt(MCMC_NNGP$states$sparse_chol_and_stuff$scale)
         MCMC_NNGP$states$transition_kernels$scale_log_scale_ancillary = MCMC_NNGP$states$transition_kernels$scale_log_scale_ancillary - .25/sqrt(iter_start + iter +100)
         if(
@@ -1242,15 +1242,15 @@ mcmc_nngp_update_Gaussian = function(
           if(
             (
               + beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                            chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                            beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                            beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                            log_scale = new_scale_log_scale)     
+                                    chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                    beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                    beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                    log_scale = new_scale_log_scale)     
               - beta_prior_log_dens(beta = MCMC_NNGP$states$params$scale_beta, n_PP = MCMC_NNGP$hierarchical_model$PP$n_PP*MCMC_NNGP$hierarchical_model$scale_PP, 
-                                            chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
-                                            beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
-                                            beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
-                                            log_scale = MCMC_NNGP$states$params$scale_log_scale)     
+                                    chol_crossprod_X = MCMC_NNGP$data$covariates$scale_X$chol_crossprod_X,
+                                    beta_mean = MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_mean, 
+                                    beta_precision =  MCMC_NNGP$hierarchical_model$beta_priors$scale_beta_precision, 
+                                    log_scale = MCMC_NNGP$states$params$scale_log_scale)     
               > log(runif(1))
             )
             &(new_scale_log_scale > MCMC_NNGP$hierarchical_model$scale_log_scale_prior[1])
