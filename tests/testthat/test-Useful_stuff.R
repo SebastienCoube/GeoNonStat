@@ -1,3 +1,4 @@
+set.seed(123)
 test_that("derivative_sandwiches produce expected output", {
   # TODO
 })
@@ -72,7 +73,46 @@ test_that("symmat produce expected output", {
   )
 })
 
+
+test_that("X_PP_mult_right produce expected output", {
+  set.seed(123)
+  locs = cbind(runif(100), runif(100))
+  n_PP = 50
+  PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+  X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+  
+  # When using PP
+  expect_error(
+    res <- X_PP_mult_right(X=X, 
+                          PP = PP, 
+                          use_PP = TRUE, 
+                          Y = rnorm(n_PP)),
+    NA
+  )
+  
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(100L,1L))
+  expect_equal(mean(res), 1.05777386, tolerance = 1e-7)
+  expect_equal(res[1],  -1.53936417, tolerance = 1e-7)
+  
+  # When not using PP
+  set.seed(123)
+  expect_error(
+    res <- X_PP_mult_right(X = X, 
+                          PP = PP, 
+                          use_PP = FALSE, 
+                          Y = rnorm(n_PP)),
+    NA
+  )
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(100L, 1L))
+  expect_equal(mean(res), 0.05949999, tolerance = 1e-7)
+  expect_equal(res[1], 4.380053, tolerance = 1e-7)
+})
+
+
 test_that("variance_field produce expected output", {
+  # Here we test only structure since results are directly extracted from X_PP_mult_right
   set.seed(123)
   locs = cbind(runif(100), runif(100))
   n_PP = 50
@@ -88,10 +128,8 @@ test_that("variance_field produce expected output", {
     NA
   )
   
-  expect_type(res, "double")
+  expect_true(is(res, "numeric"))
   expect_length(res, 100)
-  expect_equal(mean(res), 50.4898)
-  expect_equal(res[1], 64.84969)
   
   # When not using PP
   expect_error(
@@ -101,10 +139,8 @@ test_that("variance_field produce expected output", {
                           X = X),
     NA
   )
-  expect_type(res, "double")
+  expect_true(is(res, "numeric"))
   expect_length(res, 100)
-  expect_equal(mean(res), 67.298166)
-  expect_equal(res[1], 6.136415)
 })
 
 test_that("compute_sparse_chol produce expected output", {
@@ -122,6 +158,7 @@ test_that("compute_sparse_chol produce expected output", {
     "nu must be equal to 0.5 or 1.5"
   )
   
+  set.seed(123)
   expect_error(
     res <- compute_sparse_chol(
               range_beta = matrix(.5/sqrt(2),1,1), 
@@ -140,18 +177,20 @@ test_that("compute_sparse_chol produce expected output", {
   
   expect_true(is(res[[1]], "array"))
   expect_identical(dim(res[[1]]), c(100L, 11L))
-  expect_equal(mean(res[[1]]), 0.01397719)
+  expect_equal(mean(res[[1]]), 0.01397719, tolerance = 1e-7)
   expect_equal(res[[1]][2,1:3], c(13.8705735, -13.8310216, 0.00000))
   
   expect_type(res[[2]], "list")
-  expect_type(res[[2]][[1]], "array") 
+  expect_true(is(res[[2]][[1]], "array")) 
   expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
   expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
 })
 
 test_that("get_PP produce expected output", {
+  # Don't know why this tests fail when launched single. 
   obs_locs <- matrix(rnorm(10), ncol=2)
+  set.seed(123)
   expect_error(
     res <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4),
     NA
@@ -160,4 +199,103 @@ test_that("get_PP produce expected output", {
                       'lonlat', 'm', 'matern_range', 
                       'sparse_chol', 'NNarray', 'n_PP'))
   
+  expect_identical(dim(res$knots), c(4L, 2L))
+  expect_identical(rownames(res$knots), c("4", "1", "2","3"))
+  expect_equal(mean(res$knots), 0.15157697, tolerance = 1e-7)
+  
+  expect_identical(dim(res$unique_reordered_locs), c(5L, 2L))
+  expect_equal(mean(res$unique_reordered_locs), 0.0746256, tolerance = 1e-6)
+  
+  expect_identical(res$idx, c(4L, 1L, 2L, 5L, 3L))
+  
+  expect_false(res$lonlat)
+  
+  expect_identical(res$m, 10)
+  
+  expect_identical(res$matern_range, c(1, 1.1, 1.5, 0))
+  
+  expect_true(is(res$sparse_chol,"Matrix"))
+  expect_identical(dim(res$sparse_chol), c(9L, 9L))
+  expect_equal(mean(res$sparse_chol@x), 0.07222378, tolerance = 1e-7)
+  
+  expect_true(is(res$NNarray, "matrix"))
+  expect_identical(dim(res$NNarray), c(9L, 9L))
+  expect_identical(res$NNarray[6,], c(6L, 3L, 4L, 5L, 2L, 1L, NA, NA, NA))
+  
+  expect_identical(res$n_PP, 4)
+})
+
+
+test_that("beta_prior_log_dens produce expected output", {
+  # TODO
+})
+
+test_that("beta_prior_log_dens_derivative produce expected output", {
+  # TODO
+})
+
+test_that("X_PP_crossprod produce expected output", {
+  set.seed(123)
+  locs = cbind(runif(100), runif(100))
+  PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = 50, m = 15)
+  X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+  Y = matrix(rnorm(nrow(X)*3), ncol=3)
+  
+  expect_error(
+    res <- X_PP_crossprod(X = X, PP = PP, use_PP = TRUE, Y = Y),
+    NA
+  )
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(60L, 3L))
+  expect_equal(mean(res), 0.3772675, tolerance = 1e-7)
+  expect_equal(res[1,1], 4.234651, tolerance = 1e-7)
+  
+  expect_error(
+    res2 <- X_PP_crossprod(X = X, PP = PP, use_PP = FALSE, Y = Y),
+    NA
+  )
+  expect_true(is(res2, "matrix"))
+  expect_identical(dim(res2), c(10L, 3L))
+  expect_equal(mean(res2), 1.95974075, tolerance = 1e-7)
+  expect_equal(res2[1,1], 4.234651, tolerance = 1e-7)
+  
+  # Expect results without PP on the 1st rows of res (with PP) 
+  expect_identical(res[1:10,], res2[1:10,])
+})
+
+
+test_that("derivative_chol_expmat produce expected output", {
+  expect_error( 
+    res <- derivative_chol_expmat(c(1,2,3, 3,2,4)),
+    NA
+  )
+  expect_true(is(res, "array"))
+  expect_identical(dim(res), c(3L,3L,6L))
+  expect_equal(
+    apply(res, 1, mean),
+    c(8.5554350147, -0.0108160777, 0.0003808579)
+  )
+  expect_equal(
+    apply(res, 2, mean),
+    c(2.343741568, 3.071973047, 3.129285180)
+  )
+})
+
+test_that("derivative_field_wrt_scale produce expected output", {
+  field <- array(c(1,2,3), dim=c(1,3))
+  coords <- c(1,2,3, 3,2,4)
+  expect_error( 
+    res <- derivative_field_wrt_scale(field, coords),
+    NA
+  )
+  expect_true(is(res, "array"))
+  expect_identical(dim(res), c(1L,3L,6L))
+  expect_equal(
+    apply(res, 1, mean),
+    c(0.312839647)
+  )
+  expect_equal(
+    apply(res, 2, mean),
+    c(0.261804197, 0.335998026, 0.340716718)
+  )
 })

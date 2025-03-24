@@ -287,6 +287,7 @@ compute_sparse_chol = function(range_beta,
 #' @param lonlat logical, default to FALSE. TODO
 #' @param n_PP a numerical value. Number of prediction points, default to 20.
 #' @param m  a numerical value. TODO
+#' @param seed a numerical value. The random seed, default to 123. Uses mainly to reproduce results in tests. 
 #'
 #' @returns a list
 #' @export
@@ -294,7 +295,7 @@ compute_sparse_chol = function(range_beta,
 #' @examples
 #' obs_locs <- matrix(rnorm(20), ncol=2)
 #' get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
-get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
+get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10, seed=1234)
 {
   # Suppress duplicates in observed points.
   locs_ = observed_locs[! duplicated(observed_locs),]
@@ -305,7 +306,6 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
   # Corresponding locations
   idx = match(split(observed_locs, row(observed_locs)), split(locs_, row(locs_)))
   
-  # Extract n_PP ordered prediction points with kmeans. 
   knots = kmeans(locs_[seq(min(nrow(locs_), 100000)),], 
                  n_PP, algorithm = "Hartigan-Wong", iter.max = 50)$centers
   knots = knots[GpGp::order_maxmin(knots),]
@@ -313,6 +313,8 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
   # Get the m closed neighbors (ordered)
   NNarray = GpGp::find_ordered_nn(rbind(knots, locs_), m, lonlat = lonlat)
   # Lower triangular matrix of inversed cholesky factor 
+  # Add a seed here to always get the same results from vecchia
+  set.seed(seed)
   sparse_chol = Matrix::sparseMatrix(
     i = row(NNarray)[!is.na(NNarray)], 
     j = NNarray[!is.na(NNarray)], 
@@ -608,14 +610,14 @@ derivative_chol_expmat = function(coords, eps=0.00001)
 
 #' Title
 #'
-#' @param field 
+#' @param field
 #' @param coords 
 #'
 #' @returns an array
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
+#' res <- derivative_field_wrt_scale(c(1,2,3), c(1,2,3,3,2,4)),
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
