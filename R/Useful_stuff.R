@@ -608,10 +608,10 @@ derivative_chol_expmat = function(coords, eps=0.00001)
   res
 }
 
-#' Title
+#' Title TODO
 #'
-#' @param field
-#' @param coords 
+#' @param field TODO
+#' @param coordsTODO
 #'
 #' @returns an array
 #' @export
