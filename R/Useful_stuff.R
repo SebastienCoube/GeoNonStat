@@ -617,7 +617,8 @@ derivative_chol_expmat = function(coords, eps=0.00001)
 #' @export
 #'
 #' @examples
-#' res <- derivative_field_wrt_scale(c(1,2,3), c(1,2,3,3,2,4)),
+#' field <- array(c(1,2,3), dim=c(1,3))
+#' res <- derivative_field_wrt_scale(field, c(1,2,3,3,2,4))
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
