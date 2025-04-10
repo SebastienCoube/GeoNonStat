@@ -2,21 +2,22 @@
 % Please edit documentation in R/Useful_stuff.R
 \name{derivative_field_wrt_scale}
 \alias{derivative_field_wrt_scale}
-\title{Title}
+\title{Title TODO}
 \usage{
 derivative_field_wrt_scale(field, coords)
 }
 \arguments{
-\item{field}{}
+\item{field}{TODO}
 
-\item{coords}{}
+\item{coordsTODO}{}
 }
 \value{
 an array
 }
 \description{
-Title
+Title TODO
 }
 \examples{
-\dontrun{TODO}
+field <- array(c(1,2,3), dim=c(1,3))
+res <- derivative_field_wrt_scale(field, c(1,2,3,3,2,4))
 }

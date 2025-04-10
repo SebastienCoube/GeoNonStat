@@ -4,7 +4,7 @@
 \alias{get_PP}
 \title{Get prediction points (PP) for useful for vecchia}
 \usage{
-get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
+get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10, seed = 1234)
 }
 \arguments{
 \item{observed_locs}{a matrix of observed locations. TODO}
@@ -16,6 +16,8 @@ get_PP(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10)
 \item{n_PP}{a numerical value. Number of prediction points, default to 20.}
 
 \item{m}{a numerical value. TODO}
+
+\item{seed}{a numerical value. The random seed, default to 123. Uses mainly to reproduce results in tests.}
 }
 \value{
 a list

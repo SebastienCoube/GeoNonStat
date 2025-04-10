@@ -171,9 +171,9 @@ process_hierarchical_model <- function(PP,
 
 #' Initialize transition kernels
 #'
-#' @param init 
+#' @param init a numeric value
 #'
-#' @returns
+#' @returns a list
 #'
 #' @examples
 #' tk <- process_transition_kernels()
@@ -572,7 +572,7 @@ GeoNonStat <-
       vecchia_approx,
       init_tk = -4
     ) 
-    # Remove unecessary naive OLS
+    # Remove unecessary naive OLS
     hierarchical_model$naive_ols <- NULL
     
     # Chain records setup #########################################################################
@@ -618,8 +618,8 @@ GeoNonStat <-
 #' @export
 print.GeoNonStat <- function(x, ...) {
   cat("Object of class 'GeoNonStat'\n")
-  print(paste(length(x$observed_fields), "observed fields"))
-  print(paste(length(x$observed_locs), "observed locations"))
+  print(paste(length(x$data$observed_field), "observed fields"))
+  print(paste(nrow(x$data$observed_locs), "observed locations"))
   print(paste("Currently", length(x$states$params$beta), "states"))
 }
 
@@ -629,5 +629,39 @@ print.GeoNonStat <- function(x, ...) {
 #' @param ... Arguments additionnels
 #' @export
 summary.GeoNonStat <- function(object, ...) {
-  summary(object)
+  
+  cat("### data ###")
+  detailed_summary(object$data)
+  cat("### hierarchical_model ###")
+  detailed_summary(object$hierarchical_model)
+  cat("### vecchia_approx ###",
+    summary(object$vecchia_approx), 
+    "### states ###",
+    summary(object$states), 
+    "### records ###", 
+    summary(object$records), 
+    "### seed ###", 
+    object$seed, 
+    "### iterations ###", 
+    paste(
+      nrow(object$iterations$checkpoints),
+      "iterations for a total time of", 
+      round(sum(object$iterations$checkpoints[,'time']),5), "seconds"
+    ),
+    sep="\n"
+  )
+}
+
+detailed_summary <- function(partobject){
+  sumdata <- summary(partobject)
+  sumdata <- cbind(sumdata, 
+                   "Value" = as.character(sapply(dimnames(sumdata)[[1]],
+                                                 function(x) {
+                                                   res <- ""
+                                                   if(sumdata[x,"Length"] == 1 & sumdata[x,"Mode"] %in% c("numeric", "character"))
+                                                     res <- partobject[[x]]
+                                                   res
+                                                 }
+                   )))
+  return(sumdata)
 }
