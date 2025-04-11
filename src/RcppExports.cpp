@@ -11,34 +11,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// nonstat_vecchia_Linv
-Rcpp::List nonstat_vecchia_Linv(arma::mat log_range, std::string covfun_name, bool sphere, arma::mat locs, arma::mat NNarray, int num_threads, bool compute_derivative);
-RcppExport SEXP _GeoNonStat_nonstat_vecchia_Linv(SEXP log_rangeSEXP, SEXP covfun_nameSEXP, SEXP sphereSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP compute_derivativeSEXP) {
+// nonstat_vecchia_Linv_col
+arma::cube nonstat_vecchia_Linv_col(arma::mat log_range, arma::mat locs, arma::mat NNarray, int num_threads, double smoothness, bool compute_derivative);
+RcppExport SEXP _GeoNonStat_nonstat_vecchia_Linv_col(SEXP log_rangeSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP smoothnessSEXP, SEXP compute_derivativeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type log_range(log_rangeSEXP);
-    Rcpp::traits::input_parameter< std::string >::type covfun_name(covfun_nameSEXP);
-    Rcpp::traits::input_parameter< bool >::type sphere(sphereSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type NNarray(NNarraySEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    Rcpp::traits::input_parameter< double >::type smoothness(smoothnessSEXP);
     Rcpp::traits::input_parameter< bool >::type compute_derivative(compute_derivativeSEXP);
-    rcpp_result_gen = Rcpp::wrap(nonstat_vecchia_Linv(log_range, covfun_name, sphere, locs, NNarray, num_threads, compute_derivative));
-    return rcpp_result_gen;
-END_RCPP
-}
-// derivative_sandwich
-arma::vec derivative_sandwich(arma::cube derivative, arma::vec left_vector, arma::vec right_vector, Rcpp::IntegerMatrix NNarray);
-RcppExport SEXP _GeoNonStat_derivative_sandwich(SEXP derivativeSEXP, SEXP left_vectorSEXP, SEXP right_vectorSEXP, SEXP NNarraySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::cube >::type derivative(derivativeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type left_vector(left_vectorSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type right_vector(right_vectorSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type NNarray(NNarraySEXP);
-    rcpp_result_gen = Rcpp::wrap(derivative_sandwich(derivative, left_vector, right_vector, NNarray));
+    rcpp_result_gen = Rcpp::wrap(nonstat_vecchia_Linv_col(log_range, locs, NNarray, num_threads, smoothness, compute_derivative));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -55,25 +40,10 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// nonstat_covmat
-Rcpp::NumericMatrix nonstat_covmat(arma::mat log_range, std::string covfun_name, arma::mat locs);
-RcppExport SEXP _GeoNonStat_nonstat_covmat(SEXP log_rangeSEXP, SEXP covfun_nameSEXP, SEXP locsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type log_range(log_rangeSEXP);
-    Rcpp::traits::input_parameter< std::string >::type covfun_name(covfun_nameSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
-    rcpp_result_gen = Rcpp::wrap(nonstat_covmat(log_range, covfun_name, locs));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_GeoNonStat_nonstat_vecchia_Linv", (DL_FUNC) &_GeoNonStat_nonstat_vecchia_Linv, 7},
-    {"_GeoNonStat_derivative_sandwich", (DL_FUNC) &_GeoNonStat_derivative_sandwich, 4},
+    {"_GeoNonStat_nonstat_vecchia_Linv_col", (DL_FUNC) &_GeoNonStat_nonstat_vecchia_Linv_col, 6},
     {"_GeoNonStat_log_determinant_derivative", (DL_FUNC) &_GeoNonStat_log_determinant_derivative, 3},
-    {"_GeoNonStat_nonstat_covmat", (DL_FUNC) &_GeoNonStat_nonstat_covmat, 3},
     {NULL, NULL, 0}
 };
 

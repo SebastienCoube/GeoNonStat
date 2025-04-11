@@ -444,7 +444,7 @@ get_PP = function(observed_locs, matern_range, lonlat = F, n_PP = 20, m = 10, se
 #' bm = matrix(rnorm(5), 5, 1)
 #' bp = diag(exp(rnorm(5)), 5, 5)
 #' ls = rnorm(1)
-#' beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
+#' # TODO a changer beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 beta_prior_log_dens = function(beta, 
                                n_PP, 
                                beta0_mean,

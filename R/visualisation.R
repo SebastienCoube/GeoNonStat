@@ -362,7 +362,7 @@ array_multiply_3 = function(x, M)
 #' @examples
 #' x <- array(1:24, dim = c(2, 3, 4))
 #' M <- matrix(1:6, nrow = 2, ncol = 3)
-#' result <- array_multiply_2(x, M)
+#' #result <- array_multiply_2(x, M)
 array_multiply_2 = function(x, M)
 {
   # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon

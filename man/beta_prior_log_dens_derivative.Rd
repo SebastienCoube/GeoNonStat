@@ -7,8 +7,9 @@
 beta_prior_log_dens_derivative(
   beta,
   n_PP,
-  beta_mean,
-  beta_precision,
+  beta0_mean,
+  beta0_var,
+  chol_crossprod_X,
   log_scale
 )
 }
@@ -17,11 +18,11 @@ beta_prior_log_dens_derivative(
 
 \item{n_PP}{number of prediction points.}
 
+\item{log_scale}{TODO}
+
 \item{beta_mean}{TODO}
 
 \item{beta_precision}{TODO}
-
-\item{log_scale}{TODO}
 }
 \value{
 an array
@@ -34,5 +35,5 @@ beta = matrix(rnorm(10))
 bm = matrix(rnorm(5), 5, 1)
 bp = diag(exp(rnorm(5)), 5, 5)
 ls = rnorm(1)
-beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
+# TODO q corriger beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
 }

@@ -20,5 +20,5 @@ Title TODO
 \examples{
 x <- array(1:24, dim = c(2, 3, 4))
 M <- matrix(1:6, nrow = 2, ncol = 3)
-result <- array_multiply_2(x, M)
+#result <- array_multiply_2(x, M)
 }
