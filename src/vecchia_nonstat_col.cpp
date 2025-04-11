@@ -74,19 +74,19 @@ arma::cube nonstat_vecchia_Linv_col(
       exprange(1, i) = rangemat(1,1); 
       exprange(2, i) = rangemat(0,1); 
       if(compute_derivative){
-        lograngemat(0,0) = lograngemat(0,0) + .001;
+        lograngemat(0,0) = lograngemat(0,0) + .00001;
         rangemat = expmat_sym(lograngemat);
         exprange(3, i) = rangemat(0,0); 
         exprange(4, i) = rangemat(1,1); 
         exprange(5, i) = rangemat(0,1); 
-        lograngemat(0,0) = lograngemat(0,0) - .001;
-        lograngemat(1,1) = lograngemat(1,1) + .001;
+        lograngemat(0,0) = lograngemat(0,0) - .00001;
+        lograngemat(1,1) = lograngemat(1,1) + .00001;
         rangemat = expmat_sym(lograngemat);
         exprange(6, i) = rangemat(0,0); 
         exprange(7, i) = rangemat(1,1); 
         exprange(8, i) = rangemat(0,1); 
-        lograngemat(1,1) = lograngemat(1,1) - .001;
-        lograngemat(0,1) = lograngemat(0,1) + .001/sqrt(2);
+        lograngemat(1,1) = lograngemat(1,1) - .00001;
+        lograngemat(0,1) = lograngemat(0,1) + .00001/sqrt(2);
         lograngemat(1,0) = lograngemat(0,1);
         rangemat = expmat_sym(lograngemat);
         exprange(9, i)  = rangemat(0,0); 
@@ -296,40 +296,40 @@ arma::cube nonstat_vecchia_Linv_col(
             for(int j2=1; j2<bsize; j2++){
               mahala_dist = pow( 
                 ( pow(locsub(0, j1)-locsub(0, j2), 2) + pow(locsub(1, j1)-locsub(1, j2), 2) )
-              /(rangesub(0, j1)*.5*1.001 + rangesub(0, j2)*.5) , 
+              /(rangesub(0, j1)*.5*1.00001 + rangesub(0, j2)*.5) , 
                                 .5);
               dsigma11 (j1-1, j2-1) = 
-              pow(rangesub(0, j1) * 1.001 *    rangesub(0, j2)    , .25  ) * 
-              pow(rangesub(0, j1) * 1.001 *.5 + rangesub(0, j2)*.5 , -.5) * 
+              pow(rangesub(0, j1) * 1.00001 *    rangesub(0, j2)    , .25  ) * 
+              pow(rangesub(0, j1) * 1.00001 *.5 + rangesub(0, j2)*.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             }
             dsigma11 (j1-1, j1-1) = 1.0001;
             //filling dpsigma12
             mahala_dist = pow( 
               ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
-              /(rangesub(0, j1) * 1.001 *.5 + rangesub(0, 0)*.5) , 
+              /(rangesub(0, j1) * 1.00001 *.5 + rangesub(0, 0)*.5) , 
                                 .5);
               dpsigma12 (j1-1) = 
-              pow(rangesub(0, j1)  * 1.001  *    rangesub(0, 0)    , .25  ) * 
-              pow(rangesub(0, j1)  * 1.001 *.5 + rangesub(0, 0)*.5 , -.5) * 
+              pow(rangesub(0, j1)  * 1.00001  *    rangesub(0, 0)    , .25  ) * 
+              pow(rangesub(0, j1)  * 1.00001 *.5 + rangesub(0, 0)*.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             
             //filling dcsigma12
             mahala_dist = pow( 
               ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
-              /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * 1.001) , 
+              /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * 1.00001) , 
                                 .5);
               dcsigma12 (j1-1) = 
-              pow(rangesub(0, j1)  *    rangesub(0, 0)  * 1.001     , .25  ) * 
-              pow(rangesub(0, j1) *.5 + rangesub(0, 0)  * 1.001 *.5 , -.5) * 
+              pow(rangesub(0, j1)  *    rangesub(0, 0)  * 1.00001     , .25  ) * 
+              pow(rangesub(0, j1) *.5 + rangesub(0, 0)  * 1.00001 *.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             
           }
         }
         
-        dsigma11 = (dsigma11 - sigma11)*1000;
-        dpsigma12 = (dpsigma12 - sigma12)*1000;
-        dcsigma12 = -(dcsigma12 - sigma12)*1000;
+        dsigma11 = (dsigma11 - sigma11)*100000;
+        dpsigma12 = (dpsigma12 - sigma12)*100000;
+        dcsigma12 = -(dcsigma12 - sigma12)*100000;
         // computing derivative of Vecchia approx 
         
         // case child range is differentiated 
@@ -390,96 +390,74 @@ arma::cube nonstat_vecchia_Linv_col(
 }
 
 
-// //[[Rcpp::depends(RcppArmadillo)]]
-// 
-// //[[Rcpp::export]]
-// 
-// arma::mat derivative_sandwiches
-// (
-//     arma::cube vecchia, 
-//     arma::vec left_vector, 
-//     arma::vec right_vector, 
-//     Rcpp::IntegerMatrix NNarray 
-// )
-// {
-//   int  n = NNarray.ncol() ;
-//   int  m = NNarray.nrow() ;
-//   int d = (vecchia.n_cols - 1)/vecchia.n_rows;
-//   arma::mat res(d, n);
-//   for(int loc_idx = 0; loc_idx<n; loc_idx++){
-//     arma::mat vecchia_slice = vecchia.slice(loc_idx);
-//     arma::vec NNarray_col = NNarray.column(loc_idx);
-//     for(int range_idx = 0; range_idx <d; range_idx++){
-//       int bsize = std::min(loc_idx+1,m);
-//       // looping over the column idx of the derivative of tilde R (column idx retrieved through NNarray)
-//       for(int col_idx = 0; col_idx < bsize; col_idx++)
-//       {
-//         // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
-//         for(int covparm_idx = 0; covparm_idx < d; covparm_idx++)
-//         {
-//           //std::cout << NNarray(row_idx, 0) ; 
-//           //std::cout << "\n" ; 
-//           res(covparm_idx, NNarray_col()-1)+= derivative(row_idx, covparm_idx, col_idx)
-//           * left_vector(row_idx) 
-//           * right_vector(NNarray(row_idx, col_idx)-1)
-//           ; 
-//         }
-//       }
-//     }
-//   }
-//  // looping over the row idx of the derivative of tilde R
-//  // # pragma omp parallel
-//  for(int row_idx = 0; row_idx<n; row_idx++){
-//    int bsize = std::min(row_idx+1,m);
-//    {
-//      // looping over the column idx of the derivative of tilde R (column idx retrieved through NNarray)
-//      for(int col_idx = 0; col_idx < bsize; col_idx++)
-//      {
-//        // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
-//        for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
-//        {
-//          //std::cout << NNarray(row_idx, 0) ; 
-//          //std::cout << "\n" ; 
-//          res(NNarray(row_idx, covparm_idx)-1)+= derivative(row_idx, covparm_idx, col_idx)
-//          * left_vector(row_idx) 
-//          * right_vector(NNarray(row_idx, col_idx)-1)
-//          ; 
-//        }
-//      }
-//    }
-//  }
-//  return(res);
-//}
-
-// function used in sufficient ll gradient computation. Returns the gradient of the sum of diagonal terms.
 //[[Rcpp::depends(RcppArmadillo)]]
 //[[Rcpp::export]]
-arma::vec log_determinant_derivative 
+arma::mat derivative_sandwiches
 (
-    arma::cube derivative, 
-    arma::mat compressed_sparse_chol, 
-    Rcpp::IntegerMatrix NNarray
+    arma::cube vecchia, 
+    arma::vec left_vector, 
+    arma::vec right_vector, 
+    arma::mat NNarray 
 )
 {
-  int  n = NNarray.nrow() ;
-  int  m = NNarray.ncol() ;
-  arma::vec res(n);
-  res.fill(0);
-  // looping over the row idx of the derivative of tilde R
+  int  n = NNarray.n_cols;
+  int  m = NNarray.n_rows;
+  int d = (vecchia.n_cols - 1)/vecchia.n_rows;
+  arma::mat res(d, n);
+  // index of spatial location 
   for(int row_idx = 0; row_idx<n; row_idx++){
-    int bsize = std::min(row_idx+1,m);
-    {
-      // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
-      for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
+    arma::mat vecchia_slice = vecchia.slice(row_idx);
+    arma::vec NNarray_col = NNarray.col(row_idx);
+    // anisotropy index, from 0 to 2 if aniso, from 0 to 0 if iso
+    for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
+      int bsize = std::min(row_idx+1,m);
+      // looping over the column idx of the derivative of tilde R (column idx retrieved through NNarray)
+      for(int col_idx = 0; col_idx < bsize; col_idx++)
       {
-        //std::cout << NNarray(row_idx, 0) ; 
-        //std::cout << "\n" ; 
-        res(NNarray(row_idx, covparm_idx)-1)+= derivative(row_idx, covparm_idx, 0)/compressed_sparse_chol(row_idx, 0); 
+        // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
+        for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
+        {
+          res(aniso_idx, NNarray_col(covparm_idx)-1)+= vecchia_slice(col_idx, 1 + covparm_idx + aniso_idx*bsize)
+          * left_vector(row_idx) 
+          * right_vector(NNarray_col(col_idx)-1)
+          ; 
+        }
       }
     }
   }
   return(res);
 }
 
-
-
+///// // function used in sufficient ll gradient computation. Returns the gradient of the sum of diagonal terms.
+///// //[[Rcpp::depends(RcppArmadillo)]]
+///// //[[Rcpp::export]]
+///// arma::vec log_determinant_derivative 
+///// (
+/////     arma::cube derivative, 
+/////     arma::mat compressed_sparse_chol, 
+/////     Rcpp::IntegerMatrix NNarray
+///// )
+///// {
+/////   int  n = NNarray.nrow() ;
+/////   int  m = NNarray.ncol() ;
+/////   arma::vec res(n);
+/////   res.fill(0);
+/////   // looping over the row idx of the derivative of tilde R
+/////   for(int row_idx = 0; row_idx<n; row_idx++){
+/////     int bsize = std::min(row_idx+1,m);
+/////     {
+/////       // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
+/////       for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
+/////       {
+/////         //std::cout << NNarray(row_idx, 0) ; 
+/////         //std::cout << "\n" ; 
+/////         res(NNarray(row_idx, covparm_idx)-1)+= derivative(row_idx, covparm_idx, 0)/compressed_sparse_chol(row_idx, 0); 
+/////       }
+/////     }
+/////   }
+/////   return(res);
+///// }
+///// 
+///// 
+///// 
+///// //
