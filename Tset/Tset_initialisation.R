@@ -1,5 +1,10 @@
+
+
 set.seed(100)
+# spatial locations 
 locs = cbind(runif(10000), runif(10000))
+
+# Predictive Process
 PP = GeoNonStat::get_PP(
   observed_locs = locs[seq(10000),], # spatial sites
   matern_range = .1,
@@ -7,13 +12,14 @@ PP = GeoNonStat::get_PP(
   m = 15 # number of NNGP parents
 )
 
+# range parameters
 range_beta = rbind(
   c(-4, 0, 0), # intercept
   matrix(.5*rnorm(150), 50)
 ) %*% diag(c(1, 2,.5))
 NNarray_aniso = GpGp::find_ordered_nn(locs[seq(10000),], 10)
 
-# getting the coefficients
+# GP coefficients
 chol_precision = 
   GeoNonStat::compute_sparse_chol(
     range_beta = range_beta, # range parameters
@@ -43,5 +49,33 @@ MCMC_NNGP = GeoNonStat::initialize(
   observed_locs = locs[seq(10000),], observed_field = aniso_observed_field, 
   nu = 1.5, n_chains = 5,
   range_PP = T, PP = PP, # use PP for range
-  anisotropic = T # Covariance will be anisotropic
+  anisotropic = F # Covariance will be anisotropic
 )
+
+t1 = Sys.time()
+MCMC_samples = GeoNonStat::update(
+  MCMC_NNGP, # model MCMC_NNGP$state
+  n_iterations = 1, seed = 1, 
+  num_threads = 1 # practical settings
+)
+Sys.time()-t1
+
+
+
+
+MCMC_NNGP = Bidart::mcmc_nngp_initialize_nonstationary(
+  observed_locs = locs[seq(10000),], observed_field = aniso_observed_field, 
+  nu = 1.5, n_chains = 5,
+  range_PP = T, PP = PP, # use PP for range
+  anisotropic = F # Covariance will be anisotropic
+)
+
+t1 = Sys.time()
+MCMC_samples = Bidart::mcmc_nngp_update_Gaussian(
+  data = MCMC_NNGP$data, hierarchical_model = MCMC_NNGP$hierarchical_model, 
+  vecchia_approx = MCMC_NNGP$vecchia_approx, state = MCMC_NNGP$states$chain_1, 
+  n_iterations_update = 1, thinning = 1, iter_start = 1, num_threads = 1
+)
+Sys.time()-t1
+
+
