@@ -27,7 +27,7 @@ using namespace Rcpp;
 using namespace arma;
 
 //[[Rcpp::export]]
-arma::cube nonstat_vecchia_Linv_col(
+arma::cube vecchia(
     arma::mat log_range,
     arma::mat locs,
     arma::mat NNarray, 
@@ -144,7 +144,7 @@ arma::cube nonstat_vecchia_Linv_col(
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
         }
-        sigma11 (j1-1, j1-1) = 1.0001;
+        sigma11 (j1-1, j1-1) = 1.001;
         //filling sigma12
         hybrid_range_inv(0,0) = (rangesub(0, j1) + rangesub(0, 0))*.5;
         hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub(2, 0))*.5;
@@ -181,7 +181,7 @@ arma::cube nonstat_vecchia_Linv_col(
             matern_thingy(mahala_dist, smoothness);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
         }
-        sigma11 (j1-1, j1-1) = 1.0001;
+        sigma11 (j1-1, j1-1) = 1.001;
         mahala_dist = pow( 
           ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
           /(rangesub(0, j1)*.5 + rangesub(0, 0)*.5) , 
@@ -198,7 +198,7 @@ arma::cube nonstat_vecchia_Linv_col(
     // computing a vector used everyvhere
     arma::mat salt  = agmis11 * sigma12 ;
     //computing Vecchia approx itself
-    double inverse_cond_sd = pow(1- sum(salt % sigma12), -.5);
+    double inverse_cond_sd = pow(1.001- sum(salt % sigma12), -.5);
     double pow_invcondsd_3  = pow(inverse_cond_sd, 3);
     out(0, 0) = inverse_cond_sd ;
     for(int j=1; j<bsize; j++){
@@ -247,7 +247,7 @@ arma::cube nonstat_vecchia_Linv_col(
                     pow(arma::det(hybrid_range_inv), .5) * 
                     matern_thingy(mahala_dist, smoothness);
             }
-            dsigma11 (j1-1, j1-1) = 1.0001;
+            dsigma11 (j1-1, j1-1) = 1.001;
             //filling dpsigma12
             hybrid_range_inv(0,0) = (rangesub((d_idx + 1) * 3 + 0, j1) + rangesub(0, 0))*.5;
             hybrid_range_inv(1,1) = (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5;
@@ -303,7 +303,7 @@ arma::cube nonstat_vecchia_Linv_col(
               pow(rangesub(0, j1) * 1.00001 *.5 + rangesub(0, j2)*.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             }
-            dsigma11 (j1-1, j1-1) = 1.0001;
+            dsigma11 (j1-1, j1-1) = 1.001;
             //filling dpsigma12
             mahala_dist = pow( 
               ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
@@ -389,7 +389,6 @@ arma::cube nonstat_vecchia_Linv_col(
   return(result);
 }
 
-
 //[[Rcpp::depends(RcppArmadillo)]]
 //[[Rcpp::export]]
 arma::mat derivative_sandwiches
@@ -397,67 +396,52 @@ arma::mat derivative_sandwiches
     arma::cube vecchia, 
     arma::vec left_vector, 
     arma::vec right_vector, 
-    arma::mat NNarray 
+    arma::mat NNarray, 
+    bool sauce_determinant_chef,
+    int num_threads
 )
 {
+#if _OPENMP
+  omp_set_num_threads(num_threads);
+#endif
   int  n = NNarray.n_cols;
   int  m = NNarray.n_rows;
   int d = (vecchia.n_cols - 1)/vecchia.n_rows;
-  arma::mat res(d, n);
-  // index of spatial location 
+  arma::mat res(d,  n);
+  
+#pragma omp parallel for
   for(int row_idx = 0; row_idx<n; row_idx++){
-    arma::mat vecchia_slice = vecchia.slice(row_idx);
     arma::vec NNarray_col = NNarray.col(row_idx);
+    int bsize = std::min(row_idx+1,m);
     // anisotropy index, from 0 to 2 if aniso, from 0 to 0 if iso
-    for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
-      int bsize = std::min(row_idx+1,m);
-      // looping over the column idx of the derivative of tilde R (column idx retrieved through NNarray)
-      for(int col_idx = 0; col_idx < bsize; col_idx++)
-      {
-        // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
-        for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
-        {
-          res(aniso_idx, NNarray_col(covparm_idx)-1)+= vecchia_slice(col_idx, 1 + covparm_idx + aniso_idx*bsize)
-          * left_vector(row_idx) 
-          * right_vector(NNarray_col(col_idx)-1)
-          ; 
-        }
-      }
+    // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
+    arma::rowvec right_vector_sub(m);
+    for(int col_idx = 0; col_idx < bsize; col_idx++){
+      right_vector_sub(col_idx) = right_vector(NNarray_col(col_idx)-1)
+      ; 
     }
+    arma::mat vecchia_slice= vecchia.slice(row_idx);
+    arma::rowvec mini_sandwich = right_vector_sub * vecchia_slice * left_vector(row_idx)  ;
+     if(!sauce_determinant_chef){
+ # pragma omp critical 
+     for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
+       for(int col_idx = 0; col_idx < bsize; col_idx++){
+         res(aniso_idx, NNarray_col(col_idx)-1) += mini_sandwich(1 + col_idx + aniso_idx*m);
+       }
+     }
+     }else{
+ # pragma omp critical 
+     for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
+       for(int col_idx = 0; col_idx < bsize; col_idx++){
+         res(aniso_idx, NNarray_col(col_idx)-1) += 
+           mini_sandwich(1 + col_idx + aniso_idx*m) + 
+           vecchia_slice(0, 1 + col_idx + aniso_idx*m)/vecchia_slice(0, 0);
+       }
+     }
+     }
   }
+  
   return(res);
 }
 
-///// // function used in sufficient ll gradient computation. Returns the gradient of the sum of diagonal terms.
-///// //[[Rcpp::depends(RcppArmadillo)]]
-///// //[[Rcpp::export]]
-///// arma::vec log_determinant_derivative 
-///// (
-/////     arma::cube derivative, 
-/////     arma::mat compressed_sparse_chol, 
-/////     Rcpp::IntegerMatrix NNarray
-///// )
-///// {
-/////   int  n = NNarray.nrow() ;
-/////   int  m = NNarray.ncol() ;
-/////   arma::vec res(n);
-/////   res.fill(0);
-/////   // looping over the row idx of the derivative of tilde R
-/////   for(int row_idx = 0; row_idx<n; row_idx++){
-/////     int bsize = std::min(row_idx+1,m);
-/////     {
-/////       // looping over the index of the covariance parameter wrt which the derivative has been computed  (retrieved through NNarray)
-/////       for(int covparm_idx = 0; covparm_idx < bsize; covparm_idx++)
-/////       {
-/////         //std::cout << NNarray(row_idx, 0) ; 
-/////         //std::cout << "\n" ; 
-/////         res(NNarray(row_idx, covparm_idx)-1)+= derivative(row_idx, covparm_idx, 0)/compressed_sparse_chol(row_idx, 0); 
-/////       }
-/////     }
-/////   }
-/////   return(res);
-///// }
-///// 
-///// 
-///// 
-///// //
+
