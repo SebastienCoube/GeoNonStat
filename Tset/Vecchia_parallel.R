@@ -1,4 +1,4 @@
-Rcpp::sourceCpp("src/vecchia_nonstat_col.cpp")
+Rcpp::sourceCpp("src/vecchia.cpp")
 
 ################################################################
 # checking that obtained Vecchia factor gives sensible samples #
@@ -188,13 +188,9 @@ for(sm in smoothness){
 
 # testing derivative sandwich
 
-
-Rcpp::sourceCpp("src/vecchia_nonstat_col.cpp")
-
-
 set.seed(1)
 # spatial locations 
-n = 1000000
+n = 10000
 locs = cbind(runif(n), runif(n))
 # range parameters 
 log_range = matrix(0, n, 3)
@@ -248,4 +244,11 @@ for(range_col_idx in seq(3)){
   print(tatata[range_col_idx, range_row_idx])
   print("=========================")
 }
+
+
+
+Rcpp::sourceCpp("src/vecchia.cpp")
+
+
+
 

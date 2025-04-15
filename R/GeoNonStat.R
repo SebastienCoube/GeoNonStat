@@ -1,45 +1,29 @@
-#' Process obeserved locations
-#'
-#' @param observed_locs observed locations, a matrix of spatial coordinates where observations are done
-#' @param max_locs max number of locs to process in analysys, default to 100000
-#' @param seed random seed, numerical value. default to 123
-#'
-#' @returns a list with processed locations and indexes of duplicated ones in observed locations
-process_locs <- function(observed_locs, max_locs = 100000, seed=123){
-  set.seed(seed)
-  duplicated_locs = duplicated(observed_locs)
-  locs = observed_locs[!duplicated_locs, ]
-  max_locs <- min(nrow(locs), 100000)
-  locs_reordering = order(runif(nrow(locs)))
-  locs_reordering[seq(max_locs)] = locs_reordering[GpGp::order_maxmin(locs[locs_reordering[seq(max_locs)], ])]
-  locs = locs[locs_reordering, ]
-  return(list("locs" = locs, "duplicated_locs" = duplicated_locs))
-}
 
-#' Process vecchia
+#' Vecchia approximation setup
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
-#' @param processed_locs a list of processed locations (output of \code{process_locs(observed_locs)})
-#' @param observed_field a vector of observations of the interest variable
 #' @param m number of nearest neighbors to do Vecchia's approximation
 #' #'
 #' @returns a list
 #'   set.seed(100)
 #'   size <- 2000
-#'   obs_locs = cbind(runif(size), runif(size))
-#'   processed_locs <-  process_locs(obs_locs)
-#'   obs_fields <- aniso_observed_field
-#'   res <- process_vecchia(obs_locs,processed_locs, obs_fields, m=10) 
-process_vecchia <- function(observed_locs, processed_locs, observed_field, m){
+#'   observed_locs = cbind(runif(size), runif(size))
+#'   res <- vecchia_setup(observed_locs, m=10) 
+vecchia_setup <- function(observed_locs, m){
+  message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
   
-  locs <- processed_locs$locs
-  duplicated_locs <- processed_locs$duplicated_locs
+  # re-ordering and treating spatial locations 
+  locs = observed_locs[!duplicated(observed_locs), ]
+  max_locs <- min(nrow(locs), 10000)
+  locs_reordering = order(runif(nrow(locs)))
+  locs_reordering[seq(max_locs)] = locs_reordering[GpGp::order_maxmin(locs[locs_reordering[seq(max_locs)], ])]
+  locs = locs[locs_reordering, ]
   
   # storing numbers
   n_locs = n = nrow(locs)
-  n_obs = length(observed_field)
+  n_obs = nrow(observed_locs)
   # matching observed locations with reordered, unrepeated locations
   locs_match = match(split(observed_locs, row(observed_locs)), 
                      split(locs, row(locs)))
@@ -48,24 +32,26 @@ process_vecchia <- function(observed_locs, processed_locs, observed_field, m){
   hctam_scol = split(seq(n_obs), locs_match)
   
   #extracting NNarray =  nearest neighbours for Vecchia approximation
-  NNarray = GpGp::find_ordered_nn(locs, m)
-  #computations from vecchia_approx$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
-  #non_NA indices from vecchia_approx$NNarray
+  NNarray = t(GpGp::find_ordered_nn(locs, m))
+  #computations from vecchia_setup$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
+  #non_NA indices from vecchia_setup$NNarray
   NNarray_non_NA = !is.na(NNarray)
   
   # partition of locs for field update
-  cl = parallel::makeCluster(max(1, parallel::detectCores() - 2))
+  cl = parallel::makeCluster(5)
   parallel::clusterExport(cl = cl, varlist = c("locs", "n"), envir = environment())
   locs_partition = parallel::parSapply(
     cl = cl, 
-    round(seq(n / 10000 + 1, 2 * (n / 10000) + 1, length.out = min(20, ceiling(n / 10000)))), 
+    round(seq(n / 10000 + 1, 2 * (n / 10000) + 1, length.out = min(10, ceiling(n / 10000)))), 
     function(i) { kmeans(locs, centers = i, iter.max = 200, algorithm = "Hartigan-Wong")$cluster}
   )
+  colnames(locs_partition) = paste(round(seq(n / 10000 + 1, 2 * (n / 10000) + 1, length.out = min(20, ceiling(n / 10000)))), "clust")
   parallel::stopCluster(cl)
   
   return(list(
     n_locs = n_locs,
     n_obs = n_obs,
+    locs = locs, 
     locs_match = locs_match,
     locs_match_matrix = locs_match_matrix,
     hctam_scol = hctam_scol,
@@ -75,7 +61,6 @@ process_vecchia <- function(observed_locs, processed_locs, observed_field, m){
     NNarray_non_NA = !is.na(NNarray),
     sparse_chol_column_idx = NNarray[NNarray_non_NA], #column idx of the uncompressed sparse Cholesky factor
     sparse_chol_row_idx = row(NNarray)[NNarray_non_NA], #row idx of the uncompressed sparse Cholesky factor
-    duplicated_locs = duplicated_locs,
     locs_partition = locs_partition
   ))
 }
@@ -206,7 +191,7 @@ process_transition_kernels <- function(init=-4){
 #' @param covariates TODO
 #' @param observed_field TODO
 #' @param anisotropic TODO
-#' @param vecchia_approx TODO
+#' @param vecchia_setup TODO
 #' @param init_tk TODO
 #'
 #' @returns a list
@@ -216,7 +201,7 @@ process_states <- function(
     covariates,
     observed_field,
     anisotropic,
-    vecchia_approx,
+    vecchia_setup,
     init_tk = -4
 ) {
   # Transition kernels ###################################################################
@@ -316,7 +301,7 @@ process_states <- function(
     PP = PP,
     use_PP = hm$scale_PP,
     X = covariates$scale_X$X_locs,
-    locs_idx = vecchia_approx$hctam_scol_1
+    locs_idx = vecchia_setup$hctam_scol_1
   )
   
   # NNGP sparse chol #############################################
@@ -328,27 +313,27 @@ process_states <- function(
       range_beta = params$range_beta,
       PP = hm$PP,
       use_PP = hm$range_PP,
-      NNarray = vecchia_approx$NNarray,
-      locs_idx = vecchia_approx$hctam_scol_1,
+      NNarray = vecchia_setup$NNarray,
+      locs_idx = vecchia_setup$hctam_scol_1,
       locs = locs,
       nu = hm$nu,
       num_threads = max(1, parallel::detectCores() - 2)
     )
   
   sparse_chol_and_stuff$sparse_chol = Matrix::sparseMatrix(
-    x =  sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA],
-    i = vecchia_approx$sparse_chol_row_idx,
-    j = vecchia_approx$sparse_chol_column_idx,
+    x =  sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_setup$NNarray_non_NA],
+    i = vecchia_setup$sparse_chol_row_idx,
+    j = vecchia_setup$sparse_chol_column_idx,
     triangular = T
   )
   sparse_chol_and_stuff$precision_diag = as.vector((
-    sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_approx$NNarray_non_NA]^2
+    sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_setup$NNarray_non_NA]^2
   ) %*% Matrix::sparseMatrix(
     i = seq(length(
-      vecchia_approx$sparse_chol_column_idx
+      vecchia_setup$sparse_chol_column_idx
     )),
-    j = vecchia_approx$sparse_chol_column_idx,
-    x = rep(1, length(vecchia_approx$sparse_chol_row_idx))
+    j = vecchia_setup$sparse_chol_column_idx,
+    x = rep(1, length(vecchia_setup$sparse_chol_row_idx))
   )
   )
   
@@ -356,7 +341,7 @@ process_states <- function(
   
   params$field = sqrt(sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(
     sparse_chol_and_stuff$sparse_chol,
-    rnorm(vecchia_approx$n_locs)
+    rnorm(vecchia_setup$n_locs)
   ))
   
   return(list(
@@ -478,13 +463,13 @@ GeoNonStat <-
     # Vecchia approximation ##########################################################################
     # This object gathers the NNarray table used by GpGp package and related objects
 
-    vecchia_approx <- process_vecchia(observed_locs, processed_locs, observed_field, m)
+    vecchia_setup <- process_vecchia(observed_locs, processed_locs, observed_field, m)
     
     # covariates #########################################################
     
     covariates = list()
     # fixed effects for response
-    covariates$X = process_covariates(X, observed_locs, vecchia_approx)
+    covariates$X = process_covariates(X, observed_locs, vecchia_setup)
     # explicit PP basis
     explicit_PP_basis = NULL
     if (!is.null(PP)) {
@@ -495,7 +480,7 @@ GeoNonStat <-
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X,
                                             observed_locs,
-                                            vecchia_approx,
+                                            vecchia_setup,
                                             explicit_PP_basis,
                                             range_PP)
     if (!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))
@@ -503,7 +488,7 @@ GeoNonStat <-
     # fixed effects and PP for scale
     covariates$scale_X = process_covariates(scale_X,
                                             observed_locs,
-                                            vecchia_approx,
+                                            vecchia_setup,
                                             explicit_PP_basis,
                                             scale_PP)
     if (!identical(covariates$scale_X$which_locs, seq(ncol(covariates$scale_X$X))))
@@ -511,7 +496,7 @@ GeoNonStat <-
     # fixed effects and PP for noise
     covariates$noise_X = process_covariates(noise_X,
                                             observed_locs,
-                                            vecchia_approx,
+                                            vecchia_setup,
                                             explicit_PP_basis,
                                             noise_PP)
     # explicit PP basis removal
@@ -543,7 +528,7 @@ GeoNonStat <-
       covariates,
       observed_field,
       anisotropic,
-      vecchia_approx,
+      vecchia_setup,
       init_tk = -4
     ) 
     # Remove unecessary naive OLS
@@ -571,7 +556,7 @@ GeoNonStat <-
           "covariates" = covariates
         ),
       "hierarchical_model" = hierarchical_model,
-      "vecchia_approx" = vecchia_approx,
+      "vecchia_setup" = vecchia_setup,
       "states" = state,
       "records" = records,
       "seed" = seed,
@@ -608,8 +593,8 @@ summary.GeoNonStat <- function(object, ...) {
   detailed_summary(object$data)
   cat("### hierarchical_model ###")
   detailed_summary(object$hierarchical_model)
-  cat("### vecchia_approx ###",
-    summary(object$vecchia_approx), 
+  cat("### vecchia_setup ###",
+    summary(object$vecchia_setup), 
     "### states ###",
     summary(object$states), 
     "### records ###", 
