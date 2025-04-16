@@ -1,35 +1,4 @@
-#' Comparison between PP and NNGP
-#' Allows to see if a Predictive Process has enough knots.
-#' Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
-#' If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.
-#' @param PP a Predictive Process object (produced by `get_PP()`)
-#'
-#' @returns a plot
-#' @export
-#'
-#' @examples
-#' obs_locs <- matrix(rnorm(20), ncol=2)
-#' ex_PP <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
-#' compare_PP_NNGP(ex_PP)
-compare_PP_NNGP = function(PP) {
-  op <- par("mfrow")
-  seed_vector =  rnorm(PP$n_PP + nrow(PP$unique_reordered_locs))
-  par(mfrow = c(1, 2))
-  plot_pointillist_painting(
-    PP$unique_reordered_locs[PP$idx, ],
-    X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]),
-    cex = .3,
-    main = "NNGP into PP"
-  )
-  points(PP$knots, pch = 3, cex = .3)
-  plot_pointillist_painting(
-    rbind(PP$knots, PP$unique_reordered_locs),
-    as.vector(Matrix::solve(PP$sparse_chol, seed_vector)),
-    cex = .3,
-    main = "NNGP"
-  )
-  par(mfrow = op)
-}
+
 
 
 #' Plots range ellipses for nonstationary covariance functions.

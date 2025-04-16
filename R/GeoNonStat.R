@@ -584,8 +584,8 @@ print.GeoNonStat <- function(x, ...) {
 
 #' Summary of a 'GeoNonStat' object 
 #'
-#' @param object Un objet de classe \code{object}
-#' @param ... Arguments additionnels
+#' @param object an object of class \code{object}
+#' @param ... additional arguments
 #' @export
 summary.GeoNonStat <- function(object, ...) {
   
