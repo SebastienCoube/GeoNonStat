@@ -105,7 +105,7 @@ PP = function(observed_locs, matern_range = NULL, knots = NULL,  m = 10, seed=12
 #' @param object an object of class \code{object}
 #' @param ... additional arguments
 #' @export
-#' #' @examples
+#' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = PP(observed_locs)
@@ -127,32 +127,37 @@ summary.PP <- function(object, ...) {
       "and", message_loss)
 }
 
-# Plot the knots and the spatial locations of a PP
+#' @title Plot the knots and the spatial locations of a PP
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = PP(observed_locs)
 #' plot_knots.PP(pepito)
 plot_knots.PP = function(x, ...) {
+  nx <- nrow(x$unique_reordered_locs)
+  ny <- nrow(x$knots)
   plot(rbind(x$unique_reordered_locs, x$knots), 
-       cex = c(rep(.2, nrow(x$unique_reordered_locs)), rep(1, nrow(x$knots))),
-       col = c(rep(8,  nrow(x$unique_reordered_locs)), rep(2, nrow(x$knots))), 
-       pch = c(rep(16,  nrow(x$unique_reordered_locs)), rep(16, nrow(x$knots))), 
-       xlab = "first spatial coordinate",
-       ylab = "second spatial coordinate",
-       main = "Knot placement"
+       cex = c(rep(.2, nx), rep(1, ny)),
+       col = c(rep(8,  nx), rep(2, ny)), 
+       pch = c(rep(16,  nx), rep(16, ny)), 
+       xlab = "1st spatial coordinate",
+       ylab = "2nd spatial coordinate",
+       main = "Knot placement of PP"
        )
 }
 
-# Compute the percentage of marginal variance who is lost because of the use of a PP
+#' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = PP(observed_locs)
 #' plot_knots(var_loss_percentage.PP)
 var_loss_percentage.PP = function(x, ...) {
-  PP_mar_var = apply(Matrix::solve(x$sparse_chol, Matrix::diag(nrow=  nrow(x$sparse_chol), ncol = nrow(x$knots))), 1, function(x)sum(x^2))
-  return((1.0001 - PP_mar_var)*100/1.0001)
+  PP_mar_var = apply(Matrix::solve(x$sparse_chol, Matrix::diag(
+    nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
+  )), 1, function(x)
+    sum(x^2))
+  return((1.0001 - PP_mar_var) * 100 / 1.0001)
 }
 
 

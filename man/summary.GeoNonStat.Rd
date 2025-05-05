@@ -7,9 +7,9 @@
 \method{summary}{GeoNonStat}(object, ...)
 }
 \arguments{
-\item{object}{Un objet de classe \code{object}}
+\item{object}{an object of class \code{object}}
 
-\item{...}{Arguments additionnels}
+\item{...}{additional arguments}
 }
 \description{
 Summary of a 'GeoNonStat' object

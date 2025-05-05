@@ -10,7 +10,7 @@ process_states(
   covariates,
   observed_field,
   anisotropic,
-  vecchia_approx,
+  vecchia_setup,
   init_tk = -4
 )
 }
@@ -23,7 +23,7 @@ process_states(
 
 \item{anisotropic}{TODO}
 
-\item{vecchia_approx}{TODO}
+\item{vecchia_setup}{TODO}
 
 \item{init_tk}{TODO}
 }
