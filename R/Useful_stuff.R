@@ -52,7 +52,7 @@ symmat = function(coords)
 #' Title TODO
 #'
 #' @param beta TODO
-#' @param PP predictive process obtained through get_PP
+#' @param PP predictive process obtained through `PP()`
 #' @param use_PP should the PP be used ? Default to FALSE
 #' @param X TODO
 #' @param locs_idx match between PP basis function and locs.
@@ -63,7 +63,7 @@ symmat = function(coords)
 #' @examples
 #' locs = cbind(runif(100), runif(100))
 #' n_PP = 50
-#' PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+#' PP = PP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
 #' X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
 #' res <- variance_field(beta = rnorm(n_PP), PP = PP, use_PP = TRUE, X = X)
 #' res <- variance_field(beta = rnorm(n_PP), X = X)
@@ -101,7 +101,7 @@ variance_field = function(beta,
 #' @param NNarray Vecchia parents array provided by GpGp::find_ordered_nn
 #' @param locs matrix of spatial sites
 #' @param range_X covariates for range
-#' @param PP predictive process obtained through get_PP
+#' @param PP predictive process obtained through `PP()`
 #' @param use_PP should the PP be used ? (redundant when using the function "by hand", but handy when automating)
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
 #' @param nu Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
@@ -140,7 +140,7 @@ variance_field = function(beta,
 #'   )  # match between unique observed_locs and duplicated observed_locs (reverse of locs_match)
 #' NNarray = GpGp::find_ordered_nn(unique_locs, 10)  # Vecchia Nearest Neighbor Array
 #' range_X = cbind(1, unique_locs) # Covariates for the range
-#' PP = GeoNonStat::get_PP(observed_locs = observed_locs, matern_range = .1, lonlat = F, n_PP = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
+#' PP = GeoNonStat::PP(observed_locs = observed_locs, matern_range = .1, knots = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
 #' 
 #' 
 #' # sampling white noise to reuse 

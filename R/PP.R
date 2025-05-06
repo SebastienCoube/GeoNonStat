@@ -151,7 +151,7 @@ plot_knots.PP = function(x, ...) {
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = PP(observed_locs)
-#' plot_knots(var_loss_percentage.PP)
+#' var_loss_percentage.PP(pepito)
 var_loss_percentage.PP = function(x, ...) {
   PP_mar_var = apply(Matrix::solve(x$sparse_chol, Matrix::diag(
     nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
@@ -159,11 +159,6 @@ var_loss_percentage.PP = function(x, ...) {
     sum(x^2))
   return((1.0001 - PP_mar_var) * 100 / 1.0001)
 }
-
-
-
-
-
 
 
 
@@ -179,17 +174,16 @@ var_loss_percentage.PP = function(x, ...) {
 #' @returns a matrix
 #' 
 #' @examples
-#' # multiplying PP alone
 #' locs = cbind(runif(10000), runif(10000))
 #' par(mfrow = c(1,2))
 #' pepito = PP(locs)
+#' # multiplying PP alone
 #' res <- X_PP_mult_right(PP = pepito, Y = rnorm(pepito$n_knots))
-#' # multiplying PP and matrix of covariates
 #' GeoNonStat::plot_pointillist_painting(locs, res)
+#' # multiplying PP and matrix of covariates
 #' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
 #' GeoNonStat::plot_pointillist_painting(locs, res)
-
 X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL, Y)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
@@ -213,7 +207,7 @@ X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL,
 #' Allows to see if a Predictive Process has enough knots.
 #' Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
 #' If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.
-#' @param PP a Predictive Process object (produced by `get_PP()`)
+#' @param PP a Predictive Process object (produced by `PP()`)
 #'
 #' @returns a plot
 #' @export

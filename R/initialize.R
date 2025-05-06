@@ -81,10 +81,10 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' @examples
 #' set.seed(100)
 #' locs = cbind(runif(10000), runif(10000))
-#' PP = get_PP(
+#' PP = PP(
 #'   observed_locs = locs[seq(10000),], # spatial sites
 #'   matern_range = .1,
-#'   n_PP = 50, # number of knots
+#'   knots = 50, # number of knots
 #'   m = 15 # number of NNGP parents
 #' )
 #' range_beta = rbind(c(-4, 0, 0), # intercept

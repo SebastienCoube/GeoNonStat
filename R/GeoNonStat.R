@@ -380,10 +380,10 @@ process_states <- function(
 #' @examples
 #' set.seed(100)
 #' locs = cbind(runif(100), runif(100))
-#' PP = get_PP(
+#' PP = PP(
 #'   observed_locs = locs, # spatial sites
 #'   matern_range = .1,
-#'   n_PP = 50, # number of knots
+#'   knots = 50, # number of knots
 #'   m = 15 # number of NNGP parents
 #' )
 #' myobj = GeoNonStat(
