@@ -2,10 +2,10 @@ test_that("initialize class GeoNonStat works", {
   set.seed(100)
   size <- 2000
   locs = cbind(runif(size), runif(size))
-  PP = get_PP(
+  PP = PP(
     observed_locs = locs[seq(size),], # spatial sites
     matern_range = .1,
-    n_PP = 50, # number of knots
+    knots = 50, # number of knots
     m = 15 # number of NNGP parents
   )
   range_beta = rbind(c(-4, 0, 0), # intercept

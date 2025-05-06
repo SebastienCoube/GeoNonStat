@@ -1,6 +1,6 @@
 test_that("compare_PP_NNGP produce expected output", {
   obs_locs <- matrix(rnorm(20), ncol=2)
-  ex_PP <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4)
+  ex_PP <- PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), knots=4)
   op <- par("mfrow")
   expect_error(
     res <- compare_PP_NNGP(ex_PP),

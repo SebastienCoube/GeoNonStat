@@ -78,7 +78,7 @@ test_that("X_PP_mult_right produce expected output", {
   set.seed(123)
   locs = cbind(runif(100), runif(100))
   n_PP = 50
-  PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+  PP = PP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
   X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
   
   # When using PP
@@ -116,7 +116,7 @@ test_that("variance_field produce expected output", {
   set.seed(123)
   locs = cbind(runif(100), runif(100))
   n_PP = 50
-  PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+  PP = PP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
   X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
 
   # When using PP
@@ -187,12 +187,12 @@ test_that("compute_sparse_chol produce expected output", {
   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
 })
 
-test_that("get_PP produce expected output", {
+test_that("PP produce expected output", {
   # Don't know why this tests fail when launched single. 
   obs_locs <- matrix(rnorm(10), ncol=2)
   set.seed(123)
   expect_error(
-    res <- get_PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), n_PP=4),
+    res <- PP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), knots=4),
     NA
   )
   expect_named(res, c('knots', 'unique_reordered_locs', 'idx', 
@@ -237,7 +237,7 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
 test_that("X_PP_crossprod produce expected output", {
   set.seed(123)
   locs = cbind(runif(100), runif(100))
-  PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = 50, m = 15)
+  PP = PP(locs, c(1, .1, 1.5, 0), knots = 50, m = 15)
   X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
   Y = matrix(rnorm(nrow(X)*3), ncol=3)
   

@@ -32,8 +32,6 @@
 #' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
 #' # inputing an user-specified grid of knots in order to adjust to small Matérn range
 #' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
-
-
 PP = function(observed_locs, matern_range = NULL, knots = NULL,  m = 10, seed=1234){
   # Suppress duplicates in observed points.
   locs_ = observed_locs[! duplicated(observed_locs),]
