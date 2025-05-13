@@ -84,7 +84,7 @@ process_vecchia <- function(observed_locs, m){
 #' @returns a list
 #' @examples
 #' #TODO
-process_hierarchical_model <- function(
+process_hierarchical_model <- function(PP,
                                        noise_PP = NULL, noise_log_scale_prior,
                                        scale_PP = NULL, scale_log_scale_prior,
                                        range_PP = NULL, range_log_scale_prior,
@@ -504,10 +504,10 @@ GeoNonStat <-
       scale_PP, scale_log_scale_prior,
       range_PP, range_log_scale_prior,
       locs=vecchia_setup$locs,
-      nu,
-      observed_field,
-      covariates,
-      anisotropic)
+      nu = nu,
+      observed_field = observed_field,
+      covariates = covariates,
+      anisotropic = anisotropic)
     
     naive_ols <- hierarchical_model$naive_ols
     
