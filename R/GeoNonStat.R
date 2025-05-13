@@ -85,10 +85,10 @@ process_vecchia <- function(observed_locs, m){
 #' @returns a list
 #' @examples
 #' #TODO
-process_hierarchical_model <- function(PP,
-                                       noise_PP, noise_log_scale_prior,
-                                       scale_PP, scale_log_scale_prior,
-                                       range_PP, range_log_scale_prior,
+process_hierarchical_model <- function(
+                                       noise_PP = NULL, noise_log_scale_prior,
+                                       scale_PP = NULL, scale_log_scale_prior,
+                                       range_PP = NULL, range_log_scale_prior,
                                        locs,
                                        nu,
                                        observed_field,
@@ -98,22 +98,19 @@ process_hierarchical_model <- function(PP,
   
   # Info about hierarchical model ##############################################################
   
-  # if (is.null(PP))
-  #   PP = list("n_knots" = 0)
-  # 
-  if (is.null(noise_log_scale_prior) & noise_PP)
+  if (is.null(noise_log_scale_prior) & !is.null(noise_PP))
   {
-    message("noise_log_scale_prior was automatically set to an uniform on (-6, 2)")
-    noise_log_scale_prior = c(-6, 2)
+    message("the prior for the marginal variance of the PP who describes the noise parameters was automatically set to an uniform on (-6, 3)")
+    noise_log_scale_prior = c(-6, 3)
   }
   if (is.null(scale_log_scale_prior) & scale_PP)
   {
-    message("scale_log_scale_prior was automatically set to an uniform on (-6, 2)")
-    scale_log_scale_prior = c(-6, 2)
+    message("the prior for the marginal variance of the PP who describes the scale parameters was automatically set to an uniform on (-6, 3)")
+    scale_log_scale_prior = c(-6, 3)
   }
   if (is.null(range_log_scale_prior) & range_PP)
   {
-    message("range_log_scale_prior was automatically set to an uniform on (-6, 2)")
+    message("the prior for the marginal variance of the PP who describes the range parameters was automatically set to an uniform on (-6, 3)")
     range_log_scale_prior = c(-6, 3)
   }
   
@@ -122,7 +119,7 @@ process_hierarchical_model <- function(PP,
   if (!is.null(scale_log_scale_prior))
     scale_log_scale_prior = matrix(scale_log_scale_prior)
   
-  alpha_max = -0.5 * log(8 * nu) + log(max(dist(locs[seq(min(1000, nrow(locs))), ])) / 4)
+  alpha_max = -0.5 * log(8 * nu) + log(max(dist(locs[seq(min(10000, nrow(locs))), ])) / 4)
   alpha_min = -0.5 * log(8 * nu) + log(median(FNN::get.knn(locs, k = 1)$nn.dist) * 3)
   
   # OLS to get residual variance to make a guess
