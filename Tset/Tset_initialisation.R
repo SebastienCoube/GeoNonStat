@@ -5,7 +5,7 @@ set.seed(100)
 locs = cbind(runif(10000), runif(10000))
 
 # Predictive Process
-PP = GeoNonStat::get_PP(
+PP = GeoNonStat::createPP(
   observed_locs = locs[seq(10000),], # spatial sites
   matern_range = .1,
   n_PP = 50, # number of knots

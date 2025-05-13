@@ -53,7 +53,6 @@ symmat = function(coords)
 #'
 #' @param beta TODO
 #' @param PP predictive process obtained through `PP()`
-#' @param use_PP should the PP be used ? Default to FALSE
 #' @param X TODO
 #' @param locs_idx match between PP basis function and locs.
 #'
@@ -63,13 +62,12 @@ symmat = function(coords)
 #' @examples
 #' locs = cbind(runif(100), runif(100))
 #' n_PP = 50
-#' PP = PP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
+#' PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
 #' X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
 #' res <- variance_field(beta = rnorm(n_PP), PP = PP, use_PP = TRUE, X = X)
 #' res <- variance_field(beta = rnorm(n_PP), X = X)
 variance_field = function(beta,
                           PP = NULL,
-                          use_PP = F,
                           X,
                           locs_idx = NULL)
 {
@@ -77,7 +75,6 @@ variance_field = function(beta,
     X_PP_mult_right(
       X = X,
       PP = PP,
-      use_PP = use_PP,
       locs_idx = locs_idx,
       Y = beta
     )
@@ -101,12 +98,11 @@ variance_field = function(beta,
 #' @param NNarray Vecchia parents array provided by GpGp::find_ordered_nn
 #' @param locs matrix of spatial sites
 #' @param range_X covariates for range
-#' @param PP predictive process obtained through `PP()`
+#' @param PP predictive process obtained through `createPP()`
 #' @param use_PP should the PP be used ? (redundant when using the function "by hand", but handy when automating)
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
-#' @param nu Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
+#' @param smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
 #' @param anisotropic Logical, default to FALSE. TODO
-#' @param sphere Logical, default to FALSE. TODO
 #' @param num_threads numerical, number of treads to use. Default to 1.
 #' @param locs_idx match between the duplicated locations used to buile the PP basis function and the non-redundant locs used to compute the sparse chol
 #'
@@ -116,6 +112,7 @@ variance_field = function(beta,
 #' @examples
 #' locs = cbind(seq(100)/10, 0)
 #' NNarray = GpGp::find_ordered_nn(locs, 10)
+#' \dontrun{
 #' res <- compute_sparse_chol(
 #'           range_beta = matrix(.5/sqrt(2),1,1), 
 #'           NNarray = NNarray, 
@@ -124,10 +121,10 @@ variance_field = function(beta,
 #'           num_threads = 1, 
 #'           anisotropic = F,
 #'           range_X = matrix(1, nrow(locs), 1), 
-#'           nu = 1.5
+#'           smoothness = 1.5
 #'         )
+#'}
 #' \dontrun{
-#' 
 #' set.seed(1)
 #' observed_locs =  cbind(runif(10000), runif(10000))  # creating spatial locations 
 #' observed_locs = rbind(observed_locs, observed_locs) 
@@ -140,7 +137,7 @@ variance_field = function(beta,
 #'   )  # match between unique observed_locs and duplicated observed_locs (reverse of locs_match)
 #' NNarray = GpGp::find_ordered_nn(unique_locs, 10)  # Vecchia Nearest Neighbor Array
 #' range_X = cbind(1, unique_locs) # Covariates for the range
-#' PP = GeoNonStat::PP(observed_locs = observed_locs, matern_range = .1, knots = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
+#' PP = createPP(observed_locs = observed_locs, matern_range = .1, knots = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
 #' 
 #' 
 #' # sampling white noise to reuse 
@@ -154,10 +151,10 @@ variance_field = function(beta,
 #'   range_beta =  range_beta, NNarray = NNarray, 
 #'   locs = unique_locs, range_X = range_X, 
 #'   PP = PP, use_PP = T, compute_derivative = T, 
-#'   nu = 1.5, anisotropic = T,# Note : anisotropic is T
-#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#'   smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
+#'   num_threads = 1, locs_idx = hctam_scol_1)
 #' # plotting a sample generated from sparse chol
-#' GeoNonStat::plot_pointillist_painting(
+#' plot_pointillist_painting(
 #'   unique_locs, 
 #'   Matrix::solve(Matrix::sparseMatrix(
 #'     i = row(NNarray)[!is.na(NNarray)], 
@@ -174,8 +171,8 @@ variance_field = function(beta,
 #'   range_beta =  range_beta, NNarray = NNarray, 
 #'   locs = unique_locs, range_X = range_X, 
 #'   PP = PP, use_PP = T, compute_derivative = T, 
-#'   nu = 1.5, anisotropic = T,# Note : anisotropic is T
-#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#'   smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
+#'   num_threads = 1, locs_idx = hctam_scol_1)
 #' # plotting a sample generated from sparse chol. It is locally isotropic, and the same as the next !
 #' GeoNonStat::plot_pointillist_painting(
 #'   unique_locs, 
@@ -196,8 +193,8 @@ variance_field = function(beta,
 #'   range_beta =  range_beta, NNarray = NNarray, 
 #'   locs = unique_locs, range_X = range_X, 
 #'   PP = PP, use_PP = T, compute_derivative = T, 
-#'   nu = 1.5, anisotropic = F, 
-#'   sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+#'   smoothness = 1.5, anisotropic = F, 
+#'   num_threads = 1, locs_idx = hctam_scol_1)
 #' # plotting a sample generated from sparse chol
 #' GeoNonStat::plot_pointillist_painting(
 #'   unique_locs, 
@@ -217,13 +214,12 @@ compute_sparse_chol = function(range_beta,
                                PP = NULL, 
                                use_PP = F, 
                                compute_derivative = T, 
-                               nu = 1.5, 
+                               smoothness = 1.5, 
                                anisotropic = F,
-                               sphere = F,
                                num_threads = 1,
                                locs_idx = NULL)
 {
-  if (!nu%in%c(.5, 1.5)) stop("nu must be equal to 0.5 or 1.5")
+  if (!smoothness %in% c(.5, 1.5)) stop("smoothness must be equal to 0.5 or 1.5")
   # converting to canonical basis
   if(ncol(range_beta)==3) {
     range_beta = range_beta %*% matrix(
@@ -240,26 +236,15 @@ compute_sparse_chol = function(range_beta,
       X = range_X, 
       PP = PP, 
       Y = range_beta,  
-      use_PP = use_PP, 
       locs_idx = locs_idx))
   #GeoNonStat::plot_ellipses(locs, log_range)
-  # exp locally isotropic
-  covfun_name <- NULL
-  if((!anisotropic) & (nu==0.5)) covfun_name <- "nonstationary_exponential_isotropic" 
-  # matern locally isotropic
-  if((!anisotropic) & (nu==1.5)) covfun_name <- "nonstationary_matern_isotropic"  
-  # exp locally anisotropic
-  if(( anisotropic) & (nu==0.5)) covfun_name <- "nonstationary_exponential_anisotropic"
-  # matern locally anisotropic
-  if(( anisotropic) & (nu==1.5)) covfun_name <- "nonstationary_matern_anisotropic"
-  
-  res <- nonstat_vecchia_Linv(num_threads=num_threads,
+
+  res <- vecchia(num_threads=num_threads,
                               log_range = log_range*2, 
-                              covfun_name = covfun_name  , 
-                              sphere = sphere, 
                               locs = locs, 
                               NNarray = NNarray, 
-                              compute_derivative = compute_derivative)
+                              compute_derivative = compute_derivative,
+                              smoothness = smoothness)
   
   res[[2]] = lapply(res[[2]], function(x)x*2)
   return(res)
@@ -282,7 +267,7 @@ compute_sparse_chol = function(range_beta,
 ###           use_PP = F, 
 ###           num_threads = 1, 
 ###           anisotropic = F,
-###           range_X = matrix(1, nrow(locs), 1), nu = 1.5
+###           range_X = matrix(1, nrow(locs), 1), smoothness = 1.5
 ###         )[[1]][!is.na(NNarray)],
 ###       )
 ###     )
@@ -304,7 +289,7 @@ compute_sparse_chol = function(range_beta,
 ###           use_PP = F, 
 ###           num_threads = 1, 
 ###           anisotropic = T,
-###           range_X = matrix(1, nrow(locs), 1), nu = 1.5
+###           range_X = matrix(1, nrow(locs), 1), smoothness = 1.5
 ###         )[[1]][!is.na(NNarray)],
 ###       )
 ###     )

@@ -6,12 +6,15 @@
 \usage{
 plot_knots.PP(x, ...)
 }
+\arguments{
+\item{x}{an object of class \code{PP}}
+}
 \description{
 Plot the knots and the spatial locations of a PP
 }
 \examples{
 observed_locs = cbind(runif(1000), runif(1000))
 observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-pepito = PP(observed_locs)
+pepito = createPP(observed_locs)
 plot_knots.PP(pepito)
 }

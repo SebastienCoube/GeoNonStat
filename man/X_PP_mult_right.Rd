@@ -5,7 +5,7 @@
 \title{Multiply the concatenation of a matrix of covariates and a PP by a matrix
 (X|PP) %*% Y}
 \usage{
-X_PP_mult_right(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL, Y)
+X_PP_mult_right(X = NULL, PP = NULL, locs_idx = NULL, Y)
 }
 \arguments{
 \item{X}{a matrix of covariates who will be multiplied by the first rows of Y}
@@ -24,13 +24,13 @@ Multiply the concatenation of a matrix of covariates and a PP by a matrix
 (X|PP) %*% Y
 }
 \examples{
-# multiplying PP alone
 locs = cbind(runif(10000), runif(10000))
 par(mfrow = c(1,2))
-pepito = PP(locs)
+pepito = createPP(locs)
+# multiplying PP alone
 res <- X_PP_mult_right(PP = pepito, Y = rnorm(pepito$n_knots))
-# multiplying PP and matrix of covariates
 GeoNonStat::plot_pointillist_painting(locs, res)
+# multiplying PP and matrix of covariates
 X = cbind(1, locs, rnorm(nrow(locs)))
 res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
 GeoNonStat::plot_pointillist_painting(locs, res)

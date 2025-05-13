@@ -1,30 +1,30 @@
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' # automatic 
-#' pepito = PP(observed_locs)
+#' pepito = createPP(observed_locs)
 #' # choosing manually Matérn range, too small wrt number of knots
-#' pepito = PP(observed_locs, matern_range = .1)
+#' pepito = createPP(observed_locs, matern_range = .1)
 #' # choosing manually Matérn range, way too small wrt number of knots
-#' pepito = PP(observed_locs, matern_range = .01)
+#' pepito = createPP(observed_locs, matern_range = .01)
 #' # choosing manually number of knots in order to adjust to Matérn range
-#' pepito = PP(observed_locs, knots = 200, matern_range = .1)
+#' pepito = createPP(observed_locs, knots = 200, matern_range = .1)
 #' # choosing manually number of knots, but picking too few for default Matérn range
-#' pepito = PP(observed_locs, knots = 10)
+#' pepito = createPP(observed_locs, knots = 10)
 #' # choosing manually Matérn range in order to adjust to the number of knots
-#' pepito = PP(observed_locs, knots = 10, matern_range = .5)
+#' pepito = createPP(observed_locs, knots = 10, matern_range = .5)
 #' # inputing an user-specified grid of knots
-#' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
+#' pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
 #' # inputing an user-specified grid of knots in order to adjust to small Matérn range
-#' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
+#' pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
 
 set.seed(123)
 observed_locs = cbind(runif(1000), runif(1000))
 observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 
-test_that("PP works (automatic", {
+test_that("createPP works (automatic", {
   set.seed(123)
   expect_message(
-    pepito <- PP(observed_locs), 
+    pepito <- createPP(observed_locs), 
     "number of knots set by default to 100")
   expect_true(is(pepito, "PP"))
   expect_named(pepito, c('knots', 'unique_reordered_locs', 'idx', 

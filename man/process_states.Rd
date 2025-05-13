@@ -6,7 +6,6 @@
 \usage{
 process_states(
   hm,
-  locs,
   covariates,
   observed_field,
   anisotropic,

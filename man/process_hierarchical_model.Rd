@@ -53,3 +53,6 @@ a list
 \description{
 Initialize hierarchical model
 }
+\examples{
+#TODO
+}

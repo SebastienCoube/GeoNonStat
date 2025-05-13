@@ -81,7 +81,7 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' @examples
 #' set.seed(100)
 #' locs = cbind(runif(10000), runif(10000))
-#' PP = PP(
+#' PP = createPP(
 #'   observed_locs = locs[seq(10000),], # spatial sites
 #'   matern_range = .1,
 #'   knots = 50, # number of knots
@@ -245,7 +245,7 @@ initialize =
     covariates$X = process_covariates(X, observed_locs, vecchia_approx)  
     # explicit PP basis
     explicit_PP_basis = NULL
-    if(!is.null(PP))explicit_PP_basis = X_PP_mult_right(PP = PP, use_PP = T, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
+    if(!is.null(PP))explicit_PP_basis = X_PP_mult_right(PP = PP, Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X, observed_locs, vecchia_approx, explicit_PP_basis, range_PP)
     if(!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))stop("The covariates range_X cannot vary within one spatial location of observed_locs")

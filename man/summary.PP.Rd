@@ -7,7 +7,7 @@
 \method{summary}{PP}(object, ...)
 }
 \arguments{
-\item{object}{an object of class \code{object}}
+\item{object}{an object of class \code{PP}}
 
 \item{...}{additional arguments}
 }
@@ -17,6 +17,6 @@ Summary of a 'PP' object
 \examples{
 observed_locs = cbind(runif(1000), runif(1000))
 observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-pepito = PP(observed_locs)
+pepito = createPP(observed_locs)
 summary(pepito)
 }

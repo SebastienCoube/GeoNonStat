@@ -10,7 +10,7 @@ If there are not enough knots, the PP should be over-smoothed with respect to th
 compare_PP_NNGP(PP, cex = 0.3)
 }
 \arguments{
-\item{PP}{a Predictive Process object (produced by `get_PP()`)}
+\item{PP}{a Predictive Process object (produced by `createPP()`)}
 }
 \value{
 a plot
@@ -23,6 +23,6 @@ If there are not enough knots, the PP should be over-smoothed with respect to th
 }
 \examples{
 obs_locs <- matrix(rnorm(50), ncol=2)
-pepito <- PP(obs_locs)
+pepito <- createPP(obs_locs)
 compare_PP_NNGP(pepito, 1)
 }

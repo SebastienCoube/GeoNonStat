@@ -17,5 +17,7 @@
 #' @importFrom methods as
 #' @importFrom stats rnorm runif
 #' @importFrom graphics plot
+#' @importFrom FNN get.knn
+#' @importFrom coda effectiveSize
 #' @useDynLib GeoNonStat, .registration = TRUE
 "_PACKAGE"

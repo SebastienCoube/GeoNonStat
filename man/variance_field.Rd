@@ -9,7 +9,7 @@ variance_field(beta, PP = NULL, use_PP = F, X, locs_idx = NULL)
 \arguments{
 \item{beta}{TODO}
 
-\item{PP}{predictive process obtained through get_PP}
+\item{PP}{predictive process obtained through `PP()`}
 
 \item{use_PP}{should the PP be used ? Default to FALSE}
 
@@ -26,7 +26,7 @@ Title TODO
 \examples{
 locs = cbind(runif(100), runif(100))
 n_PP = 50
-PP = get_PP(locs, c(1, .1, 1.5, 0), n_PP = n_PP, m = 15)
+PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
 X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
 res <- variance_field(beta = rnorm(n_PP), PP = PP, use_PP = TRUE, X = X)
 res <- variance_field(beta = rnorm(n_PP), X = X)

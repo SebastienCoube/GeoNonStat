@@ -76,17 +76,17 @@ This package provides functions for hierarchical nonstationary nearest neighbor 
 \examples{
 set.seed(100)
 locs = cbind(runif(100), runif(100))
-PP = get_PP(
+myPP = createPP(
   observed_locs = locs, # spatial sites
   matern_range = .1,
-  n_PP = 50, # number of knots
+  knots = 50, # number of knots
   m = 15 # number of NNGP parents
 )
 myobj = GeoNonStat(
   observed_locs = locs, 
   observed_field = rnorm(100),
   nu = 1.5, n_chains = 5,
-  range_PP = T, PP = PP, # use PP for range
+  range_PP = T, PP = myPP, # use PP for range
   anisotropic = T # Covariance will be anisotropic
 )
 }

@@ -27,6 +27,6 @@ t(X|PP) %*% Y
 locs = cbind(runif(10000), runif(10000))
 par(mfrow = c(1,2))
 # comparing several PP approximations and testing PP mult
-pepito = PP(locs)
+pepito = createPP(locs)
 res <- X_PP_crossprod(X = matrix(1, 10000), PP = pepito, Y = matrix(rnorm(10000)))
 }

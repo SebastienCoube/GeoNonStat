@@ -5,7 +5,7 @@ Version: 1.1
 Date: 2021-04-20
 Author: Seb Coube-Sisqueille
 Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
-Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process
+Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process. blablabla. TODO. Add some sentences. (Description should be a paragraph).
 License: GPL-3
 Encoding: UTF-8
 Imports: 
@@ -17,7 +17,11 @@ Imports:
     fields, 
     expm, 
     ellipse, 
-    BH
+    BH,
+    methods,
+    scales,
+    coda,
+    FNN
 LinkingTo: 
     Rcpp, 
     RcppArmadillo

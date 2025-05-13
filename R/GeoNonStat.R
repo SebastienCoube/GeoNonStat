@@ -3,13 +3,14 @@
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
-#' #'
+#'
 #' @returns a list
+#' @examples
 #'   set.seed(100)
 #'   size <- 2000
 #'   observed_locs = cbind(runif(size), runif(size))
-#'   res <- vecchia_setup(observed_locs, m=10) 
-vecchia_setup <- function(observed_locs, m){
+#'   res <- process_vecchia(observed_locs, m=10) 
+process_vecchia <- function(observed_locs, m){
   message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
@@ -33,8 +34,8 @@ vecchia_setup <- function(observed_locs, m){
   
   #extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray = t(GpGp::find_ordered_nn(locs, m))
-  #computations from vecchia_setup$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
-  #non_NA indices from vecchia_setup$NNarray
+  #computations from process_vecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
+  #non_NA indices from process_vecchia$NNarray
   NNarray_non_NA = !is.na(NNarray)
   
   # partition of locs for field update
@@ -82,6 +83,8 @@ vecchia_setup <- function(observed_locs, m){
 #' @param sphere TODO
 #'
 #' @returns a list
+#' @examples
+#' #TODO
 process_hierarchical_model <- function(PP,
                                        noise_PP, noise_log_scale_prior,
                                        scale_PP, scale_log_scale_prior,
@@ -95,9 +98,9 @@ process_hierarchical_model <- function(PP,
   
   # Info about hierarchical model ##############################################################
   
-  if (is.null(PP))
-    PP = list("n_PP" = 0)
-  
+  # if (is.null(PP))
+  #   PP = list("n_knots" = 0)
+  # 
   if (is.null(noise_log_scale_prior) & noise_PP)
   {
     message("noise_log_scale_prior was automatically set to an uniform on (-6, 2)")
@@ -197,7 +200,6 @@ process_transition_kernels <- function(init=-4){
 #' @returns a list
 process_states <- function(
     hm,
-    locs,
     covariates,
     observed_field,
     anisotropic,
@@ -215,7 +217,8 @@ process_states <- function(
   
   # Linear regression coefficients  ###################################################################
   #starting points for regression coeffs
-  perturb = t(chol(vcov(hm$naive_ols))) %*% rnorm(length(hm$naive_ols$coefficients))
+  perturb = t(chol(vcov(hm$naive_ols))) %*% 
+    rnorm(length(hm$naive_ols$coefficients))
   
   params = list("beta"= NULL, 
                 "range_beta" = NULL, 
@@ -236,12 +239,14 @@ process_states <- function(
   # Range #######################################################################
   # range beta
   params$range_beta = matrix(0,
-                             ncol(covariates$range_X$X) + hm$range_PP * hm$PP$n_PP,
+                             ncol(covariates$range_X$X) + 
+                               hm$range_PP * hm$PP$n_knots,
                              1 + 2 * anisotropic)
   if (!hm$range_PP)
     row.names(params$range_beta) = colnames(covariates$range_X$X)
   if (hm$range_PP)
-    row.names(params$range_beta) = c(colnames(covariates$range_X$X), paste("PP", seq(hm$PP$n_PP), sep = "_"))
+    row.names(params$range_beta) = c(colnames(covariates$range_X$X), 
+                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
   params$range_beta[1, 1] = hm$range_beta0_mean
   
   momenta <- list()
@@ -261,21 +266,22 @@ process_states <- function(
   # Noise variance #######################################################
   
   # beta is just an intercept in stationary case
-  params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise_PP * hm$PP$n_PP), ncol = 1) #random starting values
+  params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + 
+                                   hm$noise_PP * hm$PP$n_knots), ncol = 1) #random starting values
   if (!hm$noise_PP)
     row.names(params$noise_beta) = colnames(covariates$noise_X$X)
   if (hm$noise_PP)
-    row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), paste("PP", seq(hm$PP$n_PP), sep = "_"))
+    row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
+                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
   params$noise_beta[1] = hm$noise_beta0_mean
-  momenta$noise_beta = rnorm(ncol(covariates$noise_X$X) + hm$noise_PP *hm$PP$n_PP)
+  momenta$noise_beta = rnorm(ncol(covariates$noise_X$X) + hm$noise_PP *hm$PP$n_knots)
   # noise log scale
   if (hm$noise_PP)
     params$noise_log_scale = hm$noise_log_scale_prior[1]
   # effective variance field, shall be used in density computations
   sparse_chol_and_stuff$noise = variance_field(
     beta = params$noise_beta,
-    PP = PP,
-    use_PP = hm$noise_PP,
+    PP = hm$PP,
     X = covariates$noise_X$X
   )
   
@@ -287,10 +293,12 @@ process_states <- function(
     row.names(params$scale_beta) = colnames(covariates$scale_X$X_locs)
   if (hm$scale_PP)
     row.names(params$scale_beta) = c(colnames(covariates$scale_X$X_locs),
-                                           paste("PP", seq(hm$PP$n_PP), sep = "_"))
+                                           paste("PP", seq(hm$PP$n_knots), sep = "_"))
   params$scale_beta[1] = hm$scale_beta0_mean
-  momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + hm$scale_PP * hm$PP$n_PP)
-  momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + hm$scale_PP * hm$PP$n_PP)
+  momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
+                                          hm$scale_PP * hm$PP$n_knots)
+  momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + 
+                                          hm$scale_PP * hm$PP$n_knots)
   
   # variance
   if (hm$scale_PP)
@@ -298,8 +306,7 @@ process_states <- function(
   # effective variance field, shall be used in density computations
   sparse_chol_and_stuff$scale = variance_field(
     beta = params$scale_beta,
-    PP = PP,
-    use_PP = hm$scale_PP,
+    PP = hm$PP,
     X = covariates$scale_X$X_locs,
     locs_idx = vecchia_setup$hctam_scol_1
   )
@@ -315,8 +322,8 @@ process_states <- function(
       use_PP = hm$range_PP,
       NNarray = vecchia_setup$NNarray,
       locs_idx = vecchia_setup$hctam_scol_1,
-      locs = locs,
-      nu = hm$nu,
+      locs = vecchia_setup$locs,
+      smoothness = hm$nu,
       num_threads = max(1, parallel::detectCores() - 2)
     )
   
@@ -380,7 +387,7 @@ process_states <- function(
 #' @examples
 #' set.seed(100)
 #' locs = cbind(runif(100), runif(100))
-#' PP = PP(
+#' myPP = createPP(
 #'   observed_locs = locs, # spatial sites
 #'   matern_range = .1,
 #'   knots = 50, # number of knots
@@ -390,7 +397,7 @@ process_states <- function(
 #'   observed_locs = locs, 
 #'   observed_field = rnorm(100),
 #'   nu = 1.5, n_chains = 5,
-#'   range_PP = T, PP = PP, # use PP for range
+#'   range_PP = T, PP = myPP, # use PP for range
 #'   anisotropic = T # Covariance will be anisotropic
 #' )
 GeoNonStat <- 
@@ -458,12 +465,10 @@ GeoNonStat <-
     
     # Re-ordering ############################################################################
     # remove duplicated locations
-    processed_locs <- process_locs(observed_locs, seed)
-    
     # Vecchia approximation ##########################################################################
     # This object gathers the NNarray table used by GpGp package and related objects
 
-    vecchia_setup <- process_vecchia(observed_locs, processed_locs, observed_field, m)
+    vecchia_setup <- process_vecchia(observed_locs, m)
     
     # covariates #########################################################
     
@@ -474,7 +479,6 @@ GeoNonStat <-
     explicit_PP_basis = NULL
     if (!is.null(PP)) {
       explicit_PP_basis = X_PP_mult_right(PP = PP,
-                                          use_PP = T,
                                           Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
     }
     # fixed effects and PP for range
@@ -508,7 +512,7 @@ GeoNonStat <-
       noise_PP, noise_log_scale_prior,
       scale_PP, scale_log_scale_prior,
       range_PP, range_log_scale_prior,
-      processed_locs$locs,
+      locs=vecchia_setup$locs,
       nu,
       observed_field,
       covariates,
@@ -523,12 +527,11 @@ GeoNonStat <-
     # params : a list that stocks the (current) parameters of the model, including covariance parameters, the value of the sampled field, etc
     # record : record of the MCMC iterations
     state = process_states(
-      hierarchical_model,
-      processed_locs$locs,
-      covariates,
-      observed_field,
-      anisotropic,
-      vecchia_setup,
+      hm = hierarchical_model,
+      covariates = covariates,
+      observed_field = observed_field,
+      anisotropic = anisotropic,
+      vecchia_setup = vecchia_setup,
       init_tk = -4
     ) 
     # Remove unecessary naive OLS

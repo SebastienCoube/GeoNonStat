@@ -6,12 +6,15 @@
 \usage{
 var_loss_percentage.PP(x, ...)
 }
+\arguments{
+\item{x}{an object of class \code{PP}}
+}
 \description{
 Compute the percentage of marginal variance who is lost because of the use of a PP
 }
 \examples{
 observed_locs = cbind(runif(1000), runif(1000))
 observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-pepito = PP(observed_locs)
-plot_knots(var_loss_percentage.PP)
+pepito = createPP(observed_locs)
+var_loss_percentage.PP(pepito)
 }

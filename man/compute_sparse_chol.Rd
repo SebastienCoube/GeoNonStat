@@ -12,9 +12,8 @@ compute_sparse_chol(
   PP = NULL,
   use_PP = F,
   compute_derivative = T,
-  nu = 1.5,
+  smoothness = 1.5,
   anisotropic = F,
-  sphere = F,
   num_threads = 1,
   locs_idx = NULL
 )
@@ -31,17 +30,15 @@ The last coefficients are multiplied with the spatial basis functions of PP}
 
 \item{range_X}{covariates for range}
 
-\item{PP}{predictive process obtained through get_PP}
+\item{PP}{predictive process obtained through `createPP()`}
 
 \item{use_PP}{should the PP be used ? (redundant when using the function "by hand", but handy when automating)}
 
 \item{compute_derivative}{logical, indicates if derivatives of Vecchia factors are to be computed}
 
-\item{nu}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
+\item{smoothness}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
 
 \item{anisotropic}{Logical, default to FALSE. TODO}
-
-\item{sphere}{Logical, default to FALSE. TODO}
 
 \item{num_threads}{numerical, number of treads to use. Default to 1.}
 
@@ -69,7 +66,7 @@ res <- compute_sparse_chol(
           num_threads = 1, 
           anisotropic = F,
           range_X = matrix(1, nrow(locs), 1), 
-          nu = 1.5
+          smoothness = 1.5
         )
 \dontrun{
 
@@ -85,7 +82,7 @@ hctam_scol_1 =
   )  # match between unique observed_locs and duplicated observed_locs (reverse of locs_match)
 NNarray = GpGp::find_ordered_nn(unique_locs, 10)  # Vecchia Nearest Neighbor Array
 range_X = cbind(1, unique_locs) # Covariates for the range
-PP = GeoNonStat::get_PP(observed_locs = observed_locs, matern_range = .1, lonlat = F, n_PP = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
+PP = createPP(observed_locs = observed_locs, matern_range = .1, knots = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
 
 
 # sampling white noise to reuse 
@@ -99,10 +96,10 @@ sparse_chol = compute_sparse_chol(
   range_beta =  range_beta, NNarray = NNarray, 
   locs = unique_locs, range_X = range_X, 
   PP = PP, use_PP = T, compute_derivative = T, 
-  nu = 1.5, anisotropic = T,# Note : anisotropic is T
-  sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+  smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
+  num_threads = 1, locs_idx = hctam_scol_1)
 # plotting a sample generated from sparse chol
-GeoNonStat::plot_pointillist_painting(
+plot_pointillist_painting(
   unique_locs, 
   Matrix::solve(Matrix::sparseMatrix(
     i = row(NNarray)[!is.na(NNarray)], 
@@ -119,8 +116,8 @@ sparse_chol = compute_sparse_chol(
   range_beta =  range_beta, NNarray = NNarray, 
   locs = unique_locs, range_X = range_X, 
   PP = PP, use_PP = T, compute_derivative = T, 
-  nu = 1.5, anisotropic = T,# Note : anisotropic is T
-  sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+  smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
+  num_threads = 1, locs_idx = hctam_scol_1)
 # plotting a sample generated from sparse chol. It is locally isotropic, and the same as the next !
 GeoNonStat::plot_pointillist_painting(
   unique_locs, 
@@ -141,8 +138,8 @@ sparse_chol = compute_sparse_chol(
   range_beta =  range_beta, NNarray = NNarray, 
   locs = unique_locs, range_X = range_X, 
   PP = PP, use_PP = T, compute_derivative = T, 
-  nu = 1.5, anisotropic = F, 
-  sphere = F, num_threads = 1, locs_idx = hctam_scol_1)
+  smoothness = 1.5, anisotropic = F, 
+  num_threads = 1, locs_idx = hctam_scol_1)
 # plotting a sample generated from sparse chol
 GeoNonStat::plot_pointillist_painting(
   unique_locs, 

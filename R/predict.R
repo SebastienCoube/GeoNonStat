@@ -275,7 +275,7 @@ predict_fixed_effects = function(mcmc_nngp_list, X_pred = NULL, burn_in = .5,  l
   parallel::stopCluster(cl)
   summaries = list()
   predicted_samples_ = list()
-  library(abind())
+  # library(abind())
   predicted_samples_ = do.call("abind", predicted_samples)
   summaries = get_array_summary(predicted_samples_)
   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries))
@@ -383,10 +383,9 @@ predict_noise = function(mcmc_nngp_list, X_noise_pred = NULL, burn_in = .5, pred
         # looping over saved observations
         for(i_predict in seq(n_samples))
         {
-          res[,,i_predict] = X_PP_mult_right(
+          sres[,,i_predict] = X_PP_mult_right(
             X = as.matrix(rbind(mcmc_nngp_list$data$covariates$noise_X$X, X_noise_pred)), 
             PP = PP_, 
-            use_PP = mcmc_nngp_list$hierarchical_model$noise_PP, 
             locs_idx = seq(nrow(rbind(mcmc_nngp_list$data$covariates$noise_X$X, X_noise_pred))), 
             Y = chain$noise_beta[,,i_start + i_predict]
           )[-seq(mcmc_nngp_list$vecchia_approx$n_obs),]

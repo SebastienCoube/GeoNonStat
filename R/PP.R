@@ -17,22 +17,22 @@
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' # automatic 
-#' pepito = PP(observed_locs)
+#' pepito = createPP(observed_locs)
 #' # choosing manually Matérn range, too small wrt number of knots
-#' pepito = PP(observed_locs, matern_range = .1)
+#' pepito = createPP(observed_locs, matern_range = .1)
 #' # choosing manually Matérn range, way too small wrt number of knots
-#' pepito = PP(observed_locs, matern_range = .01)
+#' pepito = createPP(observed_locs, matern_range = .01)
 #' # choosing manually number of knots in order to adjust to Matérn range
-#' pepito = PP(observed_locs, knots = 200, matern_range = .1)
+#' pepito = createPP(observed_locs, knots = 200, matern_range = .1)
 #' # choosing manually number of knots, but picking too few for default Matérn range
-#' pepito = PP(observed_locs, knots = 10)
+#' pepito = createPP(observed_locs, knots = 10)
 #' # choosing manually Matérn range in order to adjust to the number of knots
-#' pepito = PP(observed_locs, knots = 10, matern_range = .5)
+#' pepito = createPP(observed_locs, knots = 10, matern_range = .5)
 #' # inputing an user-specified grid of knots
-#' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
+#' pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
 #' # inputing an user-specified grid of knots in order to adjust to small Matérn range
-#' pepito = PP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
-PP = function(observed_locs, matern_range = NULL, knots = NULL,  m = 10, seed=1234){
+#' pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
+createPP = function(observed_locs, matern_range = NULL, knots = NULL,  m = 10, seed=1234){
   # Suppress duplicates in observed points.
   locs_ = observed_locs[! duplicated(observed_locs),]
   # Random sample. 
@@ -100,16 +100,16 @@ PP = function(observed_locs, matern_range = NULL, knots = NULL,  m = 10, seed=12
 
 #' Summary of a 'PP' object 
 #'
-#' @param object an object of class \code{object}
+#' @param object an object of class \code{PP}
 #' @param ... additional arguments
 #' @export
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = PP(observed_locs)
+#' pepito = createPP(observed_locs)
 #' summary(pepito)
 summary.PP <- function(object, ...) {
-  mar_var_loss = var_loss_percentage.PP(res)
+  mar_var_loss = var_loss_percentage.PP(object)
   message_loss = (paste(
     round(mean(mar_var_loss), 1), 
     "percent of marginal variance on average lost with the use of a PP, which is", 
@@ -126,10 +126,11 @@ summary.PP <- function(object, ...) {
 }
 
 #' @title Plot the knots and the spatial locations of a PP
+#' @param x an object of class \code{PP}
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = PP(observed_locs)
+#' pepito = createPP(observed_locs)
 #' plot_knots.PP(pepito)
 plot_knots.PP = function(x, ...) {
   nx <- nrow(x$unique_reordered_locs)
@@ -145,10 +146,11 @@ plot_knots.PP = function(x, ...) {
 }
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
+#' @param x an object of class \code{PP}
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = PP(observed_locs)
+#' pepito = createPP(observed_locs)
 #' var_loss_percentage.PP(pepito)
 var_loss_percentage.PP = function(x, ...) {
   PP_mar_var = apply(Matrix::solve(x$sparse_chol, Matrix::diag(
@@ -174,7 +176,7 @@ var_loss_percentage.PP = function(x, ...) {
 #' @examples
 #' locs = cbind(runif(10000), runif(10000))
 #' par(mfrow = c(1,2))
-#' pepito = PP(locs)
+#' pepito = createPP(locs)
 #' # multiplying PP alone
 #' res <- X_PP_mult_right(PP = pepito, Y = rnorm(pepito$n_knots))
 #' GeoNonStat::plot_pointillist_painting(locs, res)
@@ -182,7 +184,7 @@ var_loss_percentage.PP = function(x, ...) {
 #' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
 #' GeoNonStat::plot_pointillist_painting(locs, res)
-X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL, Y)
+X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   if(is.null(locs_idx)) if(!is.null(X)) locs_idx = seq(nrow(X))
@@ -205,14 +207,14 @@ X_PP_mult_right = function(X = NULL, PP = NULL, use_PP = FALSE, locs_idx = NULL,
 #' Allows to see if a Predictive Process has enough knots.
 #' Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
 #' If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.
-#' @param PP a Predictive Process object (produced by `PP()`)
+#' @param PP a Predictive Process object (produced by `createPP()`)
 #'
 #' @returns a plot
 #' @export
 #'
 #' @examples
 #' obs_locs <- matrix(rnorm(50), ncol=2)
-#' pepito <- PP(obs_locs)
+#' pepito <- createPP(obs_locs)
 #' compare_PP_NNGP(pepito, 1)
 compare_PP_NNGP = function(PP, cex = .3) {
   op <- par("mfrow")
@@ -220,7 +222,7 @@ compare_PP_NNGP = function(PP, cex = .3) {
   par(mfrow = c(1, 2))
   plot_pointillist_painting(
     PP$unique_reordered_locs[PP$idx, ],
-    X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_knots)]),
+    X_PP_mult_right(PP = PP, Y = seed_vector[seq(PP$n_knots)]),
     cex = cex,
     main = "NNGP into PP"
   )
@@ -251,9 +253,8 @@ compare_PP_NNGP = function(PP, cex = .3) {
 #' locs = cbind(runif(10000), runif(10000))
 #' par(mfrow = c(1,2))
 #' # comparing several PP approximations and testing PP mult
-#' pepito = PP(locs)
+#' pepito = createPP(locs)
 #' res <- X_PP_crossprod(X = matrix(1, 10000), PP = pepito, Y = matrix(rnorm(10000)))
-
 X_PP_crossprod = function(X, PP = NULL, Y, locs_idx = NULL)
 {
   if(is.null(locs_idx))locs_idx = seq(nrow(X))
@@ -285,12 +286,12 @@ X_PP_crossprod = function(X, PP = NULL, Y, locs_idx = NULL)
 ### # comparing several PP approximations and testing PP mult
 ### range= .1
 ### n_PP = 50
-### PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
+### PP = createPP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
+### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, Y = rnorm(n_PP)))
 ### points(PP$knots, pch = 16, cex = .5)
 ### n_PP = 100
-### PP = get_PP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, use_PP = T, Y = rnorm(n_PP)))
+### PP = createPP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
+### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, Y = rnorm(n_PP)))
 ### points(PP$knots, pch = 16, cex = .5)
 ### # ploting one PP basis
 ### GeoNonStat::plot_pointillist_painting(locs, 
