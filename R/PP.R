@@ -175,16 +175,31 @@ var_loss_percentage.PP = function(x, ...) {
 #' 
 #' @examples
 #' locs = cbind(runif(10000), runif(10000))
-#' par(mfrow = c(1,2))
 #' pepito = createPP(locs)
+#' # multiplying X alone
+#' par(mfrow = c(1,1))
+#' X = cbind(1, locs, rnorm(nrow(locs)))
+#' res <- X_PP_mult_right(X = X, Y = c(4, .1, .1, .2))
+#' GeoNonStat::plot_pointillist_painting(locs, res)
 #' # multiplying PP alone
-#' res <- X_PP_mult_right(PP = pepito, Y = rnorm(pepito$n_knots))
+#' par(mfrow = c(1,3))
+#' knots_coeffs = rnorm(pepito$n_knots)
+#' res <- X_PP_mult_right(PP = pepito, Y = knots_coeffs)
 #' GeoNonStat::plot_pointillist_painting(locs, res)
 #' # multiplying PP and matrix of covariates
-#' X = cbind(1, locs, rnorm(nrow(locs)))
-#' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
+#' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, .1, .1, .2, knots_coeffs))
 #' GeoNonStat::plot_pointillist_painting(locs, res)
-X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y){
+#' # multiplying PP and matrix of covariates with an index
+#' locs_idx = rep(seq(nrow(locs)), sapply(seq(nrow(locs)), function(x)rpois(1, 3)+1))
+#' X = X[locs_idx,]
+#' res <- X_PP_mult_right(X = X, PP = pepito, 
+#'                        Y = c(4, .1, .1, .2, knots_coeffs), 
+#'                        locs_idx = locs_idx
+#'                        )
+#' GeoNonStat::plot_pointillist_painting(locs[locs_idx,], res)
+
+X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y)
+{
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   if(is.null(locs_idx)) {
     if(!is.null(X)) {
@@ -197,7 +212,6 @@ X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y){
   res = matrix(0, length(locs_idx), ncol(Y))
   # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
-  # Multiply PP and Y
   if(!is.null(PP)) {
     if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
