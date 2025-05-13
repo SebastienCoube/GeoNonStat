@@ -340,17 +340,20 @@ process_states <- function(
   # Noise variance #######################################################
   
   # beta is just an intercept in stationary case
-  params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + 
-                                   hm$noise_PP * hm$PP$n_knots), ncol = 1) #random starting values
-  if (!hm$noise_PP)
+  # if noise_PP is null : que X sinon + PP_knots.
+  nrow_noise <- ncol(covariates$noise_X$X)
+  if(!is.null(hm$noise_PP)) nrow_noise <- nrow_noise + hm$PP$n_knots
+  params$noise_beta = matrix(rep(0, nrow_noise), ncol = 1) #random starting values
+  if (is.null(hm$noise_PP)) {
     row.names(params$noise_beta) = colnames(covariates$noise_X$X)
-  if (hm$noise_PP)
+  } else {
     row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
                                      paste("PP", seq(hm$PP$n_knots), sep = "_"))
+  }
   params$noise_beta[1] = hm$noise_beta0_mean
-  momenta$noise_beta = rnorm(ncol(covariates$noise_X$X) + hm$noise_PP *hm$PP$n_knots)
+  momenta$noise_beta = rnorm(nrow_noise)
   # noise log scale
-  if (hm$noise_PP)
+  if (!is.null(hm$noise_PP))
     params$noise_log_scale = hm$noise_log_scale_prior[1]
   # effective variance field, shall be used in density computations
   sparse_chol_and_stuff$noise = variance_field(
@@ -360,14 +363,16 @@ process_states <- function(
   )
   
   # Scale ################################################################
-  params$scale_beta    = matrix(0,
-                                      ncol(covariates$scale_X$X_locs) + hm$scale_PP * hm$PP$n_PP,
-                                      ncol = 1)
-  if (!hm$scale_PP)
+  nrow_scale <- ncol(covariates$scale_X$X_locs)
+  if(!is.null(hm$noise_PP)) nrow_scale <- nrow_scale + hm$PP$n_knots
+  params$scale_beta    = matrix(0 ,nrow_scale, ncol = 1)
+  if (is.null(hm$scale_PP)) {
     row.names(params$scale_beta) = colnames(covariates$scale_X$X_locs)
-  if (hm$scale_PP)
+  } else {
     row.names(params$scale_beta) = c(colnames(covariates$scale_X$X_locs),
-                                           paste("PP", seq(hm$PP$n_knots), sep = "_"))
+                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
+  }
+    
   params$scale_beta[1] = hm$scale_beta0_mean
   momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
                                           hm$scale_PP * hm$PP$n_knots)
@@ -375,7 +380,7 @@ process_states <- function(
                                           hm$scale_PP * hm$PP$n_knots)
   
   # variance
-  if (hm$scale_PP)
+  if (!is.null(hm$scale_PP))
     params$scale_log_scale = hm$scale_log_scale_prior[1]
   # effective variance field, shall be used in density computations
   sparse_chol_and_stuff$scale = variance_field(

@@ -185,10 +185,10 @@ var_loss_percentage.PP = function(x, ...) {
 #' par(mfrow = c(1,3))
 #' knots_coeffs = rnorm(pepito$n_knots)
 #' res <- X_PP_mult_right(PP = pepito, Y = knots_coeffs)
-#' GeoNonStat::plot_pointillist_painting(locs, res)
+#' plot_pointillist_painting(locs, res)
 #' # multiplying PP and matrix of covariates
 #' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, .1, .1, .2, knots_coeffs))
-#' GeoNonStat::plot_pointillist_painting(locs, res)
+#' plot_pointillist_painting(locs, res)
 #' # multiplying PP and matrix of covariates with an index
 #' locs_idx = rep(seq(nrow(locs)), sapply(seq(nrow(locs)), function(x)rpois(1, 3)+1))
 #' X = X[locs_idx,]
@@ -196,8 +196,7 @@ var_loss_percentage.PP = function(x, ...) {
 #'                        Y = c(4, .1, .1, .2, knots_coeffs), 
 #'                        locs_idx = locs_idx
 #'                        )
-#' GeoNonStat::plot_pointillist_painting(locs[locs_idx,], res)
-
+#' plot_pointillist_painting(locs[locs_idx,], res)
 X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
@@ -208,7 +207,14 @@ X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y)
       locs_idx = seq(length(PP$idx))
     }
   } 
+  # Sanity checks
   Y = as.matrix(Y)
+  expected_rows <- 0
+  if(!is.null(X)) expected_rows <- expected_rows + ncol(X)
+  if(!is.null(PP)) expected_rows <- expected_rows + nrow(PP$knots)
+  if(nrow(Y) != expected_rows) {
+    stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
+  }
   res = matrix(0, length(locs_idx), ncol(Y))
   # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
