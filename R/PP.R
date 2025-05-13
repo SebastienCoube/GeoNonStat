@@ -184,14 +184,20 @@ var_loss_percentage.PP = function(x, ...) {
 #' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
 #' GeoNonStat::plot_pointillist_painting(locs, res)
-X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y)
-{
+X_PP_mult_right = function(X = NULL, PP = NULL, locs_idx = NULL, Y){
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
-  if(is.null(locs_idx)) if(!is.null(X)) locs_idx = seq(nrow(X))
-  if(is.null(locs_idx)) if(!is.null(PP)) locs_idx = seq(length(PP$idx))
+  if(is.null(locs_idx)) {
+    if(!is.null(X)) {
+      locs_idx = seq(nrow(X))
+    } else { 
+      locs_idx = seq(length(PP$idx))
+    }
+  } 
   Y = as.matrix(Y)
   res = matrix(0, length(locs_idx), ncol(Y))
+  # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
+  # Multiply PP and Y
   if(!is.null(PP)) {
     if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
