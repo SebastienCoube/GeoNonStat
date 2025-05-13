@@ -138,7 +138,6 @@ predict_latent_field = function(mcmc_nngp_list, predicted_locs, X_range_pred = N
               range_beta = matrix(chain$range_beta[,,i_start + i_predict], nrow =dim(chain$range_beta)[1]), 
               NNarray = NNarray, locs = locs, 
               anisotropic = hierarchical_model$anisotropic, 
-              sphere = hierarchical_model$sphere,
               PP = PP_, use_PP = hierarchical_model$range_PP, 
               range_X = X_range, 
               compute_derivative = F, 

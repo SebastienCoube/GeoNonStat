@@ -80,7 +80,6 @@ process_vecchia <- function(observed_locs, m){
 #' @param observed_field TODO
 #' @param covariates TODO
 #' @param anisotropic TODO
-#' @param sphere TODO
 #'
 #' @returns a list
 #' @examples
@@ -93,8 +92,7 @@ process_hierarchical_model <- function(
                                        nu,
                                        observed_field,
                                        covariates,
-                                       anisotropic,
-                                       sphere) {
+                                       anisotropic) {
   
   # Info about hierarchical model ##############################################################
   
@@ -129,7 +127,6 @@ process_hierarchical_model <- function(
   # Default mean prior computed from a reasonable case.
   res <- list(
     anisotropic= anisotropic,
-    sphere= sphere,
     nu= nu,
     beta_priors= list(),
     PP= PP,
@@ -312,7 +309,6 @@ process_states <- function(
   sparse_chol_and_stuff$compressed_sparse_chol_and_grad =
     compute_sparse_chol(
       anisotropic = anisotropic,
-      sphere = hm$sphere,
       range_X = covariates$range_X$X_locs,
       range_beta = params$range_beta,
       PP = hm$PP,
@@ -364,7 +360,6 @@ process_states <- function(
 #' @param m number of nearest neighbors to do Vecchia's approximation
 #' @param nu Matern smoothness, either 0.5 or 1.5
 #' @param anisotropic anisotropic covariance
-#' @param sphere Boolean, indicating lon-lat data
 #' @param PP TODO
 #' @param n_chains TODO
 #' @param noise_PP TODO
@@ -405,7 +400,6 @@ GeoNonStat <-
            m = 10, #number of Nearest Neighbors
            nu = 1.5, #Matern smoothness
            anisotropic = FALSE, 
-           sphere = FALSE,
            PP = NULL,
            n_chains = 2,
            # number of MCMC chains
@@ -513,8 +507,7 @@ GeoNonStat <-
       nu,
       observed_field,
       covariates,
-      anisotropic,
-      sphere)
+      anisotropic)
     
     naive_ols <- hierarchical_model$naive_ols
     
