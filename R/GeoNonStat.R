@@ -36,7 +36,10 @@ process_vecchia <- function(observed_locs, m){
   NNarray = t(GpGp::find_ordered_nn(locs, m))
   #computations from process_vecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
   #non_NA indices from process_vecchia$NNarray
-  NNarray_non_NA = !is.na(NNarray)
+  sparse_mat = Matrix::sparseMatrix(x= seq(sum(!is.na(NNarray))), i = col(NNarray)[!is.na(NNarray)], j =NNarray[!is.na(NNarray)], triangular = T)
+  sparse_chol_x_reorder = (seq(length(NNarray)))[!is.na(NNarray)][match(sparse_mat@x, seq(sum(!is.na(NNarray))),)]
+  # sparse_mat@x = (NNarray + 0.0)[sparse_chol_x_reorder]
+  # sparse_mat[30,]
   
   # partition of locs for field update
   cl = parallel::makeCluster(5)
@@ -60,8 +63,8 @@ process_vecchia <- function(observed_locs, m){
     obs_per_loc = unlist(sapply(hctam_scol, length)), # count how many observations correspond to one location
     NNarray = NNarray,
     NNarray_non_NA = !is.na(NNarray),
-    sparse_chol_column_idx = NNarray[NNarray_non_NA], #column idx of the uncompressed sparse Cholesky factor
-    sparse_chol_row_idx = row(NNarray)[NNarray_non_NA], #row idx of the uncompressed sparse Cholesky factor
+    sparse_chol_i = sparse_mat@i, 
+    sparse_chol_x_reorder = sparse_chol_x_reorder, 
     locs_partition = locs_partition
   ))
 }
