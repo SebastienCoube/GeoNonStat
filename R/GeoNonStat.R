@@ -1,3 +1,60 @@
+#' process_covariates : pre-processes covariates by adding an intercept,
+#' creating useful indices, and pre-computing useful matrices and vectors
+#'
+#' @param X a m
+#' @param observed_locs TODO
+#' @param vecchia_approx TODO
+#' @param explicit_PP_basis TODO
+#' @param use_PP TODO
+#'
+#' @returns a list
+#'
+#' @examples
+#' \dontrun{TODO}
+process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basis = NULL, use_PP = F)
+{
+  # covariates in the observed field #
+  res = list()
+  # creating model matrix
+  # extracting a model matrix and storing the original argument
+  if(!is.null(X))
+  {
+    res$arg = X
+    res$X = model.matrix(~., X)
+  }
+  # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
+  if(is.null(X))
+  {
+    res$arg = "No covariates were provided"
+    res$X = matrix(model.matrix(~., as.data.frame(rep(1, nrow(observed_locs))))[,-1], nrow(observed_locs))
+    colnames(res$X) = "(Intercept)"
+  }
+  X_ = res$X
+  
+  if(use_PP) X_ = cbind(res$X, explicit_PP_basis)
+  # pre- computing XTX
+  crossprod_X = crossprod(X_)
+  res$chol_crossprod_X = chol(crossprod_X)
+  res$n_regressors = ncol(res$X)
+  # identifying  which X do not vary within location
+  res$which_locs = c()
+  for(i in seq(ncol(res$X))) 
+  {
+    if(all(duplicated(cbind(observed_locs, res$X[,i])) == vecchia_approx$duplicated_locs)) {
+      res$which_locs = c(res$which_locs, i)
+    }
+  }
+  res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
+  colnames(res$X_locs) = colnames(res$X)[res$which_locs]
+  X_locs_ = res$X_locs
+  if(use_PP)X_locs_ = cbind(X_locs_, explicit_PP_basis[vecchia_approx$hctam_scol_1,])
+  res$crossprod_X_locs = crossprod(X_locs_)
+  res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
+  #res$chol_crossprod_X_locs = (eigen(res$crossprod_X_locs)$val^.5) * t(eigen(res$crossprod_X_locs)$vec)
+  res
+}
+
+
 
 #' Vecchia approximation setup
 #'
@@ -89,19 +146,19 @@ process_vecchia <- function(observed_locs, m){
 
 process_PP_prior = function(
   PP = NULL, 
-  log_scale_prior = NULL, 
+  log_scale_bounds = NULL, 
   parameter_name
 ){
-  if(is.null(PP)&is.null(log_scale_prior))return(list(PP, log_scale_prior))
-  if(is.null(PP) & !is.null(log_scale_prior))stop(paste("No PP object was provided for the", parameter_name, "parameters, but log - marginal variance bounds were provided") )
+  if(is.null(PP)&is.null(log_scale_bounds))return(list(PP, log_scale_bounds))
+  if(is.null(PP) & !is.null(log_scale_bounds))stop(paste("No PP object was provided for the", parameter_name, "parameters, but log - marginal variance bounds were provided") )
   if(class(PP)!= "PP")stop(paste("PP who describes the", parameter_name, "parameters must be of class PP"))
-  if (!is.null(PP) & is.null(log_scale_prior)){
-    message(paste("The log - marginal variance bounds for the PP who describes the", parameter_name, "parameters were automatically set to (-6, 3)"))
-    log_scale_prior = c(-6, 3)
+  if (!is.null(PP) & is.null(log_scale_bounds)){
+    message(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters were automatically set to (-6, 3)"))
+    log_scale_bounds = c(-6, 3)
   }
-  if(!is.numeric(log_scale_prior) | length(log_scale_prior) != 2)stop(paste("The log - marginal variance bounds for the PP who describes the", parameter_name, "parameters must be a numeric vector of length 2"))
-  log_scale_prior = sort(log_scale_prior)
-  return(list(PP, log_scale_prior))
+  if(!is.numeric(log_scale_bounds) | length(log_scale_bounds) != 2)stop(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters must be a numeric vector of length 2"))
+  log_scale_bounds = sort(log_scale_bounds)
+  return(list(PP, log_scale_bounds))
 }
 
 #' Initialize hierarchical model
@@ -110,9 +167,9 @@ process_PP_prior = function(
 #' @param noisePP TODO
 #' @param scale_PP TODO
 #' @param range_PP TODO
-#' @param noise_log_scale_prior TODO
-#' @param scale_log_scale_prior TODO
-#' @param range_log_scale_prior TODO
+#' @param noise_log_scale_bounds TODO
+#' @param scale_log_scale_bounds TODO
+#' @param range_log_scale_bounds TODO
 #' @param locs TODO
 #' @param nu TODO
 #' @param observed_field TODO
@@ -122,10 +179,9 @@ process_PP_prior = function(
 #' @returns a list
 #' @examples
 #' #TODO
-process_hierarchical_model <- function(PP,
-                                       noise_PP = NULL, noise_log_scale_prior = NULL,
-                                       scale_PP = NULL, scale_log_scale_prior = NULL,
-                                       range_PP = NULL, range_log_scale_prior = NULL,
+process_hierarchical_model <- function(noise_PP = NULL, noise_log_scale_bounds = NULL,
+                                       scale_PP = NULL, scale_log_scale_bounds = NULL,
+                                       range_PP = NULL, range_log_scale_bounds = NULL,
                                        locs,
                                        nu,
                                        observed_field,
@@ -136,17 +192,19 @@ process_hierarchical_model <- function(PP,
   
   # Processing PP priors
   res = c(
-    process_PP_prior(noise_PP, noise_log_scale_prior, "noise"),
-    process_PP_prior(scale_PP, scale_log_scale_prior, "scale"),
-    process_PP_prior(range_PP, range_log_scale_prior, "range")
+    process_PP_prior(noise_PP, noise_log_scale_bounds, "noise"),
+    process_PP_prior(scale_PP, scale_log_scale_bounds, "scale"),
+    process_PP_prior(range_PP, range_log_scale_bounds, "range")
   )
   names(res) = c(
-    "noise_PP", "noise_log_scale_prior",
-    "scale_PP", "scale_log_scale_prior",
-    "range_PP", "range_log_scale_prior"
+    "noise_PP", "noise_log_scale_bounds",
+    "scale_PP", "scale_log_scale_bounds",
+    "range_PP", "range_log_scale_bounds"
   )
   
   # Making a guess for maximum and minimum reasonable values for the range intercept
+  # using as upper bound the geographic space size
+  # and as lower bound the minimal distance between two space points
   alpha_max = -0.5 * log(8 * nu) + log(max(dist(locs[seq(min(10000, nrow(locs))), ])) / 8)
   alpha_min = -0.5 * log(8 * nu) + log(median(FNN::get.knn(locs, k = 1)$nn.dist) * 3)
   
@@ -155,6 +213,7 @@ process_hierarchical_model <- function(PP,
   naive_ols =  lm(observed_field ~ covariates$X$X - 1)
   sigma_max = log(var(naive_ols$residuals))
   sigma_min = log(var(naive_ols$residuals) / 1000)
+  
   # Default mean prior computed from a reasonable case.
   res = c(res, 
           list(
