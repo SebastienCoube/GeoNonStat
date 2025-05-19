@@ -135,21 +135,13 @@ process_vecchia <- function(observed_locs, m){
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
 #' @examples 
-#' processed_PP = process_PP_prior(NULL, NULL, "tatato")
-#' processed_PP = process_PP_prior(NULL, 1, "tatato")
-#' processed_PP = process_PP_prior(1, NULL, "tatato")
-#' pepito = createPP(observed_locs = cbind(runif(10000), runif(10000))) 
-#' processed_PP =  process_PP_prior(pepito, NULL, "tatato")
-#' processed_PP =  process_PP_prior(pepito, "turlututu", "tatato")
-#' processed_PP =  process_PP_prior(pepito, c(1,2,3), "tatato")
-#' processed_PP =  process_PP_prior(pepito, c(1,2), "tatato")
 
 process_PP_prior = function(
   PP = NULL, 
   log_scale_bounds = NULL, 
   parameter_name
 ){
-  if(is.null(PP)&is.null(log_scale_bounds))return(list(PP, log_scale_bounds))
+  if(is.null(PP) & is.null(log_scale_bounds)) return(log_scale_bounds)
   if(is.null(PP) & !is.null(log_scale_bounds))stop(paste("No PP object was provided for the", parameter_name, "parameters, but log - marginal variance bounds were provided") )
   if(class(PP)!= "PP")stop(paste("PP who describes the", parameter_name, "parameters must be of class PP"))
   if (!is.null(PP) & is.null(log_scale_bounds)){
@@ -158,7 +150,7 @@ process_PP_prior = function(
   }
   if(!is.numeric(log_scale_bounds) | length(log_scale_bounds) != 2)stop(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters must be a numeric vector of length 2"))
   log_scale_bounds = sort(log_scale_bounds)
-  return(list(PP, log_scale_bounds))
+  return(log_scale_bounds)
 }
 
 #' Initialize hierarchical model
@@ -191,10 +183,9 @@ process_hierarchical_model <- function(noise_PP = NULL, noise_log_scale_bounds =
   # Info about hierarchical model ##############################################################
   
   # Processing PP priors
-  res = c(
-    process_PP_prior(noise_PP, noise_log_scale_bounds, "noise"),
-    process_PP_prior(scale_PP, scale_log_scale_bounds, "scale"),
-    process_PP_prior(range_PP, range_log_scale_bounds, "range")
+    noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise"),
+    scale_log_scale_bounds <- process_PP_prior(scale_PP, scale_log_scale_bounds, "scale"),
+    range_log_scale_bounds <- process_PP_prior(range_PP, range_log_scale_bounds, "range")
   )
   names(res) = c(
     "noise_PP", "noise_log_scale_bounds",
@@ -215,20 +206,25 @@ process_hierarchical_model <- function(noise_PP = NULL, noise_log_scale_bounds =
   sigma_min = log(var(naive_ols$residuals) / 1000)
   
   # Default mean prior computed from a reasonable case.
-  res = c(res, 
-          list(
-            anisotropic= anisotropic,
-            nu= nu,
-            beta_priors= list(),
-            PP= PP,
-            range_beta0_mean= (alpha_max + alpha_min) / 2,
-            range_beta0_var= ((alpha_max - alpha_min) / 8)^2,
-            noise_beta0_mean= (sigma_max + sigma_min) / 2,
-            noise_beta0_var= ((sigma_max - sigma_min) / 8)^2,
-            scale_beta0_mean= (sigma_max + sigma_min) / 2,
-            scale_beta0_var=((sigma_max - sigma_min) / 8)^2,
-            naive_ols = naive_ols
-          ))
+  res = list(
+    noise_PP = noise_PP,
+    noise_log_scale_bounds = noise_log_scale_bounds,
+    scale_PP = scale_PP,
+    scale_log_scale_bounds = scale_log_scale_bounds,
+    range_PP = range_PP, 
+    range_log_scale_bounds = range_log_scale_bounds, 
+    anisotropic= anisotropic,
+    nu= nu,
+    beta_priors= list(),
+    PP= PP,
+    range_beta0_mean= (alpha_max + alpha_min) / 2,
+    range_beta0_var= ((alpha_max - alpha_min) / 8)^2,
+    noise_beta0_mean= (sigma_max + sigma_min) / 2,
+    noise_beta0_var= ((sigma_max - sigma_min) / 8)^2,
+    scale_beta0_mean= (sigma_max + sigma_min) / 2,
+    scale_beta0_var=((sigma_max - sigma_min) / 8)^2,
+    naive_ols = naive_ols
+  )
   return(res)
 }
 
