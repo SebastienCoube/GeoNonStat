@@ -1,4 +1,4 @@
-test_that("process_vecchia GeoNonStat works", {
+test_that("process_vecchia works", {
   set.seed(100)
   size <- 2000
   observed_locs = cbind(runif(size), runif(size))
@@ -21,7 +21,7 @@ test_that("process_vecchia GeoNonStat works", {
   expect_identical(length(res$locs_match), 2000L)
   expect_true(all(res$locs_match %in% seq_len(res$n_locs)))
   
-  expect_true("Matrix" %in% class(res$locs_match_matrix))
+  expect_true("dgCMatrix" %in% class(res$locs_match_matrix))
   expect_identical(dim(res$locs_match_matrix), c(2000L, 2000L))
   
   expect_true("list" %in% class(res$hctam_scol))
