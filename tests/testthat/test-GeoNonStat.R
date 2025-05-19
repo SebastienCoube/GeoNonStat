@@ -38,6 +38,51 @@ test_that("process_vecchia works", {
 })
 
 
+test_that("process_PP_priors works as expected whithout PP", {
+  # Whithout PP
+  expect_error(
+    PPPP <- process_PP_prior(NULL, NULL, "example"),
+    NA
+  )
+  expect_null(PPPP)
+  
+  expect_error(
+    PPPP <- process_PP_prior(NULL, 1, "example"),
+    "No PP object was provided for the example parameters, but log - marginal variance bounds were provided"
+  )
+})
+
+test_that("process_PP_priors works as expected whith PP", {
+  # With PP
+  myPP <- 
+    suppressMessages(
+      createPP(observed_locs = cbind(runif(100), runif(100))) 
+    )
+  
+  expect_message(
+    PPPP <- process_PP_prior(myPP, NULL, "example"),
+    "automatically set to \\(-6, 3\\)"
+  )
+  expect_identical(PPPP, c(-6, 3))
+    
+  expect_error(
+    PPPP <- process_PP_prior(myPP, "toto", "example"),
+    "must be a numeric vector of length 2"
+  )
+  
+  expect_error(
+    PPPP <- process_PP_prior(myPP, c(1,2,3), "example"),
+    "must be a numeric vector of length 2"
+  )
+  
+  expect_error(
+    PPPP <- process_PP_prior(pepito, c(1,2), "tatato"),
+    NA
+  )
+  expect_identical(PPPP, c(1,2))
+  
+})
+
 test_that("initialize class GeoNonStat works", {
   set.seed(100)
   size <- 2000

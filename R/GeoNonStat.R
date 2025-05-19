@@ -135,7 +135,8 @@ process_vecchia <- function(observed_locs, m){
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
 #' @examples 
-
+#' myPP <- createPP(observed_locs = cbind(runif(100), runif(100))) 
+#' PPPP <- process_PP_prior(pepito, c(1,2), "example")
 process_PP_prior = function(
   PP = NULL, 
   log_scale_bounds = NULL, 
