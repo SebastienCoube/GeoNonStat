@@ -11,7 +11,7 @@ test_that("process_vecchia works", {
                       'locs_match_matrix', 'hctam_scol', 
                       'hctam_scol_1', 'obs_per_loc', 
                       'NNarray', 'NNarray_non_NA', 
-                      'sparse_chol_column_idx', 'sparse_chol_row_idx', 
+                      'sparse_chol_i', 'sparse_chol_x_reorder', 
                       'locs_partition'))
   expect_identical(res$n_locs, 2000L)
   expect_identical(res$n_obs, 2000L)
@@ -32,8 +32,8 @@ test_that("process_vecchia works", {
   expect_true(all(res$obs_per_loc == 1))
   
   expect_identical(dim(res$NNarray), c(11L, 2000L))
-  expect_identical(length(res$sparse_chol_column_idx), 21945L)
-  expect_identical(length(res$sparse_chol_row_idx), 21945L)
+  expect_identical(length(res$sparse_chol_i), 21945L)
+  expect_identical(length(res$sparse_chol_x_reorder), 21945L)
   expect_identical(dim(res$locs_partition), c(2000L, 1L))
 })
 
