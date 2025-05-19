@@ -183,9 +183,10 @@ process_hierarchical_model <- function(noise_PP = NULL, noise_log_scale_bounds =
   # Info about hierarchical model ##############################################################
   
   # Processing PP priors
-    noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise"),
-    scale_log_scale_bounds <- process_PP_prior(scale_PP, scale_log_scale_bounds, "scale"),
-    range_log_scale_bounds <- process_PP_prior(range_PP, range_log_scale_bounds, "range")
+  noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise")
+  scale_log_scale_bounds <- process_PP_prior(scale_PP, scale_log_scale_bounds, "scale")
+  range_log_scale_bounds <- process_PP_prior(range_PP, range_log_scale_bounds, "range")
+
 
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
