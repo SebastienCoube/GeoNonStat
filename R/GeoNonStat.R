@@ -1,61 +1,3 @@
-#' process_covariates : pre-processes covariates by adding an intercept,
-#' creating useful indices, and pre-computing useful matrices and vectors
-#'
-#' @param X a m
-#' @param observed_locs TODO
-#' @param vecchia_approx TODO
-#' @param explicit_PP_basis TODO
-#' @param use_PP TODO
-#'
-#' @returns a list
-#'
-#' @examples
-#' \dontrun{TODO}
-process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basis = NULL, use_PP = F)
-{
-  # covariates in the observed field #
-  res = list()
-  # creating model matrix
-  # extracting a model matrix and storing the original argument
-  if(!is.null(X))
-  {
-    res$arg = X
-    res$X = model.matrix(~., X)
-  }
-  # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
-  if(is.null(X))
-  {
-    res$arg = "No covariates were provided"
-    res$X = matrix(model.matrix(~., as.data.frame(rep(1, nrow(observed_locs))))[,-1], nrow(observed_locs))
-    colnames(res$X) = "(Intercept)"
-  }
-  X_ = res$X
-  
-  if(use_PP) X_ = cbind(res$X, explicit_PP_basis)
-  # pre- computing XTX
-  crossprod_X = crossprod(X_)
-  res$chol_crossprod_X = chol(crossprod_X)
-  res$n_regressors = ncol(res$X)
-  # identifying  which X do not vary within location
-  res$which_locs = c()
-  for(i in seq(ncol(res$X))) 
-  {
-    if(all(duplicated(cbind(observed_locs, res$X[,i])) == vecchia_approx$duplicated_locs)) {
-      res$which_locs = c(res$which_locs, i)
-    }
-  }
-  res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
-  colnames(res$X_locs) = colnames(res$X)[res$which_locs]
-  X_locs_ = res$X_locs
-  if(use_PP)X_locs_ = cbind(X_locs_, explicit_PP_basis[vecchia_approx$hctam_scol_1,])
-  res$crossprod_X_locs = crossprod(X_locs_)
-  res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
-  #res$chol_crossprod_X_locs = (eigen(res$crossprod_X_locs)$val^.5) * t(eigen(res$crossprod_X_locs)$vec)
-  res
-}
-
-
-
 #' Vecchia approximation setup
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
@@ -66,9 +8,9 @@ process_covariates = function(X, observed_locs, vecchia_approx, explicit_PP_basi
 #' set.seed(100)
 #' size <- 20000
 #' observed_locs = cbind(runif(size), runif(size))
-#' res <- process_vecchia(observed_locs, m=10) 
-process_vecchia <- function(observed_locs, m){
-  message("building DAGs and indices for Vecchia approximation...")
+#' res <- createVecchia(observed_locs, m=10) 
+createVecchia <- function(observed_locs, m = 12){
+  #message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
   
@@ -91,8 +33,8 @@ process_vecchia <- function(observed_locs, m){
   
   #extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray = t(GpGp::find_ordered_nn(locs, m))
-  #computations from process_vecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
-  #non_NA indices from process_vecchia$NNarray
+  #computations from createVecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
+  #non_NA indices from createVecchia$NNarray
   sparse_mat = Matrix::sparseMatrix(x= seq(sum(!is.na(NNarray))), i = col(NNarray)[!is.na(NNarray)], j =NNarray[!is.na(NNarray)], triangular = T)
   sparse_chol_x_reorder = (seq(length(NNarray)))[!is.na(NNarray)][match(sparse_mat@x, seq(sum(!is.na(NNarray))),)]
   # sparse_mat@x = (NNarray + 0.0)[sparse_chol_x_reorder]
@@ -112,7 +54,9 @@ process_vecchia <- function(observed_locs, m){
   return(list(
     n_locs = n_locs,
     n_obs = n_obs,
+    observed_locs = observed_locs, 
     locs = locs, 
+    t_locs = t(locs), 
     locs_match = locs_match,
     locs_match_matrix = locs_match_matrix,
     hctam_scol = hctam_scol,
@@ -120,11 +64,78 @@ process_vecchia <- function(observed_locs, m){
     obs_per_loc = unlist(sapply(hctam_scol, length)), # count how many observations correspond to one location
     NNarray = NNarray,
     NNarray_non_NA = !is.na(NNarray),
-    sparse_chol_i = sparse_mat@i, 
+    sparse_chol_i = sparse_mat@i+1, 
+    sparse_chol_p = sparse_mat@p, 
     sparse_chol_x_reorder = sparse_chol_x_reorder, 
     locs_partition = locs_partition
   ))
 }
+
+#' process_covariates : pre-processes covariates by adding an intercept,
+#' creating useful indices, and pre-computing useful matrices and vectors
+#'
+#' @param X a m
+#' @param vecchia_approx TODO
+#' @param explicit_PP_basis TODO
+#' @param use_PP TODO
+#'
+#' @returns a list
+#'
+#' @examples
+#' \dontrun{TODO}
+#' 
+ observed_locs = cbind(runif(10000), runif(10000))
+ X = as.data.frame(cbind(runif(10000), rnorm(10000), rpois(10000, 5)))
+ vecchia_approx = createVecchia(observed_locs, 12)
+ process_covariates(X = X, vecchia_approx)
+ process_covariates(X = NULL, vecchia_approx)
+ 
+process_covariates = function(X, vecchia_approx, PP = NULL)
+{
+  # covariates in the observed field #
+  res = list()
+  # creating model matrix
+  # extracting a model matrix and storing the original argument
+  if(!is.null(X))
+  {
+    res$arg = X
+    res$X = model.matrix(~., X)
+  }
+  # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
+  if(is.null(X))
+  {
+    res$arg = "No covariates were provided"
+    res$X = matrix(model.matrix(~., as.data.frame(rep(1, vecchia_approx$n_obs)))[,-1], vecchia_approx$n_obs)
+    colnames(res$X) = "(Intercept)"
+  }
+  X_ = res$X
+  
+  if(!is.null(PP)) X_ = cbind(res$X, explicit_PP_basis)
+  # pre- computing XTX
+  crossprod_X = crossprod(X_)
+  res$chol_crossprod_X = chol(crossprod_X)
+  res$n_regressors = ncol(res$X)
+  # identifying  which X do not vary within location
+  res$which_locs = c()
+  for(i in seq(ncol(res$X))) 
+  {
+    if(all(duplicated(cbind(vecchia_approx$observed_locs, res$X[,i])) == vecchia_approx$duplicated_locs)) {
+      res$which_locs = c(res$which_locs, i)
+    }
+  }
+  res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
+  colnames(res$X_locs) = colnames(res$X)[res$which_locs]
+  X_locs_ = res$X_locs
+  if(!is.null(PP))X_locs_ = cbind(X_locs_, explicit_PP_basis[vecchia_approx$hctam_scol_1,])
+  res$crossprod_X_locs = crossprod(X_locs_)
+  res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
+  #res$chol_crossprod_X_locs = (eigen(res$crossprod_X_locs)$val^.5) * t(eigen(res$crossprod_X_locs)$vec)
+  res
+}
+
+
+
+
 
 
 
@@ -156,26 +167,25 @@ process_PP_prior = function(
 
 #' Initialize hierarchical model
 #'
-#' @param PP TODO
-#' @param noisePP TODO
-#' @param scale_PP TODO
-#' @param range_PP TODO
-#' @param noise_log_scale_bounds TODO
-#' @param scale_log_scale_bounds TODO
-#' @param range_log_scale_bounds TODO
-#' @param locs TODO
-#' @param nu TODO
-#' @param observed_field TODO
-#' @param covariates TODO
-#' @param anisotropic TODO
+#' @param noise_PP either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary
+#' @param scale_PP either an object of class PP used to model the field of log-scale parameters, or NULL in which case the model is stationary
+#' @param range_PP either an object of class PP used to model the field of log-range parameters, or NULL in which case the model is stationary
+#' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
+#' @param scale_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the scale's PP, or NULL in which case the bounds are set automatically
+#' @param range_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the range's PP, or NULL in which case the bounds are set automatically
+#' @param locs a matrix of spatial locations, with two columns. Those are unique locations obtained with vecchia_setup. 
+#' @param nu a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
+#' @param observed_field a vector of observations. 
+#' @param covariates The covariates obtained with process_covariates
+#' @param anisotropic Boolean indicating if anisotropic
 #'
 #' @returns a list
 #' @examples
 #' #TODO
-process_hierarchical_model <- function(noise_PP = NULL, noise_log_scale_bounds = NULL,
-                                       scale_PP = NULL, scale_log_scale_bounds = NULL,
-                                       range_PP = NULL, range_log_scale_bounds = NULL,
-                                       locs,
+process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
+                                       scale_PP, scale_log_scale_bounds,
+                                       range_PP, range_log_scale_bounds,
+                                       observed_locs,
                                        nu,
                                        observed_field,
                                        covariates,
@@ -259,7 +269,6 @@ process_transition_kernels <- function(init=-4){
 #' @param hm hierarchical model (from `process_hierarchical_model()`)
 #' @param covariates TODO
 #' @param observed_field TODO
-#' @param anisotropic TODO
 #' @param vecchia_setup TODO
 #' @param init_tk TODO
 #'
@@ -268,7 +277,6 @@ process_states <- function(
     hm,
     covariates,
     observed_field,
-    anisotropic,
     vecchia_setup,
     init_tk = -4
 ) {
@@ -536,7 +544,7 @@ GeoNonStat <-
     # Vecchia approximation ##########################################################################
     # This object gathers the NNarray table used by GpGp package and related objects
 
-    vecchia_setup <- process_vecchia(observed_locs, m)
+    vecchia_setup <- createVecchia(observed_locs, m)
     
     # covariates #########################################################
     

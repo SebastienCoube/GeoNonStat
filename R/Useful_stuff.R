@@ -84,22 +84,13 @@ variance_field = function(beta,
 
 #' Computes a Vecchia sparse Cholesky factor and its derivatives
 #' 
-#' The function uses range_beta one one hand, and range_X and PP on the other hand, to compute nonstationary range parameters. 
-#' The Vecchia approximation of the sparse Cholesky factor of the precision is then computed. 
-#' Derivatives can be computed too. 
-#' Warning (for developing users) : the sparse cholesky factor is computed using the radius/anisotropy parametrization for range_beta.  
-#' However, for efficiency of implementation, the derivatives are given along the canonical parametrization.  
-#' Re-parametrization is done automatically in GeoNonStat::derivative_sandwiches
-#' 
 #' @param range_beta parameter for the range.
 #' If the covariance is anisotropic, it must have 3 columns. It the covariance is isotropic, it must have 1 column. 
 #' The first coefficients are multiplied with range_X 
 #' The last coefficients are multiplied with the spatial basis functions of PP
-#' @param NNarray Vecchia parents array provided by GpGp::find_ordered_nn
-#' @param locs matrix of spatial sites
+#' @param vecchia_approx
 #' @param range_X covariates for range
 #' @param PP predictive process obtained through `createPP()`
-#' @param use_PP should the PP be used ? (redundant when using the function "by hand", but handy when automating)
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
 #' @param smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
 #' @param anisotropic Logical, default to FALSE. TODO
