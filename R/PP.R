@@ -13,9 +13,7 @@
 #' @export
 #'
 #' @examples
-#' observed_locs = cbind(runif(1000), runif(1000))
-#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' vecchia_approx = createVecchia(observed_locs, 10)
+#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' # automatic 
 #' pepito = createPP(vecchia_approx)
 #' # choosing manually Matérn range, too small wrt number of knots
@@ -23,24 +21,27 @@
 #' # choosing manually Matérn range, way too small wrt number of knots
 #' pepito = createPP(vecchia_approx, matern_range = .01)
 #' # choosing manually number of knots in order to adjust to Matérn range
-#' pepito = createPP(vecchia_approx, knots = 200, matern_range = .1)
+#' pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
 #' # choosing manually number of knots, but picking too few for default Matérn range
-#' pepito = createPP(vecchia_approx, knots = 10)
+#' pepito = createPP(vecchia_approx, knots = 20)
 #' # choosing manually Matérn range in order to adjust to the number of knots
-#' pepito = createPP(vecchia_approx, knots = 10, matern_range = .5)
+#' pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
 #' # inputing an user-specified grid of knots
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
+#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
 #' # inputing an user-specified grid of knots in order to adjust to small Matérn range
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
+#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
+#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
+#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234){
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
     message(paste("number of knots set by default to", knots))
-    }
+  }
   if(!is.matrix(knots)){
-    knots = min(knots, nrow(observed_locs)-1)
-    knots = kmeans(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 100000)),] + rnorm(2*min(vecchia_approx$n_locs, 100000), 0, max(dist(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),]))/30), 
+    knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
+    knots = max(knots, nrow(vecchia_approx$NNarray))
+    knots = kmeans(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),] + rnorm(2*min(vecchia_approx$n_locs, 10000), 0, max(dist(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),]))/20), 
                    knots, algorithm = "Hartigan-Wong", iter.max = 50)$centers
     message("knot placement done by default using k-means")
   }
@@ -49,7 +50,11 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
     message(paste("Matérn range set by default to the fifth of the space pseudo-diameter, that is to ", signif(matern_range, 3)))
   }
   knots = knots[GpGp::order_maxmin(knots),]
-  NNarray = GpGp::find_ordered_nn(rbind(knots, vecchia_approx$locs), nrow(vecchia_approx$NNarray)-1)
+  #NNarray = GpGp::find_ordered_nn(rbind(knots, vecchia_approx$locs), nrow(vecchia_approx$NNarray)-1)
+  NNarray = rbind(
+    GpGp::find_ordered_nn(knots, nrow(vecchia_approx$NNarray)-1), 
+    cbind(nrow(knots) + seq(vecchia_approx$n_locs), FNN::get.knnx(query = vecchia_approx$locs, data = knots, k = nrow(vecchia_approx$NNarray)-1)$nn.index)
+  )
   
   sparse_chol = Matrix::sparseMatrix(
     i = row(NNarray)[!is.na(NNarray)], 
@@ -201,59 +206,21 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
   if(nrow(Y) != expected_rows) {
     stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
   }
+  if(!permutate_PP_to_obs) locs_idx = seq(vecchia_approx$n_locs)
+  if(permutate_PP_to_obs) locs_idx = vecchia_approx$locs_match
   res = matrix(0, length(locs_idx), ncol(Y))
   # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
   if(!is.null(PP)) {
-    if(!permutate_PP_to_obs) locs_idx = seq(vecchia_approx$n_locs)
-    if(permutate_PP_to_obs) locs_idx = vecchia_approx$locs_match
     if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
     V[seq(nrow(Y)),] = Y
     res = res + as.matrix(Matrix::solve(PP$sparse_chol, V, triangular = T))[-seq(nrow(PP$knots)),,drop =F][locs_idx,,drop =F]
   }
-  colnames(res) = c("det", "an", "an")[seq(ncol(res))]
+  if(ncol(res)==3)colnames(res) = c("det", "an", "an")
+  if(ncol(res)==1)colnames(res) = "det"
   res
 }
-
-
-#' Comparison between PP and NNGP
-#' Allows to see if a Predictive Process has enough knots.
-#' Plots two samples, one from a Predictive Process, and one from the Nearest Neighbor Gaussian Process the PP is obtained from.
-#' If there are not enough knots, the PP should be over-smoothed with respect to the NNGP.
-#' @param PP a Predictive Process object (produced by `createPP()`)
-#'
-#' @returns a plot
-#' @export
-#'
-#' @examples
-#' obs_locs <- matrix(rnorm(5000), ncol=2)
-#' vecchia_approx = createVecchia(obs_locs)
-#' PP <- createPP(vecchia_approx)
-#' compare_PP_NNGP_sample(PP, vecchia_approx, 1, 10)
-#' compare_PP_NNGP_sample(PP, vecchia_approx, 1, 100)
- 
-compare_PP_NNGP_sample = function(PP, vecchia_approx, cex = .3, seed = 1) {
-  op <- par("mfrow")
-  set.seed(seed)
-  seed_vector =  rnorm(nrow(PP$sparse_chol))
-  par(mfrow = c(1, 2))
-  plot_pointillist_painting(
-    vecchia_approx$locs,
-    X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, Y = seed_vector[seq(PP$n_knots)], permutate_PP_to_obs = F),
-    cex = cex,
-    main = "NNGP into PP"
-  )
-  points(PP$knots, pch = 3, cex = cex)
-  plot_pointillist_painting(
-    rbind(PP$knots, vecchia_approx$locs),
-    as.vector(Matrix::solve(PP$sparse_chol, seed_vector)),
-    cex = cex,
-    main = "NNGP"
-  )
-  par(mfrow = op)
-}
-
 
 #' Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
 #' t(X|PP) %*% Y
