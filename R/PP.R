@@ -34,7 +34,6 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
 
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234){
-  
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
     message(paste("number of knots set by default to", knots))
@@ -50,11 +49,8 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
     message(paste("Matérn range set by default to the fifth of the space pseudo-diameter, that is to ", signif(matern_range, 3)))
   }
   knots = knots[GpGp::order_maxmin(knots),]
-  NNarray = 
-    GpGp::find_ordered_nn(
-      locs = rbind(knots,vecchia_approx$locs), 
-      m = nrow(vecchia_approx$NNarray)
-    )
+  NNarray = GpGp::find_ordered_nn(rbind(knots, vecchia_approx$locs), nrow(vecchia_approx$NNarray)-1)
+  
   sparse_chol = Matrix::sparseMatrix(
     i = row(NNarray)[!is.na(NNarray)], 
     j = NNarray[!is.na(NNarray)], 
@@ -194,12 +190,9 @@ var_loss_percentage.PP = function(x, ...) {
 #'                        )
 #' plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
 #' 
-X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y)
+X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
-  if(!is.null(X))if(nrow(X) == vecchia_approx$n_locs)locs_idx = seq(nrow(X))
-  if(!is.null(X))if(nrow(X) != vecchia_approx$n_locs)locs_idx = vecchia_approx$locs_match
-  if(is.null(X))locs_idx = seq(vecchia_approx$n_locs)
   # Sanity checks
   Y = as.matrix(Y)
   expected_rows <- 0
@@ -212,6 +205,8 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y)
   # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
   if(!is.null(PP)) {
+    if(!permutate_PP_to_obs) locs_idx = seq(vecchia_approx$n_locs)
+    if(permutate_PP_to_obs) locs_idx = vecchia_approx$locs_match
     if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
     V[seq(nrow(Y)),] = Y
@@ -235,15 +230,17 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y)
 #' obs_locs <- matrix(rnorm(5000), ncol=2)
 #' vecchia_approx = createVecchia(obs_locs)
 #' PP <- createPP(vecchia_approx)
-#' compare_PP_NNGP(PP, 1)
+#' compare_PP_NNGP_sample(PP, vecchia_approx, 1, 10)
+#' compare_PP_NNGP_sample(PP, vecchia_approx, 1, 100)
  
-compare_PP_NNGP = function(PP, vecchia_approx, cex = .3) {
+compare_PP_NNGP_sample = function(PP, vecchia_approx, cex = .3, seed = 1) {
   op <- par("mfrow")
+  set.seed(seed)
   seed_vector =  rnorm(nrow(PP$sparse_chol))
   par(mfrow = c(1, 2))
   plot_pointillist_painting(
     vecchia_approx$locs,
-    X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, Y = seed_vector[seq(PP$n_knots)]),
+    X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, Y = seed_vector[seq(PP$n_knots)], permutate_PP_to_obs = F),
     cex = cex,
     main = "NNGP into PP"
   )
@@ -258,7 +255,6 @@ compare_PP_NNGP = function(PP, vecchia_approx, cex = .3) {
 }
 
 
-TO DO TO DO
 #' Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
 #' t(X|PP) %*% Y
 #'
@@ -272,78 +268,50 @@ TO DO TO DO
 #' @export
 #'
 #' @examples
- locs = cbind(runif(10000), runif(10000))
- vecchia_approx = createVecchia(locs)
- PP = createPP(vecchia_approx)
- res <- X_PP_crossprod(X = matrix(1, 10000), PP = PP, Y = matrix(rnorm(10000)), vecchia_approx = vecchia_approx)
-X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx)
+#' locs = cbind(runif(5000), runif(5000))
+#' locs = rbind(locs, locs)
+#' vecchia_approx = createVecchia(locs)
+#' PP = createPP(vecchia_approx)
+#' 
+#' # just surrogate of crossprod
+#' X = matrix(rnorm(100000), 10000)
+#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
+#' res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx)
+#' crossprod(X, Y) - res1
+#' 
+#' # crossprod + PP with observations of X on the locs
+#' X = matrix(rnorm(20*vecchia_approx$n_locs), vecchia_approx$n_locs)
+#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
+#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
+#' hist(as.vector(res2 - crossprod(
+#'  cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),]), Y
+#' )))
+#' 
+#' # crossprod + PP with PP dispatched to observations of X
+#' X = matrix(rnorm(20*vecchia_approx$n_obs), vecchia_approx$n_obs)
+#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
+#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+#' hist(as.vector(res2 - crossprod(
+#'  cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),][vecchia_approx$locs_match,]), Y
+#' )))
+
+ X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx, permutate_PP_to_obs = F)
 {
-  
-  if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
-  if(!is.null(X))if(nrow(X) == vecchia_approx$n_locs)locs_idx = seq(nrow(X))
-  if(!is.null(X))if(nrow(X) != vecchia_approx$n_locs)locs_idx = vecchia_approx$locs_match
-  if(is.null(X))locs_idx = seq(vecchia_approx$n_locs)
-  
   Y = as.matrix(Y)
   res = crossprod(x = X, y = Y)
   if(!is.null(PP))
   {
+    if(permutate_PP_to_obs) Y = vecchia_approx$locs_match_matrix %*% Y
     res = 
       rbind(
         res, 
         Matrix::solve(
           Matrix::t(PP$sparse_chol), 
-          rbind(
-            matrix(0, nrow(PP$knots), ncol(Y)), 
-            (
-              Matrix::sparseMatrix(x = 1, i = PP$idx, j = seq(length(PP$idx))) %*% # matrix for redunant locations and reordering in PP
-                Matrix::sparseMatrix(i = locs_idx, j = seq(nrow(Y)), dims = c(length(PP$idx), nrow(Y)))  # matrix for redunant locations and reordering between Y and PP
-            )%*%
-              Y
-          ))[1:PP$n_knots,,drop=F]
+          rbind(matrix(0, nrow(PP$knots), ncol(Y)), Y)
+        )[1:PP$n_knots,,drop=F]
       )
   }
   as.matrix(res)
 }
 
-### # simulate locs
-### locs = cbind(runif(10000), runif(10000))
-### par(mfrow = c(1,2))
-### # comparing several PP approximations and testing PP mult
-### range= .1
-### n_PP = 50
-### PP = createPP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, Y = rnorm(n_PP)))
-### points(PP$knots, pch = 16, cex = .5)
-### n_PP = 100
-### PP = createPP(locs, c(1, range, 1.5, 0), n_PP = n_PP, m = 15)
-### GeoNonStat::plot_pointillist_painting(locs, field = X_PP_mult_right(PP = PP, Y = rnorm(n_PP)))
-### points(PP$knots, pch = 16, cex = .5)
-### # ploting one PP basis
-### GeoNonStat::plot_pointillist_painting(locs, 
-###                                   Matrix::solve(PP$sparse_chol, 
-###                                                 Matrix::sparseMatrix(
-###                                                   i = seq(nrow(PP$knots)), 
-###                                                   j = seq(nrow(PP$knots)), 
-###                                                   x = 1, 
-###                                                   dims = c(nrow(PP$sparse_chol), nrow(PP$knots))
-###                                                 ))[-seq(nrow(PP$knots)),][PP$idx,5]
-### )
-### # testing PP crossprod
-### X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
-### Y = matrix(rnorm(nrow(X)*3), ncol=3)
-### X_PP_crossprod(X = X, PP = PP, use_PP = T, Y = Y)- 
-###   Matrix::t(Matrix::crossprod(
-###     Y, 
-###     cbind(
-###       X,
-###       Matrix::solve(PP$sparse_chol, 
-###                     Matrix::sparseMatrix(
-###                       i = seq(nrow(PP$knots)), 
-###                       j = seq(nrow(PP$knots)), 
-###                       x = 1, 
-###                       dims = c(nrow(PP$sparse_chol), nrow(PP$knots))
-###                     ))[-seq(nrow(PP$knots)),][PP$idx,]
-###     )
-###   ))
  
