@@ -13,25 +13,25 @@
 #' @export
 #'
 #' @examples
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-#' # automatic 
-#' pepito = createPP(vecchia_approx)
-#' # choosing manually Matérn range, too small wrt number of knots
-#' pepito = createPP(vecchia_approx, matern_range = .1)
-#' # choosing manually Matérn range, way too small wrt number of knots
-#' pepito = createPP(vecchia_approx, matern_range = .01)
-#' # choosing manually number of knots in order to adjust to Matérn range
-#' pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
-#' # choosing manually number of knots, but picking too few for default Matérn range
-#' pepito = createPP(vecchia_approx, knots = 20)
-#' # choosing manually Matérn range in order to adjust to the number of knots
-#' pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
-#' # inputing an user-specified grid of knots
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
-#' # inputing an user-specified grid of knots in order to adjust to small Matérn range
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
+vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
+# automatic 
+pepito = createPP(vecchia_approx)
+# choosing manually Matérn range, too small wrt number of knots
+pepito = createPP(vecchia_approx, matern_range = .1)
+# choosing manually Matérn range, way too small wrt number of knots
+pepito = createPP(vecchia_approx, matern_range = .01)
+# choosing manually number of knots in order to adjust to Matérn range
+pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
+# choosing manually number of knots, but picking too few for default Matérn range
+pepito = createPP(vecchia_approx, knots = 20)
+# choosing manually Matérn range in order to adjust to the number of knots
+pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
+# inputing an user-specified grid of knots
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
+# inputing an user-specified grid of knots in order to adjust to small Matérn range
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234){
   if(is.null(knots)){
@@ -77,8 +77,9 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
     ), class = "PP"
   )
   
-  plot_knots.PP(x = res, locs = vecchia_approx$locs)
   mar_var_loss = var_loss_percentage.PP(res)
+  print(min(mar_var_loss))
+  plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
   hist(mar_var_loss, xlab = "percentage of lost variance", main = "histogram of lost marginal variance \n between the PP and the full GP")
   message(paste(
     round(mean(mar_var_loss), 1), 
@@ -126,12 +127,17 @@ summary.PP <- function(object, ...) {
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = createPP(observed_locs)
 #' plot_knots.PP(pepito)
-plot_knots.PP = function(x, locs){
+plot_knots.PP = function(x, locs, mar_var_loss = NULL){
   nx <- nrow(locs)
   ny <- nrow(x$knots)
-  plot(rbind(locs, x$knots), 
-       cex = c(rep(.2, nx), rep(1, ny)),
-       col = c(rep(8,  nx), rep(2, ny)), 
+  heat_col = rep(8,  nx)
+  if(!is.null(mar_var_loss))heat_col = heat.colors(6)[as.numeric(cut(mar_var_loss[-seq(ny)], breaks = c(0,1,2,5,10,50, 100), include.lowest = T))]
+  plot(rbind(locs, 
+    x$knots), 
+       cex = c(rep(1, nx), 
+         rep(1, ny)),
+       col = c(heat_col, 
+         rep(1, ny)), 
        pch = c(rep(16,  nx), rep(16, ny)), 
        xlab = "1st spatial coordinate",
        ylab = "2nd spatial coordinate",
@@ -151,7 +157,8 @@ var_loss_percentage.PP = function(x, ...) {
     nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
   )), 1, function(x)
     sum(x^2))
-  return((1.0001 - PP_mar_var) * 100 / 1.0001)
+  return((pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100)
+  # max(0) because of tiny numerical errors
 }
 
 
