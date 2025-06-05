@@ -1,3 +1,5 @@
+TO DO : Range parametrization changed
+
 # With only one HMC step in range 
 
 # numerically stable log(exp(x) + exp(y)) with 0 << x << y or 0 << y << x
@@ -314,7 +316,6 @@ mcmc_nngp_update_Gaussian = function(
         MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol= new_sparse_chol
         MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = new_compressed_sparse_chol_and_grad
         MCMC_NNGP$states$params$range_beta[] = new_range_beta
-        MCMC_NNGP$states$sparse_chol_and_stuff$precision_diag = as.vector((MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][MCMC_NNGP$vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(MCMC_NNGP$vecchia_approx$sparse_chol_column_idx)), j = MCMC_NNGP$vecchia_approx$sparse_chol_column_idx, x = rep(1, length(MCMC_NNGP$vecchia_approx$sparse_chol_row_idx))))
       }
     }
     
@@ -481,7 +482,6 @@ mcmc_nngp_update_Gaussian = function(
         MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol= new_sparse_chol
         MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = new_compressed_sparse_chol_and_grad
         MCMC_NNGP$states$params$range_beta[] = new_range_beta
-        MCMC_NNGP$states$sparse_chol_and_stuff$precision_diag = as.vector((MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][MCMC_NNGP$vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(MCMC_NNGP$vecchia_approx$sparse_chol_column_idx)), j = MCMC_NNGP$vecchia_approx$sparse_chol_column_idx, x = rep(1, length(MCMC_NNGP$vecchia_approx$sparse_chol_row_idx))))
       }
     }
     
@@ -595,7 +595,6 @@ mcmc_nngp_update_Gaussian = function(
             
             MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol= new_sparse_chol
             MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = new_compressed_sparse_chol_and_grad
-            MCMC_NNGP$states$sparse_chol_and_stuff$precision_diag = as.vector((MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][MCMC_NNGP$vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(MCMC_NNGP$vecchia_approx$sparse_chol_column_idx)), j = MCMC_NNGP$vecchia_approx$sparse_chol_column_idx, x = rep(1, length(MCMC_NNGP$vecchia_approx$sparse_chol_row_idx))))
           }
         }
       }
@@ -744,7 +743,6 @@ mcmc_nngp_update_Gaussian = function(
             
             MCMC_NNGP$states$sparse_chol_and_stuff$sparse_chol= new_sparse_chol
             MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad = new_compressed_sparse_chol_and_grad
-            MCMC_NNGP$states$sparse_chol_and_stuff$precision_diag = as.vector((MCMC_NNGP$states$sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][MCMC_NNGP$vecchia_approx$NNarray_non_NA]^2)%*%Matrix::sparseMatrix(i = seq(length(MCMC_NNGP$vecchia_approx$sparse_chol_column_idx)), j = MCMC_NNGP$vecchia_approx$sparse_chol_column_idx, x = rep(1, length(MCMC_NNGP$vecchia_approx$sparse_chol_row_idx))))
           }
         }
       }

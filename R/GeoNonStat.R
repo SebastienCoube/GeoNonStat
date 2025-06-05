@@ -98,8 +98,7 @@ createVecchia <- function(observed_locs, m = 12){
 #' process_covariates(X = X, vecchia_approx, PP)
 #' process_covariates(X = NULL, vecchia_approx, PP)
  
-process_covariates = function(X, vecchia_approx, PP = NULL)
-{
+process_covariates = function(X, vecchia_approx, PP = NULL){
   # covariates in the observed field #
   res = list()
   # creating model matrix
@@ -175,7 +174,7 @@ process_PP_prior = function(
 #' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
 #' @param scale_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the scale's PP, or NULL in which case the bounds are set automatically
 #' @param range_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the range's PP, or NULL in which case the bounds are set automatically
-#' @param nu a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
+#' @param matern_smoothness a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations. 
 #' @param covariates The list of covariates obtained with process_covariates, contianing X, X_noise, X_range, X_scale
 #' @param anisotropic Boolean indicating if anisotropic
@@ -198,7 +197,7 @@ process_PP_prior = function(
 #'   scale_PP = PP, scale_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -208,7 +207,7 @@ process_PP_prior = function(
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -218,7 +217,7 @@ process_PP_prior = function(
 #'   scale_PP = NULL, scale_log_scale_bounds = NULL,
 #'   range_PP = NULL, range_log_scale_bounds = NULL,
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -229,7 +228,7 @@ process_PP_prior = function(
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -238,7 +237,7 @@ process_PP_prior = function(
 #'   scale_PP = NULL, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -247,7 +246,7 @@ process_PP_prior = function(
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = NULL, range_log_scale_bounds = c(1, 3),
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -256,12 +255,10 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
                                        scale_PP, scale_log_scale_bounds,
                                        range_PP, range_log_scale_bounds,
                                        observed_locs,
-                                       nu,
+                                       matern_smoothness,
                                        observed_field,
                                        covariates,
                                        anisotropic) {
-  
-  # Info about hierarchical model ##############################################################
   
   # Processing PP priors
   noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise")
@@ -271,8 +268,8 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
   # and as lower bound the minimal distance between two space points
-  alpha_max = -0.5 * log(8 * nu) + log(max(dist(vecchia_approx$locs[seq(min(10000, nrow(vecchia_approx$locs))), ])) / 8)
-  alpha_min = -0.5 * log(8 * nu) + log(median(FNN::get.knn(vecchia_approx$locs, k = 1)$nn.dist) * 3)
+  alpha_max = -0.5 * log(8 * matern_smoothness) + log(max(dist(vecchia_approx$locs[seq(min(10000, nrow(vecchia_approx$locs))), ])) / 8)
+  alpha_min = -0.5 * log(8 * matern_smoothness) + log(median(FNN::get.knn(vecchia_approx$locs, k = 1)$nn.dist) * 3)
   
   # OLS to get residual variance to make a guess for maximum and minimum reasonable values 
   # for NNGP and noise variance
@@ -289,7 +286,7 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
     range_PP = range_PP, 
     range_log_scale_bounds = range_log_scale_bounds, 
     anisotropic= anisotropic,
-    nu= nu,
+    matern_smoothness= matern_smoothness,
     beta_priors= list(),
     PP= PP,
     range_beta0_mean= (alpha_max + alpha_min) / 2,
@@ -327,7 +324,7 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
 #'   scale_PP = PP, scale_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
 #'   observed_locs,
-#'   nu = 1.5,
+#'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
@@ -363,172 +360,171 @@ process_transition_kernels <- function(init=-4, hm){
 #' @param hm hierarchical model (from `process_hierarchical_model()`)
 #' @param covariates TODO
 #' @param observed_field TODO
-#' @param vecchia_setup TODO
+#' @param vecchia_approx TODO
 #' @param init_tk TODO
 #'
 #' @returns a list
+
+
+set.seed(100)
+nobs = 10000
+observed_locs = cbind(runif(nobs), runif(nobs))
+observed_field = rnorm(nobs)
+
+X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+vecchia_approx = createVecchia(observed_locs, 12)
+PP = createPP(vecchia_approx)
+
+covariates = list(
+  X = process_covariates(X = X, vecchia_approx), 
+  scale_X = process_covariates(X = X, vecchia_approx, PP),
+  noise_X = process_covariates(X = X, vecchia_approx, PP),
+  range_X = process_covariates(X = X, vecchia_approx, PP)
+)
+hm = process_hierarchical_model(
+  noise_PP = PP, noise_log_scale_bounds = NULL,
+  scale_PP = PP, scale_log_scale_bounds = NULL,
+  range_PP = PP, range_log_scale_bounds = NULL,
+  observed_locs,
+  matern_smoothness = 1.5,
+  observed_field = observed_field,
+  covariates = covariates,
+  anisotropic = T) 
+
+process_states(
+    hm,
+    covariates,
+    observed_field,
+    vecchia_approx,
+    init_tk = -4
+)
 
 process_states <- function(
     hm,
     covariates,
     observed_field,
-    vecchia_setup,
+    vecchia_approx,
     init_tk = -4
 ) {
-  # Transition kernels ###################################################################
-  # Starting points for transition kernels, will be adaptively tuned
-  # Transition kernel state
-  # transition kernel variance is given as the log
-  # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
-  # have an ancillary and a sufficient version when applicable
-  # range
-  transition_kernels <- process_transition_kernels(init_tk)
   
-  # Linear regression coefficients  ###################################################################
+  # initializing sub-lisits in the state
+  # Actual parameters
+  params = list()
+  # Metropolis proposal distribution width for MCMC
+  ker_var <- process_transition_kernels(init_tk, hm)
+  # Momenta for HMC
+  momenta <- list()
+  # Useful stuff pre-computed from the parameters
+  stuff <- list()
+  
+  
+  # Linear regression coefficients  ############################################
   #starting points for regression coeffs
   perturb = t(chol(vcov(hm$naive_ols))) %*% 
     rnorm(length(hm$naive_ols$coefficients))
-  
-  params = list("beta"= NULL, 
-                "range_beta" = NULL, 
-                "range_log_scale" = NULL,
-                "scale_beta" = NULL,
-                "field" = NULL)
-  
+  # parameter value 
   params[["beta"]] = hm$naive_ols$coefficients + perturb
   row.names(params[["beta"]]) = colnames(covariates$X$X)
-  
-  sparse_chol_and_stuff <- list()
   # Residuals of the OLS model that have to be explained by the latent field and the noise
-  sparse_chol_and_stuff$lm_fit = as.vector(covariates$X$X %*% matrix(params[["beta"]], ncol = 1))
-  sparse_chol_and_stuff$lm_fit_locs = as.vector(covariates$X$X_locs %*%
-                                                        matrix(params[["beta"]][covariates$X$which_locs], ncol = 1))
-  sparse_chol_and_stuff$lm_residuals = as.vector(observed_field - sparse_chol_and_stuff$lm_fit)
+  stuff$lm_fit = as.vector(covariates$X$X %*% matrix(params[["beta"]], ncol = 1))
+  stuff$lm_fit_locs = as.vector(covariates$X$X_locs %*%
+                                  matrix(params[["beta"]][covariates$X$which_locs], ncol = 1))
+  stuff$lm_residuals = as.vector(observed_field - stuff$lm_fit)
   
-  # Range #######################################################################
-  # range beta
-  params$range_beta = matrix(0,
-                             ncol(covariates$range_X$X) + 
-                               hm$range_PP * hm$PP$n_knots,
-                             1 + 2 * anisotropic)
-  if (!hm$range_PP)
+  # Range of the NNGP and stuff depending on it ################################
+  # parameter format and value
+  if (is.null(hm$range_PP)){
+    params$range_beta = matrix(0, ncol(covariates$range_X$X), 1 + 2 * hm$anisotropic)
     row.names(params$range_beta) = colnames(covariates$range_X$X)
-  if (hm$range_PP)
+  }
+  if (!is.null(hm$range_PP)){
+    params$range_beta = matrix(0, ncol(covariates$range_X$X) + hm$range_PP$n_knots, 1 + 2 * hm$anisotropic)
     row.names(params$range_beta) = c(colnames(covariates$range_X$X), 
                                      paste("PP", seq(hm$PP$n_knots), sep = "_"))
+    if (!hm$anisotropic)params$range_log_scale =   hm$range_log_scale_bounds[1]
+    if (hm$anisotropic)params$range_log_scale = c(rep(hm$range_log_scale_prior[1], 3),rep(0, 3))
+  }
   params$range_beta[1, 1] = hm$range_beta0_mean
-  
-  momenta <- list()
+  # momenta
   momenta$range_beta_ancillary = matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient = matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
-  # range log scale
-  if (hm$range_PP) {
-    if (!anisotropic)
-      params$range_log_scale =   hm$range_log_scale_prior[1]
-    if (anisotropic)
-      params$range_log_scale = c(rep(hm$range_log_scale_prior[1], 3),
-                                       rep(0, 3))
+  if (!is.null(hm$range_PP)) {
     momenta$range_log_scale_ancillary  = rnorm(length(params$range_log_scale))
     momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
   }
+  # cholesky factors of precision matrices
+  stuff$compressed_chol = compute_sparse_chol(
+    range_beta = params$range_beta, vecchia_approx = vecchia_approx, 
+    range_X = covariates$range_X$X_locs, 
+    PP = hm$range_PP, matern_smoothness = hm$matern_smoothness, 
+    compute_derivative = T, num_threads = min(5, max(parallel::detectCores()-1, 1))
+      )
+  stuff$sparse_chol = Matrix::sparseMatrix(
+    i = vecchia_approx$sparse_chol_i, 
+    p = vecchia_approx$sparse_chol_p, 
+    x = stuff$compressed_chol[,1,][vecchia_approx$sparse_chol_x_reorder], 
+    triangular = T
+  ) 
+  #plot_pointillist_painting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
   
-  # Noise variance #######################################################
-  
-  # beta is just an intercept in stationary case
-  # if noise_PP is null : que X sinon + PP_knots.
-  nrow_noise <- ncol(covariates$noise_X$X)
-  if(!is.null(hm$noise_PP)) nrow_noise <- nrow_noise + hm$PP$n_knots
-  params$noise_beta = matrix(rep(0, nrow_noise), ncol = 1) #random starting values
-  if (is.null(hm$noise_PP)) {
+  # Noise variance  and stuff depending on it ##################################
+  # parameter format and value
+  if(is.null(hm$noise_PP)) {
+    params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X)), ncol = 1) #random starting values
     row.names(params$noise_beta) = colnames(covariates$noise_X$X)
-  } else {
+  }
+  if(!is.null(hm$noise_PP)) {
+    params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise_PP$n_knots), ncol = 1) #random starting values
     row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
                                      paste("PP", seq(hm$PP$n_knots), sep = "_"))
+    params$noise_log_scale = hm$noise_log_scale_prior[1]
   }
   params$noise_beta[1] = hm$noise_beta0_mean
-  momenta$noise_beta = rnorm(nrow_noise)
-  # noise log scale
-  if (!is.null(hm$noise_PP))
-    params$noise_log_scale = hm$noise_log_scale_prior[1]
+  # momenta
+  momenta$noise_beta = rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  sparse_chol_and_stuff$noise = variance_field(
-    beta = params$noise_beta,
-    PP = hm$PP,
-    X = covariates$noise_X$X
-  )
+  stuff$noise_var = exp(X_PP_mult_right(
+    X = covariates$noise_X$X, PP = hm$noise_PP,
+    vecchia_approx = vecchia_approx, Y = params$noise_beta, 
+    permutate_PP_to_obs = T
+  ))
   
-  # Scale ################################################################
-  nrow_scale <- ncol(covariates$scale_X$X_locs)
-  if(!is.null(hm$noise_PP)) nrow_scale <- nrow_scale + hm$PP$n_knots
-  params$scale_beta    = matrix(0 ,nrow_scale, ncol = 1)
+  # Marginal variance of the NNGP and stuff depending on it ####################
   if (is.null(hm$scale_PP)) {
+    params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs), ncol = 1)
     row.names(params$scale_beta) = colnames(covariates$scale_X$X_locs)
-  } else {
+    momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs))
+    momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs))
+  } 
+  if (!is.null(hm$scale_PP)) {
+    params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + hm$scale_PP$n_knots, ncol = 1)
     row.names(params$scale_beta) = c(colnames(covariates$scale_X$X_locs),
                                      paste("PP", seq(hm$PP$n_knots), sep = "_"))
-  }
-    
-  params$scale_beta[1] = hm$scale_beta0_mean
-  momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
-                                          hm$scale_PP * hm$PP$n_knots)
-  momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + 
-                                          hm$scale_PP * hm$PP$n_knots)
-  
-  # variance
-  if (!is.null(hm$scale_PP))
     params$scale_log_scale = hm$scale_log_scale_prior[1]
+    momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
+                                            hm$scale_PP$n_knots)
+    momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + 
+                                            hm$scale_PP$n_knots)
+  }
+  params$scale_beta[1] = hm$scale_beta0_mean
   # effective variance field, shall be used in density computations
-  sparse_chol_and_stuff$scale = variance_field(
-    beta = params$scale_beta,
-    PP = hm$PP,
-    X = covariates$scale_X$X_locs,
-    locs_idx = vecchia_setup$hctam_scol_1
-  )
+  stuff$field_sd = exp(.5*X_PP_mult_right(
+    X = covariates$scale_X$X_locs, PP = hm$scale_PP,
+    vecchia_approx = vecchia_approx, Y = params$scale_beta, 
+    permutate_PP_to_obs = F
+  ))
   
-  # NNGP sparse chol #############################################
-  sparse_chol_and_stuff$compressed_sparse_chol_and_grad =
-    compute_sparse_chol(
-      anisotropic = anisotropic,
-      range_X = covariates$range_X$X_locs,
-      range_beta = params$range_beta,
-      PP = hm$PP,
-      use_PP = hm$range_PP,
-      NNarray = vecchia_setup$NNarray,
-      locs_idx = vecchia_setup$hctam_scol_1,
-      locs = vecchia_setup$locs,
-      smoothness = hm$nu,
-      num_threads = max(1, parallel::detectCores() - 2)
-    )
-  
-  sparse_chol_and_stuff$sparse_chol = Matrix::sparseMatrix(
-    x =  sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_setup$NNarray_non_NA],
-    i = vecchia_setup$sparse_chol_row_idx,
-    j = vecchia_setup$sparse_chol_column_idx,
-    triangular = T
-  )
-  sparse_chol_and_stuff$precision_diag = as.vector((
-    sparse_chol_and_stuff$compressed_sparse_chol_and_grad[[1]][vecchia_setup$NNarray_non_NA]^2
-  ) %*% Matrix::sparseMatrix(
-    i = seq(length(
-      vecchia_setup$sparse_chol_column_idx
-    )),
-    j = vecchia_setup$sparse_chol_column_idx,
-    x = rep(1, length(vecchia_setup$sparse_chol_row_idx))
-  )
-  )
-  
-  # Latent field ################################################################
-  
-  params$field = sqrt(sparse_chol_and_stuff$scale) * as.vector(Matrix::solve(
-    sparse_chol_and_stuff$sparse_chol,
-    rnorm(vecchia_setup$n_locs)
+  # Latent field ###############################################################
+  params$field = stuff$field_sd * as.vector(Matrix::solve(
+    stuff$sparse_chol,
+    rnorm(vecchia_approx$n_locs)
   ))
   
   return(list(
     "params" = params, #parameters of interest to the model
-    "sparse_chol_and_stuff" =sparse_chol_and_stuff, #stuff that is useful for computations
+    "stuff" = stuff, #stuff that is useful for computations
     "momenta" = momenta, # HMC momenta
-    "transition_kernels" = transition_kernels # Starting points for transition kernels, will be adaptively tuned
+    "ker_var" = ker_var # Starting points for transition kernels, will be adaptively tuned
   ))
 }
 
@@ -538,7 +534,7 @@ process_states <- function(
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
 #' @param m number of nearest neighbors to do Vecchia's approximation
-#' @param nu Matern smoothness, either 0.5 or 1.5
+#' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
 #' @param anisotropic anisotropic covariance
 #' @param PP TODO
 #' @param n_chains TODO
@@ -568,7 +564,7 @@ process_states <- function(
 #' myobj = GeoNonStat(
 #'   observed_locs = locs, 
 #'   observed_field = rnorm(100),
-#'   nu = 1.5, n_chains = 5,
+#'   matern_smoothness = 1.5, n_chains = 5,
 #'   range_PP = T, PP = myPP, # use PP for range
 #'   anisotropic = T # Covariance will be anisotropic
 #' )
@@ -579,7 +575,7 @@ GeoNonStat <-
     X = NULL, # Response variable 
     # Covariates per observation
     m = 10, #number of Nearest Neighbors
-    nu = 1.5, #Matern smoothness
+    matern_smoothness = 1.5, #Matern smoothness
     anisotropic = FALSE, 
     PP = NULL,
     n_chains = 2,
@@ -632,21 +628,20 @@ GeoNonStat <-
      }
     
     # smoothness
-    if (!nu %in% c(1.5, .5))
-      stop("only nu = 1.5 or nu = 0.5")
+    if (!matern_smoothness %in% c(1.5, .5))
+      stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
     
     # Re-ordering ############################################################################
     # remove duplicated locations
     # Vecchia approximation ##########################################################################
     # This object gathers the NNarray table used by GpGp package and related objects
 
-    vecchia_setup <- createVecchia(observed_locs, m)
     
     # covariates #########################################################
     
     covariates = list()
     # fixed effects for response
-    covariates$X = process_covariates(X, observed_locs, vecchia_setup)
+    covariates$X = process_covariates(X, observed_locs, vecchia_approx)
     # explicit PP basis
     explicit_PP_basis = NULL
     if (!is.null(PP)) {
@@ -656,27 +651,22 @@ GeoNonStat <-
     # fixed effects and PP for range
     covariates$range_X = process_covariates(range_X,
                                             observed_locs,
-                                            vecchia_setup,
-                                            explicit_PP_basis,
+                                            vecchia_approx,
                                             range_PP)
     if (!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))
       stop("The covariates range_X cannot vary within one spatial location of observed_locs")
     # fixed effects and PP for scale
     covariates$scale_X = process_covariates(scale_X,
                                             observed_locs,
-                                            vecchia_setup,
-                                            explicit_PP_basis,
+                                            vecchia_approx,
                                             scale_PP)
     if (!identical(covariates$scale_X$which_locs, seq(ncol(covariates$scale_X$X))))
       stop("The covariates scale_X cannot vary within one spatial location of observed_locs")
     # fixed effects and PP for noise
     covariates$noise_X = process_covariates(noise_X,
                                             observed_locs,
-                                            vecchia_setup,
-                                            explicit_PP_basis,
+                                            vecchia_approx,
                                             noise_PP)
-    # explicit PP basis removal
-    remove(explicit_PP_basis)
     
     # Info about hierarchical model ##############################################################
     hierarchical_model <- process_hierarchical_model(
@@ -684,8 +674,8 @@ GeoNonStat <-
       noise_PP, noise_log_scale_prior,
       scale_PP, scale_log_scale_prior,
       range_PP, range_log_scale_prior,
-      locs=vecchia_setup$locs,
-      nu = nu,
+      locs=vecchia_approx$locs,
+      matern_smoothness = matern_smoothness,
       observed_field = observed_field,
       covariates = covariates,
       anisotropic = anisotropic)
@@ -702,7 +692,7 @@ GeoNonStat <-
       covariates = covariates,
       observed_field = observed_field,
       anisotropic = anisotropic,
-      vecchia_setup = vecchia_setup,
+      vecchia_approx = vecchia_approx,
       init_tk = -4
     ) 
     # Remove unecessary naive OLS
@@ -730,7 +720,7 @@ GeoNonStat <-
           "covariates" = covariates
         ),
       "hierarchical_model" = hierarchical_model,
-      "vecchia_setup" = vecchia_setup,
+      "vecchia_approx" = vecchia_approx,
       "states" = state,
       "records" = records,
       "seed" = seed,
@@ -767,8 +757,8 @@ summary.GeoNonStat <- function(object, ...) {
   detailed_summary(object$data)
   cat("### hierarchical_model ###")
   detailed_summary(object$hierarchical_model)
-  cat("### vecchia_setup ###",
-    summary(object$vecchia_setup), 
+  cat("### vecchia_approx ###",
+    summary(object$vecchia_approx), 
     "### states ###",
     summary(object$states), 
     "### records ###", 
