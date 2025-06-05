@@ -83,6 +83,27 @@ test_that("process_PP_priors works as expected whith PP", {
   
 })
 
+
+test_that("process_transition_kernels return expected result", {
+  expect_error(
+    res <- process_transition_kernels(),
+    NA
+  )
+  expect_true(is.list(res))
+  init <- -4
+  expect_identical(res, 
+               list( range_log_scale_sufficient = init,
+                  range_log_scale_ancillary =  init,
+                  range_beta_sufficient = c(init, init),
+                  range_beta_ancillary  = c(init, init),
+                  scale_beta_sufficient_mala = init,
+                  scale_beta_ancillary_mala  = init,
+                  scale_log_scale_sufficient = init,
+                  scale_log_scale_ancillary =  init,
+                  noise_beta_mala = init,
+                  noise_log_scale = init))
+})
+
 test_that("initialize class GeoNonStat works", {
   set.seed(100)
   size <- 2000
