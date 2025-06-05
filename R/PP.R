@@ -41,7 +41,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   if(!is.matrix(knots)){
     knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
     knots = max(knots, nrow(vecchia_approx$NNarray))
-    knots = kmeans(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),] + rnorm(2*min(vecchia_approx$n_locs, 10000), 0, max(dist(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),]))/20), 
+    knots = kmeans(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),] + rnorm(2*min(vecchia_approx$n_locs, 10000), 0, max(dist(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),]))/50), 
                    knots, algorithm = "Hartigan-Wong", iter.max = 50)$centers
     message("knot placement done by default using k-means")
   }
@@ -78,7 +78,6 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   )
   
   mar_var_loss = var_loss_percentage.PP(res)
-  print(min(mar_var_loss))
   plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
   hist(mar_var_loss, xlab = "percentage of lost variance", main = "histogram of lost marginal variance \n between the PP and the full GP")
   message(paste(

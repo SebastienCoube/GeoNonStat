@@ -87,63 +87,97 @@ createVecchia <- function(observed_locs, m = 12){
 #' \dontrun{TODO}
 #' 
 #' 
+#' 
+#' nlocs = 5000
 #' nobs = 10000
-#' observed_locs = cbind(runif(nobs), runif(nobs))
+#' unique_locs = cbind(runif(nlocs), runif(nlocs))
+#' observed_locs = unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' vecchia_approx = createVecchia(observed_locs, 12)
 #' PP = createPP(vecchia_approx)
 #' 
-#' process_covariates(X = X, vecchia_approx)
-#' process_covariates(X = NULL, vecchia_approx)
-#' process_covariates(X = X, vecchia_approx, PP)
-#' process_covariates(X = NULL, vecchia_approx, PP)
- 
-process_covariates = function(X, vecchia_approx, PP = NULL){
+#' # Good cases ######################
+#' # no PP, an X
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+#' # no PP, no X
+#' res = process_covariates(X = NULL, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+#' # PP and X
+#' res = process_covariates(X = X, vecchia_approx, PP = PP, covariate_name = "test_covariate", one_obs_per_site = F)
+#' # one obs of x per loc
+#' X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' 
+#' # Errors ##########################
+#' # one obs of x per loc
+#' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' # bad X number of rows
+#' X = X[-1,]
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' # bad X format
+#' X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' # not independent covariates
+#' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+
+process_covariates = function(X, vecchia_approx, 
+                              PP = NULL, covariate_name = "<missing covariate name>", 
+                              one_obs_per_site = F){
+  if (!is.data.frame(X) & !is.null(X)) stop(paste(covariate_name, "should be a data.frame or NULL"))
+  if (!is.null(X))if(nrow(X)!=nrow(vecchia_approx$observed_locs)) stop(paste(covariate_name, "should have the same number of rows as the observed_locs from vecchia_approx"))
+  
   # covariates in the observed field #
   res = list()
   # creating model matrix
   # extracting a model matrix and storing the original argument
-  if(!is.null(X))
-  {
+  if(!is.null(X)){
     res$arg = X
     res$X = model.matrix(~., X)
   }
   # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
-  if(is.null(X))
-  {
+  if(is.null(X)){
     res$arg = "No covariates were provided"
     res$X = matrix(model.matrix(~., as.data.frame(rep(1, vecchia_approx$n_obs)))[,-1], vecchia_approx$n_obs)
   }
   colnames(res$X)[1] = "(Intercept)"
-  
+  if(det(crossprod(res$X))<1e-10)stop(paste(covariate_name, "does not induce an independent collection of covariates (det (XTX) < 1e-10). In particular, remember that the Intercept is automatically added."))
   
   X_ = res$X
   if(!is.null(PP)) X_ = cbind(res$X, X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, Y = diag(1, PP$n_knots)))
   # pre- computing XTX
-  crossprod_X = crossprod(X_)
+  crossprod_X = crossprod(X_)  + diag(1e-10, ncol(X_), ncol(X_))
   res$chol_crossprod_X = chol(crossprod_X)
   res$n_regressors = ncol(res$X)
   # identifying  which X do not vary within location
   res$which_locs = c()
-  for(i in seq(ncol(res$X))) 
-  {
-    if(all(duplicated(cbind(vecchia_approx$observed_locs, res$X[,i])) == vecchia_approx$duplicated_locs)) {
+  duplicated_locs = duplicated(observed_locs)
+  for(i in seq(ncol(res$X))){
+    if(all(duplicated(cbind(vecchia_approx$observed_locs, res$X[,i])) == duplicated_locs)) {
       res$which_locs = c(res$which_locs, i)
     }
+  }
+  if(one_obs_per_site){
+    if (!identical(res$which_locs, seq(ncol(res$X))))
+      stop(paste(covariate_name, "cannot vary within one spatial location of observed_locs"))
   }
   res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
   colnames(res$X_locs) = colnames(res$X)[res$which_locs]
   X_locs_ = res$X_locs
   if(!is.null(PP))X_locs_ =cbind(X_locs_, X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F, Y = diag(1, PP$n_knots)))
-  res$crossprod_X_locs = crossprod(X_locs_)
+  res$crossprod_X_locs = crossprod(X_locs_) + diag(1e-10, ncol(X_locs_), ncol(X_locs_))
   res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
+  if(one_obs_per_site){
+    res$X = NULL
+    res$chol_crossprod_X = NULL
+  }
   res
 }
 
 #' Safety checks and automatic treatment of PP objects and their marginal variance bounds
 #'
 #' @param PP a PP object, as given by create_PP
-#' @param log_scale_prior a numeric vector of size 2 indicating the lower and upper PP log-variance bounds
+#' @param log_scale_bounds a numeric vector of size 2 indicating the lower and upper PP log-variance bounds
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
 #' @examples 
@@ -259,7 +293,8 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
                                        observed_field,
                                        covariates,
                                        anisotropic) {
-  
+  if (!matern_smoothness %in% c(1.5, .5))
+    stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   # Processing PP priors
   noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise")
   scale_log_scale_bounds <- process_PP_prior(scale_PP, scale_log_scale_bounds, "scale")
@@ -364,49 +399,47 @@ process_transition_kernels <- function(init=-4, hm){
 #' @param init_tk TODO
 #'
 #' @returns a list
-
-
-set.seed(100)
-nobs = 10000
-observed_locs = cbind(runif(nobs), runif(nobs))
-observed_field = rnorm(nobs)
-
-X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-vecchia_approx = createVecchia(observed_locs, 12)
-PP = createPP(vecchia_approx)
-
-covariates = list(
-  X = process_covariates(X = X, vecchia_approx), 
-  scale_X = process_covariates(X = X, vecchia_approx, PP),
-  noise_X = process_covariates(X = X, vecchia_approx, PP),
-  range_X = process_covariates(X = X, vecchia_approx, PP)
-)
-hm = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = NULL,
-  scale_PP = PP, scale_log_scale_bounds = NULL,
-  range_PP = PP, range_log_scale_bounds = NULL,
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-
-process_states(
-    hm,
-    covariates,
-    observed_field,
-    vecchia_approx,
-    init_tk = -4
-)
+#' set.seed(100)
+#' nobs = 10000
+#' observed_locs = cbind(runif(nobs), runif(nobs))
+#' observed_field = rnorm(nobs)
+#' 
+#' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+#' vecchia_approx = createVecchia(observed_locs, 12)
+#' PP = createPP(vecchia_approx)
+#' 
+#' covariates = list(
+#'   X = process_covariates(X = X, vecchia_approx), 
+#'   scale_X = process_covariates(X = X, vecchia_approx, PP),
+#'   noise_X = process_covariates(X = X, vecchia_approx, PP),
+#'   range_X = process_covariates(X = X, vecchia_approx, PP)
+#' )
+#' hm = process_hierarchical_model(
+#'   noise_PP = PP, noise_log_scale_bounds = NULL,
+#'   scale_PP = PP, scale_log_scale_bounds = NULL,
+#'   range_PP = PP, range_log_scale_bounds = NULL,
+#'   observed_locs,
+#'   matern_smoothness = 1.5,
+#'   observed_field = observed_field,
+#'   covariates = covariates,
+#'   anisotropic = T) 
+#' 
+#' process_states(
+#'     hm,
+#'     covariates,
+#'     observed_field,
+#'     vecchia_approx,
+#'     init_tk = -4
+#' )
 
 process_states <- function(
     hm,
     covariates,
     observed_field,
     vecchia_approx,
-    init_tk = -4
+    init_tk = -4, seed = 1
 ) {
-  
+  set.seed(seed)
   # initializing sub-lisits in the state
   # Actual parameters
   params = list()
@@ -441,8 +474,8 @@ process_states <- function(
     params$range_beta = matrix(0, ncol(covariates$range_X$X) + hm$range_PP$n_knots, 1 + 2 * hm$anisotropic)
     row.names(params$range_beta) = c(colnames(covariates$range_X$X), 
                                      paste("PP", seq(hm$PP$n_knots), sep = "_"))
-    if (!hm$anisotropic)params$range_log_scale =   hm$range_log_scale_bounds[1]
-    if (hm$anisotropic)params$range_log_scale = c(rep(hm$range_log_scale_prior[1], 3),rep(0, 3))
+    if (!hm$anisotropic)params$range_log_scale =   matrix(hm$range_log_scale_bounds[1])
+    if (hm$anisotropic)params$range_log_scale = matrix(c(rep(hm$range_log_scale_prior[1], 3),rep(0, 3)))
   }
   params$range_beta[1, 1] = hm$range_beta0_mean
   # momenta
@@ -530,44 +563,79 @@ process_states <- function(
 
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
-#' @param observed_locs a matrix of spatial coordinates where observations are done
+#' @param vecchia_approx
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
-#' @param m number of nearest neighbors to do Vecchia's approximation
 #' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
 #' @param anisotropic anisotropic covariance
 #' @param PP TODO
 #' @param n_chains TODO
 #' @param noise_PP TODO
-#' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
-#' @param noise_log_scale_prior  1 times 2 matrix for the prior on the log-variance of the noise PP field.
 #' @param scale_PP TODO
-#' @param scale_X  a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
-#' @param scale_log_scale_prior  1 times 2 matrix for the prior on the log-variance of the scale PP field.
 #' @param range_PP TODO
+#' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
+#' @param scale_X  a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
 #' @param range_X  a data.frame of covariates explaining the Gaussian process range through fixed linear effects
-#' @param range_log_scale_prior 1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.
+#' @param noise_log_scale_bounds  1 times 2 matrix for the prior on the log-variance of the noise PP field.
+#' @param scale_log_scale_bounds  1 times 2 matrix for the prior on the log-variance of the scale PP field.
+#' @param range_log_scale_bounds 1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.
 #' @param seed TODO
 #'
 #' @returns a list
 #' @export
 #'
 #' @examples
-#' set.seed(100)
-#' locs = cbind(runif(100), runif(100))
-#' myPP = createPP(
-#'   observed_locs = locs, # spatial sites
-#'   matern_range = .1,
-#'   knots = 50, # number of knots
-#'   m = 15 # number of NNGP parents
-#' )
-#' myobj = GeoNonStat(
-#'   observed_locs = locs, 
-#'   observed_field = rnorm(100),
-#'   matern_smoothness = 1.5, n_chains = 5,
-#'   range_PP = T, PP = myPP, # use PP for range
-#'   anisotropic = T # Covariance will be anisotropic
-#' )
+set.seed(100)
+nobs = 10000
+observed_locs = cbind(runif(5000), runif(5000))[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
+observed_field = rnorm(nobs)
+vecchia_approx = createVecchia(observed_locs)
+myPP = createPP(
+  vecchia_approx = vecchia_approx,
+  matern_range = .1,
+  knots = 600
+)
+range_PP = myPP
+scale_PP = myPP
+noise_PP = myPP
+
+noise_log_scale_bounds = c(-6, 3)
+scale_log_scale_bounds = c(-6, 3)
+range_log_scale_bounds = c(-6, 3)
+
+X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+range_X = as.data.frame(observed_locs)
+scale_X = as.data.frame(observed_locs)
+noise_X = X
+
+
+
+matern_smoothness = 1.5
+n_chains = 4
+anisotropic = T
+seed = 1
+
+myobj = GeoNonStat(
+  vecchia_approx = vecchia_approx,
+  observed_field = observed_field,  #spatial locations
+  X = X, # Response variable 
+  # Covariates per observation
+  matern_smoothness = 1.5, #Matern smoothness
+  anisotropic = FALSE, 
+  n_chains = 5,
+  # number of MCMC chains
+  noise_X =  noise_X ,
+  range_X =  range_X ,
+  scale_X =  scale_X ,
+  noise_PP = noise_PP ,
+  range_PP = range_PP ,
+  scale_PP = scale_PP ,
+  noise_log_scale_prior = NULL,
+  range_log_scale_prior = NULL,
+  scale_log_scale_prior = NULL,
+  seed = 1
+)
+
 GeoNonStat <- 
   function(
     vecchia_approx,
@@ -577,20 +645,18 @@ GeoNonStat <-
     m = 10, #number of Nearest Neighbors
     matern_smoothness = 1.5, #Matern smoothness
     anisotropic = FALSE, 
-    PP = NULL,
     n_chains = 2,
     # number of MCMC chains
-    noise_PP = F,
     noise_X = NULL,
-    noise_log_scale_prior = NULL,
-    scale_PP = F,
-    scale_X = NULL,
-    scale_log_scale_prior = NULL,
-    range_PP = F,
     range_X = NULL,
+    scale_X = NULL,
+    noise_PP = F,
+    range_PP = F,
+    scale_PP = F,
+    noise_log_scale_prior = NULL,
     range_log_scale_prior = NULL,
-    seed = 1)
-  {
+    scale_log_scale_prior = NULL,
+    seed = 1)  {
     # time
     t_begin = Sys.time()
     # seed
@@ -602,129 +668,77 @@ GeoNonStat <-
     # format
     
     if (!is.vector(observed_field)) stop("observed_field should be a vector")
-    
-    if (!is.data.frame(X) & !is.null(X)) stop("X should be a data.frame or NULL")
-    if (!is.data.frame(noise_X) & !is.null(noise_X)) stop("noise_X should be a data.frame or NULL")
-    if (!is.data.frame(scale_X) & !is.null(scale_X)) stop("scale_X should be a data.frame or NULL")
-    if (!is.data.frame(range_X) & !is.null(range_X)) stop("range_X should be a data.frame or NULL")
-    
-    if ((is.null(PP)) & (noise_PP | range_PP | scale_PP))
-      stop("either noise_PP, range_PP, or scale_PP is TRUE, while nothing was provided for PP")
-    #length of observations
-    if (!all(
-      unique(c(length(observed_field), nrow(observed_locs), nrow(X), nrow(scale_X), nrow(noise_X), nrow(range_X), length(PP$idx)))
-        %in% c(0, length(observed_field)))) {
-        stop(
-          paste(
-            "Lengths are not matching : observed_field has", length(observed_field), "observations,",
-            "observed_locs has", nrow(observed_locs), "rows,",
-            "X has", nrow(X), "rows,",
-            "scale_X has", nrow(scale_X), "rows (can only be either 0 or the length of the observations),",
-            "noise_X has", nrow(noise_X), "rows (can only be either 0 or the length of the observations),",
-            "range_X has", nrow(range_X), "rows (can only be either 0 or the length of the observations),",
-            "PP has", length(PP$idx), "locations (can only be either 0 or the length of the observations)"
-          )
-        )
-     }
-    
-    # smoothness
-    if (!matern_smoothness %in% c(1.5, .5))
-      stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
-    
-    # Re-ordering ############################################################################
-    # remove duplicated locations
-    # Vecchia approximation ##########################################################################
-    # This object gathers the NNarray table used by GpGp package and related objects
-
+    if(
+      (!is.null(scale_X) | !is.null(scale_PP))
+      &(!is.null(range_X) | !is.null(range_PP))
+    )warning("The model formulation induces both nonstationary range (through non-NULL range_X and range_PP) and nonstationary NNGP variance (through non-NULL scale_X and scale_PP). Those two families of parameters are notoriously difficult to identify. Please reconsider and have only one of them being nonstationary (by either letting range_X and range_PP being NULL, or scale_X and scale_PP being NULL), except if you know what you are doing.")
+    if(!n_chains%in%c(2,3,4,5))stop("n_chains must be 2, 3, 4, or 5")
     
     # covariates #########################################################
-    
     covariates = list()
     # fixed effects for response
-    covariates$X = process_covariates(X, observed_locs, vecchia_approx)
-    # explicit PP basis
-    explicit_PP_basis = NULL
-    if (!is.null(PP)) {
-      explicit_PP_basis = X_PP_mult_right(PP = PP,
-                                          Y = diag(1, nrow(PP$knots), nrow(PP$knots)))
-    }
+    covariates$X = process_covariates(X = X, vecchia_approx = vecchia_approx, 
+                                      PP = NULL, covariate_name = "X", one_obs_per_site = F)
     # fixed effects and PP for range
-    covariates$range_X = process_covariates(range_X,
-                                            observed_locs,
-                                            vecchia_approx,
-                                            range_PP)
-    if (!identical(covariates$range_X$which_locs, seq(ncol(covariates$range_X$X_locs))))
-      stop("The covariates range_X cannot vary within one spatial location of observed_locs")
+    covariates$range_X = process_covariates(X = range_X, vecchia_approx = vecchia_approx, 
+                                      PP = range_PP, covariate_name = "range_X", one_obs_per_site = T)
     # fixed effects and PP for scale
-    covariates$scale_X = process_covariates(scale_X,
-                                            observed_locs,
-                                            vecchia_approx,
-                                            scale_PP)
-    if (!identical(covariates$scale_X$which_locs, seq(ncol(covariates$scale_X$X))))
-      stop("The covariates scale_X cannot vary within one spatial location of observed_locs")
+    covariates$scale_X = process_covariates(X = scale_X, vecchia_approx = vecchia_approx, 
+                                      PP = scale_PP, covariate_name = "scale_X", one_obs_per_site = T)
     # fixed effects and PP for noise
-    covariates$noise_X = process_covariates(noise_X,
-                                            observed_locs,
-                                            vecchia_approx,
-                                            noise_PP)
+    covariates$noise_X = process_covariates(X = noise_X, vecchia_approx = vecchia_approx, 
+                                      PP = noise_PP, covariate_name = "noise_X", one_obs_per_site = F)
     
     # Info about hierarchical model ##############################################################
     hierarchical_model <- process_hierarchical_model(
-      PP,
-      noise_PP, noise_log_scale_prior,
-      scale_PP, scale_log_scale_prior,
-      range_PP, range_log_scale_prior,
-      locs=vecchia_approx$locs,
+      noise_PP = noise_PP, noise_log_scale_bounds = noise_log_scale_bounds,
+      scale_PP = scale_PP, scale_log_scale_bounds = scale_log_scale_bounds,
+      range_PP = range_PP, range_log_scale_bounds = range_log_scale_bounds,
+      observed_locs = vecchia_approx$observed_locs,
       matern_smoothness = matern_smoothness,
       observed_field = observed_field,
       covariates = covariates,
       anisotropic = anisotropic)
     
-    naive_ols <- hierarchical_model$naive_ols
     
     # Chain states #################################################################
-    # for each chain, creating sub-lists in order to stock all the stuff that is related to one chain, including :
-    # transition_kernel_sd : a list that stocks the (current) automatically-tuned transition kernels standard deviations
-    # params : a list that stocks the (current) parameters of the model, including covariance parameters, the value of the sampled field, etc
-    # record : record of the MCMC iterations
-    state = process_states(
-      hm = hierarchical_model,
-      covariates = covariates,
-      observed_field = observed_field,
-      anisotropic = anisotropic,
-      vecchia_approx = vecchia_approx,
-      init_tk = -4
-    ) 
-    # Remove unecessary naive OLS
-    hierarchical_model$naive_ols <- NULL
+    #cl = parallel::makeCluster(min(parallel::detectCores()-1, n_chains))
+    #parallel::clusterExport(cl, c("hierarchical_model", "covariates", 
+    #                              "vecchia_approx", "observed_field", "seed"))
+    states = 
+      #parallel::parLapply(
+      lapply(
+      #  cl =  cl, 
+        seq(n_chains), 
+        function(chain_number)
+          process_states(
+            seed = chain_number + seed, 
+            hm = hierarchical_model, covariates = covariates, 
+            observed_field = observed_field, vecchia_approx = vecchia_approx, 
+            init_tk = -4
+          )
+      )
+    names(states) = paste("chain", seq(n_chains), sep = "_")
+    #parallel::stopCluster(cl)
     
     # Chain records setup #########################################################################
-    
     # records is a list that stocks the recorded parameters of the model, including covariance parameters, the value of the sampled field, etc. In terms of RAM, those are the biggest bit !
+    records = lapply(states, function(x)list())
+    for(i in seq(length(records)))records[[i]][[length(records[[i]])+1]] = states[[i]]$params
     # iteration is a 2-colums matrix that records the iteration at the end of each chains join and the associated CPU time
-    records = list()
-    records =  sapply(state$params, function(x) NULL)
-    iterations = list()
-    iterations$checkpoints =  matrix(c(0, as.numeric(Sys.time() - t_begin, unit = "mins")), ncol = 2)
-    colnames(iterations$checkpoints) = c("iteration", "time")
-    iterations$thinning = c()
+    checkpoints =  matrix(c(0, as.numeric(Sys.time() - t_begin, unit = "mins")), ncol = 2)
+    colnames(checkpoints) = c("iteration", "time")
     
     # Result ####################################################################
     res <- structure(
       list(
-      "data" =
-        list(
-          "locs" = locs,
-          "observed_field" = observed_field,
-          "observed_locs" = observed_locs,
-          "covariates" = covariates
-        ),
+      "observed_field" = observed_field,
       "hierarchical_model" = hierarchical_model,
       "vecchia_approx" = vecchia_approx,
-      "states" = state,
+      "states" = states,
       "records" = records,
       "seed" = seed,
-      "iterations" = iterations
+      "checkpoints" = checkpoints
     ), class = "GeoNonStat")
   message(paste(
     "Setup done,",
