@@ -717,8 +717,7 @@ GeoNonStat <-
     
     # Chain records setup #########################################################################
     # records is a list that stocks the recorded parameters of the model, including covariance parameters, the value of the sampled field, etc. In terms of RAM, those are the biggest bit !
-    records = lapply(states, function(x)list())
-    for(i in seq(length(records)))records[[i]][[length(records[[i]])+1]] = states[[i]]$params
+    records = lapply(states, function(x) list(x$params))
     # iteration is a 2-colums matrix that records the iteration at the end of each chains join and the associated CPU time
     checkpoints =  matrix(c(0, as.numeric(Sys.time() - t_begin, unit = "mins")), ncol = 2)
     colnames(checkpoints) = c("iteration", "time")
