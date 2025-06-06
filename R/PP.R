@@ -120,6 +120,8 @@ summary.PP <- function(object, ...) {
 
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class \code{PP}
+#' @param locs locations
+#' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
@@ -129,28 +131,63 @@ summary.PP <- function(object, ...) {
 #' vPP <- var_loss_percentage.PP(pepito)
 #' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
 plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
-  nx <- nrow(locs)
-  ny <- nrow(x$knots)
-  heat_col = rep(8,  nx)
+  nlocs <- nrow(locs)
+  nknots <- nrow(x$knots)
+  locs_col = 8
+  legendtitle <- NULL
+  omar <- par("mar")
   if(!is.null(mar_var_loss)) {
-    heat_col = rev(c("#AF1139", "#E64C4C", "#EEA192", "#A4BDD2", "#5E8EB8", "#325E8B"))[
-                     as.numeric(cut(mar_var_loss[-seq(ny)],
-                     breaks = c(0,1,2,5,10,50,100), include.lowest = T))]
-    # heat.colors(6)[as.numeric(cut(mar_var_loss[-seq(ny)], 
-                                             # breaks = c(0,1,2,5,10,50,100), include.lowest = T))]
+    # Remove knots from mar_var_loss
+    legendtitle <- "Loss of\nmarginal\nvariance"
+    cols <- mar_var_loss[-seq(nknots)]
+    # Reorder to plot worst last
+    ord <- order(cols)
+    cols <- cols[ord]
+    locs <- locs[ord,]
+    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = T)
+    base_colors <- c('#F3D97CCC', '#F5C46FCC', '#EDAB65CC', '#DD8A5BCC', '#C2604FCC', '#A02F42CC')
+    locs_col = base_colors[as.numeric(cut_var)]
+    
+    mylegend <-  legend(x="right", 
+                        legend=levels(cut_var), 
+                        fill=base_colors, 
+                        title=legendtitle,
+                        plot=FALSE)
+    if(omar[2]>=omar[4]) {
+      par(mar = omar + c(0, 0, 0, 4*(1 + mylegend$rect$w)), xpd = TRUE) 
+    }
   }
-  plot(rbind(locs, 
-    x$knots), 
-       cex = c(rep(cex[1], nx), 
-         rep(cex[2], ny)),
-       col = c(heat_col, 
-         rep(1, ny)), 
-    pch = ".", 
-       # pch = c(rep(16,  nx), rep(16, ny)), 
+  # Plot locations
+  pch = 16
+  if(nlocs>1e6) pch="."
+  
+  maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
+  minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
+
+  plot(locs, 
+       cex = 1,
+       col = locs_col, 
+       pch = pch, 
        xlab = "1st spatial coordinate",
        ylab = "2nd spatial coordinate",
-       main = "Knot placement of PP"
-       )
+       main = "Knot placement of PP",
+       xlim=c(minlim[1], maxlim[2]),
+       ylim=c(minlim[2], maxlim[2])
+  )
+  # Plot knots
+  points(x$knots, pch = 10, cex=1.2, col=1)
+  if(!is.null(mar_var_loss)) {
+  legend(x="right",
+         legend=levels(cut_var), 
+         fill=base_colors, 
+         title=legendtitle,
+         inset=c(-mylegend$rect$w, 0),
+         bty="n")
+  }
+  # Restaure margins
+  par(mar=omar)
+  
+  
 }
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
