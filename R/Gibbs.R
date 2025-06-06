@@ -1,4 +1,4 @@
-TO DO : Range parametrization changed
+# TO DO : Range parametrization changed
 
 # With only one HMC step in range 
 

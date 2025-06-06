@@ -76,18 +76,16 @@ createVecchia <- function(observed_locs, m = 12){
 #' process_covariates : pre-processes covariates by adding an intercept,
 #' creating useful indices, and pre-computing useful matrices and vectors
 #'
-#' @param X a m
+#' @param X a data.frame with as many rows as vecchia_approx$observed_locs
 #' @param vecchia_approx TODO
-#' @param explicit_PP_basis TODO
-#' @param use_PP TODO
+#' @param PP NULL, 
+#' @param covariate_name "<missing covariate name>", 
+#' @param one_obs_per_site = F
 #'
 #' @returns a list
 #'
 #' @examples
 #' \dontrun{TODO}
-#' 
-#' 
-#' 
 #' nlocs = 5000
 #' nobs = 10000
 #' unique_locs = cbind(runif(nlocs), runif(nlocs))
@@ -120,7 +118,6 @@ createVecchia <- function(observed_locs, m = 12){
 #' # not independent covariates
 #' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
-
 process_covariates = function(X, vecchia_approx, 
                               PP = NULL, covariate_name = "<missing covariate name>", 
                               one_obs_per_site = F){
@@ -284,7 +281,6 @@ process_PP_prior = function(
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
-
 process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
                                        scale_PP, scale_log_scale_bounds,
                                        range_PP, range_log_scale_bounds,
@@ -323,7 +319,6 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
     anisotropic= anisotropic,
     matern_smoothness= matern_smoothness,
     beta_priors= list(),
-    PP= PP,
     range_beta0_mean= (alpha_max + alpha_min) / 2,
     range_beta0_var= ((alpha_max - alpha_min) / 8)^2,
     noise_beta0_mean= (sigma_max + sigma_min) / 2,
@@ -473,7 +468,7 @@ process_states <- function(
   if (!is.null(hm$range_PP)){
     params$range_beta = matrix(0, ncol(covariates$range_X$X) + hm$range_PP$n_knots, 1 + 2 * hm$anisotropic)
     row.names(params$range_beta) = c(colnames(covariates$range_X$X), 
-                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
+                                     paste("PP", seq(hm$range_PP$n_knots), sep = "_"))
     if (!hm$anisotropic)params$range_log_scale =   matrix(hm$range_log_scale_bounds[1])
     if (hm$anisotropic)params$range_log_scale = matrix(c(rep(hm$range_log_scale_prior[1], 3),rep(0, 3)))
   }
@@ -509,7 +504,7 @@ process_states <- function(
   if(!is.null(hm$noise_PP)) {
     params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise_PP$n_knots), ncol = 1) #random starting values
     row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
-                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
+                                     paste("PP", seq(hm$noise_PP$n_knots), sep = "_"))
     params$noise_log_scale = hm$noise_log_scale_prior[1]
   }
   params$noise_beta[1] = hm$noise_beta0_mean
@@ -532,7 +527,7 @@ process_states <- function(
   if (!is.null(hm$scale_PP)) {
     params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + hm$scale_PP$n_knots, ncol = 1)
     row.names(params$scale_beta) = c(colnames(covariates$scale_X$X_locs),
-                                     paste("PP", seq(hm$PP$n_knots), sep = "_"))
+                                     paste("PP", seq(hm$scale_PP$n_knots), sep = "_"))
     params$scale_log_scale = hm$scale_log_scale_prior[1]
     momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
                                             hm$scale_PP$n_knots)
@@ -563,7 +558,7 @@ process_states <- function(
 
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
-#' @param vecchia_approx
+#' @param vecchia_approx TODO
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
 #' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
@@ -585,57 +580,56 @@ process_states <- function(
 #' @export
 #'
 #' @examples
-set.seed(100)
-nobs = 10000
-observed_locs = cbind(runif(5000), runif(5000))[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
-observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs)
-myPP = createPP(
-  vecchia_approx = vecchia_approx,
-  matern_range = .1,
-  knots = 600
-)
-range_PP = myPP
-scale_PP = myPP
-noise_PP = myPP
-
-noise_log_scale_bounds = c(-6, 3)
-scale_log_scale_bounds = c(-6, 3)
-range_log_scale_bounds = c(-6, 3)
-
-X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
-range_X = as.data.frame(observed_locs)
-scale_X = as.data.frame(observed_locs)
-noise_X = X
-
-
-
-matern_smoothness = 1.5
-n_chains = 4
-anisotropic = T
-seed = 1
-
-myobj = GeoNonStat(
-  vecchia_approx = vecchia_approx,
-  observed_field = observed_field,  #spatial locations
-  X = X, # Response variable 
-  # Covariates per observation
-  matern_smoothness = 1.5, #Matern smoothness
-  anisotropic = FALSE, 
-  n_chains = 5,
-  # number of MCMC chains
-  noise_X =  noise_X ,
-  range_X =  range_X ,
-  scale_X =  scale_X ,
-  noise_PP = noise_PP ,
-  range_PP = range_PP ,
-  scale_PP = scale_PP ,
-  noise_log_scale_prior = NULL,
-  range_log_scale_prior = NULL,
-  scale_log_scale_prior = NULL,
-  seed = 1
-)
-
+#' set.seed(100)
+#' nobs = 10000
+#' observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
+#' observed_field = rnorm(nobs)
+#' vecchia_approx = createVecchia(observed_locs)
+#' myPP = createPP(
+#'   vecchia_approx = vecchia_approx,
+#'   matern_range = .1,
+#'   knots = 600
+#' )
+#' range_PP = myPP
+#' scale_PP = myPP
+#' noise_PP = myPP
+#' 
+#' noise_log_scale_bounds = c(-6, 3)
+#' scale_log_scale_bounds = c(-6, 3)
+#' range_log_scale_bounds = c(-6, 3)
+#' 
+#' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+#' range_X = as.data.frame(observed_locs)
+#' scale_X = as.data.frame(observed_locs)
+#' noise_X = X
+#' 
+#' 
+#' 
+#' matern_smoothness = 1.5
+#' n_chains = 4
+#' anisotropic = T
+#' seed = 1
+#' 
+#' myobj = GeoNonStat(
+#'   vecchia_approx = vecchia_approx,
+#'   observed_field = observed_field,  #spatial locations
+#'   X = X, # Response variable 
+#'   # Covariates per observation
+#'   matern_smoothness = 1.5, #Matern smoothness
+#'   anisotropic = FALSE, 
+#'   n_chains = 5,
+#'   # number of MCMC chains
+#'   noise_X =  noise_X ,
+#'   range_X =  range_X ,
+#'   scale_X =  scale_X ,
+#'   noise_PP = noise_PP ,
+#'   range_PP = range_PP ,
+#'   scale_PP = scale_PP ,
+#'   noise_log_scale_prior = NULL,
+#'   range_log_scale_prior = NULL,
+#'   scale_log_scale_prior = NULL,
+#'   seed = 1
+#' )
 GeoNonStat <- 
   function(
     vecchia_approx,
@@ -712,9 +706,9 @@ GeoNonStat <-
         seq(n_chains), 
         function(chain_number)
           process_states(
-            seed = chain_number + seed, 
-            hm = hierarchical_model, covariates = covariates, 
-            observed_field = observed_field, vecchia_approx = vecchia_approx, 
+            seed = chain_number + seed,
+            hm = hierarchical_model, covariates = covariates,
+            observed_field = observed_field, vecchia_approx = vecchia_approx,
             init_tk = -4
           )
       )

@@ -57,7 +57,7 @@ symmat = function(coords)
 #' If the covariance is anisotropic, it must have 3 columns. It the covariance is isotropic, it must have 1 column. 
 #' The first coefficients are multiplied with range_X 
 #' The last coefficients are multiplied with the spatial basis functions of PP
-#' @param vecchia_approx
+#' @param vecchia_approx TODO
 #' @param range_X covariates for range
 #' @param PP predictive process obtained through `createPP()`
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed

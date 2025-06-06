@@ -5,16 +5,22 @@
 \title{Multiply the concatenation of a matrix of covariates and a PP by a matrix
 (X|PP) %*% Y}
 \usage{
-X_PP_mult_right(X = NULL, PP = NULL, locs_idx = NULL, Y)
+X_PP_mult_right(
+  X = NULL,
+  PP = NULL,
+  vecchia_approx,
+  Y,
+  permutate_PP_to_obs = F
+)
 }
 \arguments{
 \item{X}{a matrix of covariates who will be multiplied by the first rows of Y}
 
 \item{PP}{either a PP whose basis will be multiplied by the last columns of Y}
 
-\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates, or NULL}
-
 \item{Y}{the matrix who multiplies the covariates and the PP}
+
+\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates, or NULL}
 }
 \value{
 a matrix
@@ -25,13 +31,30 @@ Multiply the concatenation of a matrix of covariates and a PP by a matrix
 }
 \examples{
 locs = cbind(runif(10000), runif(10000))
-par(mfrow = c(1,2))
-pepito = createPP(locs)
-# multiplying PP alone
-res <- X_PP_mult_right(PP = pepito, Y = rnorm(pepito$n_knots))
-GeoNonStat::plot_pointillist_painting(locs, res)
-# multiplying PP and matrix of covariates
+locs = rbind(locs, locs)
+vecchia_approx = createVecchia(locs, 12)
+PP = createPP(vecchia_approx)
+covariate_coefficients = c(4, 1, 1, .5)
+knots_coeffs = rnorm(PP$n_knots)
+par(mfrow = c(2,2))
+# multiplying X alone
 X = cbind(1, locs, rnorm(nrow(locs)))
-res <- X_PP_mult_right(PP = pepito, X = X, Y = c(4, 1, 2, .2, rnorm(pepito$n_knots)))
-GeoNonStat::plot_pointillist_painting(locs, res)
+res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+res1
+plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
+# multiplying PP alone
+res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
+plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
+# multiplying PP and matrix of covariate, one obs for each location
+X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
+res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
+plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
+# multiplying PP and matrix of covariates with an index
+X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
+                       Y = c(covariate_coefficients, knots_coeffs), 
+                       vecchia_approx = vecchia_approx
+                       )
+plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
+
 }

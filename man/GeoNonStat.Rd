@@ -7,65 +7,59 @@
 \title{GeoNonStat: Hierarchical Nonstationary Nearest Neighbor Gaussian Process}
 \usage{
 GeoNonStat(
-  observed_locs,
+  vecchia_approx,
   observed_field,
   X = NULL,
   m = 10,
-  nu = 1.5,
+  matern_smoothness = 1.5,
   anisotropic = FALSE,
-  sphere = FALSE,
-  PP = NULL,
   n_chains = 2,
-  noise_PP = F,
   noise_X = NULL,
-  noise_log_scale_prior = NULL,
-  scale_PP = F,
-  scale_X = NULL,
-  scale_log_scale_prior = NULL,
-  range_PP = F,
   range_X = NULL,
+  scale_X = NULL,
+  noise_PP = F,
+  range_PP = F,
+  scale_PP = F,
+  noise_log_scale_prior = NULL,
   range_log_scale_prior = NULL,
+  scale_log_scale_prior = NULL,
   seed = 1
 )
 }
 \arguments{
-\item{observed_locs}{a matrix of spatial coordinates where observations are done}
+\item{vecchia_approx}{TODO}
 
 \item{observed_field}{a vector of observations of the interest variable}
 
 \item{X}{a data.frame of covariates explaining the interest variable through fixed linear effects}
 
-\item{m}{number of nearest neighbors to do Vecchia's approximation}
-
-\item{nu}{Matern smoothness, either 0.5 or 1.5}
+\item{matern_smoothness}{Matern smoothness, either 0.5 or 1.5}
 
 \item{anisotropic}{anisotropic covariance}
 
-\item{sphere}{Boolean, indicating lon-lat data}
-
-\item{PP}{TODO}
-
 \item{n_chains}{TODO}
-
-\item{noise_PP}{TODO}
 
 \item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
 
-\item{noise_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
-
-\item{scale_PP}{TODO}
+\item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
 
 \item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
 
-\item{scale_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
+\item{noise_PP}{TODO}
 
 \item{range_PP}{TODO}
 
-\item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
-
-\item{range_log_scale_prior}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+\item{scale_PP}{TODO}
 
 \item{seed}{TODO}
+
+\item{PP}{TODO}
+
+\item{noise_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
+
+\item{scale_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
+
+\item{range_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
 }
 \value{
 a list
@@ -75,18 +69,53 @@ This package provides functions for hierarchical nonstationary nearest neighbor 
 }
 \examples{
 set.seed(100)
-locs = cbind(runif(100), runif(100))
+nobs = 10000
+observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
+observed_field = rnorm(nobs)
+vecchia_approx = createVecchia(observed_locs)
 myPP = createPP(
-  observed_locs = locs, # spatial sites
+  vecchia_approx = vecchia_approx,
   matern_range = .1,
-  knots = 50, # number of knots
-  m = 15 # number of NNGP parents
+  knots = 600
 )
+range_PP = myPP
+scale_PP = myPP
+noise_PP = myPP
+
+noise_log_scale_bounds = c(-6, 3)
+scale_log_scale_bounds = c(-6, 3)
+range_log_scale_bounds = c(-6, 3)
+
+X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+range_X = as.data.frame(observed_locs)
+scale_X = as.data.frame(observed_locs)
+noise_X = X
+
+
+
+matern_smoothness = 1.5
+n_chains = 4
+anisotropic = T
+seed = 1
+
 myobj = GeoNonStat(
-  observed_locs = locs, 
-  observed_field = rnorm(100),
-  nu = 1.5, n_chains = 5,
-  range_PP = T, PP = myPP, # use PP for range
-  anisotropic = T # Covariance will be anisotropic
+  vecchia_approx = vecchia_approx,
+  observed_field = observed_field,  #spatial locations
+  X = X, # Response variable 
+  # Covariates per observation
+  matern_smoothness = 1.5, #Matern smoothness
+  anisotropic = FALSE, 
+  n_chains = 5,
+  # number of MCMC chains
+  noise_X =  noise_X ,
+  range_X =  range_X ,
+  scale_X =  scale_X ,
+  noise_PP = noise_PP ,
+  range_PP = range_PP ,
+  scale_PP = scale_PP ,
+  noise_log_scale_prior = NULL,
+  range_log_scale_prior = NULL,
+  scale_log_scale_prior = NULL,
+  seed = 1
 )
 }

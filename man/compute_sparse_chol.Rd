@@ -6,16 +6,12 @@
 \usage{
 compute_sparse_chol(
   range_beta,
-  NNarray,
-  locs,
+  vecchia_approx,
   range_X = NULL,
   PP = NULL,
-  use_PP = F,
+  matern_smoothness = 1.5,
   compute_derivative = T,
-  smoothness = 1.5,
-  anisotropic = F,
-  num_threads = 1,
-  locs_idx = NULL
+  num_threads = 1
 )
 }
 \arguments{
@@ -24,23 +20,19 @@ If the covariance is anisotropic, it must have 3 columns. It the covariance is i
 The first coefficients are multiplied with range_X 
 The last coefficients are multiplied with the spatial basis functions of PP}
 
-\item{NNarray}{Vecchia parents array provided by GpGp::find_ordered_nn}
-
-\item{locs}{matrix of spatial sites}
+\item{vecchia_approx}{TODO}
 
 \item{range_X}{covariates for range}
 
 \item{PP}{predictive process obtained through `createPP()`}
 
-\item{use_PP}{should the PP be used ? (redundant when using the function "by hand", but handy when automating)}
-
 \item{compute_derivative}{logical, indicates if derivatives of Vecchia factors are to be computed}
+
+\item{num_threads}{numerical, number of treads to use. Default to 1.}
 
 \item{smoothness}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
 
 \item{anisotropic}{Logical, default to FALSE. TODO}
-
-\item{num_threads}{numerical, number of treads to use. Default to 1.}
 
 \item{locs_idx}{match between the duplicated locations used to buile the PP basis function and the non-redundant locs used to compute the sparse chol}
 }
@@ -48,108 +40,100 @@ The last coefficients are multiplied with the spatial basis functions of PP}
 a list
 }
 \description{
-The function uses range_beta one one hand, and range_X and PP on the other hand, to compute nonstationary range parameters. 
-The Vecchia approximation of the sparse Cholesky factor of the precision is then computed. 
-Derivatives can be computed too. 
-Warning (for developing users) : the sparse cholesky factor is computed using the radius/anisotropy parametrization for range_beta.  
-However, for efficiency of implementation, the derivatives are given along the canonical parametrization.  
-Re-parametrization is done automatically in GeoNonStat::derivative_sandwiches
+Computes a Vecchia sparse Cholesky factor and its derivatives
 }
 \examples{
-locs = cbind(seq(100)/10, 0)
-NNarray = GpGp::find_ordered_nn(locs, 10)
-res <- compute_sparse_chol(
-          range_beta = matrix(.5/sqrt(2),1,1), 
-          NNarray = NNarray, 
-          locs = locs,
-          use_PP = F, 
-          num_threads = 1, 
-          anisotropic = F,
-          range_X = matrix(1, nrow(locs), 1), 
-          smoothness = 1.5
-        )
-\dontrun{
-
-set.seed(1)
-observed_locs =  cbind(runif(10000), runif(10000))  # creating spatial locations 
-observed_locs = rbind(observed_locs, observed_locs) 
-observed_locs = observed_locs[order(runif(nrow(observed_locs))),]# duplicating observed_locs
-unique_locs = observed_locs[!duplicated(observed_locs),]# getting unique spatial locations
-hctam_scol_1 =  
-  match(
-    split(unique_locs, row(unique_locs)), 
-    split(observed_locs, row(observed_locs)), 
-  )  # match between unique observed_locs and duplicated observed_locs (reverse of locs_match)
-NNarray = GpGp::find_ordered_nn(unique_locs, 10)  # Vecchia Nearest Neighbor Array
-range_X = cbind(1, unique_locs) # Covariates for the range
-PP = createPP(observed_locs = observed_locs, matern_range = .1, knots = 20, m = 10) # Predictive Process is defined on duplicated observed_locs
+locs = cbind(runif(1000), runif(1000))
+vecchia_approx = createVecchia(locs)
+Rcpp::sourceCpp("src/vecchia.cpp")
+range_X = matrix(1, nrow(locs))
+PP = createPP(vecchia_approx)
 
 
-# sampling white noise to reuse 
-v = rnorm(nrow(unique_locs))
 
-# anisotropic case 
-range_beta = matrix(rnorm(23*3), 23, 3) # regression coefficients for the range
-# Note : range_beta has 3 col because aniso
-range_beta[1,1] = -4
-sparse_chol = compute_sparse_chol(
-  range_beta =  range_beta, NNarray = NNarray, 
-  locs = unique_locs, range_X = range_X, 
-  PP = PP, use_PP = T, compute_derivative = T, 
-  smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
-  num_threads = 1, locs_idx = hctam_scol_1)
-# plotting a sample generated from sparse chol
-plot_pointillist_painting(
-  unique_locs, 
-  Matrix::solve(Matrix::sparseMatrix(
-    i = row(NNarray)[!is.na(NNarray)], 
-    j = (NNarray[!is.na(NNarray)]), 
-    x = (sparse_chol[[1]][!is.na(NNarray)]), 
+# test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness= 1.5
+range_beta = matrix(c(-2))
+GpGpcov = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = row(t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
+    j = t(vecchia_approx$NNarray)[!is.na(t(vecchia_approx$NNarray))], 
+    x=  
+  GpGp::vecchia_Linv(
+  c(1, exp(range_beta[1]), 1.5, .000001), covfun_name = "matern_isotropic", 
+  (vecchia_approx$locs), NNarray = t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
+  triangular = T
+  )
+  ))
+image(GpGpcov[vecchia_approx$locs_match, vecchia_approx$locs_match])
+mycov = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
+    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
+    x=  
+      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
     triangular = T
-  ), v)
-)
-
-
-# Showing that anisotropic case comprises isotropic case 
-range_beta[,-1] = 0
-sparse_chol = compute_sparse_chol(
-  range_beta =  range_beta, NNarray = NNarray, 
-  locs = unique_locs, range_X = range_X, 
-  PP = PP, use_PP = T, compute_derivative = T, 
-  smoothness = 1.5, anisotropic = T,# Note : anisotropic is T
-  num_threads = 1, locs_idx = hctam_scol_1)
-# plotting a sample generated from sparse chol. It is locally isotropic, and the same as the next !
-GeoNonStat::plot_pointillist_painting(
-  unique_locs, 
-  Matrix::solve(Matrix::sparseMatrix(
-    i = row(NNarray)[!is.na(NNarray)], 
-    j = (NNarray[!is.na(NNarray)]), 
-    x = (sparse_chol[[1]][!is.na(NNarray)]), 
+  )
+))
+image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
+hist(mycov- GpGpcov)
+# test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness = 0.5 aka exponential
+GpGpcov = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = row(t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
+    j = t(vecchia_approx$NNarray)[!is.na(t(vecchia_approx$NNarray))], 
+    x=  
+  GpGp::vecchia_Linv(
+  c(1, exp(range_beta[1]), .5, .000001), covfun_name = "matern_isotropic", 
+  (vecchia_approx$locs), NNarray = t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
+  triangular = T
+  )
+  ))
+image(GpGpcov[vecchia_approx$locs_match, vecchia_approx$locs_match])
+mycov = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
+    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
+    x=  
+      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = .5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
     triangular = T
-  ), v)
-)
+  )
+))
+image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
+hist(mycov- GpGpcov)
+range_beta = matrix(rnorm(1 + PP$n_knots))
+compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = F)
+range_beta = matrix(rnorm(1 + PP$n_knots))
+compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = F)
 
 
-# isotropic case 
-range_beta = range_beta[,1,drop = F] # regression coefficients for the range
-# Note : range_beta has 1 col because iso
-range_beta[1,1] = -4
-sparse_chol = compute_sparse_chol(
-  range_beta =  range_beta, NNarray = NNarray, 
-  locs = unique_locs, range_X = range_X, 
-  PP = PP, use_PP = T, compute_derivative = T, 
-  smoothness = 1.5, anisotropic = F, 
-  num_threads = 1, locs_idx = hctam_scol_1)
-# plotting a sample generated from sparse chol
-GeoNonStat::plot_pointillist_painting(
-  unique_locs, 
-  Matrix::solve(Matrix::sparseMatrix(
-    i = row(NNarray)[!is.na(NNarray)], 
-    j = (NNarray[!is.na(NNarray)]), 
-    x = (sparse_chol[[1]][!is.na(NNarray)]), 
+# test equivalence of parametrizations for locally isotropic and locally aniso
+range_beta = matrix(c(-2))
+mycov = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
+    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
+    x=  
+      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
     triangular = T
-  ), v)
-)
+  )
+))
+image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
 
-}
+range_beta = matrix(c(-2, 0,0), 1)
+mycov_aniso = tcrossprod(solve(
+  Matrix::sparseMatrix(
+    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
+    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
+    x=  
+      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
+    triangular = T
+  )
+))
+image(mycov_aniso[vecchia_approx$locs_match, vecchia_approx$locs_match])
+hist(mycov - mycov_aniso)
+# test with a PP
+range_beta = matrix(rnorm(1 + PP$n_knots))
+compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
+range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
+compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
 }

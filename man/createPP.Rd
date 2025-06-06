@@ -5,10 +5,10 @@
 \title{Create an object of class PP, a low rank Predictive Process used as a prior to describe 
 spatial variations of covariance parameters}
 \usage{
-createPP(observed_locs, matern_range = NULL, knots = NULL, m = 10, seed = 1234)
+createPP(vecchia_approx, matern_range = NULL, knots = NULL, seed = 1234)
 }
 \arguments{
-\item{observed_locs}{a matrix of spatial coordinates where observations are done}
+\item{vecchia_approx}{obtained by `createVecchia()`}
 
 \item{matern_range}{either a positive number used to set the Matérn range of the PP or NULL, 
 if NULL, a default PP range is guessed from the spatial locations.}
@@ -16,8 +16,6 @@ if NULL, a default PP range is guessed from the spatial locations.}
 \item{knots}{either (i) a matrix of spatial knots used for the PP, 
 (ii) or a positive integer used to set the number of knots, the knots being then found using kmeans, 
 (iii) or NULL, a default number and placement of knots being guessed from the spatial locations.}
-
-\item{m}{number of nearest neighbors to do Vecchia's approximation who goes into PP}
 
 \item{seed}{integer used as a seed}
 }
@@ -29,22 +27,23 @@ Create an object of class PP, a low rank Predictive Process used as a prior to d
 spatial variations of covariance parameters
 }
 \examples{
-observed_locs = cbind(runif(1000), runif(1000))
-observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
+vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 # automatic 
-pepito = createPP(observed_locs)
+pepito = createPP(vecchia_approx)
 # choosing manually Matérn range, too small wrt number of knots
-pepito = createPP(observed_locs, matern_range = .1)
+pepito = createPP(vecchia_approx, matern_range = .1)
 # choosing manually Matérn range, way too small wrt number of knots
-pepito = createPP(observed_locs, matern_range = .01)
+pepito = createPP(vecchia_approx, matern_range = .01)
 # choosing manually number of knots in order to adjust to Matérn range
-pepito = createPP(observed_locs, knots = 200, matern_range = .1)
+pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
 # choosing manually number of knots, but picking too few for default Matérn range
-pepito = createPP(observed_locs, knots = 10)
+pepito = createPP(vecchia_approx, knots = 20)
 # choosing manually Matérn range in order to adjust to the number of knots
-pepito = createPP(observed_locs, knots = 10, matern_range = .5)
+pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
 # inputing an user-specified grid of knots
-pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))))
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
 # inputing an user-specified grid of knots in order to adjust to small Matérn range
-pepito = createPP(observed_locs, knots = as.matrix(expand.grid(seq(-.05, 1.05, .1), seq(-.05, 1.05, .1))), matern_range = .1)
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
+pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 }

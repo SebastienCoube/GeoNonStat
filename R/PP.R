@@ -32,7 +32,6 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
-
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234){
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
@@ -124,20 +123,30 @@ summary.PP <- function(object, ...) {
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = createPP(observed_locs)
-#' plot_knots.PP(pepito)
+#' vecchia_approx = createVecchia(observed_locs)
+#' pepito = createPP(vecchia_approx)
+#' plot_knots.PP(pepito, vecchia_approx$locs)
+#' vPP <- var_loss_percentage.PP(pepito)
+#' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
 plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   nx <- nrow(locs)
   ny <- nrow(x$knots)
   heat_col = rep(8,  nx)
-  if(!is.null(mar_var_loss))heat_col = heat.colors(6)[as.numeric(cut(mar_var_loss[-seq(ny)], breaks = c(0,1,2,5,10,50, 100), include.lowest = T))]
+  if(!is.null(mar_var_loss)) {
+    heat_col = rev(c("#AF1139", "#E64C4C", "#EEA192", "#A4BDD2", "#5E8EB8", "#325E8B"))[
+                     as.numeric(cut(mar_var_loss[-seq(ny)],
+                     breaks = c(0,1,2,5,10,50,100), include.lowest = T))]
+    # heat.colors(6)[as.numeric(cut(mar_var_loss[-seq(ny)], 
+                                             # breaks = c(0,1,2,5,10,50,100), include.lowest = T))]
+  }
   plot(rbind(locs, 
     x$knots), 
        cex = c(rep(cex[1], nx), 
          rep(cex[2], ny)),
        col = c(heat_col, 
          rep(1, ny)), 
-       pch = c(rep(16,  nx), rep(16, ny)), 
+    pch = ".", 
+       # pch = c(rep(16,  nx), rep(16, ny)), 
        xlab = "1st spatial coordinate",
        ylab = "2nd spatial coordinate",
        main = "Knot placement of PP"

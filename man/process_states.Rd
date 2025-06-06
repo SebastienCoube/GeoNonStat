@@ -8,9 +8,9 @@ process_states(
   hm,
   covariates,
   observed_field,
-  anisotropic,
-  vecchia_setup,
-  init_tk = -4
+  vecchia_approx,
+  init_tk = -4,
+  seed = 1
 )
 }
 \arguments{
@@ -20,14 +20,44 @@ process_states(
 
 \item{observed_field}{TODO}
 
-\item{anisotropic}{TODO}
-
-\item{vecchia_setup}{TODO}
+\item{vecchia_approx}{TODO}
 
 \item{init_tk}{TODO}
 }
 \value{
 a list
+set.seed(100)
+nobs = 10000
+observed_locs = cbind(runif(nobs), runif(nobs))
+observed_field = rnorm(nobs)
+
+X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+vecchia_approx = createVecchia(observed_locs, 12)
+PP = createPP(vecchia_approx)
+
+covariates = list(
+  X = process_covariates(X = X, vecchia_approx), 
+  scale_X = process_covariates(X = X, vecchia_approx, PP),
+  noise_X = process_covariates(X = X, vecchia_approx, PP),
+  range_X = process_covariates(X = X, vecchia_approx, PP)
+)
+hm = process_hierarchical_model(
+  noise_PP = PP, noise_log_scale_bounds = NULL,
+  scale_PP = PP, scale_log_scale_bounds = NULL,
+  range_PP = PP, range_log_scale_bounds = NULL,
+  observed_locs,
+  matern_smoothness = 1.5,
+  observed_field = observed_field,
+  covariates = covariates,
+  anisotropic = T) 
+
+process_states(
+    hm,
+    covariates,
+    observed_field,
+    vecchia_approx,
+    init_tk = -4
+)
 }
 \description{
 Title

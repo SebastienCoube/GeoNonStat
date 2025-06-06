@@ -5,7 +5,7 @@
 \title{Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
 t(X|PP) %*% Y}
 \usage{
-X_PP_crossprod(X, PP = NULL, Y, locs_idx = NULL)
+X_PP_crossprod(X, PP = NULL, Y, vecchia_approx, permutate_PP_to_obs = F)
 }
 \arguments{
 \item{X}{a matrix of covariates who will be multiplied by the first rows of Y}
@@ -24,9 +24,30 @@ Do the cross-product of the concatenation of a matrix of covariates and a PP, an
 t(X|PP) %*% Y
 }
 \examples{
-locs = cbind(runif(10000), runif(10000))
-par(mfrow = c(1,2))
-# comparing several PP approximations and testing PP mult
-pepito = createPP(locs)
-res <- X_PP_crossprod(X = matrix(1, 10000), PP = pepito, Y = matrix(rnorm(10000)))
+locs = cbind(runif(5000), runif(5000))
+locs = rbind(locs, locs)
+vecchia_approx = createVecchia(locs)
+PP = createPP(vecchia_approx)
+
+# just surrogate of crossprod
+X = matrix(rnorm(100000), 10000)
+Y = matrix(rnorm(30*nrow(X)), nrow(X))
+res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx)
+crossprod(X, Y) - res1
+
+# crossprod + PP with observations of X on the locs
+X = matrix(rnorm(20*vecchia_approx$n_locs), vecchia_approx$n_locs)
+Y = matrix(rnorm(30*nrow(X)), nrow(X))
+res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
+hist(as.vector(res2 - crossprod(
+ cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),]), Y
+)))
+
+# crossprod + PP with PP dispatched to observations of X
+X = matrix(rnorm(20*vecchia_approx$n_obs), vecchia_approx$n_obs)
+Y = matrix(rnorm(30*nrow(X)), nrow(X))
+res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+hist(as.vector(res2 - crossprod(
+ cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),][vecchia_approx$locs_match,]), Y
+)))
 }

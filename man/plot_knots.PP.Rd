@@ -4,7 +4,7 @@
 \alias{plot_knots.PP}
 \title{Plot the knots and the spatial locations of a PP}
 \usage{
-plot_knots.PP(x, ...)
+plot_knots.PP(x, locs, mar_var_loss = NULL, cex = c(0.5, 0.5))
 }
 \arguments{
 \item{x}{an object of class \code{PP}}
