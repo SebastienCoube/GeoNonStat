@@ -133,12 +133,17 @@ summary.PP <- function(object, ...) {
 plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
-  locs_col = 8
   legendtitle <- NULL
   omar <- par("mar")
+  if(omar[2]>=omar[4]) {
+    par(mar = omar + c(0, 0, 0, 4*(1.5 + mylegend$rect$w)), xpd = TRUE)
+  }
+  
+  ### Colors of locations
+  locs_col = 8
   if(!is.null(mar_var_loss)) {
-    # Remove knots from mar_var_loss
-    legendtitle <- "Loss of\nmarginal\nvariance"
+    # Remove knots from mar_var_loss
+    legendtitle <- "Loss of\nmarginal\nvariance\n(%)"
     cols <- mar_var_loss[-seq(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
@@ -147,23 +152,15 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
     cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = T)
     base_colors <- c('#F3D97CCC', '#F5C46FCC', '#EDAB65CC', '#DD8A5BCC', '#C2604FCC', '#A02F42CC')
     locs_col = base_colors[as.numeric(cut_var)]
-    
-    mylegend <-  legend(x="right", 
-                        legend=levels(cut_var), 
-                        fill=base_colors, 
-                        title=legendtitle,
-                        plot=FALSE)
-    if(omar[2]>=omar[4]) {
-      par(mar = omar + c(0, 0, 0, 4*(1 + mylegend$rect$w)), xpd = TRUE) 
-    }
   }
-  # Plot locations
-  pch = 16
-  if(nlocs>1e6) pch="."
   
+  #### Plot locations and knots
   maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
   minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
-
+  
+  # Plot locations
+  pch = 16
+  if(nlocs>1e6) pch="."
   plot(locs, 
        cex = 1,
        col = locs_col, 
@@ -174,17 +171,33 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
        xlim=c(minlim[1], maxlim[2]),
        ylim=c(minlim[2], maxlim[2])
   )
-  # Plot knots
-  points(x$knots, pch = 10, cex=1.2, col=1)
+  # Plot knots
+  points(x$knots, pch = 10, cex=1, col=1)
+  
+  ### compute size of legend
+  mylegend <- legend(x="right",
+                     legend="knots",
+                     pch =10,
+                     col=1,
+                     title="Knots", 
+                     plot = FALSE)
+  
+  ### Plot marginal variance loss
   if(!is.null(mar_var_loss)) {
-  legend(x="right",
+  legend(x="topright",
          legend=levels(cut_var), 
          fill=base_colors, 
          title=legendtitle,
-         inset=c(-mylegend$rect$w, 0),
+         inset=c(-1.2*mylegend$rect$w, 0),
          bty="n")
   }
-  # Restaure margins
+  legend(x="right",
+         legend="knots", 
+         pch =10,
+         col=1,
+         inset=c(-mylegend$rect$w, 0),
+         bty="n")
+  #### Restaure margins
   par(mar=omar)
   
   
