@@ -3,12 +3,13 @@
 #' Create an object of class PP, a low rank Predictive Process used as a prior to describe 
 #' spatial variations of covariance parameters
 #' @param vecchia_approx obtained by `createVecchia()`
-#' @param matern_range either a positive number used to set the Matérn range of the PP or NULL, 
+#' @param matern_range either a positive number used to set the Matérn range of the PP or NULL (default), 
 #' if NULL, a default PP range is guessed from the spatial locations.
 #' @param knots either (i) a matrix of spatial knots used for the PP, 
 #' (ii) or a positive integer used to set the number of knots, the knots being then found using kmeans, 
-#' (iii) or NULL, a default number and placement of knots being guessed from the spatial locations.
-#' @param seed integer used as a seed
+#' (iii) or NULL (default), a default number and placement of knots being guessed from the spatial locations.
+#' @param seed integer. Used as a seed to reproduce results.
+#' @param plot logical, should diagnostic plots of PP be produced ? Default to TRUE.
 #' @returns a list
 #' @export
 #'
@@ -32,7 +33,7 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
-createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234){
+createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234, plot=TRUE){
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
     message(paste("number of knots set by default to", knots))
@@ -77,8 +78,10 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   )
   
   mar_var_loss = var_loss_percentage.PP(res)
-  plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
-  hist(mar_var_loss, xlab = "percentage of lost variance", main = "histogram of lost marginal variance \n between the PP and the full GP")
+  if(plot) {
+    plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
+    hist(mar_var_loss, xlab = "percentage of lost variance", main = "histogram of lost marginal variance \n between the PP and the full GP")
+  }
   message(paste(
     round(mean(mar_var_loss), 1), 
     "percent of marginal variance on average is lost with the use of a PP.\n This is", 
