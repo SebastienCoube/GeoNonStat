@@ -47,7 +47,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   }
   if(is.null(matern_range)){
     matern_range = max(dist(knots))/5
-    message(paste("Matérn range set by default to the fifth of the space pseudo-diameter, that is to ", signif(matern_range, 3)))
+    message(paste("Matérn range set by default to the fifth of the space pseudo-diameter, that is to", signif(matern_range, 3)))
   }
   knots = knots[GpGp::order_maxmin(knots),]
   #NNarray = GpGp::find_ordered_nn(rbind(knots, vecchia_approx$locs), nrow(vecchia_approx$NNarray)-1)
@@ -79,18 +79,16 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   
   mar_var_loss = var_loss_percentage.PP(res)
   if(plot) {
+    def.par <- par(no.readonly = TRUE)
+    layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
     plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
-    hist(mar_var_loss, xlab = "percentage of lost variance", main = "histogram of lost marginal variance \n between the PP and the full GP")
+    hist(mar_var_loss, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
+    par(def.par)
   }
-  message(paste(
-    round(mean(mar_var_loss), 1), 
-    "percent of marginal variance on average is lost with the use of a PP.\n This is", 
-    c(
-      "great !", 
-      "fairly good, but it might be improved by adding more knots or increasing the Matérn range.", 
-      "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range.")
-    [1 + (mean(mar_var_loss)>3) + (mean(mar_var_loss)>10)]))
-  
+  if(mean(mar_var_loss)>10) msg <- "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
+  else if(mean(mar_var_loss)>3) msg <- "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
+  else msg <- "great !"
+  message(round(mean(mar_var_loss), 1), "% of marginal variance on average is lost with the use of a PP.\n This is", msg)
   return(res)
 }
 
@@ -139,7 +137,8 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   legendtitle <- NULL
   omar <- par("mar")
   if(omar[2]>=omar[4]) {
-    par(mar = omar + c(0, 0, 0, 4*(1.5 + mylegend$rect$w)), xpd = TRUE)
+    par(mar = omar + c(0, 0, 0, 4*1.5), xpd = TRUE)
+    # par(mar = omar + c(0, 0, 0, 4*(1.5 + mylegend$rect$w)), xpd = TRUE)
   }
   
   ### Colors of locations
@@ -160,7 +159,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   #### Plot locations and knots
   maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
   minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
-  
+  # 
   # Plot locations
   pch = 16
   if(nlocs>1e6) pch="."
@@ -177,14 +176,14 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   # Plot knots
   points(x$knots, pch = 10, cex=1, col=1)
   
-  ### compute size of legend
+
+  # ### compute size of legend
   mylegend <- legend(x="right",
                      legend="knots",
                      pch =10,
                      col=1,
-                     title="Knots", 
+                     title="Knots",
                      plot = FALSE)
-  
   ### Plot marginal variance loss
   if(!is.null(mar_var_loss)) {
   legend(x="topright",
