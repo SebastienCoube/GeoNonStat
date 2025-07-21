@@ -79,12 +79,9 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   
   mar_var_loss = var_loss_percentage.PP(res)
   if(plot) {
-    def.par <- par(no.readonly = TRUE)
-    layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
-    plot_knots.PP(x = res, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
-    hist(mar_var_loss, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
-    par(def.par)
+    plot.PP(res, vecchia_approx, mar_var_loss)
   }
+  
   if(mean(mar_var_loss)>10) msg <- "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
   else if(mean(mar_var_loss)>3) msg <- "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
   else msg <- "great !"
@@ -119,10 +116,12 @@ summary.PP <- function(object, ...) {
       "and", message_loss)
 }
 
+
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class \code{PP}
 #' @param locs locations
 #' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
+#' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
@@ -131,18 +130,17 @@ summary.PP <- function(object, ...) {
 #' plot_knots.PP(pepito, vecchia_approx$locs)
 #' vPP <- var_loss_percentage.PP(pepito)
 #' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
-plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
+plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
   legendtitle <- NULL
   omar <- par("mar")
-  if(omar[2]>=omar[4]) {
+  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
     par(mar = omar + c(0, 0, 0, 4*1.5), xpd = TRUE)
-    # par(mar = omar + c(0, 0, 0, 4*(1.5 + mylegend$rect$w)), xpd = TRUE)
   }
   
   ### Colors of locations
-  locs_col = 8
+  locs_col = "#CDCDCDCC"
   if(!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
     legendtitle <- "Loss of\nmarginal\nvariance\n(%)"
@@ -163,20 +161,21 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
   # Plot locations
   pch = 16
   if(nlocs>1e6) pch="."
+  title = "Locations of PP"
+  if(show_knots) title = "Knot placement of PP"
   plot(locs, 
        cex = 1,
        col = locs_col, 
        pch = pch, 
        xlab = "1st spatial coordinate",
        ylab = "2nd spatial coordinate",
-       main = "Knot placement of PP",
+       main = title,
        xlim=c(minlim[1], maxlim[2]),
        ylim=c(minlim[2], maxlim[2])
   )
   # Plot knots
-  points(x$knots, pch = 10, cex=1, col=1)
+  if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
   
-
   # ### compute size of legend
   mylegend <- legend(x="right",
                      legend="knots",
@@ -184,8 +183,8 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
                      col=1,
                      title="Knots",
                      plot = FALSE)
-  ### Plot marginal variance loss
   if(!is.null(mar_var_loss)) {
+  ### Marginal variance loss scale
   legend(x="topright",
          legend=levels(cut_var), 
          fill=base_colors, 
@@ -193,16 +192,17 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, cex = c(.5, .5)){
          inset=c(-1.2*mylegend$rect$w, 0),
          bty="n")
   }
-  legend(x="right",
-         legend="knots", 
-         pch =10,
-         col=1,
-         inset=c(-mylegend$rect$w, 0),
-         bty="n")
+  if(show_knots) {
+    legend(x="right",
+           legend="knots", 
+           pch =10,
+           col=1,
+           inset=c(-mylegend$rect$w, 0),
+           bty="n")
+  }
+
   #### Restaure margins
   par(mar=omar)
-  
-  
 }
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
@@ -241,7 +241,7 @@ var_loss_percentage.PP = function(x, ...) {
 #' PP = createPP(vecchia_approx)
 #' covariate_coefficients = c(4, 1, 1, .5)
 #' knots_coeffs = rnorm(PP$n_knots)
-#' par(mfrow = c(2,2))
+#' par(mfrow = c(1,2))
 #' # multiplying X alone
 #' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
