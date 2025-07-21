@@ -80,7 +80,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   if(plot) {
     plot.PP(res, vecchia_approx, mar_var_loss=TRUE)
   }
-  
+  mar_var_loss = var_loss_percentage.PP(res)
   if(mean(mar_var_loss)>10) msg <- "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
   else if(mean(mar_var_loss)>3) msg <- "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
   else msg <- "great !"

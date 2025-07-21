@@ -13,16 +13,19 @@
 #' plot.PP(pepito, vecchia_approx)
 plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
-  # layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
+  layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
   if(mar_var_loss && !separate) {
-    par(mfrow=c(1,2))
-    par(mar=c(1, 1, 4, 1) + 0.1)
+    # par(mfrow=c(1,2))
+    par(mar=c(2, 2, 4, 1) + 0.5)
   }
   mar_var <- NULL
-  if(mar_var_loss) mar_var = var_loss_percentage.PP(res)
+  if(mar_var_loss) mar_var = var_loss_percentage.PP(PP)
   plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
   if(mar_var_loss) {
-    hist(mar_var, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
+    hist(mar_var, 
+         xlab = "percentage of lost variance", 
+         main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP",
+         cex.main=1)
   }
   par(def.par)
 }
@@ -55,7 +58,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
   locs_col = "#CDCDCDCC"
   if(!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
-    legendtitle <- "Loss of\nmarginal\nvariance\n(%)"
+    legendtitle <- "\n\n\nLoss of\nmarginal\nvariance\n(%)"
     cols <- mar_var_loss[-seq(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
@@ -83,7 +86,8 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
        ylab = "2nd spatial coordinate",
        main = title,
        xlim=c(minlim[1], maxlim[2]),
-       ylim=c(minlim[2], maxlim[2])
+       ylim=c(minlim[2], maxlim[2]),
+       cex.main=1
   )
   # Plot knots
   if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
@@ -105,7 +109,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
            bty="n")
   }
   if(show_knots) {
-    legend(x="right",
+    legend(x="topright",
            legend="knots", 
            pch =10,
            col=1,
@@ -307,7 +311,9 @@ get_colors = function(x) {
 #' @export
 #'
 #' @examples
-#' plot_pointillist_painting(locs=c(2,3,6), field=c(1,2,3))
+#' locs <- matrix(rnorm(2000), ncol=2)
+#' plot_pointillist_painting(locs=locs, field=locs[,1])
+#' plot_pointillist_painting(locs=locs, field=rnorm(1000))
 plot_pointillist_painting = function(locs,
                                      field,
                                      cex = 1,
