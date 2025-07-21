@@ -22,29 +22,29 @@ renew_momentum  = function(momentum, kept_momentum = .9){
 #state = mcmc_nngp_list$states$chain_1; n_iterations_update  =100; num_threads = 10; iter_start = 0; seed = 1; iter=1
 #
 ##' @export
-#mcmc_nngp_update_Gaussian = function(
-#    covariates,
-#    observed_field,
-#    hierarchical_model,
-#    vecchia_approx,
-#    n_iterations_update = 100, 
-#    num_threads = 1, 
-#    iter_start,
-#    seed=123 
-#)
-#{
+MCMC = function(
+    covariates,
+    observed_field,
+    hierarchical_model,
+    vecchia_approx,
+    state,
+    n_iterations_update = 100, 
+    num_threads = 1, 
+    iter_start,
+    seed=123 
+)
+{
   message(paste("Starting MCMC chain for Nonstat NNGP model at iteration", iter_start, "for", n_iterations_update, "iterations"))
   set.seed(seed)
+  list2env(state, environment())
   #########################################
   # Initializing chain storage structures #
   #########################################
   # this part re-creates a small portion of the $records objects of each chain. It fills it with chain state during the run, and then updates each chain with the new values
-  params_records = lapply(params, function(x)array(0, c(dim(as.matrix(x)), n_iterations_update)))
+  params_records = list()
+  
   #par(mfrow = c(2, 1))
   
-  #################
-  # Gibbs sampler #
-  #################
   t1 = Sys.time()
   for(iter in seq(1, n_iterations_update)){
     if((iter + iter_start)/50 ==(iter + iter_start) %/% 50)print(paste("iteration", (iter + iter_start)))
@@ -1261,14 +1261,11 @@ renew_momentum  = function(momentum, kept_momentum = .9){
     #######################
     # Storing the samples #
     #######################
-    for(name in names(params))
-    {
-      params_records[[name]][,,iter] = params[[name]]
-    }
+    params_records[[iter]] = params
   }
   print(Sys.time()-t1)
-#  return(list("state" = state, "params_records" = params_records))
-#}
+  return(list("state" = state, "params_records" = params_records))
+}
 
 
 
