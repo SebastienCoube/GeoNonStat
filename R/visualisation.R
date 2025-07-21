@@ -16,6 +16,7 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   # layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
   if(mar_var_loss && !separate) {
     par(mfrow=c(1,2))
+    par(mar=c(1, 1, 4, 1) + 0.1)
   }
   mar_var <- NULL
   if(mar_var_loss) mar_var = var_loss_percentage.PP(res)
