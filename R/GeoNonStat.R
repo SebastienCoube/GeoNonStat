@@ -45,12 +45,13 @@ createVecchia <- function(observed_locs, m = 12){
   # partition of locs for field update
   cl = parallel::makeCluster(5)
   parallel::clusterExport(cl = cl, varlist = c("locs", "n"), envir = environment())
+  clust_size = 50000
   locs_partition = parallel::parSapply(
     cl = cl, 
-    round(seq(n / 10000 + 1, 2 * (n / 10000) + 1, length.out = min(10, ceiling(n / 10000)))), 
+    round(seq(n %/% clust_size+ 1, 2 * (n %/% clust_size) + 1, length.out = min(10, ceiling(n %/% clust_size) + 1))), 
     function(i) { kmeans(locs, centers = i, iter.max = 200, algorithm = "Hartigan-Wong")$cluster}
   )
-  colnames(locs_partition) = paste(round(seq(n / 10000 + 1, 2 * (n / 10000) + 1, length.out = min(10, ceiling(n / 10000)))), "clust")
+  colnames(locs_partition) = paste(round(seq(n %/% clust_size+ 1, 2 * (n %/% clust_size) + 1, length.out = min(10, ceiling(n %/% clust_size) + 1))), "clust")
   parallel::stopCluster(cl)
   
   return(list(
@@ -122,7 +123,7 @@ process_covariates = function(X, vecchia_approx,
                               PP = NULL, covariate_name = "<missing covariate name>", 
                               one_obs_per_site = F){
   if (!is.data.frame(X) & !is.null(X)) stop(paste(covariate_name, "should be a data.frame or NULL"))
-  if (!is.null(X))if(nrow(X)!=nrow(vecchia_approx$observed_locs)) stop(paste(covariate_name, "should have the same number of rows as the observed_locs from vecchia_approx"))
+  if (!is.null(X))if(nrow(X)!=nrow(vecchia_approx$observed_locs)) stop(paste(covariate_name, "should have the same number of rows as the vecchia_approx$duplicated_locs"))
   
   # covariates in the observed field #
   res = list()
@@ -148,7 +149,7 @@ process_covariates = function(X, vecchia_approx,
   res$n_regressors = ncol(res$X)
   # identifying  which X do not vary within location
   res$which_locs = c()
-  duplicated_locs = duplicated(observed_locs)
+  duplicated_locs = duplicated(vecchia_approx$observed_locs)
   for(i in seq(ncol(res$X))){
     if(all(duplicated(cbind(vecchia_approx$observed_locs, res$X[,i])) == duplicated_locs)) {
       res$which_locs = c(res$which_locs, i)
@@ -156,7 +157,7 @@ process_covariates = function(X, vecchia_approx,
   }
   if(one_obs_per_site){
     if (!identical(res$which_locs, seq(ncol(res$X))))
-      stop(paste(covariate_name, "cannot vary within one spatial location of observed_locs"))
+      stop(paste(covariate_name, "cannot vary within one spatial location of vecchia_approx$duplicated_locs"))
   }
   res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
   colnames(res$X_locs) = colnames(res$X)[res$which_locs]
@@ -223,7 +224,7 @@ process_PP_prior = function(
 #' covariates = list()
 #' covariates$X = process_covariates(X, vecchia_approx = vecchia_approx)
 #' 
-#' hm1 = process_hierarchical_model(
+#' hm1 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
 #'   scale_PP = PP, scale_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
@@ -233,7 +234,7 @@ process_PP_prior = function(
 #'   covariates = covariates,
 #'   anisotropic = T) 
 #' 
-#' hm2 = process_hierarchical_model(
+#' hm2 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = c(1, 3),
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
@@ -243,7 +244,7 @@ process_PP_prior = function(
 #'   covariates = covariates,
 #'   anisotropic = T) 
 #' 
-#' hm3 = process_hierarchical_model(
+#' hm3 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = NULL, noise_log_scale_bounds = NULL,
 #'   scale_PP = NULL, scale_log_scale_bounds = NULL,
 #'   range_PP = NULL, range_log_scale_bounds = NULL,
@@ -254,7 +255,7 @@ process_PP_prior = function(
 #'   anisotropic = T) 
 #' 
 #' # there is an error, it's normal
-#' hm4 = process_hierarchical_model(
+#' hm4 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = NULL, noise_log_scale_bounds = c(1, 3),
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
@@ -263,7 +264,7 @@ process_PP_prior = function(
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
-#' hm5 = process_hierarchical_model(
+#' hm5 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = c(1, 3),
 #'   scale_PP = NULL, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = PP, range_log_scale_bounds = c(1, 3),
@@ -272,7 +273,7 @@ process_PP_prior = function(
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
-#' hm6 = process_hierarchical_model(
+#' hm6 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = c(1, 3),
 #'   scale_PP = PP, scale_log_scale_bounds = c(1, 3),
 #'   range_PP = NULL, range_log_scale_bounds = c(1, 3),
@@ -281,7 +282,8 @@ process_PP_prior = function(
 #'   observed_field = observed_field,
 #'   covariates = covariates,
 #'   anisotropic = T) 
-process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
+process_hierarchical_model <- function(vecchia_approx, 
+                                       noise_PP, noise_log_scale_bounds,
                                        scale_PP, scale_log_scale_bounds,
                                        range_PP, range_log_scale_bounds,
                                        observed_locs,
@@ -349,7 +351,7 @@ process_hierarchical_model <- function(noise_PP, noise_log_scale_bounds,
 #' covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx)
 #' covariates$X_scale = process_covariates(X, vecchia_approx = vecchia_approx)
 #' 
-#' hm = process_hierarchical_model(
+#' hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
 #'   scale_PP = PP, scale_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
@@ -371,15 +373,15 @@ process_transition_kernels <- function(init=-4, hm){
   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
-    range_beta_sufficient = rep(init, (1 + 2*hm$anisotropic)*(1+!is.null(hm$range_PP))),
-    range_beta_ancillary  = rep(init, (1 + 2*hm$anisotropic)*(1+!is.null(hm$range_PP))),
+    range_beta_sufficient = rep(init, 4),
+    range_beta_ancillary  = rep(init, 4),
     
-    scale_beta_sufficient_mala = rep(init, 1+!is.null(hm$scale_PP)),
-    scale_beta_ancillary_mala  = rep(init, 1+!is.null(hm$scale_PP)),
+    scale_beta_sufficient_mala = rep(init, 2),
+    scale_beta_ancillary_mala  = rep(init, 2),
     scale_log_scale_sufficient = init,
     scale_log_scale_ancillary =  init,
     
-    noise_beta_mala = rep(init, 1+!is.null(hm$noise_PP)),
+    noise_beta_mala = rep(init, 2),
     noise_log_scale = init
   )
   return(res)
@@ -409,7 +411,7 @@ process_transition_kernels <- function(init=-4, hm){
 #'   noise_X = process_covariates(X = X, vecchia_approx, PP),
 #'   range_X = process_covariates(X = X, vecchia_approx, PP)
 #' )
-#' hm = process_hierarchical_model(
+#' hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
 #'   scale_PP = PP, scale_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
@@ -455,10 +457,7 @@ process_states <- function(
   row.names(params[["beta"]]) = colnames(covariates$X$X)
   # Residuals of the OLS model that have to be explained by the latent field and the noise
   stuff$lm_fit = as.vector(covariates$X$X %*% matrix(params[["beta"]], ncol = 1))
-  stuff$lm_fit_locs = as.vector(covariates$X$X_locs %*%
-                                  matrix(params[["beta"]][covariates$X$which_locs], ncol = 1))
-  stuff$lm_residuals = as.vector(observed_field - stuff$lm_fit)
-  
+  stuff$lm_residuals = observed_field - stuff$lm_fit
   # Range of the NNGP and stuff depending on it ################################
   # parameter format and value
   if (is.null(hm$range_PP)){
@@ -470,7 +469,7 @@ process_states <- function(
     row.names(params$range_beta) = c(colnames(covariates$range_X$X), 
                                      paste("PP", seq(hm$range_PP$n_knots), sep = "_"))
     if (!hm$anisotropic)params$range_log_scale =   matrix(hm$range_log_scale_bounds[1])
-    if (hm$anisotropic)params$range_log_scale = matrix(c(rep(hm$range_log_scale_prior[1], 3),rep(0, 3)))
+    if (hm$anisotropic)params$range_log_scale = matrix(c(rep(hm$range_log_scale_bounds[1], 3),rep(0, 3)))
   }
   params$range_beta[1, 1] = hm$range_beta0_mean
   # momenta
@@ -505,17 +504,17 @@ process_states <- function(
     params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise_PP$n_knots), ncol = 1) #random starting values
     row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
                                      paste("PP", seq(hm$noise_PP$n_knots), sep = "_"))
-    params$noise_log_scale = hm$noise_log_scale_prior[1]
+    params$noise_log_scale = hm$noise_log_scale_bounds[1]
   }
   params$noise_beta[1] = hm$noise_beta0_mean
   # momenta
   momenta$noise_beta = rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  stuff$noise_var = exp(X_PP_mult_right(
+  stuff$noise_var = as.vector(exp(X_PP_mult_right(
     X = covariates$noise_X$X, PP = hm$noise_PP,
     vecchia_approx = vecchia_approx, Y = params$noise_beta, 
     permutate_PP_to_obs = T
-  ))
+  )))
   
   # Marginal variance of the NNGP and stuff depending on it ####################
   if (is.null(hm$scale_PP)) {
@@ -528,7 +527,7 @@ process_states <- function(
     params$scale_beta    = matrix(0, ncol(covariates$scale_X$X_locs) + hm$scale_PP$n_knots, ncol = 1)
     row.names(params$scale_beta) = c(colnames(covariates$scale_X$X_locs),
                                      paste("PP", seq(hm$scale_PP$n_knots), sep = "_"))
-    params$scale_log_scale = hm$scale_log_scale_prior[1]
+    params$scale_log_scale = hm$scale_log_scale_bounds[1]
     momenta$scale_beta_ancillary =  rnorm(ncol(covariates$scale_X$X_locs) + 
                                             hm$scale_PP$n_knots)
     momenta$scale_beta_sufficient = rnorm(ncol(covariates$scale_X$X_locs) + 
@@ -536,11 +535,11 @@ process_states <- function(
   }
   params$scale_beta[1] = hm$scale_beta0_mean
   # effective variance field, shall be used in density computations
-  stuff$field_sd = exp(.5*X_PP_mult_right(
+  stuff$field_sd = as.vector(exp(.5*X_PP_mult_right(
     X = covariates$scale_X$X_locs, PP = hm$scale_PP,
     vecchia_approx = vecchia_approx, Y = params$scale_beta, 
     permutate_PP_to_obs = F
-  ))
+  )))
   
   # Latent field ###############################################################
   params$field = stuff$field_sd * as.vector(Matrix::solve(
@@ -625,9 +624,9 @@ process_states <- function(
 #'   noise_PP = noise_PP ,
 #'   range_PP = range_PP ,
 #'   scale_PP = scale_PP ,
-#'   noise_log_scale_prior = NULL,
-#'   range_log_scale_prior = NULL,
-#'   scale_log_scale_prior = NULL,
+#'   noise_log_scale_bounds = NULL,
+#'   range_log_scale_bounds = NULL,
+#'   scale_log_scale_bounds = NULL,
 #'   seed = 1
 #' )
 GeoNonStat <- 
@@ -636,7 +635,6 @@ GeoNonStat <-
     observed_field,  #spatial locations
     X = NULL, # Response variable 
     # Covariates per observation
-    m = 10, #number of Nearest Neighbors
     matern_smoothness = 1.5, #Matern smoothness
     anisotropic = FALSE, 
     n_chains = 2,
@@ -644,12 +642,12 @@ GeoNonStat <-
     noise_X = NULL,
     range_X = NULL,
     scale_X = NULL,
-    noise_PP = F,
-    range_PP = F,
-    scale_PP = F,
-    noise_log_scale_prior = NULL,
-    range_log_scale_prior = NULL,
-    scale_log_scale_prior = NULL,
+    noise_PP = NULL,
+    range_PP = NULL,
+    scale_PP = NULL,
+    noise_log_scale_bounds = NULL,
+    range_log_scale_bounds = NULL,
+    scale_log_scale_bounds = NULL,
     seed = 1)  {
     # time
     t_begin = Sys.time()
@@ -684,7 +682,7 @@ GeoNonStat <-
                                       PP = noise_PP, covariate_name = "noise_X", one_obs_per_site = F)
     
     # Info about hierarchical model ##############################################################
-    hierarchical_model <- process_hierarchical_model(
+    hierarchical_model <- process_hierarchical_model(vecchia_approx = vecchia_approx,
       noise_PP = noise_PP, noise_log_scale_bounds = noise_log_scale_bounds,
       scale_PP = scale_PP, scale_log_scale_bounds = scale_log_scale_bounds,
       range_PP = range_PP, range_log_scale_bounds = range_log_scale_bounds,
@@ -725,6 +723,7 @@ GeoNonStat <-
     # Result ####################################################################
     res <- structure(
       list(
+      "covariates" = covariates,
       "observed_field" = observed_field,
       "hierarchical_model" = hierarchical_model,
       "vecchia_approx" = vecchia_approx,
