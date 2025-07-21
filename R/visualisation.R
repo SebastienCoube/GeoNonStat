@@ -27,6 +27,95 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
 }
 
 
+
+#' @title Plot the knots and the spatial locations of a PP
+#' @param x an object of class \code{PP}
+#' @param locs locations
+#' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
+#' @param show_knots logical, default to TRUE. Should the knots be plotted ?
+#' @examples
+#' observed_locs = cbind(runif(1000), runif(1000))
+#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
+#' vecchia_approx = createVecchia(observed_locs)
+#' pepito = createPP(vecchia_approx)
+#' plot_knots.PP(pepito, vecchia_approx$locs)
+#' vPP <- var_loss_percentage.PP(pepito)
+#' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
+plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
+  nlocs <- nrow(locs)
+  nknots <- nrow(x$knots)
+  legendtitle <- NULL
+  omar <- par("mar")
+  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
+    par(mar = omar + c(0, 0, 0, 4*1.5), xpd = TRUE)
+  }
+  
+  ### Colors of locations
+  locs_col = "#CDCDCDCC"
+  if(!is.null(mar_var_loss)) {
+    # Remove knots from mar_var_loss
+    legendtitle <- "Loss of\nmarginal\nvariance\n(%)"
+    cols <- mar_var_loss[-seq(nknots)]
+    # Reorder to plot worst last
+    ord <- order(cols)
+    cols <- cols[ord]
+    locs <- locs[ord,]
+    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = T)
+    base_colors <- c('#F3D97CCC', '#F5C46FCC', '#EDAB65CC', '#DD8A5BCC', '#C2604FCC', '#A02F42CC')
+    locs_col = base_colors[as.numeric(cut_var)]
+  }
+  
+  #### Plot locations and knots
+  maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
+  minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
+  # 
+  # Plot locations
+  pch = 16
+  if(nlocs>1e6) pch="."
+  title = "Locations of PP"
+  if(show_knots) title = "Knot placement of PP"
+  plot(locs, 
+       cex = 1,
+       col = locs_col, 
+       pch = pch, 
+       xlab = "1st spatial coordinate",
+       ylab = "2nd spatial coordinate",
+       main = title,
+       xlim=c(minlim[1], maxlim[2]),
+       ylim=c(minlim[2], maxlim[2])
+  )
+  # Plot knots
+  if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
+  
+  # ### compute size of legend
+  mylegend <- legend(x="right",
+                     legend="knots",
+                     pch =10,
+                     col=1,
+                     title="Knots",
+                     plot = FALSE)
+  if(!is.null(mar_var_loss)) {
+    ### Marginal variance loss scale
+    legend(x="topright",
+           legend=levels(cut_var), 
+           fill=base_colors, 
+           title=legendtitle,
+           inset=c(-1.2*mylegend$rect$w, 0),
+           bty="n")
+  }
+  if(show_knots) {
+    legend(x="right",
+           legend="knots", 
+           pch =10,
+           col=1,
+           inset=c(-mylegend$rect$w, 0),
+           bty="n")
+  }
+  
+  #### Restaure margins
+  par(mar=omar)
+}
+
 #' Plots range ellipses for nonstationary covariance functions.
 #' @param locs ellipses centers. A matrix with 2 columns, 1 row  for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
