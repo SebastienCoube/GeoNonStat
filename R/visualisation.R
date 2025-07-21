@@ -16,16 +16,16 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   # layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
   if(mar_var_loss && !separate) {
     par(mfrow=c(1,2))
-    par(mar=c(1, 1, 4, 1) + 0.1)
+    # par(mar=c(1, 1, 4, 1) + 0.1)
   }
   mar_var <- NULL
-  if(mar_var_loss) mar_var = var_loss_percentage.PP(res)
+  if(mar_var_loss) mar_var = var_loss_percentage.PP(PP)
   plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
   if(mar_var_loss) {
     hist(mar_var, 
          xlab = "percentage of lost variance", 
          main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP",
-         cex.main=8)
+         cex.main=1)
   }
   par(def.par)
 }
@@ -86,8 +86,8 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
        ylab = "2nd spatial coordinate",
        main = title,
        xlim=c(minlim[1], maxlim[2]),
-       ylim=c(minlim[2], maxlim[2],
-              cex.main=8)
+       ylim=c(minlim[2], maxlim[2]),
+       cex.main=1
   )
   # Plot knots
   if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
