@@ -5,7 +5,7 @@ Rcpp::sourceCpp("src/vecchia.cpp")
 ################################################################
 
 set.seed(100000)
-n = 40000
+n = 100000
 # spatial locations 
 locs = cbind(runif(n), runif(n))
 log_range = matrix(0, n, 1)
