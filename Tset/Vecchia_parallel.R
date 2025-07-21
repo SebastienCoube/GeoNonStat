@@ -251,4 +251,33 @@ Rcpp::sourceCpp("src/vecchia.cpp")
 
 
 
+# testing efficiency wrt old packagfe Bidart
+set.seed(1)
+# spatial locations 
+n = 10000
+locs = cbind(runif(n), runif(n))
+# range parameters 
+log_range = matrix(0, n, 3)
+log_range[,1] = -8 + 3*locs[,1]
+log_range[,2] = -8 + 3*locs[,2]
+log_range[,3] = -3*locs[,2]
+# vecchia approx 
+NNarray = GpGp::find_ordered_nn(locs, 10)
+smoothness = c(0.5, 1.5)
+# anisotropic
+mean(sapply(seq(30), function(i){
+  t1 = Sys.time()
+  tatato = Bidart::nonstat_vecchia_Linv(
+    log_range = (log_range), locs = (locs), NNarray = (NNarray), num_threads = 6, compute_derivative = T, covfun_name = "nonstationary_matern_anisotropic", sphere = F)
+  Sys.time()-t1
+})) / 
+mean(sapply(seq(30), function(i){
+  t1 = Sys.time()
+  t1 = Sys.time()
+  tatato = vecchia(
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 6, compute_derivative = T, smoothness = 1.5)
+  Sys.time()-t1
+}))
+
+
 
