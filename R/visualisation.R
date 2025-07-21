@@ -13,8 +13,7 @@
 #' plot.PP(pepito, vecchia_approx)
 plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
-  layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
-  layout(matrix(c(1,1,1,2,2), 1, 5, byrow = TRUE))
+  layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
   if(mar_var_loss && !separate) {
     # par(mfrow=c(1,2))
     par(mar=c(2, 2, 4, 1) + 0.5)
@@ -59,7 +58,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
   locs_col = "#CDCDCDCC"
   if(!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
-    legendtitle <- "Loss of\nmarginal\nvariance\n(%)"
+    legendtitle <- "\n\n\nLoss of\nmarginal\nvariance\n(%)"
     cols <- mar_var_loss[-seq(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
@@ -110,7 +109,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
            bty="n")
   }
   if(show_knots) {
-    legend(x="right",
+    legend(x="topright",
            legend="knots", 
            pch =10,
            col=1,
