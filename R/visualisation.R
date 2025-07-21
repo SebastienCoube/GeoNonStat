@@ -22,7 +22,10 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   if(mar_var_loss) mar_var = var_loss_percentage.PP(res)
   plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
   if(mar_var_loss) {
-    hist(mar_var, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
+    hist(mar_var, 
+         xlab = "percentage of lost variance", 
+         main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP",
+         cex.main=8)
   }
   par(def.par)
 }
@@ -83,7 +86,8 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
        ylab = "2nd spatial coordinate",
        main = title,
        xlim=c(minlim[1], maxlim[2]),
-       ylim=c(minlim[2], maxlim[2])
+       ylim=c(minlim[2], maxlim[2],
+              cex.main=8)
   )
   # Plot knots
   if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
@@ -307,7 +311,9 @@ get_colors = function(x) {
 #' @export
 #'
 #' @examples
-#' plot_pointillist_painting(locs=c(2,3,6), field=c(1,2,3))
+#' locs <- matrix(rnorm(2000), ncol=2)
+#' plot_pointillist_painting(locs=locs, field=locs[,1])
+#' plot_pointillist_painting(locs=locs, field=rnorm(1000))
 plot_pointillist_painting = function(locs,
                                      field,
                                      cex = 1,
