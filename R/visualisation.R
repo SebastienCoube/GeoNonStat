@@ -11,15 +11,17 @@
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' pepito = createPP(vecchia_approx)
 #' plot.PP(pepito, vecchia_approx)
-plot.PP <- function(PP, vecchia = NULL, mar_var_loss = NULL, separate=FALSE) {
+plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
   # layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
-  if(!is.null(mar_var_loss) && !separate) {
+  if(mar_var_loss && !separate) {
     par(mfrow=c(1,2))
   }
-  plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var_loss)
-  if(!is.null(mar_var_loss)) {
-    hist(mar_var_loss, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
+  mar_var <- NULL
+  if(mar_var_loss) mar_var = var_loss_percentage.PP(res)
+  plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
+  if(mar_var_loss) {
+    hist(mar_var, xlab = "percentage of lost variance", main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP")
   }
   par(def.par)
 }
