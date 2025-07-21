@@ -13,10 +13,11 @@
 #' plot.PP(pepito, vecchia_approx)
 plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
-  # layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
+  layout(matrix(rep(c(1,1,1,2,2), 5), 5, 5, byrow = TRUE))
+  layout(matrix(c(1,1,1,2,2), 1, 5, byrow = TRUE))
   if(mar_var_loss && !separate) {
-    par(mfrow=c(1,2))
-    # par(mar=c(1, 1, 4, 1) + 0.1)
+    # par(mfrow=c(1,2))
+    par(mar=c(2, 2, 4, 1) + 0.5)
   }
   mar_var <- NULL
   if(mar_var_loss) mar_var = var_loss_percentage.PP(PP)
