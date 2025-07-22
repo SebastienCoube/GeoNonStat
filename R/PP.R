@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
+#' vecchia_approx = createVecchia(cbind(runif(10000), runif(10000)), 10, ncores=1)
 #' # automatic 
 #' pepito = createPP(vecchia_approx)
 #' # choosing manually Matérn range, too small wrt number of knots
@@ -131,7 +131,7 @@ generate_knots_from_kmeans <- function(knots_number, locs) {
 #' @param ... additional arguments
 #' @export
 #' @examples
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
+#' vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
 #' summary(pepito)
 summary.PP <- function(object, ...) {
@@ -147,9 +147,8 @@ summary.PP <- function(object, ...) {
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @param x an object of class \code{PP}
 #' @examples
-#' observed_locs = cbind(runif(1000), runif(1000))
-#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = createPP(observed_locs)
+#' vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores=1)
+#' pepito = createPP(vecchia, plot=FALSE)
 #' var_loss_percentage.PP(pepito)
 var_loss_percentage.PP = function(x) {
   PP_mar_var = apply(
@@ -190,7 +189,7 @@ var_loss_percentage.PP = function(x) {
 #' @examples
 #' locs = cbind(runif(10000), runif(10000))
 #' locs = rbind(locs, locs)
-#' vecchia_approx = createVecchia(locs, 12)
+#' vecchia_approx = createVecchia(locs, 12, ncores=1)
 #' PP = createPP(vecchia_approx)
 #' covariate_coefficients = c(4, 1, 1, .5)
 #' knots_coeffs = rnorm(PP$n_knots)
@@ -260,7 +259,7 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' @examples
 #' set.seed(123)
 #' locs = cbind(runif(50), runif(50))
-#' vecchia_approx = createVecchia(locs)
+#' vecchia_approx = createVecchia(locs, ncores=1)
 #' PP = createPP(vecchia_approx, plot=FALSE)
 #' X = matrix(rnorm(100), 50)
 #' Y = matrix(rnorm(30*nrow(X)), nrow(X))

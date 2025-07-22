@@ -11,7 +11,7 @@
 #' set.seed(100)
 #' size <- 20000
 #' observed_locs = cbind(runif(size), runif(size))
-#' res <- createVecchia(observed_locs, m=10) 
+#' res <- createVecchia(observed_locs, m=10, ncores=1) 
 createVecchia <- function(observed_locs, m = 12, ncores=5){
   #message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
@@ -132,7 +132,7 @@ generate_location_partitions <- function(locs, n, ncores=5) {
 #' unique_locs = cbind(runif(nlocs), runif(nlocs))
 #' observed_locs = unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' vecchia_approx = createVecchia(observed_locs, 12)
+#' vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
 #' PP = createPP(vecchia_approx)
 #' 
 #' # Good cases ######################
@@ -258,7 +258,7 @@ process_PP_prior = function(
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
 #' observed_field = rnorm(nobs)
-#' vecchia_approx = createVecchia(observed_locs)
+#' vecchia_approx = createVecchia(observed_locs, ncores=1)
 #' PP = createPP(vecchia_approx)
 #' X = as.data.frame(cbind(rnorm(nobs), runif(nobs)))
 #' covariates = list()
@@ -382,7 +382,7 @@ process_hierarchical_model <- function(vecchia_approx,
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
 #' observed_field = rnorm(nobs)
-#' vecchia_approx = createVecchia(observed_locs)
+#' vecchia_approx = createVecchia(observed_locs, ncores=1)
 #' PP = createPP(vecchia_approx)
 #' X = as.data.frame(cbind(rnorm(nobs), runif(nobs)))
 #' covariates = list()
@@ -442,7 +442,7 @@ process_transition_kernels <- function(init=-4, hm){
 #' observed_field = rnorm(nobs)
 #' 
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' vecchia_approx = createVecchia(observed_locs, 12)
+#' vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
 #' PP = createPP(vecchia_approx)
 #' 
 #' covariates = list(
@@ -618,7 +618,7 @@ process_states <- function(
 #' nobs = 10000
 #' observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
 #' observed_field = rnorm(nobs)
-#' vecchia_approx = createVecchia(observed_locs)
+#' vecchia_approx = createVecchia(observed_locs, ncores=1)
 #' myPP = createPP(
 #'   vecchia_approx = vecchia_approx,
 #'   matern_range = .1,

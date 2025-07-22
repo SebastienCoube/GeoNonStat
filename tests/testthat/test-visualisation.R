@@ -1,8 +1,9 @@
+set.seed(123)
+obs_locs <- matrix(rnorm(200), ncol=2)
+vecchia_approx = createVecchia(obs_locs, ncores=1)
+pepito = createPP(vecchia_approx, plot=FALSE)
+
 test_that("plot_knots.PP doesn't produce errors", {
-  set.seed(123)
-  obs_locs <- matrix(rnorm(200), ncol=2)
-  vecchia_approx = createVecchia(obs_locs)
-  pepito = createPP(vecchia_approx, plot=FALSE)
   expect_error(
     res <- plot_knots.PP(pepito),
     NA
@@ -19,10 +20,6 @@ test_that("plot_knots.PP doesn't produce errors", {
 })
 
 test_that("plot.PP doesn't produce errors", {
-  set.seed(123)
-  obs_locs <- matrix(rnorm(200), ncol=2)
-  vecchia_approx = createVecchia(obs_locs)
-  pepito = createPP(vecchia_approx, plot=FALSE)
   expect_message(
     res <- plot.PP(pepito, mar_var_loss = FALSE),
     NA

@@ -1,5 +1,5 @@
 set.seed(123)
-vecchia_approx = createVecchia(observed_locs  = cbind(runif(1000), runif(1000)), 10)
+vecchia_approx = createVecchia(cbind(runif(1000), runif(1000)), 10, ncores = 1)
 
 test_that("createPP works (automatic)", {
   set.seed(123)

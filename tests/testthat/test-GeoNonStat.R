@@ -4,7 +4,7 @@ observed_locs = cbind(runif(size), runif(size))
 
 test_that("createVecchia works", {
   expect_error(
-    res <- createVecchia(observed_locs, m=10),
+    res <- createVecchia(observed_locs, m=10, ncores=1),
     NA
   )
   expect_true(is(res, "list"))
@@ -59,7 +59,7 @@ test_that("process_PP_priors works as expected whithout PP", {
 test_that("process_PP_priors works as expected whith PP", {
   # With PP
   suppressMessages({
-    myVecchia <- createVecchia(observed_locs, m=10)
+    myVecchia <- createVecchia(observed_locs, m=10, ncores = 1)
     myPP <- createPP(myVecchia) 
   })
   
@@ -110,7 +110,7 @@ test_that("process_transition_kernels return expected result", {
 
 set.seed(100)
 suppressMessages({
-  VA <- createVecchia(observed_locs, m=10)
+  VA <- createVecchia(observed_locs, m=10, ncores=1)
   PP = createPP(VA, plot=FALSE)
 })
 
