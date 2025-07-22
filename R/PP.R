@@ -41,8 +41,6 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   }
   if(!is.matrix(knots)){
     knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
-    # TODO une erreur ici ? tester avec locs de dim [10,2]
-    knots = max(knots, nrow(vecchia_approx$NNarray))
     knots = generate_knots_from_kmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
   }

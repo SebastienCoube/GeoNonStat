@@ -57,8 +57,8 @@ createVecchia <- function(observed_locs, m = 12){
     triangular = T
   )
   
-  sparse_chol_x_reorder <- seq_along(NNarray)[NNarray_non_NA][
-    match(sparse_mat@x, seq_len(sum(NNarray_non_NA)))
+  sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][
+    match(sparse_mat@x, seq_len(sum(NNNoNA)))
   ]
   
   # Partitioning locations using parallel kmeans for field update
