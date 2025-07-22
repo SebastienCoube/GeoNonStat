@@ -187,24 +187,29 @@ var_loss_percentage.PP = function(x) {
 #' @returns a matrix
 #' 
 #' @examples
-#' locs = cbind(runif(10000), runif(10000))
+#' locs = cbind(runif(1000), runif(1000))
 #' locs = rbind(locs, locs)
 #' vecchia_approx = createVecchia(locs, 12, ncores=1)
-#' PP = createPP(vecchia_approx)
+#' PP = createPP(vecchia_approx, plot=FALSE)
 #' covariate_coefficients = c(4, 1, 1, .5)
 #' knots_coeffs = rnorm(PP$n_knots)
+#' X = cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
+#' 
 #' # multiplying X alone
-#' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-#' res1
 #' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
+#' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+#' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
+#' 
 #' # multiplying PP alone
 #' res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 #' plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
+#' 
 #' # multiplying PP and matrix of covariate, one obs for each location
 #' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
 #' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
 #' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
+#' 
 #' # multiplying PP and matrix of covariates with an index
 #' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
 #' res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
@@ -212,12 +217,11 @@ var_loss_percentage.PP = function(x) {
 #'                        vecchia_approx = vecchia_approx
 #'                        )
 #' plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
-#' 
 X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   # Sanity checks
-  Y = as.matrix(Y)
+  if(!is.matrix(Y)) Y <- as.matrix(Y)
   expected_rows <- 0
   if(!is.null(X)) expected_rows <- expected_rows + ncol(X)
   if(!is.null(PP)) expected_rows <- expected_rows + nrow(PP$knots)
