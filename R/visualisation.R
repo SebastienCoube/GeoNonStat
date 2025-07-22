@@ -9,22 +9,22 @@
 #'
 #' @examples
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-#' pepito = createPP(vecchia_approx)
+#' pepito = createPP(vecchia_approx, plot=FALSE)
 #' plot.PP(pepito, vecchia_approx)
 plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
-  layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
-  if(mar_var_loss && !separate) {
-    # par(mfrow=c(1,2))
-    par(mar=c(2, 2, 4, 1) + 0.5)
+  par(mar=c(3, 3, 3, 1) + 0.5)
+  par(mgp=c(2, 1, 0))
+  if(mar_var_loss & !separate) {
+    layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
   }
   mar_var <- NULL
   if(mar_var_loss) mar_var = var_loss_percentage.PP(PP)
   plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
   if(mar_var_loss) {
-    hist(mar_var, 
+    hist(mar_var,
          xlab = "percentage of lost variance", 
-         main = "Histogram of\nlost marginal variance\nbetween the PP and\nthe full GP",
+         main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
          cex.main=1)
   }
   par(def.par)
@@ -46,13 +46,18 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
 #' vPP <- var_loss_percentage.PP(pepito)
 #' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
 plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
+  # Graphical parameters
+  def.par <- par(no.readonly = TRUE)
+  omar <- def.par[["mar"]]
+  par(mgp=c(2, 1, 0))
+  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
+    par(mar = omar + c(1, 1, 1, 4*1.5), xpd = TRUE)
+  }
+  
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
   legendtitle <- NULL
-  omar <- par("mar")
-  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
-    par(mar = omar + c(0, 0, 0, 4*1.5), xpd = TRUE)
-  }
+
   
   ### Colors of locations
   locs_col = "#CDCDCDCC"
@@ -118,7 +123,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
   }
   
   #### Restaure margins
-  par(mar=omar)
+  par(mar=omar, mgp=def.par[["mgp"]])
 }
 
 #' Plots range ellipses for nonstationary covariance functions.
