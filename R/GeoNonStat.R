@@ -3,7 +3,9 @@
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
 #'
-#' @returns a list
+#' @returns a list of Vecchia approximation objects and metadata.
+#' @export
+#' 
 #' @examples
 #' set.seed(100)
 #' size <- 20000
@@ -16,20 +18,27 @@ createVecchia <- function(observed_locs, m = 12){
   if (!is.matrix(observed_locs)) stop("observed_locs should be a matrix")
   if (ncol(observed_locs)!=2) stop("observed_locs should have 2 columns")
   
-  # re-ordering and treating spatial locations 
-  locs = observed_locs[!duplicated(observed_locs), ]
-  max_locs <- min(nrow(locs), 10000)
-  locs_reordering = order(runif(nrow(locs)))
-  locs_reordering[seq(max_locs)] = locs_reordering[GpGp::order_maxmin(locs[locs_reordering[seq(max_locs)], ])]
-  locs = locs[locs_reordering, ]
+  # remove duplicates 
+  locs <- unique(observed_locs)
   
   # storing numbers
-  n_locs = n = nrow(locs)
+  n_locs = nrow(locs)
   n_obs = nrow(observed_locs)
+  
+  # re-ordering spatial locations (random then maxmin on subset)
+  max_locs <- min(n_locs, 10000)
+  neworder = order(runif(n_locs))
+  neworder[seq(max_locs)] <- neworder[GpGp::order_maxmin(locs[neworder[seq(max_locs)], ])]
+  locs = locs[neworder, ]
+  
   # matching observed locations with reordered, unrepeated locations
-  locs_match = match(split(observed_locs, row(observed_locs)), 
-                     split(locs, row(locs)))
-  locs_match_matrix = Matrix::sparseMatrix(i = locs_match,j = seq(n_obs), x = 1)
+  locs_match <- match(
+    split(observed_locs, row(observed_locs)), 
+    split(locs, row(locs))
+  )
+  
+  locs_match_matrix = Matrix::sparseMatrix(i = locs_match, j = seq(n_obs), x = 1)
+  
   # doing reversed operation : for a given unrepeated location, tell which observations correspond
   hctam_scol = split(seq(n_obs), locs_match)
   
@@ -37,22 +46,23 @@ createVecchia <- function(observed_locs, m = 12){
   NNarray = t(GpGp::find_ordered_nn(locs, m))
   #computations from createVecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
   #non_NA indices from createVecchia$NNarray
-  sparse_mat = Matrix::sparseMatrix(x= seq(sum(!is.na(NNarray))), i = col(NNarray)[!is.na(NNarray)], j =NNarray[!is.na(NNarray)], triangular = T)
-  sparse_chol_x_reorder = (seq(length(NNarray)))[!is.na(NNarray)][match(sparse_mat@x, seq(sum(!is.na(NNarray))),)]
-  # sparse_mat@x = (NNarray + 0.0)[sparse_chol_x_reorder]
-  # sparse_mat[30,]
+  # Nearest neighbors for Vecchia
+  NNarray <- t(GpGp::find_ordered_nn(locs, m))
+  NNNoNA <- !is.na(NNarray)
   
-  # partition of locs for field update
-  cl = parallel::makeCluster(5)
-  parallel::clusterExport(cl = cl, varlist = c("locs", "n"), envir = environment())
-  clust_size = 50000
-  locs_partition = parallel::parSapply(
-    cl = cl, 
-    round(seq(n %/% clust_size+ 1, 2 * (n %/% clust_size) + 1, length.out = min(10, ceiling(n %/% clust_size) + 1))), 
-    function(i) { kmeans(locs, centers = i, iter.max = 200, algorithm = "Hartigan-Wong")$cluster}
+  sparse_mat = Matrix::sparseMatrix(
+    x= seq(sum(NNNoNA)), 
+    i = col(NNarray)[NNNoNA], 
+    j =NNarray[NNNoNA], 
+    triangular = T
   )
-  colnames(locs_partition) = paste(round(seq(n %/% clust_size+ 1, 2 * (n %/% clust_size) + 1, length.out = min(10, ceiling(n %/% clust_size) + 1))), "clust")
-  parallel::stopCluster(cl)
+  
+  sparse_chol_x_reorder <- seq_along(NNarray)[NNarray_non_NA][
+    match(sparse_mat@x, seq_len(sum(NNarray_non_NA)))
+  ]
+  
+  # Partitioning locations using parallel kmeans for field update
+  locs_partition <- generate_location_partitions(locs, n_locs)
   
   return(list(
     n_locs = n_locs,
@@ -72,6 +82,30 @@ createVecchia <- function(observed_locs, m = 12){
     sparse_chol_x_reorder = sparse_chol_x_reorder, 
     locs_partition = locs_partition
   ))
+}
+
+
+#' Partition spatial locations using parallel k-means
+#' @noRd
+generate_location_partitions <- function(locs, n) {
+  clust_size <- 50000
+  n_clusters <- ceiling(n / clust_size)
+  centers_seq <- round(seq(n_clusters + 1, 2 * n_clusters + 1, length.out = min(10, n_clusters + 1)))
+  
+  cl <- parallel::makeCluster(min(5, parallel::detectCores(logical = FALSE)))
+  on.exit(parallel::stopCluster(cl))
+  
+  parallel::clusterExport(cl, varlist = c("locs", "n"), envir = environment())
+  
+  locs_partition <- parallel::parSapply(
+    cl, centers_seq,
+    function(k) {
+      kmeans(locs, centers = k, iter.max = 200, algorithm = "Hartigan-Wong")$cluster
+    }
+  )
+  
+  colnames(locs_partition) <- paste0(centers_seq, "_clust")
+  return(locs_partition)
 }
 
 #' process_covariates : pre-processes covariates by adding an intercept,
