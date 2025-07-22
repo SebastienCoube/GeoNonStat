@@ -2,6 +2,7 @@
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
+#' @param ncores number of cores to run in parallel, default to 5.
 #'
 #' @returns a list of Vecchia approximation objects and metadata.
 #' @export
@@ -11,7 +12,7 @@
 #' size <- 20000
 #' observed_locs = cbind(runif(size), runif(size))
 #' res <- createVecchia(observed_locs, m=10) 
-createVecchia <- function(observed_locs, m = 12){
+createVecchia <- function(observed_locs, m = 12, ncores=5){
   #message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
@@ -58,7 +59,7 @@ createVecchia <- function(observed_locs, m = 12){
   ]
   
   # Partitioning locations using parallel kmeans for field update
-  locs_partition <- generate_location_partitions(locs, n_locs)
+  locs_partition <- generate_location_partitions(locs, n_locs, ncores=ncores)
   
   return(list(
     n_locs = n_locs,
@@ -83,23 +84,32 @@ createVecchia <- function(observed_locs, m = 12){
 
 #' Partition spatial locations using parallel k-means
 #' @noRd
-generate_location_partitions <- function(locs, n) {
+generate_location_partitions <- function(locs, n, ncores=5) {
   clust_size <- 50000
   n_clusters <- ceiling(n / clust_size)
   centers_seq <- round(seq(n_clusters + 1, 2 * n_clusters + 1, length.out = min(10, n_clusters + 1)))
   
-  cl <- parallel::makeCluster(min(5, parallel::detectCores(logical = FALSE)))
-  on.exit(parallel::stopCluster(cl))
-  
-  parallel::clusterExport(cl, varlist = c("locs", "n"), envir = environment())
-  
-  locs_partition <- parallel::parSapply(
-    cl, centers_seq,
-    function(k) {
-      kmeans(locs, centers = k, iter.max = 200, algorithm = "Hartigan-Wong")$cluster
-    }
-  )
-  
+  if(ncores>1) {
+    cl <- parallel::makeCluster(min(ncores, parallel::detectCores(logical = FALSE)))
+    on.exit(parallel::stopCluster(cl))
+    
+    parallel::clusterExport(cl, varlist = c("locs", "n"), envir = environment())
+    
+    locs_partition <- parallel::parSapply(
+      cl, centers_seq,
+      function(k) {
+        kmeans(locs, centers = k, iter.max = 200, algorithm = "Hartigan-Wong")$cluster
+      }
+    )
+  } else {
+    locs_partition <- sapply(
+      centers_seq,
+      function(k) {
+        kmeans(locs, centers = k, iter.max = 200, algorithm = "Hartigan-Wong")$cluster
+      }
+    )
+  }
+
   colnames(locs_partition) <- paste0(centers_seq, "_clust")
   return(locs_partition)
 }

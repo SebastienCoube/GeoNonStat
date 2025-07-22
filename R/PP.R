@@ -258,34 +258,41 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' @export
 #'
 #' @examples
-#' locs = cbind(runif(5000), runif(5000))
-#' locs = rbind(locs, locs)
+#' set.seed(123)
+#' locs = cbind(runif(50), runif(50))
 #' vecchia_approx = createVecchia(locs)
-#' PP = createPP(vecchia_approx)
+#' PP = createPP(vecchia_approx, plot=FALSE)
+#' X = matrix(rnorm(100), 50)
+#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
 #' 
 #' # just surrogate of crossprod
-#' X = matrix(rnorm(100000), 10000)
-#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
-#' res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx)
-#' crossprod(X, Y) - res1
+#' res1 <- X_PP_crossprod(X = X, Y = Y)
+#' identical(crossprod(X, Y) , res1)
 #' 
 #' # crossprod + PP with observations of X on the locs
-#' X = matrix(rnorm(20*vecchia_approx$n_locs), vecchia_approx$n_locs)
-#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
 #' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
-#' hist(as.vector(res2 - crossprod(
-#'  cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),]), Y
-#' )))
 #' 
-#' # crossprod + PP with PP dispatched to observations of X
-#' X = matrix(rnorm(20*vecchia_approx$n_obs), vecchia_approx$n_obs)
-#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
-#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
-#' hist(as.vector(res2 - crossprod(
-#'  cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),][vecchia_approx$locs_match,]), Y
-#' )))
- X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx, permutate_PP_to_obs = F)
+#' # crossprod + PP with observations of X on the obs
+#' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+ X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_obs = F)
 {
+  # TODO : est-ce qu'il ne faudrait pas déplacer cette fonction dans un fichier utils ou usefull_stuff ?
+  # Si on le fait le faut déplacer les tests avec. 
+   if(nrow(X) != nrow(Y)) {
+     stop("X and Y should have the same number of rows")
+   }
+  if(permutate_PP_to_obs & is.null(vecchia_approx)) {
+    stop("To permutate PP to observed values vecchia_approx needs to be provided.")
+  }
+  if(!is.null(PP)){
+    if(nrow(X) != nrow(PP$vecchia_locs) ) {
+      stop("X should have the same number of rows as locations in vecchia")
+    }
+    if(vecchia_approx$n_locs != nrow(PP$vecchia_locs) ) {
+      stop("vecchia_approx should have the same number of locations as the locations of PP")
+    }
+  }
+   
   Y = as.matrix(Y)
   res = crossprod(x = X, y = Y)
   if(!is.null(PP))

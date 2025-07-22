@@ -116,3 +116,55 @@ test_that("summary.PP gives expected results", {
   expect_output(summary(pepito),
                  "Object of class 'PP' with 100 knots, based on 1000 locations, matérn range = 0.2870118")
 })
+
+set.seed(123)
+PP = createPP(vecchia_approx, plot=FALSE)
+X = matrix(rnorm(500), 1000)
+Y = matrix(rnorm(30*nrow(X)), nrow(X))
+
+test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
+  expect_error(
+    res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
+    NA
+  )
+  expect_true(is(res1, "matrix"))
+  expect_identical(dim(res1), c(1L, 30L))
+  expect_identical(res1,crossprod(X, Y))
+  
+  # Simple corssprod, vecchia unused. 
+  expect_error(
+    res2 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
+    NA
+  )
+  expect_identical(res1,res2)
+})
+
+test_that("X_PP_crossprod with PP", {
+  expect_error(
+    res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx),
+    NA
+  )
+  expect_true(is(res2, "matrix"))
+  expect_identical(dim(res2), c(101L, 30L))
+  
+  # First line is crossprod
+  expect_identical(res2[1,],crossprod(X, Y)[1,])
+  expect_equal(colMeans(res2)[1:5], 
+               c(0.1999806, -0.8748530, 0.9684133, -0.7444476, 0.1350033),
+               tolerance = 1e-5)
+})
+
+test_that("X_PP_crossprod with PP and permute obs", {
+  expect_error(
+    res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
+    NA
+  )
+  expect_true(is(res3, "matrix"))
+  expect_identical(dim(res3), c(101L, 30L))
+  
+  # First line is crossprod
+  expect_identical(res3[1,],crossprod(X, Y)[1,])
+  expect_equal(colMeans(res3)[1:5], 
+               c(0.02263887, -1.04065836, 0.84462225, -0.70220738, 0.36781311),
+               tolerance = 1e-5)
+})
