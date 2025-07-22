@@ -34,6 +34,7 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234, plot=TRUE){
+  # TODO : est-ce que le nombre de knots peut être plus grand que la dimention des locs de vecchia_approx ?
   # Generate knots
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
@@ -130,25 +131,16 @@ generate_knots_from_kmeans <- function(knots_number, locs) {
 #' @param ... additional arguments
 #' @export
 #' @examples
-#' observed_locs = cbind(runif(1000), runif(1000))
-#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' pepito = createPP(observed_locs)
+#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
+#' pepito = createPP(vecchia_approx, plot=FALSE)
 #' summary(pepito)
 summary.PP <- function(object, ...) {
-  mar_var_loss = var_loss_percentage.PP(object)
-  message_loss = (paste(
-    round(mean(mar_var_loss), 1), 
-    "percent of marginal variance on average lost with the use of a PP, which is", 
-    c(
-      "great !", 
-      "fairly good, but might be improved by adding more knots or increasing the Matérn range.", 
-      "quite a bit of loss, but may be fixed by adding more knots or increasing the Matérn range.")
-    [1 + (mean(mar_var_loss)>3) + (mean(mar_var_loss)>10)]))
-  cat("Obect of class \'PP\' with ", 
-      object$n_knots, 
-      "knots, Matérn range =", 
-      object$matern_range, 
-      "and", message_loss)
+  cat("Object of class \'PP\' with", 
+      object$n_knots, "knots,", 
+      "based on", dim(object$vecchia_locs)[1], "locations,",
+      "matérn range =", object$matern_range)
+  var_loss_percentage.PP(object)
+  return(invisible(NULL))
 }
 
 

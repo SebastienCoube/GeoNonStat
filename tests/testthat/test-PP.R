@@ -82,28 +82,6 @@ test_that("createPP works knots as matrix", {
   expect_equal(pepito$matern_range, .1, tolerance = 1e-5)
 })
 
-
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-#' # automatic 
-#' pepito = createPP(vecchia_approx)
-#' # choosing manually Matérn range, too small wrt number of knots
-#' pepito = createPP(vecchia_approx, matern_range = .1)
-#' # choosing manually Matérn range, way too small wrt number of knots
-#' pepito = createPP(vecchia_approx, matern_range = .01)
-#' # choosing manually number of knots in order to adjust to Matérn range
-#' pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
-#' # choosing manually number of knots, but picking too few for default Matérn range
-#' pepito = createPP(vecchia_approx, knots = 20)
-#' # choosing manually Matérn range in order to adjust to the number of knots
-#' pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
-#' # inputing an user-specified grid of knots
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
-#' # inputing an user-specified grid of knots in order to adjust to small Matérn range
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
-#' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
-
-
 test_that("var_loss_percentage.PP gives expected results", {
   set.seed(123)
   suppressMessages({
@@ -132,3 +110,9 @@ test_that("var_loss_percentage.PP gives expected results", {
   expect_equal(mean(res), 83.91222, tolerance = 1e-5)
 })
 
+test_that("summary.PP gives expected results", {
+  set.seed(123)
+  pepito <- createPP(vecchia_approx, plot=FALSE)
+  expect_output(summary(pepito),
+                 "Object of class 'PP' with 100 knots, based on 1000 locations, matérn range = 0.2870118")
+})
