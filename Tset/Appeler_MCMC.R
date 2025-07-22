@@ -1,4 +1,4 @@
-observed_locs = cbind(runif(4000), 1)
+observed_locs = cbind(runif(400000), 1)
 X = cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
 
 NNarray = GpGp::find_ordered_nn(observed_locs, 12)

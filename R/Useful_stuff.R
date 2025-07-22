@@ -1,5 +1,15 @@
 
 
+decompress_chol = function(vecchia_approx, compressed_sparse_chol){
+  return(Matrix::sparseMatrix(
+    i = vecchia_approx$sparse_chol_i, 
+    p = vecchia_approx$sparse_chol_p, 
+    x = compressed_sparse_chol[,1,][vecchia_approx$sparse_chol_x_reorder], 
+    triangular = T
+  )) 
+}
+
+
 #' Exponential of a square matrix, adding a small numeric value on the diagonal
 #'
 #' @param coords a numeric vector
@@ -58,7 +68,7 @@ symmat = function(coords)
 #' The first coefficients are multiplied with range_X 
 #' The last coefficients are multiplied with the spatial basis functions of PP
 #' @param vecchia_approx TODO
-#' @param range_X covariates for range
+#' @param range_X covariates for range, treated using process_covariates
 #' @param PP predictive process obtained through `createPP()`
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
 #' @param smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
@@ -166,7 +176,7 @@ symmat = function(coords)
 
 compute_sparse_chol = function(range_beta, 
                                vecchia_approx,
-                               range_X = NULL, 
+                               range_X, 
                                PP = NULL, 
                                matern_smoothness = 1.5, 
                                compute_derivative = T, 
@@ -187,7 +197,7 @@ compute_sparse_chol = function(range_beta,
   log_range = as.matrix(
     X_PP_mult_right(
       vecchia_approx=  vecchia_approx, 
-      X = range_X, 
+      X = range_X$X_locs, 
       PP = PP, 
       Y = range_beta, 
       permutate_PP_to_obs = F))

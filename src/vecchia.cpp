@@ -144,7 +144,7 @@ arma::cube vecchia(
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
         }
-        sigma11 (j1-1, j1-1) = 1.000001;
+        sigma11 (j1-1, j1-1) = 1.00001;
         //filling sigma12
         hybrid_range_inv(0,0) = (rangesub(0, j1) + rangesub(0, 0))*.5;
         hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub(2, 0))*.5;
@@ -181,7 +181,7 @@ arma::cube vecchia(
             matern_thingy(mahala_dist, smoothness);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
         }
-        sigma11 (j1-1, j1-1) = 1.000001;
+        sigma11 (j1-1, j1-1) = 1.00001;
         mahala_dist = pow( 
           ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
           /(rangesub(0, j1)*.5 + rangesub(0, 0)*.5) , 
@@ -198,7 +198,7 @@ arma::cube vecchia(
     // computing a vector used everyvhere
     arma::mat salt  = agmis11 * sigma12 ;
     //computing Vecchia approx itself
-    double inverse_cond_sd = pow(1.000001- sum(salt % sigma12), -.5);
+    double inverse_cond_sd = pow(1.00001- sum(salt % sigma12), -.5);
     double pow_invcondsd_3  = pow(inverse_cond_sd, 3);
     out(0, 0) = inverse_cond_sd ;
     for(int j=1; j<bsize; j++){
@@ -247,7 +247,7 @@ arma::cube vecchia(
                     pow(arma::det(hybrid_range_inv), .5) * 
                     matern_thingy(mahala_dist, smoothness);
             }
-            dsigma11 (j1-1, j1-1) = 1.000001;
+            dsigma11 (j1-1, j1-1) = 1.00001;
             //filling dpsigma12
             hybrid_range_inv(0,0) = (rangesub((d_idx + 1) * 3 + 0, j1) + rangesub(0, 0))*.5;
             hybrid_range_inv(1,1) = (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5;

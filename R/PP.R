@@ -114,7 +114,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
 generate_knots_from_kmeans <- function(knots_number, locs) {
   n_sample <- min(nrow(locs), 10000)
   sampled_locs <- locs[seq(n_sample), ]
-  noise <- matrix(rnorm(2 * n_sample, 0, max(dist(sampled_locs)) / 50), ncol = 2)
+  noise <- matrix(rnorm(2 * n_sample, 0, max(dist(sampled_locs)) / 20), ncol = 2)
   centers <- kmeans(sampled_locs + noise, knots_number,
                     algorithm = "Hartigan-Wong", iter.max = 50)$centers
   return(centers)

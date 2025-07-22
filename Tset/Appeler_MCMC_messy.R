@@ -1,11 +1,5 @@
 
 
-# Latent field and regression coefficients
-Rcpp::sourceCpp("src/vecchia.cpp")
-source("R/GeoNonStat.R")
-source("R/Useful_stuff.R")
-source("R/PP.R")
-source("R/visualisation.R")
 observed_locs = cbind(runif(40000), 1)
 
 X = cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
@@ -24,7 +18,6 @@ points(observed_locs[,1], w, col = 2, cex = .5, pch = 16)
 vecchia_approx = createVecchia(observed_locs)
 PP = createPP(vecchia_approx)
 
-source("R/GeoNonStat.R")
 mygns = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   observed_field = c(observed_field), X = as.data.frame(X), 
@@ -90,3 +83,62 @@ abline(h = reg_coeffs[4])
 plot(params_records$beta[5,,])
 abline(h = reg_coeffs[5])
 
+
+
+
+
+
+
+
+###############
+# Anisotropic #
+###############
+
+observed_locs = cbind(runif(40000), runif(40000))
+vecchia_approx = createVecchia(observed_locs)
+
+# fixed effects
+X = cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
+X = process_covariates(X = as.data.frame(X), vecchia_approx = vecchia_approx, PP = PP)
+reg_coeffs = rnorm(ncol(X$X))
+
+range_X = observed_locs
+PP = createPP(vecchia_approx)
+range_X = process_covariates(X = as.data.frame(range_X), vecchia_approx = vecchia_approx, PP = PP)
+range_beta = matrix(0, range_X$n_regressors + PP$n_knots, 3)
+range_beta[] = .5*rnorm(length(range_beta))
+range_beta[1,1] = -4
+
+compressed_sparse_chol = compute_sparse_chol(
+  range_beta = range_beta, vecchia_approx = vecchia_approx, 
+  range_X = range_X, PP = PP, matern_smoothness = 1.5, 
+  compute_derivative = F, num_threads = 6)
+decompressed_chol = decompress_chol(vecchia_approx, compressed_sparse_chol)
+
+w = as.vector(Matrix::solve(decompressed_chol, rnorm(nrow(vecchia_approx$locs))))
+plot_pointillist_painting(vecchia_approx$locs, w, cex = .5)
+
+noise_var = 1
+
+
+
+mygns = GeoNonStat(
+  vecchia_approx = vecchia_approx, 
+  observed_field = c(observed_field), X = as.data.frame(X), 
+  matern_smoothness = 1.5, anisotropic = F, 
+  n_chains = 3, 
+  noise_X = NULL, range_X = NULL, scale_X = NULL, noise_PP = NULL, 
+  range_PP = NULL, scale_PP = NULL, seed = 1
+)
+
+names(mygns)
+
+
+list2env(mygns$states$chain_1, environment())
+list2env(mygns, environment())
+
+n_iterations_update = 200
+num_threads = 5
+iter_start = 1
+iter = 1
+seed=123 

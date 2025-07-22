@@ -482,16 +482,11 @@ process_states <- function(
   # cholesky factors of precision matrices
   stuff$compressed_chol = compute_sparse_chol(
     range_beta = params$range_beta, vecchia_approx = vecchia_approx, 
-    range_X = covariates$range_X$X_locs, 
+    range_X = covariates$range_X, 
     PP = hm$range_PP, matern_smoothness = hm$matern_smoothness, 
     compute_derivative = T, num_threads = min(5, max(parallel::detectCores()-1, 1))
       )
-  stuff$sparse_chol = Matrix::sparseMatrix(
-    i = vecchia_approx$sparse_chol_i, 
-    p = vecchia_approx$sparse_chol_p, 
-    x = stuff$compressed_chol[,1,][vecchia_approx$sparse_chol_x_reorder], 
-    triangular = T
-  ) 
+  stuff$sparse_chol = decompress_chol(vecchia_approx, stuff$compressed_chol)
   #plot_pointillist_painting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
   
   # Noise variance  and stuff depending on it ##################################
