@@ -9,7 +9,7 @@
 #' @examples
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
-#' plot.PP(pepito, vecchia_approx)
+#' plot.PP(pepito)
 plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
   par(mar=c(3, 3, 3, 1) + 0.5)
@@ -41,11 +41,9 @@ plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE) {
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' vecchia_approx = createVecchia(observed_locs)
-#' pepito = createPP(vecchia_approx)
-#' plot_knots.PP(pepito, vecchia_approx$locs)
-#' vPP <- var_loss_percentage.PP(pepito)
-#' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
-plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
+#' pepito = createPP(vecchia_approx, plot=FALSE)
+#' plot_knots.PP(pepito)
+plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
   # Graphical parameters
   def.par <- par(no.readonly = TRUE)
   omar <- def.par[["mar"]]
@@ -95,14 +93,10 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, 
        ylim=c(minlim[2], maxlim[2]),
        cex.main=1
   )
-  # Plot knots
-  if(show_knots) points(x$knots, pch = 10, cex=1, col=1)
   
   # ### compute size of legend
   mylegend <- legend(x="right",
                      legend="knots",
-                     pch =10,
-                     col=1,
                      title="Knots",
                      plot = FALSE)
   if(!is.null(mar_var_loss)) {
@@ -114,7 +108,9 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, 
            inset=c(-1.2*mylegend$rect$w, 0),
            bty="n")
   }
+  # Plot knots
   if(show_knots) {
+    points(x$knots, pch = 10, cex=1, col=1)
     legend(x="topright",
            legend="knots", 
            pch =10,
