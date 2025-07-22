@@ -5,6 +5,24 @@
 #' @param ncores number of cores to run in parallel, default to 5.
 #'
 #' @returns a list of Vecchia approximation objects and metadata.
+#' \describe{
+#'   \item{\code{n_locs}}{Number of unique locations}
+#'   \item{\code{n_obs}}{Number of observed locations}
+#'   \item{\code{observed_locs}}{Observed locations} 
+#'   \item{\code{locs}}{Unique locations} 
+#'   \item{\code{t_locs}}{t(locs)}  # TODO : A mon avis ça ne sert à rien de stocker ça. 
+#'   \item{\code{locs_match}}{locs_match}
+#'   \item{\code{locs_match_matrix}}{locs_match_matrix}
+#'   \item{\code{hctam_scol}}{hctam_scol}
+#'   \item{\code{hctam_scol_1}}{sapply(hctam_scol} function(x) x[1])}
+#'   \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol} length))} # count how many observations correspond to one location
+#'   \item{\code{NNarray}}{NNarray}
+#'   \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
+#'   \item{\code{sparse_chol_i}}{sparse_mat@i+1} 
+#'   \item{\code{sparse_chol_p}}{sparse_mat@p} 
+#'   \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder} 
+#'   \item{\code{locs_partition}}{locs_partition}
+#' }
 #' @export
 #' 
 #' @examples
