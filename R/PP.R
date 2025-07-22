@@ -34,38 +34,50 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234, plot=TRUE){
+  # Generate knots
   if(is.null(knots)){
     knots = min(100, vecchia_approx$n_locs-1)
-    message(paste("number of knots set by default to", knots))
+    message(paste("number of knots set to", knots))
   }
   if(!is.matrix(knots)){
     knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
     knots = max(knots, nrow(vecchia_approx$NNarray))
-    knots = kmeans(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),] + rnorm(2*min(vecchia_approx$n_locs, 10000), 0, max(dist(vecchia_approx$locs[seq(min(vecchia_approx$n_locs, 10000)),]))/50), 
-                   knots, algorithm = "Hartigan-Wong", iter.max = 50)$centers
+    knots = generate_knots_from_kmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
   }
+  
+  # matern range
   if(is.null(matern_range)){
     matern_range = max(dist(knots))/5
-    message(paste("Matérn range set by default to the fifth of the space pseudo-diameter, that is to", signif(matern_range, 3)))
+    message(paste("Matérn range set to ", signif(matern_range, 3))," the fifth of the space pseudo-diameter")
   }
+  
+  # knots order
   knots = knots[GpGp::order_maxmin(knots),]
-  #NNarray = GpGp::find_ordered_nn(rbind(knots, vecchia_approx$locs), nrow(vecchia_approx$NNarray)-1)
+  
+  # NNarray
   NNarray = rbind(
     GpGp::find_ordered_nn(knots, nrow(vecchia_approx$NNarray)-1), 
-    cbind(nrow(knots) + seq(vecchia_approx$n_locs), FNN::get.knnx(query = vecchia_approx$locs, data = knots, k = nrow(vecchia_approx$NNarray)-1)$nn.index)
+    cbind(nrow(knots) + seq(vecchia_approx$n_locs), 
+          FNN::get.knnx(query = vecchia_approx$locs, 
+                        data = knots, 
+                        k = nrow(vecchia_approx$NNarray)-1)$nn.index)
   )
   
+  # Cholesky matrix
+  combined_locs <- rbind(knots, vecchia_approx$locs)
+  Linv_vals <- GpGp::vecchia_Linv(
+    covparms = c(1, matern_range, 1e-6),
+    covfun_name = "matern15_isotropic",
+    locs = combined_locs, 
+    NNarray = NNarray
+  )
+  notnaNNarray <- !is.na(NNarray)
   sparse_chol = Matrix::sparseMatrix(
-    i = row(NNarray)[!is.na(NNarray)], 
-    j = NNarray[!is.na(NNarray)], 
-    x = GpGp::vecchia_Linv(
-      c(1, matern_range, .000001),
-      "matern15_isotropic", 
-      rbind(knots, vecchia_approx$locs), 
-      NNarray
-    )[!is.na(NNarray)], 
-    triangular = T
+    i = row(NNarray)[notnaNNarray], 
+    j = NNarray[notnaNNarray], 
+    x = Linv_vals[notnaNNarray], 
+    triangular = TRUE
   )
   
   res = structure(
@@ -73,19 +85,39 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
       "knots" = knots,
       "matern_range" = matern_range,
       "sparse_chol" = sparse_chol,
-      "n_knots" = nrow(knots)
+      "n_knots" = nrow(knots),
+      "vecchia_locs" = vecchia_approx$locs
     ), class = "PP"
   )
   
-  if(plot) {
-    plot.PP(res, vecchia_approx, mar_var_loss=TRUE)
-  }
-  mar_var_loss = var_loss_percentage.PP(res)
-  if(mean(mar_var_loss)>10) msg <- "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
-  else if(mean(mar_var_loss)>3) msg <- "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
-  else msg <- "great !"
-  message(round(mean(mar_var_loss), 1), "% of marginal variance on average is lost with the use of a PP.\n This is", msg)
+  if(plot) plot.PP(res, mar_var_loss=TRUE)
+  
   return(res)
+}
+
+#' Generate spatial knots using k-means clustering
+#'
+#' Selects a set of spatial knots using k-means clustering from the observed locations.
+#' If the number of locations is large, a subsample of up to 10,000 points is used,
+#' and a small random perturbation is added to break ties and improve cluster separation.
+#'
+#' @param knots_number Integer. The number of knots (i.e., clusters) to generate.
+#' @param locs A matrix of spatial coordinates (typically with two columns for 2D locations).
+#' 
+#' @return A matrix of size \code{knots_number} × ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
+
+#' @examples
+#' locs <- cbind(runif(5000), runif(5000))
+#' knots <- generate_knots_from_kmeans(100, locs)
+#' plot(locs, col = "grey", pch = 16, cex = 0.5)
+#' points(knots, col = "red", pch = 19)
+generate_knots_from_kmeans <- function(knots_number, locs) {
+  n_sample <- min(nrow(locs), 10000)
+  sampled_locs <- locs[seq(n_sample), ]
+  noise <- matrix(rnorm(2 * n_sample, 0, max(dist(sampled_locs)) / 50), ncol = 2)
+  centers <- kmeans(sampled_locs + noise, knots_number,
+                    algorithm = "Hartigan-Wong", iter.max = 50)$centers
+  return(centers)
 }
 
 #' Summary of a 'PP' object 
@@ -128,7 +160,19 @@ var_loss_percentage.PP = function(x, ...) {
     nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
   )), 1, function(x)
     sum(x^2))
-  return((pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100)
+  PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100
+  mean_mar_var <- mean(PP_mar_var)
+  msg <- if (mean_mar_var > 10) {
+    "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
+  } else if (mean_mar_var > 3) {
+    "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
+  } else {
+    "great !"
+  }
+  message(round(mean_mar_var, 1), 
+          "% of marginal variance on average is lost with the use of a PP.\nThis is ", msg)
+  
+  return(PP_mar_var)
   # max(0) because of tiny numerical errors
 }
 
