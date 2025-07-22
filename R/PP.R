@@ -41,6 +41,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   }
   if(!is.matrix(knots)){
     knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
+    # TODO une erreur ici ? tester avec locs de dim [10,2]
     knots = max(knots, nrow(vecchia_approx$NNarray))
     knots = generate_knots_from_kmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
@@ -53,6 +54,7 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   }
   
   # knots order
+  if(is.null(rownames(knots))) rownames(knots) <- seq_len(nrow(knots))
   knots = knots[GpGp::order_maxmin(knots),]
   
   # NNarray
@@ -90,7 +92,11 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
     ), class = "PP"
   )
   
-  if(plot) plot.PP(res, mar_var_loss=TRUE)
+  if(plot) {
+    plot.PP(res, mar_var_loss=TRUE)
+  } else {
+    varloss <- var_loss_percentage.PP(res)
+  }
   
   return(res)
 }
@@ -155,11 +161,14 @@ summary.PP <- function(object, ...) {
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
 #' pepito = createPP(observed_locs)
 #' var_loss_percentage.PP(pepito)
-var_loss_percentage.PP = function(x, ...) {
-  PP_mar_var = apply(Matrix::solve(x$sparse_chol, Matrix::diag(
-    nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
-  )), 1, function(x)
-    sum(x^2))
+var_loss_percentage.PP = function(x) {
+  PP_mar_var = apply(
+    Matrix::solve(x$sparse_chol, 
+                  Matrix::diag(nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots))), 
+    1, 
+    function(x) sum(x^2)
+  )
+  # max(0) because of tiny numerical errors
   PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100
   mean_mar_var <- mean(PP_mar_var)
   msg <- if (mean_mar_var > 10) {
@@ -173,7 +182,6 @@ var_loss_percentage.PP = function(x, ...) {
           "% of marginal variance on average is lost with the use of a PP.\nThis is ", msg)
   
   return(PP_mar_var)
-  # max(0) because of tiny numerical errors
 }
 
 
