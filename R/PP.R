@@ -58,7 +58,10 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   # NNarray
   NNarray = rbind(
     GpGp::find_ordered_nn(knots, nrow(vecchia_approx$NNarray)-1), 
-    cbind(nrow(knots) + seq(vecchia_approx$n_locs), FNN::get.knnx(query = vecchia_approx$locs, data = knots, k = nrow(vecchia_approx$NNarray)-1)$nn.index)
+    cbind(nrow(knots) + seq(vecchia_approx$n_locs), 
+          FNN::get.knnx(query = vecchia_approx$locs, 
+                        data = knots, 
+                        k = nrow(vecchia_approx$NNarray)-1)$nn.index)
   )
   
   # Cholesky matrix
@@ -82,11 +85,12 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
       "knots" = knots,
       "matern_range" = matern_range,
       "sparse_chol" = sparse_chol,
-      "n_knots" = nrow(knots)
+      "n_knots" = nrow(knots),
+      "vecchia_locs" = vecchia_approx$locs
     ), class = "PP"
   )
   
-  if(plot) plot.PP(res, vecchia_approx, mar_var_loss=TRUE)
+  if(plot) plot.PP(res, mar_var_loss=TRUE)
   
   return(res)
 }

@@ -1,7 +1,6 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
 #' 
 #' @param PP an object of class PP, create with `createPP`
-#' @param vecchia the vecchia approx object that the PP object was created from. 
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
 #'
 #' @returns NULL
@@ -11,7 +10,7 @@
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
 #' plot.PP(pepito, vecchia_approx)
-plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
+plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
   par(mar=c(3, 3, 3, 1) + 0.5)
   par(mgp=c(2, 1, 0))
@@ -22,7 +21,7 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
   if(mar_var_loss) {
     mar_var = var_loss_percentage.PP(PP)
   }
-  plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
+  plot_knots.PP(x = PP, mar_var_loss = mar_var)
   if(mar_var_loss) {
     hist(mar_var,
          xlab = "percentage of lost variance", 
@@ -46,7 +45,7 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
 #' plot_knots.PP(pepito, vecchia_approx$locs)
 #' vPP <- var_loss_percentage.PP(pepito)
 #' plot_knots.PP(pepito, vecchia_approx$locs, mar_var_loss = vPP)
-plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
+plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE, cex = c(.5, .5)){
   # Graphical parameters
   def.par <- par(no.readonly = TRUE)
   omar <- def.par[["mar"]]
@@ -55,6 +54,7 @@ plot_knots.PP = function(x, locs, mar_var_loss = NULL, show_knots = TRUE, cex = 
     par(mar = omar + c(1, 1, 1, 4*1.5), xpd = TRUE)
   }
   
+  locs <- x$vecchia_locs
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
   legendtitle <- NULL
