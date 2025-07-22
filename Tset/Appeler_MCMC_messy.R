@@ -5,6 +5,7 @@ Rcpp::sourceCpp("src/vecchia.cpp")
 source("R/GeoNonStat.R")
 source("R/Useful_stuff.R")
 source("R/PP.R")
+source("R/visualisation.R")
 observed_locs = cbind(runif(40000), 1)
 
 X = cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
@@ -23,12 +24,14 @@ points(observed_locs[,1], w, col = 2, cex = .5, pch = 16)
 vecchia_approx = createVecchia(observed_locs)
 PP = createPP(vecchia_approx)
 
+source("R/GeoNonStat.R")
 mygns = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   observed_field = c(observed_field), X = as.data.frame(X), 
   matern_smoothness = 1.5, anisotropic = F, 
   n_chains = 3, 
-  noise_X = NULL, range_X = NULL, scale_X = NULL, noise_PP = NULL, range_PP = NULL, scale_PP = NULL, seed = 1
+  noise_X = NULL, range_X = NULL, scale_X = NULL, noise_PP = NULL, 
+  range_PP = NULL, scale_PP = NULL, seed = 1
 )
 
 names(mygns)
