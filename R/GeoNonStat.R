@@ -44,10 +44,6 @@ createVecchia <- function(observed_locs, m = 12){
   
   #extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray = t(GpGp::find_ordered_nn(locs, m))
-  #computations from createVecchia$NNarray in order to create sparse Cholesky using Matrix::sparseMatrix
-  #non_NA indices from createVecchia$NNarray
-  # Nearest neighbors for Vecchia
-  NNarray <- t(GpGp::find_ordered_nn(locs, m))
   NNNoNA <- !is.na(NNarray)
   
   sparse_mat = Matrix::sparseMatrix(
