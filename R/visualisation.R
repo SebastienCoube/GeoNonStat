@@ -19,7 +19,9 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
     layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
   }
   mar_var <- NULL
-  if(mar_var_loss) mar_var = var_loss_percentage.PP(PP)
+  if(mar_var_loss) {
+    mar_var = var_loss_percentage.PP(PP)
+  }
   plot_knots.PP(x = PP, locs = vecchia_approx$locs, mar_var_loss = mar_var)
   if(mar_var_loss) {
     hist(mar_var,

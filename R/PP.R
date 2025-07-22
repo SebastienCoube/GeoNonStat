@@ -80,11 +80,6 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   if(plot) {
     plot.PP(res, vecchia_approx, mar_var_loss=TRUE)
   }
-  mar_var_loss = var_loss_percentage.PP(res)
-  if(mean(mar_var_loss)>10) msg <- "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
-  else if(mean(mar_var_loss)>3) msg <- "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
-  else msg <- "great !"
-  message(round(mean(mar_var_loss), 1), "% of marginal variance on average is lost with the use of a PP.\n This is", msg)
   return(res)
 }
 
@@ -128,7 +123,19 @@ var_loss_percentage.PP = function(x, ...) {
     nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots)
   )), 1, function(x)
     sum(x^2))
-  return((pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100)
+  PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var)/1.000001) * 100
+  mean_mar_var <- mean(PP_mar_var)
+  msg <- if (mean_mar_var > 10) {
+    "quite a bit of loss, and may be fixed by adding more knots or increasing the Matérn range."
+  } else if (mean_mar_var > 3) {
+    "fairly good, but it might be improved by adding more knots or increasing the Matérn range."
+  } else {
+    "great !"
+  }
+  message(round(mean_mar_var, 1), 
+          "% of marginal variance on average is lost with the use of a PP.\nThis is ", msg)
+  
+  return(PP_mar_var)
   # max(0) because of tiny numerical errors
 }
 
