@@ -194,7 +194,6 @@ var_loss_percentage.PP = function(x) {
 #' PP = createPP(vecchia_approx)
 #' covariate_coefficients = c(4, 1, 1, .5)
 #' knots_coeffs = rnorm(PP$n_knots)
-#' par(mfrow = c(1,2))
 #' # multiplying X alone
 #' X = cbind(1, locs, rnorm(nrow(locs)))
 #' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
@@ -226,8 +225,12 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
   if(nrow(Y) != expected_rows) {
     stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
   }
-  if(!permutate_PP_to_obs) locs_idx = seq(vecchia_approx$n_locs)
-  if(permutate_PP_to_obs) locs_idx = vecchia_approx$locs_match
+  
+  if(permutate_PP_to_obs) {
+    locs_idx = vecchia_approx$locs_match
+  } else {
+    locs_idx = seq(vecchia_approx$n_locs)
+  }
   res = matrix(0, length(locs_idx), ncol(Y))
   # Multiply X and Y
   if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
@@ -281,7 +284,6 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' hist(as.vector(res2 - crossprod(
 #'  cbind(X, Matrix::solve(PP$sparse_chol, diag(1, nrow(PP$sparse_chol), PP$n_knots))[-seq(PP$n_knots),][vecchia_approx$locs_match,]), Y
 #' )))
-
  X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx, permutate_PP_to_obs = F)
 {
   Y = as.matrix(Y)

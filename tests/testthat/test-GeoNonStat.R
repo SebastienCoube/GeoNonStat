@@ -1,23 +1,27 @@
-test_that("process_vecchia works", {
-  set.seed(100)
-  size <- 2000
-  observed_locs = cbind(runif(size), runif(size))
-  expect_message(
-  res <- process_vecchia(observed_locs, m=10),
-    "building DAGs and indices for Vecchia approximation"
+set.seed(100)
+size <- 2000
+observed_locs = cbind(runif(size), runif(size))
+
+test_that("createVecchia works", {
+  expect_error(
+    res <- createVecchia(observed_locs, m=10),
+    NA
   )
-  expect_true("list" %in% class(res))
-  expect_named(res, c('n_locs', 'n_obs', 'locs', 'locs_match', 
-                      'locs_match_matrix', 'hctam_scol', 
-                      'hctam_scol_1', 'obs_per_loc', 
+  expect_true(is(res, "list"))
+  expect_named(res, c('n_locs', 'n_obs', 'observed_locs', 'locs', 't_locs', 
+                      'locs_match', 'locs_match_matrix', 
+                      'hctam_scol', 'hctam_scol_1', 
+                      'obs_per_loc', 
                       'NNarray', 'NNarray_non_NA', 
-                      'sparse_chol_i', 'sparse_chol_x_reorder', 
+                      'sparse_chol_i', 'sparse_chol_p', 'sparse_chol_x_reorder', 
                       'locs_partition'))
   expect_identical(res$n_locs, 2000L)
   expect_identical(res$n_obs, 2000L)
-  expect_true(is.numeric(res$locs))
+  expect_identical(res$observed_locs, observed_locs)
   expect_identical(dim(res$locs), c(2000L, 2L))
-  expect_equal(mean(res$locs), 0.5035152, tolerance = 1e-5)
+  expect_identical(colMeans(res$locs), colMeans(observed_locs))
+  expect_identical(res$t_locs, t(res$locs))
+  
   expect_identical(length(res$locs_match), 2000L)
   expect_true(all(res$locs_match %in% seq_len(res$n_locs)))
   
@@ -34,7 +38,7 @@ test_that("process_vecchia works", {
   expect_identical(dim(res$NNarray), c(11L, 2000L))
   expect_identical(length(res$sparse_chol_i), 21945L)
   expect_identical(length(res$sparse_chol_x_reorder), 21945L)
-  expect_identical(dim(res$locs_partition), c(2000L, 1L))
+  expect_identical(dim(res$locs_partition), c(2000L, 2L))
 })
 
 
@@ -54,10 +58,10 @@ test_that("process_PP_priors works as expected whithout PP", {
 
 test_that("process_PP_priors works as expected whith PP", {
   # With PP
-  myPP <- 
-    suppressMessages(
-      createPP(observed_locs = cbind(runif(100), runif(100))) 
-    )
+  suppressMessages({
+    myVecchia <- createVecchia(observed_locs, m=10)
+    myPP <- createPP(myVecchia) 
+  })
   
   expect_message(
     PPPP <- process_PP_prior(myPP, NULL, "example"),
@@ -76,7 +80,7 @@ test_that("process_PP_priors works as expected whith PP", {
   )
   
   expect_error(
-    PPPP <- process_PP_prior(pepito, c(1,2), "tatato"),
+    PPPP <- process_PP_prior(myPP, c(1,2), "tatato"),
     NA
   )
   expect_identical(PPPP, c(1,2))
@@ -85,83 +89,71 @@ test_that("process_PP_priors works as expected whith PP", {
 
 
 test_that("process_transition_kernels return expected result", {
+  init <- -5
   expect_error(
-    res <- process_transition_kernels(),
+    res <- process_transition_kernels(init = init),
     NA
   )
   expect_true(is.list(res))
-  init <- -4
   expect_identical(res, 
                list( range_log_scale_sufficient = init,
                   range_log_scale_ancillary =  init,
-                  range_beta_sufficient = c(init, init),
-                  range_beta_ancillary  = c(init, init),
-                  scale_beta_sufficient_mala = init,
-                  scale_beta_ancillary_mala  = init,
+                  range_beta_sufficient = c(init, init, init, init),
+                  range_beta_ancillary  = c(init, init, init, init),
+                  scale_beta_sufficient_mala = c(init, init),
+                  scale_beta_ancillary_mala  = c(init, init),
                   scale_log_scale_sufficient = init,
                   scale_log_scale_ancillary =  init,
-                  noise_beta_mala = init,
+                  noise_beta_mala = c(init, init),
                   noise_log_scale = init))
 })
 
+set.seed(100)
+suppressMessages({
+  VA <- createVecchia(observed_locs, m=10)
+  PP = createPP(VA, plot=FALSE)
+})
+
 test_that("initialize class GeoNonStat works", {
-  set.seed(100)
-  size <- 2000
-  locs = cbind(runif(size), runif(size))
-  PP = PP(
-    observed_locs = locs[seq(size),], # spatial sites
-    matern_range = .1,
-    knots = 50, # number of knots
-    m = 15 # number of NNGP parents
-  )
-  range_beta = rbind(c(-4, 0, 0), # intercept
-                     matrix(.5*rnorm(150), 50)
-  ) %*% diag(c(1, 2,.5))
-  NNarray_aniso = GpGp::find_ordered_nn(locs[seq(size),], 10)
-  
-  # getting the coefficients
-  chol_precision = compute_sparse_chol(
-    range_beta = range_beta, # range parameters
-    NNarray = NNarray_aniso, # Vecchia approx DAG
-    locs = locs[seq(size),], # spatial coordinates
-    range_X = matrix(1, size), # covariates for the range (just an intercept)
-    PP = PP, use_PP = T, # predictive process
-    nu = 1.5, # smoothness
-    anisotropic = T # anisotropy
-  )[[1]]
-  # putting coefficients in precision Cholesly
-  chol_precision = Matrix::sparseMatrix(
-    x = chol_precision[!is.na(NNarray_aniso)], 
-    i = row(NNarray_aniso)[!is.na(NNarray_aniso)], 
-    j = (NNarray_aniso)[!is.na(NNarray_aniso)], 
-    triangular = T
-  )
-  # sampling the anisotropic process
-  seed_vector = rnorm(size)
-  aniso_latent_field = as.vector(Matrix::solve(chol_precision, seed_vector)) 
-  aniso_observed_field = aniso_latent_field + .8*rnorm(size)
-  #plot_pointillist_painting(locs, aniso_latent_field)
+  set.seed(123)
+  obs_field <- rnorm(nrow(observed_locs))
   expect_message(
     myobj <- GeoNonStat(
-      observed_locs = locs[seq(size),], 
-      observed_field = aniso_observed_field, 
-      nu = 1.5, 
-      n_chains = 5,
-      range_PP = TRUE, 
-      PP = PP, # use PP for range
-      anisotropic = TRUE # Covariance will be anisotropic
+      vecchia_approx = VA,
+      observed_field = obs_field
     ),
-    "range_log_scale_prior was automatically set to an"
+    "Setup done,"
   )
   
-  expect_true(is(myobj, "GeoNonStat"))
-  expect_named(myobj, c('data', 'hierarchical_model', 'vecchia_approx', 'states', 'records', 'seed', 'iterations'))
+  expect_s3_class(myobj, "GeoNonStat")
+  expect_named(myobj, c('covariates', 'observed_field', 
+                        'hierarchical_model', 'vecchia_approx', 
+                        'states', 'records', 'seed', 'checkpoints'))
+  expect_true(is(myobj$covariates, "list"))
+  expect_true(is(myobj$observed_field, "numeric"))
+  expect_true(is(myobj$hierarchical_model, "list"))
+  expect_true(is(myobj$vecchia_approx, "list"))
+  expect_true(is(myobj$states, "list"))
+  expect_true(is(myobj$records, "list"))
+  expect_true(is(myobj$seed, "numeric"))
+  expect_true(is(myobj$checkpoints, "matrix"))
+  
+  # covariates
+  expect_named(myobj$covariates,c('X', 'range_X', 'scale_X', 'noise_X'))
+  
+  # observed_filed
+  expect_identical(myobj$observed_field, obs_field)
+  
+  # hierarchical_model
+  expect_named(myobj$hierarchical_model,c('noise_PP', 'noise_log_scale_bounds', 
+                                          'scale_PP', 'scale_log_scale_bounds', 
+                                          'range_PP', 'range_log_scale_bounds', 
+                                          'anisotropic', 'matern_smoothness', 
+                                          'beta_priors', 
+                                          'range_beta0_mean', 'range_beta0_var', 'noise_beta0_mean', 'noise_beta0_var', 'scale_beta0_mean', 'scale_beta0_var', 
+                                          'naive_ols'))
   
   # data
-  expect_named(myobj$data, c('locs', 'observed_field', 'observed_locs', 'covariates'))
-  expect_identical(myobj$data$observed_locs, locs[seq(size),])
-  expect_identical(myobj$data$observed_field, aniso_observed_field)
-  expect_identical(mean(myobj$data$locs), mean(locs[seq(size),]))
-  
-  expect_named(myobj$data$covariates,c('X', 'range_X', 'scale_X', 'noise_X'))
+  expect_identical(myobj$vecchia_approx, VA)
+  # TODO finir les tests
 })

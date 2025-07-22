@@ -65,7 +65,7 @@ createVecchia <- function(observed_locs, m = 12){
     n_obs = n_obs,
     observed_locs = observed_locs, 
     locs = locs, 
-    t_locs = t(locs), 
+    t_locs = t(locs),  # TODO : A mon avis ça ne sert à rien de stocker ça. 
     locs_match = locs_match,
     locs_match_matrix = locs_match_matrix,
     hctam_scol = hctam_scol,
@@ -399,8 +399,7 @@ process_transition_kernels <- function(init=-4, hm){
   # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
   # have an ancillary and a sufficient version when applicable
   # range
-  res = 
-  list(
+  res =   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
     range_beta_sufficient = rep(init, 4),
@@ -414,6 +413,7 @@ process_transition_kernels <- function(init=-4, hm){
     noise_beta_mala = rep(init, 2),
     noise_log_scale = init
   )
+
   return(res)
 }
 
