@@ -33,7 +33,6 @@ plot.PP <- function(PP, vecchia = NULL, mar_var_loss = TRUE, separate=FALSE) {
 }
 
 
-
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class \code{PP}
 #' @param locs locations
