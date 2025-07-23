@@ -295,8 +295,7 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
       stop("vecchia_approx should have the same number of locations as the locations of PP")
     }
   }
-   
-  Y = as.matrix(Y)
+  if(!is.matrix(Y)) Y = as.matrix(Y)
   res = crossprod(x = X, y = Y)
   if(!is.null(PP))
   {
