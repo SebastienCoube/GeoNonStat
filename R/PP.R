@@ -217,6 +217,14 @@ var_loss_percentage.PP = function(x) {
 #'                        vecchia_approx = vecchia_approx
 #'                        )
 #' plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
+#' 
+#' # multiplying 
+#' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+#' res5 <- X_PP_mult_right(X = NULL, PP = PP, 
+#'                        Y = diag(1, PP$n_knots), 
+#'                        vecchia_approx = vecchia_approx,
+#'                        permutate_PP_to_obs = T
+#'                        )
 X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
@@ -235,13 +243,20 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
     locs_idx = seq(vecchia_approx$n_locs)
   }
   res = matrix(0, length(locs_idx), ncol(Y))
+  
   # Multiply X and Y
-  if(!is.null(X)) res = res + X  %*% Y[seq(ncol(X)),]
+  xrow_offset <- 0
+  if(!is.null(X)) {
+    xrow_offset <- ncol(X)
+    res = res + X  %*% Y[seq_len(xrow_offset), , drop=FALSE]
+  } 
   if(!is.null(PP)) {
-    if(!is.null(X)) Y =  Y[-seq(ncol(X)),, drop = F] 
+    if(xrow_offset>0) Y =  Y[-seq_len(xrow_offset), , drop = FALSE]  # remove X rows from Y if needed
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
     V[seq(nrow(Y)),] = Y
-    res = res + as.matrix(Matrix::solve(PP$sparse_chol, V, triangular = T))[-seq(nrow(PP$knots)),,drop =F][locs_idx,,drop =F]
+    solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
+    PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
+    res <- res + PP_result[locs_idx, , drop = FALSE]
   }
   if(ncol(res)==3)colnames(res) = c("det", "an", "an")
   if(ncol(res)==1)colnames(res) = "det"
