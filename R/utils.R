@@ -343,21 +343,18 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
- beta = matrix(rnorm(300), 100)
- beta1 = beta 
- #derived_idx=  cbind(1,1)
- #derived_idx=  cbind(1,2)
- #derived_idx=  cbind(2,1)
- # derived_idx=  cbind(10,3)
- # beta1[derived_idx] = beta1[derived_idx]+ .0001
- # (
- #  beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6)) -
- #   beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))
- # )*10000
- # beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))[derived_idx]
- 
-
- 
+#' beta = matrix(rnorm(300), 100)
+#' beta1 = beta 
+#' derived_idx=  cbind(1,1)
+#' derived_idx=  cbind(1,2)
+#' derived_idx=  cbind(2,1)
+#'  derived_idx=  cbind(10,3)
+#'  beta1[derived_idx] = beta1[derived_idx]+ .0001
+#'  (
+#'   beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6)) -
+#'    beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))
+#'  )*10000
+#'  beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))[derived_idx]
  beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
