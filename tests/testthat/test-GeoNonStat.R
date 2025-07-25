@@ -56,8 +56,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = X, 
                              vecchia_approx = vecchia_approx, 
                              PP = NULL, 
-                             covariate_name = NULL, 
-                             one_obs_per_site = F),
+                             covariate_name = "X"),
     NA
   )
   expect_true(is(res, "list"))
@@ -86,8 +85,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = NULL, 
                               vecchia_approx, 
                               PP = PP, 
-                              covariate_name = "test_covariate", 
-                              one_obs_per_site = F),
+                              covariate_name = "X"),
     NA
   )
   
@@ -96,8 +94,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = NULL, 
                              vecchia_approx, 
                              PP = NULL, 
-                             covariate_name = "test_covariate", 
-                             one_obs_per_site = F),
+                             covariate_name = "X"),
     NA
   )
   
@@ -106,8 +103,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = X, 
                               vecchia_approx, 
                               PP = PP, 
-                              covariate_name = "test_covariate", 
-                              one_obs_per_site = F),
+                              covariate_name = "X"),
     NA
   )
 
@@ -117,8 +113,7 @@ test_that("process_covariates work as expected", {
   res <- process_covariates(X = X, 
                             vecchia_approx, 
                             PP = NULL, 
-                            covariate_name = "test_covariate", 
-                            one_obs_per_site = T),
+                            covariate_name = "range_X"),
   NA)
 
 })

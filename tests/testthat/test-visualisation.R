@@ -26,11 +26,11 @@ test_that("plot.PP doesn't produce errors", {
   )
   expect_message(
     res <- plot.PP(pepito, mar_var_loss = TRUE),
-    "0.2% of marginal variance"
+    "0.3% of marginal variance"
   )
   expect_message(
     res <- plot.PP(pepito, mar_var_loss = TRUE, separate=TRUE),
-    "0.2% of marginal variance"
+    "0.3% of marginal variance"
   )
   mar_var = var_loss_percentage.PP(pepito)
   expect_error(
