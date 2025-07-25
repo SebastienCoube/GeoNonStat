@@ -1,3 +1,24 @@
+naive_greedy_coloring = function(M)
+{
+  #number of nodes
+  n_obs = nrow(M)
+  #deducting degrees
+  degrees = as.vector(rep(1, n_obs)%*%M)
+  #getting adjacent nodes of a given node
+  idx = split(M@i+1, rep(seq_along(diff(M@p)),diff(M@p)))
+  #creating a color * node matrix of incompatibilities
+  incompatibilities = matrix(0, n_obs+1, max(degrees))
+  cols = rep(0, n_obs)
+  
+  for(i in seq(n_obs))
+  {
+    cols[i] = match(0, incompatibilities[i,])
+    incompatibilities[idx[[i]],cols[i]] = 1
+  }
+  return(cols)
+}
+
+
 #' Vecchia approximation setup
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
@@ -78,6 +99,19 @@ createVecchia <- function(observed_locs, m = 12, ncores=1){
   
   # Partitioning locations using parallel kmeans for field update
   locs_partition <- generate_location_partitions(locs, n_locs, ncores=ncores)
+  
+  markov_mat = Matrix::crossprod(sparse_mat)
+  markov_mat@x[]=1
+  locs_partition_coloring = lapply(
+    split(locs_partition, col(locs_partition)), 
+    function(x){
+      M = Matrix::sparseMatrix(i = seq(length(x)), j = x, x = 1)
+      return(naive_greedy_coloring(Matrix::t(M) %*% markov_mat %*% M))
+    })
+  
+  for(i in seq(ncol(locs_partition))){
+    locs_partition[,i] = locs_partition_coloring[[i]][locs_partition[,i]]
+  }
   
   return(list(
     n_locs = n_locs,
@@ -874,3 +908,4 @@ detailed_summary <- function(partobject){
                    )))
   return(sumdata)
 }
+

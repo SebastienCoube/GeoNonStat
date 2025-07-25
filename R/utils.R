@@ -1,12 +1,32 @@
 
+naive_greedy_coloring = function(M)
+{
+  #number of nodes
+  n_obs = nrow(M)
+  #deducting degrees
+  degrees = as.vector(rep(1, n_obs)%*%M)
+  #getting adjacent nodes of a given node
+  idx = split(M@i+1, rep(seq_along(diff(M@p)),diff(M@p)))
+  #creating a color * node matrix of incompatibilities
+  incompatibilities = matrix(0, n_obs+1, max(degrees))
+  cols = rep(0, n_obs)
+  
+  for(i in seq(n_obs))
+  {
+    cols[i] = match(0, incompatibilities[i,])
+    incompatibilities[idx[[i]],cols[i]] = 1
+  }
+  return(cols)
+}
+
 
 decompress_chol = function(vecchia_approx, compressed_sparse_chol){
-  return(Matrix::sparseMatrix(
+  Matrix::sparseMatrix(
     i = vecchia_approx$sparse_chol_i, 
     p = vecchia_approx$sparse_chol_p, 
     x = compressed_sparse_chol[,1,][vecchia_approx$sparse_chol_x_reorder], 
     triangular = T
-  )) 
+  ) 
 }
 
 
@@ -276,31 +296,41 @@ compute_sparse_chol = function(range_beta,
 #' bp = diag(exp(rnorm(5)), 5, 5)
 #' ls = rnorm(1)
 #' # TODO a changer beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
+
+locs = cbind(runif(10000), runif(10000))
+X_range = cbind(locs, locs^2)
+V = createVecchia(locs)
+PP = createPP(V)
+GNS = GeoNonStat(vecchia_approx = V, observed_field = rnorm(nrow(locs)), range_PP = PP, range_X = as.data.frame(X_range))
+
+GNS$covariates$range_X$crossprod_X_locs[seq()]
+GNS$hierarchical_model$range_beta0_mean 
+
+
+
 beta_prior_log_dens = function(beta, 
-                               n_PP, 
+                               X, 
                                beta0_mean,
                                beta0_var,
-                               chol_crossprod_X, 
                                log_scale){
   PP_prior = 0
   if(n_PP>0) 
   {
-    scale_mat = GeoNonStat::expmat(-log_scale)
+    scale_mat = expmat(-log_scale)
     PP_prior = (
       # PP coefficients follow N(0, scale_mat)
       +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
       -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
     )
   }
-  chol_crossprod_X_ = chol_crossprod_X[seq(nrow(beta)-n_PP),seq(nrow(beta)-n_PP),drop = F]
-  chol_crossprod_X_[1,] = chol_crossprod_X_[1,]/chol_crossprod_X_[1,1]
-  M = solve(chol_crossprod_X_)
   
   return(
-    PP_prior + 
-      sum(
-        -.5 * (M %*% beta[seq(nrow(beta)-n_PP),] - c(beta0_mean, rep(0, length(beta[seq(nrow(beta)-n_PP),])-1)))^2/c(beta0_var, rep(10, length(beta[seq(nrow(beta)-n_PP),])-1))
-      )  
+    PP_prior +  sum(
+      c(
+      - .5 * (beta[1,1] - beta0_mean)^2 / beta0_var,
+      - .5 * (beta[seq(nrow(beta) - n_PP),][-1])^2 * .01
+      )
+    )
   )
 }
 
@@ -317,51 +347,38 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
-#' beta = matrix(rnorm(10))
-#' bm = matrix(rnorm(5), 5, 1)
-#' bp = diag(exp(rnorm(5)), 5, 5)
-#' ls = rnorm(1)
-#' # TODO q corriger beta_prior_log_dens_derivative(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
-beta_prior_log_dens_derivative = 
+ beta = matrix(rnorm(300), 100)
+ beta1 = beta 
+ #derived_idx=  cbind(1,1)
+ #derived_idx=  cbind(1,2)
+ #derived_idx=  cbind(2,1)
+ # derived_idx=  cbind(10,3)
+ # beta1[derived_idx] = beta1[derived_idx]+ .0001
+ # (
+ #  beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6)) -
+ #   beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))
+ # )*10000
+ # beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))[derived_idx]
+ 
+
+ 
+ beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
            beta0_var,
-           chol_crossprod_X, 
            log_scale){
-    chol_crossprod_X_ = chol_crossprod_X[seq(nrow(beta)-n_PP),seq(nrow(beta)-n_PP),drop = F]
-    chol_crossprod_X_[1,] = chol_crossprod_X_[1,]/chol_crossprod_X_[1,1]
-    M = solve(chol_crossprod_X_)
-    res = t(M) %*% matrix(
-      -(M%*%beta[seq(nrow(beta)-n_PP),,drop=F] - c(beta0_mean, rep(0, length(beta[seq(nrow(beta)-n_PP),,drop=F])-1)))/c(beta0_var, rep(10, length(beta[seq(nrow(beta)-n_PP),,drop=F])-1)),
-      ncol = ncol(beta)
-    ) 
+    res = beta[seq(nrow(beta)-n_PP),]
+    res[1] = -(res[1] - beta0_mean)/beta0_var
+    res[-1] = -(res[-1])/100
     if(n_PP>0) 
     {
       scale_mat = GeoNonStat::expmat(-log_scale)
       res = rbind(res, 
-                  -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
+                  beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
       )
     }
     res
 }
-
-
-
-## beta = matrix(rnorm(10))
-## n_PP = 5
-## beta_mean = matrix(rnorm(5), 5, 1)
-## beta_precision = diag(exp(rnorm(5)), 5, 5)
-## log_scale = rnorm(1)
-## 
-## beta_prior_log_dens(beta = beta, n_PP = 5, beta_mean = beta_mean, beta_precision = beta_precision, log_scale = log_scale)
-## beta_ = beta; beta_[10]=beta_[10]+.0001
-## beta_prior_log_dens_derivative(beta = beta, n_PP = 5, beta_mean = beta_mean, beta_precision = beta_precision, log_scale = log_scale)
-## 10000*
-##   (
-##   beta_prior_log_dens(beta = beta_, n_PP = 5, beta_mean = beta_mean, beta_precision = beta_precision, log_scale = log_scale)-
-##   beta_prior_log_dens(beta = beta, n_PP = 5, beta_mean = beta_mean, beta_precision = beta_precision, log_scale = log_scale)
-##   )
-
 
 #PP$idx : match between the non redundant locations of PP and the redundant observed locations
 #locs_idx : match between the redundant observed locations and those of X
