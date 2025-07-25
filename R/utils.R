@@ -315,7 +315,6 @@ beta_prior_log_dens = function(beta,
 #' @param log_scale TODO
 #'
 #' @returns an array
-#' @export
 #'
 #' @examples
 #' beta = matrix(rnorm(10))
@@ -374,7 +373,6 @@ beta_prior_log_dens_derivative =
 #' @param eps a numeric value, default to 0.00001
 #'
 #' @returns an 3 dimensional array
-#' @export
 #'
 #' @examples
 #' derivative_chol_expmat(c(1,2,3, 3,2,4))
@@ -399,7 +397,6 @@ derivative_chol_expmat = function(coords, eps=0.00001)
 #' @param coordsTODO
 #'
 #' @returns an array
-#' @export
 #'
 #' @examples
 #' field <- array(c(1,2,3), dim=c(1,3))
@@ -427,7 +424,6 @@ derivative_field_wrt_scale = function(field, coords)
 #' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
 #' @param Y the matrix who multiplies the covariates and the PP
 #'
-#' @export
 #' @returns a matrix
 #' 
 #' @examples
@@ -495,7 +491,8 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
     res = res + X  %*% Y[seq_len(xrow_offset), , drop=FALSE]
   } 
   if(!is.null(PP)) {
-    if(xrow_offset>0) Y =  Y[-seq_len(xrow_offset), , drop = FALSE]  # remove X rows from Y if needed
+    # remove X rows from Y if needed
+    if(xrow_offset>0) Y =  Y[-seq_len(xrow_offset), , drop = FALSE] 
     V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
     V[seq(nrow(Y)),] = Y
     solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
@@ -517,7 +514,6 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #'
 #'
 #' @returns a matrix
-#' @export
 #'
 #' @examples
 #' set.seed(123)
@@ -568,7 +564,8 @@ X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_
         )[1:PP$n_knots,,drop=F]
       )
   }
-  as.matrix(res)
+  if(!is.matrix(res)) res <- as.matrix(res)
+  return(res)
 }
 
 

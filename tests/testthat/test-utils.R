@@ -1,9 +1,10 @@
 set.seed(123)
-vecchia_approx = createVecchia(cbind(runif(1000), runif(1000)), 10, ncores = 1)
+locs <- cbind(runif(1000), runif(1000))
+vecchia_approx = createVecchia(locs, 10, ncores = 1)
 
 set.seed(123)
 PP = createPP(vecchia_approx, plot=FALSE)
-X = matrix(rnorm(500), 1000)
+X = matrix(rnorm(500), nrow(locs))
 Y = matrix(rnorm(30*nrow(X)), nrow(X))
 
 
@@ -39,7 +40,7 @@ test_that("expmat produce expected output", {
 })
 
 test_that("symmat produce expected output", {
-  # 1x1 matrix
+  # 1x1 matrix
   coords <- c(1)
   expect_error(
     res <- symmat(coords), 
@@ -49,7 +50,7 @@ test_that("symmat produce expected output", {
   expect_identical(dim(res), c(1L,1L))
   expect_equal(res, matrix(c(1)))
   
-  # 2x2 matrix
+  # 2x2 matrix
   coords <- c(1,2,3)
   expect_error(
     res <- symmat(coords), 
@@ -61,7 +62,7 @@ test_that("symmat produce expected output", {
                matrix(c(1,3,3,2),
                       nrow=2))
   
-  # 3x3 matrix
+  # 3x3 matrix
   coords <- c(1,2,3,4,5,6)
   expect_error(
     res <- symmat(coords), 
@@ -82,78 +83,57 @@ test_that("symmat produce expected output", {
 })
 
 
-# 
-# test_that("variance_field produce expected output", {
-#   # Here we test only structure since results are directly extracted from X_PP_mult_right
-#   set.seed(123)
-#   locs = cbind(runif(100), runif(100))
-#   n_PP = 50
-#   PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
-#   X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
-# 
-#   # When using PP
-#   expect_error(
-#     res <- variance_field(beta = rnorm(n_PP), 
-#                           PP = PP, 
-#                           use_PP = TRUE, 
-#                           X = X),
-#     NA
-#   )
-#   
-#   expect_true(is(res, "numeric"))
-#   expect_length(res, 100)
-#   
-#   # When not using PP
-#   expect_error(
-#     res <- variance_field(beta = rnorm(n_PP), 
-#                           PP = PP, 
-#                           use_PP = FALSE, 
-#                           X = X),
-#     NA
-#   )
-#   expect_true(is(res, "numeric"))
-#   expect_length(res, 100)
-# })
-
 # test_that("compute_sparse_chol produce expected output", {
 #   set.seed(123)
-#   locs = cbind(seq(100)/10, 0)
-#   NNarray = GpGp::find_ordered_nn(locs, 10)
+#   X <- data.frame(cbind(runif(vecchia_approx$n_obs), rnorm(vecchia_approx$n_obs), rpois(vecchia_approx$n_obs, 5)))
+#   tt <- process_covariates(
+#     X = X, 
+#     vecchia_approx = vecchia_approx, 
+#     covariate_name = "test_covariate")
+#   
+#   tt <- process_covariates(X = range_X, vecchia_approx = vecchia_approx, PP=PP, covariate_name = NULL)
+#   range_beta = matrix(rnorm(1 + PP$n_knots))
+#   compute_sparse_chol(range_beta = range_beta, 
+#                       vecchia_approx = vecchia_approx, 
+#                       range_X = range_X, 
+#                       PP = PP, 
+#                       matern_smoothness = 1.5, 
+#                       compute_derivative = T)
 #   
 #   expect_error(
 #     res <- compute_sparse_chol(
-#       range_beta = matrix(.5/sqrt(2),1,1), 
-#       NNarray = NNarray, 
+#       range_beta = matrix(.5/sqrt(2),1,1),
+#       NNarray = NNarray,
 #       locs = locs,
 #       nu = 2
 #     ),
 #     "nu must be equal to 0.5 or 1.5"
 #   )
-#   
+# 
 #   set.seed(123)
 #   expect_error(
 #     res <- compute_sparse_chol(
-#               range_beta = matrix(.5/sqrt(2),1,1), 
-#               NNarray = NNarray, 
+#               range_beta = matrix(.5/sqrt(2),1,1),
+#               NNarray = NNarray,
 #               locs = locs,
-#               use_PP = F, 
-#               num_threads = 1, 
+#               use_PP = F,
+#               num_threads = 1,
 #               anisotropic = F,
-#               range_X = matrix(1, nrow(locs), 1), 
+#               range_X = matrix(1, nrow(locs), 1),
 #               nu = 1.5
 #             ),
 #     NA
 #   )
 #   expect_type(res, "list")
 #   expect_length(res, 2)
-#   
+# 
 #   expect_true(is(res[[1]], "array"))
 #   expect_identical(dim(res[[1]]), c(100L, 11L))
 #   expect_equal(mean(res[[1]]), 0.01397719, tolerance = 1e-7)
 #   expect_equal(res[[1]][2,1:3], c(13.8705735, -13.8310216, 0.00000))
-#   
+# 
 #   expect_type(res[[2]], "list")
-#   expect_true(is(res[[2]][[1]], "array")) 
+#   expect_true(is(res[[2]][[1]], "array"))
 #   expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
 #   expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
 #   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))

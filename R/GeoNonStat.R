@@ -178,33 +178,49 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
 process_covariates = function(X, vecchia_approx, 
-                              PP = NULL, covariate_name = "<missing covariate name>", 
+                              PP = NULL, covariate_name = NULL, 
                               one_obs_per_site = F){
-  if (!is.data.frame(X) & !is.null(X)) stop(paste(covariate_name, "should be a data.frame or NULL"))
-  if (!is.null(X))if(nrow(X)!=nrow(vecchia_approx$observed_locs)) stop(paste(covariate_name, "should have the same number of rows as the vecchia_approx$duplicated_locs"))
-  
   # covariates in the observed field #
   res = list()
-  # creating model matrix
-  # extracting a model matrix and storing the original argument
+  
+  if(is.null(covariate_name)) covariate_name <- "X"
   if(!is.null(X)){
+    if (!is.data.frame(X)) 
+      stop(paste(covariate_name, "should be a data.frame or NULL"))
+    if(nrow(X)!=nrow(vecchia_approx$observed_locs))
+      stop(paste(covariate_name, "should have the same number of rows as the vecchia_approx$observed_locs"))
+    
+    # creating model matrix
+    # extracting a model matrix and storing the original argument
     res$arg = X
     res$X = model.matrix(~., X)
   }
+
   # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
   if(is.null(X)){
     res$arg = "No covariates were provided"
-    res$X = matrix(model.matrix(~., as.data.frame(rep(1, vecchia_approx$n_obs)))[,-1], vecchia_approx$n_obs)
+    res$X = matrix(1, vecchia_approx$n_obs)
   }
   colnames(res$X)[1] = "(Intercept)"
-  if(det(crossprod(res$X))<1e-10)stop(paste(covariate_name, "does not induce an independent collection of covariates (det (XTX) < 1e-10). In particular, remember that the Intercept is automatically added."))
+  
+  if(det(crossprod(res$X))<1e-10)
+    stop(covariate_name, 
+         " does not induce an independent collection of covariates ",
+         "(det (XTX) < 1e-10). In particular, remember that the Intercept is ", 
+         "automatically added.")
   
   X_ = res$X
-  if(!is.null(PP)) X_ = cbind(res$X, X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, Y = diag(1, PP$n_knots)))
+  if(!is.null(PP)) 
+    X_ = cbind(res$X, 
+               X_PP_mult_right(PP = PP, 
+                               vecchia_approx = vecchia_approx, 
+                               permutate_PP_to_obs = T, 
+                               Y = diag(1, PP$n_knots)))
   # pre- computing XTX
   crossprod_X = crossprod(X_)  + diag(1e-10, ncol(X_), ncol(X_))
   res$chol_crossprod_X = chol(crossprod_X)
   res$n_regressors = ncol(res$X)
+  
   # identifying  which X do not vary within location
   res$which_locs = c()
   duplicated_locs = duplicated(vecchia_approx$observed_locs)
@@ -215,19 +231,30 @@ process_covariates = function(X, vecchia_approx,
   }
   if(one_obs_per_site){
     if (!identical(res$which_locs, seq(ncol(res$X))))
-      stop(paste(covariate_name, "cannot vary within one spatial location of vecchia_approx$duplicated_locs"))
+      stop(covariate_name, 
+           " cannot vary within one spatial location of ", 
+           "vecchia_approx$duplicated_locs")
   }
-  res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], ncol = length(res$which_locs))
+  
+  res$X_locs = matrix(res$X[vecchia_approx$hctam_scol_1,res$which_locs], 
+                      ncol = length(res$which_locs))
   colnames(res$X_locs) = colnames(res$X)[res$which_locs]
   X_locs_ = res$X_locs
-  if(!is.null(PP))X_locs_ =cbind(X_locs_, X_PP_mult_right(PP = PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F, Y = diag(1, PP$n_knots)))
+  if(!is.null(PP)) {
+    X_locs_ =cbind(X_locs_, 
+                   X_PP_mult_right(PP = PP, 
+                                   vecchia_approx = vecchia_approx, 
+                                   permutate_PP_to_obs = F, 
+                                   Y = diag(1, PP$n_knots)))
+  }
   res$crossprod_X_locs = crossprod(X_locs_) + diag(1e-10, ncol(X_locs_), ncol(X_locs_))
   res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
+  
   if(one_obs_per_site){
     res$X = NULL
     res$chol_crossprod_X = NULL
   }
-  res
+  return(res)
 }
 
 #' Safety checks and automatic treatment of PP objects and their marginal variance bounds
