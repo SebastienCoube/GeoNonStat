@@ -1,4 +1,3 @@
-
 naive_greedy_coloring = function(M)
 {
   #number of nodes
@@ -296,18 +295,15 @@ compute_sparse_chol = function(range_beta,
 #' bp = diag(exp(rnorm(5)), 5, 5)
 #' ls = rnorm(1)
 #' # TODO a changer beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
-
-locs = cbind(runif(10000), runif(10000))
-X_range = cbind(locs, locs^2)
-V = createVecchia(locs)
-PP = createPP(V)
-GNS = GeoNonStat(vecchia_approx = V, observed_field = rnorm(nrow(locs)), range_PP = PP, range_X = as.data.frame(X_range))
-
-GNS$covariates$range_X$crossprod_X_locs[seq()]
-GNS$hierarchical_model$range_beta0_mean 
-
-
-
+#' locs = cbind(runif(10000), runif(10000))
+#' X_range = cbind(locs, locs^2)
+#' V = createVecchia(locs)
+#' PP = createPP(V)
+#' GNS = GeoNonStat(vecchia_approx = V, observed_field = rnorm(nrow(locs)), range_PP = PP, range_X = as.data.frame(X_range))
+#' 
+#' GNS$covariates$range_X$crossprod_X_locs[seq()]
+#' GNS$hierarchical_model$range_beta0_mean 
+# 
 beta_prior_log_dens = function(beta, 
                                X, 
                                beta0_mean,
