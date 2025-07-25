@@ -55,8 +55,7 @@ test_that("process_covariates work as expected", {
   expect_error(
     res <- process_covariates(X = X, 
                              vecchia_approx = vecchia_approx, 
-                             PP = NULL, 
-                             covariate_name = "X"),
+                             PP = NULL, one_obs_per_locs = FALSE),
     NA
   )
   expect_true(is(res, "list"))
@@ -85,7 +84,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = NULL, 
                               vecchia_approx, 
                               PP = PP, 
-                              covariate_name = "X"),
+                              one_obs_per_locs = FALSE),
     NA
   )
   
@@ -94,7 +93,7 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = NULL, 
                              vecchia_approx, 
                              PP = NULL, 
-                             covariate_name = "X"),
+                             one_obs_per_locs = FALSE),
     NA
   )
   
@@ -103,17 +102,17 @@ test_that("process_covariates work as expected", {
     res <- process_covariates(X = X, 
                               vecchia_approx, 
                               PP = PP, 
-                              covariate_name = "X"),
+                              one_obs_per_locs = FALSE),
     NA
   )
 
-  # one obs of x per loc
+  # one obs of x per loc (no duplicates)
   X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
   expect_error(
   res <- process_covariates(X = X, 
                             vecchia_approx, 
                             PP = NULL, 
-                            covariate_name = "range_X"),
+                            one_obs_per_locs = TRUE),
   NA)
 
 })

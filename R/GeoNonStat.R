@@ -172,11 +172,9 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' @param X a data.frame with as many rows as vecchia_approx$observed_locs
 #' @param vecchia_approx TODO
 #' @param PP NULL, 
-#' @param covariate_name character, one of `X`, `noise_X`, `scale_X`, `range_X` 
-#' @details
-#' Some covariates may be constrained not to vary within a single spatial 
-#' location. The X_range and X_scale variables must be constrained. 
-#' The X_noise and X_scale variables do not need to be constrained.
+#' @param one_obs_per_locs (logical, default to FALSE). Should the covariate be 
+#' constrained to not vary within a spatial location 
+#' (should be TRUE to range_X and scale_X)
 #' 
 #' @returns a list
 #'
@@ -188,42 +186,38 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' observed_locs = unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
-#' PP = createPP(vecchia_approx)
+#' PP = createPP(vecchia_approx, plot=FALSE)
 #' 
 #' # Good cases ######################
 #' # no PP, an X
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = F)
 #' # no PP, no X
-#' res = process_covariates(X = NULL, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+#' res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_site = F)
 #' # PP and X
-#' res = process_covariates(X = X, vecchia_approx, PP = PP, covariate_name = "test_covariate", one_obs_per_site = F)
+#' res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_site = F)
 #' # one obs of x per loc
 #' X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = T)
 #' 
 #' # Errors ##########################
 #' # one obs of x per loc
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = T)
 #' # bad X number of rows
 #' X = X[-1,]
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = T)
 #' # bad X format
 #' X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = T)
 #' # not independent covariates
 #' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_site = T)
 process_covariates = function(X, 
                               vecchia_approx, 
                               PP = NULL, 
-                              covariate_name = c("X", "noise_X", "scale_X", "range_X")){
-  
-  covariate_name <- match.arg(covariate_name)
-  one_obs_per_site <- switch(covariate_name,
-                             range_X = TRUE,
-                             scale_X = TRUE,
-                             FALSE)
+                              one_obs_per_locs = FALSE){
+  covariate_name <- as.list(match.call())$X
+  if(is.null(X)) covariate_name <- X
   res = list()
   
   # covariates in the observed field #
@@ -474,10 +468,10 @@ process_hierarchical_model <- function(vecchia_approx,
 #' PP = createPP(vecchia_approx)
 #' X = as.data.frame(cbind(rnorm(nobs), runif(nobs)))
 #' covariates = list()
-#' covariates$X = process_covariates(X, vecchia_approx = vecchia_approx)
-#' covariates$X_range = process_covariates(X, vecchia_approx = vecchia_approx, covariate_name="range_X")
-#' covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx, covariate_name="noise_X")
-#' covariates$X_scale = process_covariates(X, vecchia_approx = vecchia_approx, covariate_name="scale_X")
+#' covariates$X = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=FALSE)
+#' covariates$X_range = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=TRUE)
+#' covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=FALSE)
+#' covariates$X_scale = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=TRUE)
 #' 
 #' hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
@@ -533,10 +527,10 @@ process_transition_kernels <- function(init=-4, hm){
 #' PP = createPP(vecchia_approx)
 #' 
 #' covariates = list(
-#'   X = process_covariates(X = X, vecchia_approx), 
-#'   scale_X = process_covariates(X = X, vecchia_approx, PP, covariate_name="scale_X"),
-#'   noise_X = process_covariates(X = X, vecchia_approx, PP, covariate_name="noise_X"),
-#'   range_X = process_covariates(X = X, vecchia_approx, PP, covariate_name="range_X")
+#'   X = process_covariates(X = X, vecchia_approx, one_obs_per_locs=FALSE), 
+#'   scale_X = process_covariates(X = X, vecchia_approx, PP, one_obs_per_locs=TRUE),
+#'   noise_X = process_covariates(X = X, vecchia_approx, PP, one_obs_per_locs=TRUE),
+#'   range_X = process_covariates(X = X, vecchia_approx, PP, one_obs_per_locs=FALSE)
 #' )
 #' hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
@@ -791,16 +785,16 @@ GeoNonStat <-
     covariates = list()
     # fixed effects for response
     covariates$X = process_covariates(X = X, vecchia_approx = vecchia_approx, 
-                                      PP = NULL, covariate_name = "X")
+                                      PP = NULL, one_obs_per_locs=FALSE)
     # fixed effects and PP for range
     covariates$range_X = process_covariates(X = range_X, vecchia_approx = vecchia_approx, 
-                                      PP = range_PP, covariate_name = "range_X")
+                                      PP = range_PP, one_obs_per_locs=TRUE)
     # fixed effects and PP for scale
     covariates$scale_X = process_covariates(X = scale_X, vecchia_approx = vecchia_approx, 
-                                      PP = scale_PP, covariate_name = "scale_X")
+                                      PP = scale_PP, one_obs_per_locs=TRUE)
     # fixed effects and PP for noise
     covariates$noise_X = process_covariates(X = noise_X, vecchia_approx = vecchia_approx, 
-                                      PP = noise_PP, covariate_name = "noise_X")
+                                      PP = noise_PP, one_obs_per_locs=FALSE)
     
     # Info about hierarchical model ##############################################################
     hierarchical_model <- process_hierarchical_model(vecchia_approx = vecchia_approx,
