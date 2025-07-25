@@ -211,7 +211,7 @@ compute_sparse_chol = function(range_beta,
   return(res)
 }
 
-### # checking equivalence of parametrizations ######
+#### checking equivalence of parametrizations ##
 ### 
 ### locs = cbind(seq(100)/10, 0)
 ### NNarray = GpGp::find_ordered_nn(locs, 10)
@@ -415,3 +415,160 @@ derivative_field_wrt_scale = function(field, coords)
   }
   res
 }
+
+
+
+
+#' Multiply the concatenation of a matrix of covariates and a PP by a matrix
+#' (X|PP) %*% Y
+#'
+#' @param X a matrix of covariates who will be multiplied by the first rows of Y
+#' @param PP either a PP whose basis will be multiplied by the last columns of Y
+#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
+#' @param Y the matrix who multiplies the covariates and the PP
+#'
+#' @export
+#' @returns a matrix
+#' 
+#' @examples
+#' locs = cbind(runif(1000), runif(1000))
+#' locs = rbind(locs, locs)
+#' vecchia_approx = createVecchia(locs, 12, ncores=1)
+#' PP = createPP(vecchia_approx, plot=FALSE)
+#' covariate_coefficients = c(4, 1, 1, .5)
+#' knots_coeffs = rnorm(PP$n_knots)
+#' X = cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
+#' 
+#' # multiplying X alone
+#' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+#' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
+#' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+#' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
+#' 
+#' # multiplying PP alone
+#' res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
+#' plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
+#' 
+#' # multiplying PP and matrix of covariate, one obs for each location
+#' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
+#' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
+#' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
+#' 
+#' # multiplying PP and matrix of covariates with an index
+#' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+#' res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
+#'                        Y = c(covariate_coefficients, knots_coeffs), 
+#'                        vecchia_approx = vecchia_approx
+#'                        )
+#' plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
+#' 
+#' # multiplying 
+#' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+#' res5 <- X_PP_mult_right(X = NULL, PP = PP, 
+#'                        Y = diag(1, PP$n_knots), 
+#'                        vecchia_approx = vecchia_approx,
+#'                        permutate_PP_to_obs = T
+#'                        )
+X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
+{
+  if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
+  # Sanity checks
+  if(!is.matrix(Y)) Y <- as.matrix(Y)
+  expected_rows <- 0
+  if(!is.null(X)) expected_rows <- expected_rows + ncol(X)
+  if(!is.null(PP)) expected_rows <- expected_rows + nrow(PP$knots)
+  if(nrow(Y) != expected_rows) {
+    stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
+  }
+  
+  if(permutate_PP_to_obs) {
+    locs_idx = vecchia_approx$locs_match
+  } else {
+    locs_idx = seq(vecchia_approx$n_locs)
+  }
+  res = matrix(0, length(locs_idx), ncol(Y))
+  
+  # Multiply X and Y
+  xrow_offset <- 0
+  if(!is.null(X)) {
+    xrow_offset <- ncol(X)
+    res = res + X  %*% Y[seq_len(xrow_offset), , drop=FALSE]
+  } 
+  if(!is.null(PP)) {
+    if(xrow_offset>0) Y =  Y[-seq_len(xrow_offset), , drop = FALSE]  # remove X rows from Y if needed
+    V = matrix(0, nrow(PP$sparse_chol), ncol(Y))
+    V[seq(nrow(Y)),] = Y
+    solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
+    PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
+    res <- res + PP_result[locs_idx, , drop = FALSE]
+  }
+  if(ncol(res)==3)colnames(res) = c("det", "an", "an")
+  if(ncol(res)==1)colnames(res) = "det"
+  res
+}
+
+#' Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
+#' t(X|PP) %*% Y
+#'
+#' @param X a matrix of covariates who will be multiplied by the first rows of Y
+#' @param PP either a PP whose basis will be multiplied by the last columns of Y
+#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
+#' @param Y the matrix who multiplies the covariates and the PP
+#'
+#'
+#' @returns a matrix
+#' @export
+#'
+#' @examples
+#' set.seed(123)
+#' locs = cbind(runif(50), runif(50))
+#' vecchia_approx = createVecchia(locs, ncores=1)
+#' PP = createPP(vecchia_approx, plot=FALSE)
+#' X = matrix(rnorm(100), 50)
+#' Y = matrix(rnorm(30*nrow(X)), nrow(X))
+#' 
+#' # just surrogate of crossprod
+#' res1 <- X_PP_crossprod(X = X, Y = Y)
+#' identical(crossprod(X, Y) , res1)
+#' 
+#' # crossprod + PP with observations of X on the locs
+#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
+#' 
+#' # crossprod + PP with observations of X on the obs
+#' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_obs = F)
+{
+  # TODO : est-ce qu'il ne faudrait pas déplacer cette fonction dans un fichier utils ou usefull_stuff ?
+  # Si on le fait le faut déplacer les tests avec. 
+  if(nrow(X) != nrow(Y)) {
+    stop("X and Y should have the same number of rows")
+  }
+  if(permutate_PP_to_obs & is.null(vecchia_approx)) {
+    stop("To permutate PP to observed values vecchia_approx needs to be provided.")
+  }
+  if(!is.null(PP)){
+    if(nrow(X) != nrow(PP$vecchia_locs) ) {
+      stop("X should have the same number of rows as locations in vecchia")
+    }
+    if(vecchia_approx$n_locs != nrow(PP$vecchia_locs) ) {
+      stop("vecchia_approx should have the same number of locations as the locations of PP")
+    }
+  }
+  if(!is.matrix(Y)) Y = as.matrix(Y)
+  res = crossprod(x = X, y = Y)
+  if(!is.null(PP))
+  {
+    if(permutate_PP_to_obs) Y = vecchia_approx$locs_match_matrix %*% Y
+    res = 
+      rbind(
+        res, 
+        Matrix::solve(
+          Matrix::t(PP$sparse_chol), 
+          rbind(matrix(0, nrow(PP$knots), ncol(Y)), Y)
+        )[1:PP$n_knots,,drop=F]
+      )
+  }
+  as.matrix(res)
+}
+
+
