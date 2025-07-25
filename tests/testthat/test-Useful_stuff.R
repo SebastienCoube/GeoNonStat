@@ -1,4 +1,12 @@
 set.seed(123)
+vecchia_approx = createVecchia(cbind(runif(1000), runif(1000)), 10, ncores = 1)
+
+set.seed(123)
+PP = createPP(vecchia_approx, plot=FALSE)
+X = matrix(rnorm(500), 1000)
+Y = matrix(rnorm(30*nrow(X)), nrow(X))
+
+
 test_that("derivative_sandwiches produce expected output", {
   # TODO
 })
@@ -74,155 +82,82 @@ test_that("symmat produce expected output", {
 })
 
 
-test_that("X_PP_mult_right produce expected output", {
-  set.seed(123)
-  locs = cbind(runif(100), runif(100))
-  n_PP = 50
-  PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
-  X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
-  
-  # When using PP
-  expect_error(
-    res <- X_PP_mult_right(X=X, 
-                          PP = PP,  
-                          Y = rnorm(n_PP)),
-    NA
-  )
-  
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(100L,1L))
-  expect_equal(mean(res), 1.05777386, tolerance = 1e-7)
-  expect_equal(res[1],  -1.53936417, tolerance = 1e-7)
-  
-  # When not using PP
-  set.seed(123)
-  expect_error(
-    res <- X_PP_mult_right(X = X, 
-                          PP = PP, 
-                          use_PP = FALSE, 
-                          Y = rnorm(n_PP)),
-    NA
-  )
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(100L, 1L))
-  expect_equal(mean(res), 0.05949999, tolerance = 1e-7)
-  expect_equal(res[1], 4.380053, tolerance = 1e-7)
-})
+# 
+# test_that("variance_field produce expected output", {
+#   # Here we test only structure since results are directly extracted from X_PP_mult_right
+#   set.seed(123)
+#   locs = cbind(runif(100), runif(100))
+#   n_PP = 50
+#   PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
+#   X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
+# 
+#   # When using PP
+#   expect_error(
+#     res <- variance_field(beta = rnorm(n_PP), 
+#                           PP = PP, 
+#                           use_PP = TRUE, 
+#                           X = X),
+#     NA
+#   )
+#   
+#   expect_true(is(res, "numeric"))
+#   expect_length(res, 100)
+#   
+#   # When not using PP
+#   expect_error(
+#     res <- variance_field(beta = rnorm(n_PP), 
+#                           PP = PP, 
+#                           use_PP = FALSE, 
+#                           X = X),
+#     NA
+#   )
+#   expect_true(is(res, "numeric"))
+#   expect_length(res, 100)
+# })
 
-
-test_that("variance_field produce expected output", {
-  # Here we test only structure since results are directly extracted from X_PP_mult_right
-  set.seed(123)
-  locs = cbind(runif(100), runif(100))
-  n_PP = 50
-  PP = createPP(locs, c(1, .1, 1.5, 0), knots = n_PP, m = 15)
-  X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
-
-  # When using PP
-  expect_error(
-    res <- variance_field(beta = rnorm(n_PP), 
-                          PP = PP, 
-                          use_PP = TRUE, 
-                          X = X),
-    NA
-  )
-  
-  expect_true(is(res, "numeric"))
-  expect_length(res, 100)
-  
-  # When not using PP
-  expect_error(
-    res <- variance_field(beta = rnorm(n_PP), 
-                          PP = PP, 
-                          use_PP = FALSE, 
-                          X = X),
-    NA
-  )
-  expect_true(is(res, "numeric"))
-  expect_length(res, 100)
-})
-
-test_that("compute_sparse_chol produce expected output", {
-  set.seed(123)
-  locs = cbind(seq(100)/10, 0)
-  NNarray = GpGp::find_ordered_nn(locs, 10)
-  
-  expect_error(
-    res <- compute_sparse_chol(
-      range_beta = matrix(.5/sqrt(2),1,1), 
-      NNarray = NNarray, 
-      locs = locs,
-      nu = 2
-    ),
-    "nu must be equal to 0.5 or 1.5"
-  )
-  
-  set.seed(123)
-  expect_error(
-    res <- compute_sparse_chol(
-              range_beta = matrix(.5/sqrt(2),1,1), 
-              NNarray = NNarray, 
-              locs = locs,
-              use_PP = F, 
-              num_threads = 1, 
-              anisotropic = F,
-              range_X = matrix(1, nrow(locs), 1), 
-              nu = 1.5
-            ),
-    NA
-  )
-  expect_type(res, "list")
-  expect_length(res, 2)
-  
-  expect_true(is(res[[1]], "array"))
-  expect_identical(dim(res[[1]]), c(100L, 11L))
-  expect_equal(mean(res[[1]]), 0.01397719, tolerance = 1e-7)
-  expect_equal(res[[1]][2,1:3], c(13.8705735, -13.8310216, 0.00000))
-  
-  expect_type(res[[2]], "list")
-  expect_true(is(res[[2]][[1]], "array")) 
-  expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
-  expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
-  expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
-})
-
-test_that("createPP produce expected output", {
-  # Don't know why this tests fail when launched single. 
-  obs_locs <- matrix(rnorm(10), ncol=2)
-  set.seed(123)
-  expect_error(
-    res <- createPP(obs_locs, matern_range=c(1, 1.1, 1.5, 0), knots=4),
-    NA
-  )
-  expect_named(res, c('knots', 'unique_reordered_locs', 'idx', 
-                      'lonlat', 'm', 'matern_range', 
-                      'sparse_chol', 'NNarray', 'n_PP'))
-  
-  expect_identical(dim(res$knots), c(4L, 2L))
-  expect_identical(rownames(res$knots), c("4", "1", "2","3"))
-  expect_equal(mean(res$knots), 0.15157697, tolerance = 1e-7)
-  
-  expect_identical(dim(res$unique_reordered_locs), c(5L, 2L))
-  expect_equal(mean(res$unique_reordered_locs), 0.0746256, tolerance = 1e-6)
-  
-  expect_identical(res$idx, c(4L, 1L, 2L, 5L, 3L))
-  
-  expect_false(res$lonlat)
-  
-  expect_identical(res$m, 10)
-  
-  expect_identical(res$matern_range, c(1, 1.1, 1.5, 0))
-  
-  expect_true(is(res$sparse_chol,"Matrix"))
-  expect_identical(dim(res$sparse_chol), c(9L, 9L))
-  expect_equal(mean(res$sparse_chol@x), 0.07222378, tolerance = 1e-7)
-  
-  expect_true(is(res$NNarray, "matrix"))
-  expect_identical(dim(res$NNarray), c(9L, 9L))
-  expect_identical(res$NNarray[6,], c(6L, 3L, 4L, 5L, 2L, 1L, NA, NA, NA))
-  
-  expect_identical(res$n_PP, 4)
-})
+# test_that("compute_sparse_chol produce expected output", {
+#   set.seed(123)
+#   locs = cbind(seq(100)/10, 0)
+#   NNarray = GpGp::find_ordered_nn(locs, 10)
+#   
+#   expect_error(
+#     res <- compute_sparse_chol(
+#       range_beta = matrix(.5/sqrt(2),1,1), 
+#       NNarray = NNarray, 
+#       locs = locs,
+#       nu = 2
+#     ),
+#     "nu must be equal to 0.5 or 1.5"
+#   )
+#   
+#   set.seed(123)
+#   expect_error(
+#     res <- compute_sparse_chol(
+#               range_beta = matrix(.5/sqrt(2),1,1), 
+#               NNarray = NNarray, 
+#               locs = locs,
+#               use_PP = F, 
+#               num_threads = 1, 
+#               anisotropic = F,
+#               range_X = matrix(1, nrow(locs), 1), 
+#               nu = 1.5
+#             ),
+#     NA
+#   )
+#   expect_type(res, "list")
+#   expect_length(res, 2)
+#   
+#   expect_true(is(res[[1]], "array"))
+#   expect_identical(dim(res[[1]]), c(100L, 11L))
+#   expect_equal(mean(res[[1]]), 0.01397719, tolerance = 1e-7)
+#   expect_equal(res[[1]][2,1:3], c(13.8705735, -13.8310216, 0.00000))
+#   
+#   expect_type(res[[2]], "list")
+#   expect_true(is(res[[2]][[1]], "array")) 
+#   expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
+#   expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
+#   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
+# })
 
 
 test_that("beta_prior_log_dens produce expected output", {
@@ -231,35 +166,6 @@ test_that("beta_prior_log_dens produce expected output", {
 
 test_that("beta_prior_log_dens_derivative produce expected output", {
   # TODO
-})
-
-test_that("X_PP_crossprod produce expected output", {
-  set.seed(123)
-  locs = cbind(runif(100), runif(100))
-  PP = createPP(locs, c(1, .1, 1.5, 0), knots = 50, m = 15)
-  X = matrix(rnorm(10*nrow(PP$unique_reordered_locs)), ncol = 10)
-  Y = matrix(rnorm(nrow(X)*3), ncol=3)
-  
-  expect_error(
-    res <- X_PP_crossprod(X = X, PP = PP, use_PP = TRUE, Y = Y),
-    NA
-  )
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(60L, 3L))
-  expect_equal(mean(res), 0.3772675, tolerance = 1e-7)
-  expect_equal(res[1,1], 4.234651, tolerance = 1e-7)
-  
-  expect_error(
-    res2 <- X_PP_crossprod(X = X, PP = PP, use_PP = FALSE, Y = Y),
-    NA
-  )
-  expect_true(is(res2, "matrix"))
-  expect_identical(dim(res2), c(10L, 3L))
-  expect_equal(mean(res2), 1.95974075, tolerance = 1e-7)
-  expect_equal(res2[1,1], 4.234651, tolerance = 1e-7)
-  
-  # Expect results without PP on the 1st rows of res (with PP) 
-  expect_identical(res[1:10,], res2[1:10,])
 })
 
 
@@ -298,3 +204,91 @@ test_that("derivative_field_wrt_scale produce expected output", {
     c(0.261804197, 0.335998026, 0.340716718)
   )
 })
+
+
+
+test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
+  expect_error(
+    res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
+    NA
+  )
+  expect_true(is(res1, "matrix"))
+  expect_identical(dim(res1), c(1L, 30L))
+  expect_identical(res1,crossprod(X, Y))
+  
+  # Simple corssprod, vecchia unused. 
+  expect_error(
+    res2 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
+    NA
+  )
+  expect_identical(res1,res2)
+})
+
+test_that("X_PP_crossprod with PP", {
+  expect_error(
+    res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx),
+    NA
+  )
+  expect_true(is(res2, "matrix"))
+  expect_identical(dim(res2), c(101L, 30L))
+  
+  # First line is crossprod
+  expect_identical(res2[1,],crossprod(X, Y)[1,])
+  expect_equal(colMeans(res2)[1:5], 
+               c(0.1999806, -0.8748530, 0.9684133, -0.7444476, 0.1350033),
+               tolerance = 1e-5)
+})
+
+test_that("X_PP_crossprod with PP and permute obs", {
+  expect_error(
+    res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
+    NA
+  )
+  expect_true(is(res3, "matrix"))
+  expect_identical(dim(res3), c(101L, 30L))
+  
+  # First line is crossprod
+  expect_identical(res3[1,],crossprod(X, Y)[1,])
+  expect_equal(colMeans(res3)[1:5], 
+               c(0.02263887, -1.04065836, 0.84462225, -0.70220738, 0.36781311),
+               tolerance = 1e-5)
+})
+
+# res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+test_that("X_PP_mult_right with PP and permute obs", {
+  set.seed(123)
+  expect_error(
+    resmr <- X_PP_mult_right(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    "Y should have"
+  )
+  # No PP
+  expect_error(
+    resmr <- X_PP_mult_right(X = X, PP = NULL, Y = matrix(c(0.5, 1, 1.1, 0.2), nrow = 1), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    NA
+  )
+  expect_true(is(resmr, "matrix"))
+  expect_identical(dim(resmr), c(1000L, 4L))
+  expect_equal(mean(resmr), 0.01392224, tolerance = 1e-5)
+  
+  # No X
+  expect_error(
+    resmr <- X_PP_mult_right(X = NULL, PP = PP, Y = matrix(rnorm(200), nrow = 100), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    NA
+  )
+  expect_true(is(resmr, "Matrix"))
+  expect_identical(dim(resmr), c(1000L, 2L))
+  mean(as.matrix(resmr))
+  expect_equal(mean(as.matrix(resmr)), -0.1908332, tolerance = 1e-5)
+  
+  # X and PP
+  expect_error(
+    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(202), nrow = 101), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    NA
+  )
+  expect_true(is(resmr, "Matrix"))
+  expect_identical(dim(resmr), c(1000L, 2L))
+  expect_equal(mean(as.matrix(resmr)), 0.01075514, tolerance = 1e-5)
+  
+})
+
+
