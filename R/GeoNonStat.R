@@ -173,7 +173,9 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' @param vecchia_approx TODO
 #' @param PP NULL, 
 #' @param covariate_name "<missing covariate name>", 
-#' @param one_obs_per_site = F
+#' @param one_obs_per_site = FALSE (default). Some covariates can be constrained 
+#' to have observations that do not vary whithin 1 spatial site. X_range and 
+#' X_scale need to be constrained. X_noise and X don't need to be constrained. 
 #'
 #' @returns a list
 #'
@@ -214,6 +216,11 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 process_covariates = function(X, vecchia_approx, 
                               PP = NULL, covariate_name = NULL, 
                               one_obs_per_site = F){
+  # TODO: recoder covariate_name et one_obs_per_site pour obliger à n'avoir que 
+  # les valeurs X_noise, X, X_range et X_scale en covariate name.
+  # Si ça n'est pas un des 4, ça retourne un des 4.
+  # Et si X_range et X_scale on contraint à one_obs_per_site. 
+  
   # covariates in the observed field #
   res = list()
   

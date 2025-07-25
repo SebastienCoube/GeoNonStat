@@ -42,6 +42,87 @@ test_that("createVecchia works", {
 })
 
 
+test_that("process_covariates work as expected", {
+  nlocs = 50L
+  nobs = 100L
+  unique_locs = cbind(runif(nlocs), runif(nlocs))
+  observed_locs = rbind(unique_locs, unique_locs)
+  X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+  vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
+  PP = createPP(vecchia_approx, plot=FALSE)
+  
+  # no PP, an X
+  expect_error(
+    res <- process_covariates(X = X, 
+                             vecchia_approx = vecchia_approx, 
+                             PP = NULL, 
+                             covariate_name = NULL, 
+                             one_obs_per_site = F),
+    NA
+  )
+  expect_true(is(res, "list"))
+  expect_named(res, c('arg', 'X', 'chol_crossprod_X', 'n_regressors', 
+                      'which_locs', 'X_locs', 'crossprod_X_locs', 
+                      'chol_crossprod_X_locs'))
+  
+  expect_identical(res$arg, X)
+  expect_true(is(res$X, "matrix"))
+  expect_true(is(res$chol_crossprod_X, "matrix"))
+  expect_identical(res$n_regressors, 4L)
+  expect_identical(res$which_locs, 1L)
+  expect_true(is(res$X_locs, "matrix"))
+  expect_true(is(res$crossprod_X_locs, "matrix"))
+  expect_true(is(res$chol_crossprod_X_locs, "matrix"))
+  
+  expect_identical(dim(res$X), c(nobs, 4L))
+  expect_identical(dim(res$chol_crossprod_X), c(4L, 4L))
+  expect_identical(dim(res$X_locs), c(nlocs, 1L))
+  expect_identical(dim(res$crossprod_X_locs), c(1L, 1L))
+  expect_identical(dim(res$chol_crossprod_X_locs), c(1L, 1L))
+  
+  # TODO tester les valeurs en sortie.
+  # PP, no X
+  expect_error(
+    res <- process_covariates(X = NULL, 
+                              vecchia_approx, 
+                              PP = PP, 
+                              covariate_name = "test_covariate", 
+                              one_obs_per_site = F),
+    NA
+  )
+  
+  # no PP, no X
+  expect_error(
+    res <- process_covariates(X = NULL, 
+                             vecchia_approx, 
+                             PP = NULL, 
+                             covariate_name = "test_covariate", 
+                             one_obs_per_site = F),
+    NA
+  )
+  
+  # PP and X
+  expect_error(
+    res <- process_covariates(X = X, 
+                              vecchia_approx, 
+                              PP = PP, 
+                              covariate_name = "test_covariate", 
+                              one_obs_per_site = F),
+    NA
+  )
+
+  # one obs of x per loc
+  X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
+  expect_error(
+  res <- process_covariates(X = X, 
+                            vecchia_approx, 
+                            PP = NULL, 
+                            covariate_name = "test_covariate", 
+                            one_obs_per_site = T),
+  NA)
+
+})
+
 test_that("process_PP_priors works as expected whithout PP", {
   # Whithout PP
   expect_error(
