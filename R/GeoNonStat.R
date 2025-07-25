@@ -30,7 +30,7 @@
 #' size <- 20000
 #' observed_locs = cbind(runif(size), runif(size))
 #' res <- createVecchia(observed_locs, m=10, ncores=1) 
-createVecchia <- function(observed_locs, m = 12, ncores=5){
+createVecchia <- function(observed_locs, m = 12, ncores=1){
   #message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
@@ -91,7 +91,7 @@ createVecchia <- function(observed_locs, m = 12, ncores=5){
     hctam_scol_1 = sapply(hctam_scol, function(x) x[1]),
     obs_per_loc = unlist(sapply(hctam_scol, length)), # count how many observations correspond to one location
     NNarray = NNarray,
-    NNarray_non_NA = !is.na(NNarray),
+    NNarray_non_NA = NNNoNA, # TODO : idem à voir si c'est utile de trainer ça ?
     sparse_chol_i = sparse_mat@i+1, 
     sparse_chol_p = sparse_mat@p, 
     sparse_chol_x_reorder = sparse_chol_x_reorder, 
@@ -102,7 +102,7 @@ createVecchia <- function(observed_locs, m = 12, ncores=5){
 
 #' Partition spatial locations using parallel k-means
 #' @noRd
-generate_location_partitions <- function(locs, n, ncores=5) {
+generate_location_partitions <- function(locs, n, ncores=1) {
   clust_size <- 50000
   n_clusters <- ceiling(n / clust_size)
   centers_seq <- round(seq(n_clusters + 1, 2 * n_clusters + 1, length.out = min(10, n_clusters + 1)))
