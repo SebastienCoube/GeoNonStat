@@ -68,7 +68,7 @@ symmat = function(coords)
   
   diag_indices <- which(row(mat) == col(mat))
   lower_indices <- which(lower.tri(mat))
-
+  
   # 1st fill diagonal elements
   mat[diag_indices] <- coords[1:n]
   # Then lower and upper mat
@@ -205,9 +205,9 @@ compute_sparse_chol = function(range_beta,
   # converting to canonical basis
   if(ncol(range_beta)==3) {
     range_beta = range_beta %*% matrix(
-    c(1/sqrt(2), 1/sqrt(2),  0, 
-      1/sqrt(2), -1/sqrt(2), 0,
-      0,       0,        1), 3)*sqrt(2)*2
+      c(1/sqrt(2), 1/sqrt(2),  0, 
+        1/sqrt(2), -1/sqrt(2), 0,
+        0,       0,        1), 3)*sqrt(2)*2
   }
   if(ncol(range_beta)==1) {
     range_beta = range_beta * 2
@@ -220,7 +220,6 @@ compute_sparse_chol = function(range_beta,
       PP = PP, 
       Y = range_beta, 
       permutate_PP_to_obs = F))
-
   res <- vecchia(num_threads=num_threads,
                  log_range = t(log_range), 
                  locs = vecchia_approx$t_locs, 
@@ -290,43 +289,81 @@ compute_sparse_chol = function(range_beta,
 #' @export
 #'
 #' @examples
-#' beta = matrix(rnorm(10))
-#' bm = matrix(rnorm(5), 5, 1)
-#' bp = diag(exp(rnorm(5)), 5, 5)
-#' ls = rnorm(1)
-#' # TODO a changer beta_prior_log_dens(beta, n_PP = 5, beta_mean = bm, beta_precision = bp, log_scale = ls)
-#' locs = cbind(runif(10000), runif(10000))
-#' X_range = cbind(locs, locs^2)
-#' V = createVecchia(locs)
-#' PP = createPP(V)
-#' GNS = GeoNonStat(vecchia_approx = V, observed_field = rnorm(nrow(locs)), range_PP = PP, range_X = as.data.frame(X_range))
 #' 
-#' GNS$covariates$range_X$crossprod_X_locs[seq()]
-#' GNS$hierarchical_model$range_beta0_mean 
-# 
+#' beta = matrix(rnorm(300), 100)
+#' n_PP = 90 
+#' beta0_mean = -5
+#' beta0_var = 2
+#' chol_crossprod_X = diag(1,100)
+#' log_scale = c(-6,-6,-6,0,0,0)
+#' 
+#' beta_prior_log_dens(
+#'   beta, 
+#'   n_PP, 
+#'   beta0_mean,
+#'   beta0_var,
+#'   chol_crossprod_X, 
+#'   log_scale
+#' )
+#' for(i in seq(nrow(beta))){
+#'   for(j in seq(ncol(beta))){
+#'     beta_ = beta
+#'     beta_[i,j] = beta_[i,j] + .00001
+#'     print(
+#'       paste(i,j,
+#'             signif(
+#'               (beta_prior_log_dens(
+#'                 beta_, 
+#'                 n_PP, 
+#'                 beta0_mean,
+#'                 beta0_var,
+#'                 chol_crossprod_X, 
+#'                 log_scale
+#'               ) - beta_prior_log_dens(
+#'                 beta, 
+#'                 n_PP, 
+#'                 beta0_mean,
+#'                 beta0_var,
+#'                 chol_crossprod_X, 
+#'                 log_scale
+#'               ))*100000, 
+#'               3), 
+#'             signif(
+#'               beta_prior_log_dens_derivative(beta, 
+#'                                              n_PP, 
+#'                                              beta0_mean,
+#'                                              beta0_var,
+#'                                              chol_crossprod_X, 
+#'                                              log_scale
+#'               )[i,j], 
+#'               3
+#'             )
+#'       ))
+#'     
+#'   }
+#' }
+
+
+
 beta_prior_log_dens = function(beta, 
-                               X, 
+                               n_PP, 
                                beta0_mean,
                                beta0_var,
+                               chol_crossprod_X, 
                                log_scale){
   PP_prior = 0
   if(n_PP>0) 
   {
-    scale_mat = expmat(-log_scale)
+    scale_mat = GeoNonStat::expmat(-log_scale)
     PP_prior = (
       # PP coefficients follow N(0, scale_mat)
       +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
       -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
     )
   }
-  
   return(
-    PP_prior +  sum(
-      c(
-      - .5 * (beta[1,1] - beta0_mean)^2 / beta0_var,
-      - .5 * (beta[seq(nrow(beta) - n_PP),][-1])^2 * .01
-      )
-    )
+    PP_prior
+      -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[-1])^2) / .01)
   )
 }
 
@@ -355,23 +392,25 @@ beta_prior_log_dens = function(beta,
 #'    beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))
 #'  )*10000
 #'  beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))[derived_idx]
- beta_prior_log_dens_derivative = 
+beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
            beta0_var,
+           chol_crossprod_X, 
            log_scale){
-    res = beta[seq(nrow(beta)-n_PP),]
-    res[1] = -(res[1] - beta0_mean)/beta0_var
-    res[-1] = -(res[-1])/100
+    res =  beta[seq(nrow(beta)- n_PP),,drop = F]
+    res[1,1] = -(res[1,1] - beta0_mean)/beta0_var
+    res[-1] = -(res[-1] - 0)/.01
     if(n_PP>0) 
     {
       scale_mat = GeoNonStat::expmat(-log_scale)
       res = rbind(res, 
-                  beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
+                  -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
       )
     }
     res
-}
+  }
+
 
 #PP$idx : match between the non redundant locations of PP and the redundant observed locations
 #locs_idx : match between the redundant observed locations and those of X
@@ -409,8 +448,18 @@ derivative_chol_expmat = function(coords, eps=0.00001)
 #' @returns an array
 #'
 #' @examples
-#' field <- array(c(1,2,3), dim=c(1,3))
-#' res <- derivative_field_wrt_scale(field, c(1,2,3,3,2,4))
+#' field <- matrix(rnorm(30), ncol = 3)
+#' log_scale_vec=  rnorm(6)
+#' res <- derivative_field_wrt_scale(field, log_scale_vec)
+#' par(mfrow = c(3,2))
+#' for(i in seq(length(log_scale_vec))){
+#'   log_scale_vec_ = log_scale_vec
+#'   log_scale_vec_[i] = log_scale_vec_[i] + .0001
+#'   field_ = field %*% solve(chol(expmat(log_scale_vec))) %*% chol(expmat(log_scale_vec_))
+#'   plot((field_-field)*10000, res[,,i], xlab = "finite diff", ylab = "using function", main = paste(i, "-th derivative"))
+#'   abline(a=0, b=1)
+#' }
+ 
 derivative_field_wrt_scale = function(field, coords)
 {
   d_chol_expmat = derivative_chol_expmat(coords)
@@ -498,7 +547,8 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
   xrow_offset <- 0
   if(!is.null(X)) {
     xrow_offset <- ncol(X)
-    res = res + X  %*% Y[seq_len(xrow_offset), , drop=FALSE]
+    # using res[] is important for performance
+    res[] = res + X  %*% Y[seq_len(xrow_offset), , drop=FALSE]
   } 
   if(!is.null(PP)) {
     # remove X rows from Y if needed
@@ -507,7 +557,8 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
     V[seq(nrow(Y)),] = Y
     solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
     PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
-    res <- res + PP_result[locs_idx, , drop = FALSE]
+    # using res[] is important for performance
+    res[] <- res + PP_result[locs_idx, , drop = FALSE]
   }
   if(ncol(res)==3)colnames(res) = c("det", "an", "an")
   if(ncol(res)==1)colnames(res) = "det"
