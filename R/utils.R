@@ -18,7 +18,6 @@ naive_greedy_coloring = function(M)
   return(cols)
 }
 
-
 decompress_chol = function(vecchia_approx, compressed_sparse_chol){
   Matrix::sparseMatrix(
     i = vecchia_approx$sparse_chol_i, 
