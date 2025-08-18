@@ -37,32 +37,44 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   # TODO : est-ce que le nombre de knots peut être plus grand que la dimention des locs de vecchia_approx ?
   # Generate knots
   if(is.null(knots)){
-    knots = min(100, vecchia_approx$n_locs-1)
+    knots = 25
     message(paste("number of knots set to", knots))
   }
   if(!is.matrix(knots)){
-    knots = min(knots, nrow(vecchia_approx$observed_locs)-1)
     knots = generate_knots_from_kmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
   }
   
   # matern range
   if(is.null(matern_range)){
-    matern_range = max(dist(knots))/5
-    message(paste("Matérn range set to ", signif(matern_range, 3))," the fifth of the space pseudo-diameter")
+    matern_range = max(dist(knots))*.25
+    message(paste("Matérn range set to ", signif(matern_range, 3))," 25 % of the space pseudo-diameter")
   }
   
   # knots order
   if(is.null(rownames(knots))) rownames(knots) <- seq_len(nrow(knots))
   knots = knots[GpGp::order_maxmin(knots),]
   
+  additional = NULL
+  if(nrow(vecchia_approx$NNarray)-1 - nrow(knots)>0){
+    additional = 
+      GpGp::find_ordered_nn(
+        vecchia_approx$locs, 
+        m = nrow(vecchia_approx$NNarray)-1 - nrow(knots))[,-1]
+  }
   # NNarray
   NNarray = rbind(
-    GpGp::find_ordered_nn(knots, nrow(vecchia_approx$NNarray)-1), 
-    cbind(nrow(knots) + seq(vecchia_approx$n_locs), 
-          FNN::get.knnx(query = vecchia_approx$locs, 
-                        data = knots, 
-                        k = nrow(vecchia_approx$NNarray)-1)$nn.index)
+    cbind(
+      GpGp::find_ordered_nn(knots, nrow(vecchia_approx$NNarray)-1), 
+      matrix(NA, nrow(knots), max(0, nrow(vecchia_approx$NNarray) - nrow(knots)))
+    ), 
+    cbind(
+      nrow(knots) + seq(vecchia_approx$n_locs), 
+      FNN::get.knnx(
+        query = vecchia_approx$locs, 
+        data = knots, 
+        k = min(nrow(knots),  nrow(vecchia_approx$NNarray)-1))$nn.index,
+      additional + nrow(knots))
   )
   
   # Cholesky matrix
@@ -117,10 +129,9 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
 #' plot(locs, col = "grey", pch = 16, cex = 0.5)
 #' points(knots, col = "red", pch = 19)
 generate_knots_from_kmeans <- function(knots_number, locs) {
-  n_sample <- min(nrow(locs), 10000)
+  n_sample <- min(nrow(locs), 50000)
   sampled_locs <- locs[seq(n_sample), ]
-  noise <- matrix(rnorm(2 * n_sample, 0, max(dist(sampled_locs)) / 20), ncol = 2)
-  centers <- kmeans(sampled_locs + noise, knots_number,
+  centers <- kmeans(sampled_locs, knots_number,
                     algorithm = "Hartigan-Wong", iter.max = 50)$centers
   return(centers)
 }
@@ -173,3 +184,16 @@ var_loss_percentage.PP = function(x) {
   return(PP_mar_var)
 }
 
+
+
+get_basis = function(PP, vecchia_approx, df = T){
+  res = X_PP_mult_right(
+    X= NULL, PP = PP, vecchia_approx = vecchia_approx, 
+    Y = diag(1, PP$n_knots), permutate_PP_to_obs = T
+  )
+  colnames(res) = paste("Basis_", seq(ncol(res)), sep = "")
+  res[res<.001] = 0
+  if(df)res = as.data.frame(res)
+  if(!df)res = as(res, "sparseMatrix")
+  return(res)
+}
