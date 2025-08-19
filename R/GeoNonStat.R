@@ -14,12 +14,12 @@
 #'   \item{\code{locs_match}}{locs_match}
 #'   \item{\code{locs_match_matrix}}{locs_match_matrix}
 #'   \item{\code{hctam_scol}}{hctam_scol}
-#'   \item{\code{hctam_scol_1}}{sapply(hctam_scol} function(x) x[1])}
-#'   \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol} length))} # count how many observations correspond to one location
+#'   \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
+#'   \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol, length))} # count how many observations correspond to one location
 #'   \item{\code{NNarray}}{NNarray}
 #'   \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
-#'   \item{\code{sparse_chol_i}}{sparse_mat@i+1} 
-#'   \item{\code{sparse_chol_p}}{sparse_mat@p} 
+#'   \item{\code{sparse_chol_i}}{sparse_mat at i+1} 
+#'   \item{\code{sparse_chol_p}}{sparse_mat at p} 
 #'   \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder} 
 #'   \item{\code{locs_partition}}{locs_partition}
 #' }
