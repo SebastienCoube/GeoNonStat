@@ -191,7 +191,6 @@ symmat = function(coords)
 #' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
 #' range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
 #' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
-
 compute_sparse_chol = function(range_beta, 
                                vecchia_approx,
                                range_X, 
@@ -202,6 +201,7 @@ compute_sparse_chol = function(range_beta,
 {
   if (!matern_smoothness %in% c(.5, 1.5)) stop("matern_smoothness must be equal to 0.5 or 1.5")
   # converting to canonical basis
+  # TODO ici est-ce que ncol(range_beta) peut être autre que 1 ou 3 ?
   if(ncol(range_beta)==3) {
     range_beta = range_beta %*% matrix(
       c(1/sqrt(2), 1/sqrt(2),  0, 
@@ -238,7 +238,7 @@ compute_sparse_chol = function(range_beta,
 ###       Matrix::sparseMatrix(
 ###         i = row(NNarray)[!is.na(NNarray)],
 ###         j = (NNarray)[!is.na(NNarray)],
-###         x= GeoNonStat::compute_sparse_chol(
+###         x= compute_sparse_chol(
 ###           range_beta = matrix(.5/sqrt(2),1,1), 
 ###           NNarray = NNarray, 
 ###           locs = locs,
@@ -260,7 +260,7 @@ compute_sparse_chol = function(range_beta,
 ###       Matrix::sparseMatrix(
 ###         i = row(NNarray)[!is.na(NNarray)],
 ###         j = (NNarray)[!is.na(NNarray)],
-###         x= GeoNonStat::compute_sparse_chol(
+###         x= compute_sparse_chol(
 ###           range_beta = matrix(c(.5,0,0),1), 
 ###           NNarray = NNarray, 
 ###           locs = locs,
@@ -353,7 +353,7 @@ beta_prior_log_dens = function(beta,
   PP_prior = 0
   if(n_PP>0) 
   {
-    scale_mat = GeoNonStat::expmat(-log_scale)
+    scale_mat = expmat(-log_scale)
     PP_prior = (
       # PP coefficients follow N(0, scale_mat)
       +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
@@ -402,7 +402,7 @@ beta_prior_log_dens_derivative =
     res[-1] = -(res[-1] - 0)/.01
     if(n_PP>0) 
     {
-      scale_mat = GeoNonStat::expmat(-log_scale)
+      scale_mat = expmat(-log_scale)
       res = rbind(res, 
                   -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
       )
