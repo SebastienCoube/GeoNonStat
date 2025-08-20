@@ -12,7 +12,7 @@ plot(observed_locs[,1], observed_field)
 points(observed_locs[,1], w, col = 2, cex = .5, pch = 16)
 
 
-vecchia_approx = createVecchia(observed_locs)
+vecchia_approx = createVecchia(observed_locs, ncores = 3)
 PP = createPP(vecchia_approx)
 
 mygns = GeoNonStat(
@@ -20,7 +20,13 @@ mygns = GeoNonStat(
   observed_field = c(observed_field), X = as.data.frame(X), 
   matern_smoothness = 1.5, anisotropic = F, 
   n_chains = 3, 
-  noise_X = NULL, range_X = NULL, scale_X = NULL, noise_PP = NULL, range_PP = NULL, scale_PP = NULL, seed = 1
+  noise_X = NULL, 
+  range_X = NULL, 
+  # scale_X = NULL, 
+  noise_PP = NULL, 
+  range_PP = NULL, 
+  # scale_PP = NULL, 
+  seed = 1
 )
 
 samples1 = MCMC(
