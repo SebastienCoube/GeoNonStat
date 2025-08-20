@@ -131,6 +131,9 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
 generate_knots_from_kmeans <- function(knots_number, locs) {
   n_sample <- min(nrow(locs), 50000)
   sampled_locs <- locs[seq(n_sample), ]
+  
+  # TODO ici j'ai un warning Les étapes de transfer (quick-TRANSfer stage) ont dépassé le maximum (= 2500000)
+  # Si on met l'algorithme "Lloyd" ça résoud le pb.
   centers <- kmeans(sampled_locs, knots_number,
                     algorithm = "Hartigan-Wong", iter.max = 50)$centers
   return(centers)
