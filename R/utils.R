@@ -250,68 +250,8 @@ compute_sparse_chol = function(range_beta,
 #' @param beta_mean TODO
 #' @param beta_precision TODO
 #' @param log_scale TODO
-#'
-#' @returns a numeric value
-#' @export
-#'
-#' @examples
-#' 
-#' beta = matrix(rnorm(300), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' chol_crossprod_X = diag(1,100)
-#' log_scale = c(-6,-6,-6,0,0,0)
-#' 
-#' beta_prior_log_dens(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   chol_crossprod_X, 
-#'   log_scale
-#' )
-#' for(i in seq(nrow(beta))){
-#'   for(j in seq(ncol(beta))){
-#'     beta_ = beta
-#'     beta_[i,j] = beta_[i,j] + .00001
-#'     print(
-#'       paste(i,j,
-#'             signif(
-#'               (beta_prior_log_dens(
-#'                 beta_, 
-#'                 n_PP, 
-#'                 beta0_mean,
-#'                 beta0_var,
-#'                 chol_crossprod_X, 
-#'                 log_scale
-#'               ) - beta_prior_log_dens(
-#'                 beta, 
-#'                 n_PP, 
-#'                 beta0_mean,
-#'                 beta0_var,
-#'                 chol_crossprod_X, 
-#'                 log_scale
-#'               ))*100000, 
-#'               3), 
-#'             signif(
-#'               beta_prior_log_dens_derivative(beta, 
-#'                                              n_PP, 
-#'                                              beta0_mean,
-#'                                              beta0_var,
-#'                                              chol_crossprod_X, 
-#'                                              log_scale
-#'               )[i,j], 
-#'               3
-#'             )
-#'       ))
-#'     
-#'   }
-#' }
-#' 
-#' 
-#' 
-#'   beta follows a Normal distribution, with independent components. 
+#' @description
+#' #'   beta follows a Normal distribution, with independent components. 
 #'   
 #'   -------------------------------------------------------------------------------                    
 #'   In the isotropic case, beta has one column. 
@@ -361,28 +301,45 @@ compute_sparse_chol = function(range_beta,
 #'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
 #'                 |_       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                             
 #'                 
-
+#' @returns a numeric value
+#' @export
+#'
+#' @examples
+#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
+#' beta = matrix(rnorm(300), 100)
+#' n_PP = 90 
+#' beta0_mean = -5
+#' beta0_var = 2
+#' log_scale = c(-3,-2)
+#' 
+#' beta_prior_log_dens(
+#'   beta, 
+#'   n_PP, 
+#'   beta0_mean,
+#'   beta0_var,
+#'   log_scale
+#' )
+#' 
+#' beta = matrix(rnorm(100), 100)
+#' n_PP = 90 
+#' beta0_mean = -5
+#' beta0_var = 2
+#' log_scale = c(-3)
+#' 
+#' beta_prior_log_dens(
+#'   beta, 
+#'   n_PP, 
+#'   beta0_mean,
+#'   beta0_var,
+#'   log_scale
+#' )
 beta_prior_log_dens = function(beta, 
                                n_PP, 
                                beta0_mean,
                                beta0_var,
                                log_scale){
-  # PP_prior = 0
-  # if(n_PP>0) 
-  # {
-  #   scale_mat = expmat(-log_scale)
-  #   PP_prior = (
-  #     # PP coefficients follow N(0, scale_mat)
-  #     +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
-  #     -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
-  #   )
-  # }
-  # return(
-  #   PP_prior
-  #     -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[seq(nrow(beta)-n_PP),,drop = F][-1])^2) / .01)
-  # )
-  mean_mat <- matrix(0, dim(beta)) 
-  var_mat <- matrix(0.01, dim(beta)) 
+  mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
+  var_mat <- matrix(0.01, dim(beta)[1], dim(beta)[2])  
   mean_mat[1,1] <- beta0_mean  # Intercept for range
   var_mat[1,1] <- beta0_var # Intercept for range
   var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
@@ -409,9 +366,36 @@ beta_prior_log_dens = function(beta,
 #' # Comparison between differentiation using 
 #' # finite difference and using the formula
 #' # TODO Elise : ceci n'est pas un exemple.
-#' # Par contre passeerr ça en test pour vérifier 
+#' # Par contre passer ça en test pour vérifier 
 #' # que ça a bonne taille et que ça tourne autour de 1. 
+#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
+#' # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
 #' beta = matrix(rnorm(300), 100)
+#' n_PP = 90 
+#' beta0_mean = -5
+#' beta0_var = 2
+#' log_scale = c(-3, -2)
+#' beta_prior_log_dens_derivative(
+#'   beta, 
+#'   n_PP, 
+#'   beta0_mean,
+#'   beta0_var,
+#'   log_scale
+#' )
+#' 
+#' beta = matrix(rnorm(100), 100)
+#' n_PP = 90 
+#' beta0_mean = -5
+#' beta0_var = 2
+#' log_scale = c(-3)
+#' 
+#' beta_prior_log_dens_derivative(
+#'   beta, 
+#'   n_PP, 
+#'   beta0_mean,
+#'   beta0_var,
+#'   log_scale
+#' )
 #' res <-matrix(0, 100, 3)
 #' for(i in seq(100))
 #' {
@@ -430,8 +414,8 @@ beta_prior_log_dens_derivative =
            beta0_mean,
            beta0_var,
            log_scale){
-    mean_mat <- matrix(0, dim(beta)) 
-    var_mat <- matrix(0.01, dim(beta)) 
+    mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
+    var_mat <- matrix(0.01,dim(beta)[1], dim(beta)[2]) 
     mean_mat[1,1] <- beta0_mean
     var_mat[1,1] <- beta0_var
     var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
@@ -440,9 +424,6 @@ beta_prior_log_dens_derivative =
     }
     return(-(beta - mean_mat)/ var_mat)
   }
-
-
-
 
 
 #' Multiply the concatenation of a matrix of covariates and a PP by a matrix
@@ -565,8 +546,6 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
 X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_obs = F)
 {
-  # TODO : est-ce qu'il ne faudrait pas déplacer cette fonction dans un fichier utils ou usefull_stuff ?
-  # Si on le fait le faut déplacer les tests avec. 
   if(nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
   }
