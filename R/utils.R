@@ -381,14 +381,14 @@ beta_prior_log_dens = function(beta,
   #   PP_prior
   #     -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[seq(nrow(beta)-n_PP),,drop = F][-1])^2) / .01)
   # )
-  mean_mat <- var_mat <- 0*beta 
-  mean_mat[1,1] = beta0_mean  # Intercept for range
-  var_mat[] = .01
-  var_mat[1,1] = beta0_var # Intercept for range
-  # For predictive process. Diagonal matrix
-  # Upper left : range, remaining of diagonal : anisotropy
-  var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
-  var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
+  mean_mat <- matrix(0, dim(beta)) 
+  var_mat <- matrix(0.01, dim(beta)) 
+  mean_mat[1,1] <- beta0_mean  # Intercept for range
+  var_mat[1,1] <- beta0_var # Intercept for range
+  var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
+  if(ncol(beta)==3) {
+    var_mat[-seq(nrow(beta)-n_PP), c(2,3)] <- exp(log_scale[2])
+  }
   return(-0.5 * sum((beta - mean_mat)^2 / var_mat))
 }
 
@@ -406,46 +406,38 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
-#' 
 #' # Comparison between differentiation using 
 #' # finite difference and using the formula
-# beta = matrix(rnorm(300), 100)
-# for(i in seq(100))
-# {
-#   for(j in seq(3)){
-#     beta1 = beta 
-#     beta1[i,j] = beta1[i,j]+ .0001
-#     print((
-#       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-#         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-#     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j])
-#   }
-# }
- 
- 
+#' # TODO Elise : ceci n'est pas un exemple.
+#' # Par contre passeerr ça en test pour vérifier 
+#' # que ça a bonne taille et que ça tourne autour de 1. 
+#' beta = matrix(rnorm(300), 100)
+#' res <-matrix(0, 100, 3)
+#' for(i in seq(100))
+#' {
+#'   for(j in seq(3)){
+#'     beta1 = beta 
+#'     beta1[i,j] = beta1[i,j]+ .0001
+#'     res[i,j] <- (
+#'       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+#'         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+#'     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
+#'  }
+#' }
+#' mean(res); var(c(res))
 beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
            beta0_var,
            log_scale){
-#     res =  beta[seq(nrow(beta)- n_PP),,drop = F]
-#     res[1,1] = -(res[1,1] - beta0_mean)/beta0_var
-#     res[-1] = -(res[-1] - 0)/.01
-#     if(n_PP>0) 
-#     {
-#       scale_mat = expmat(-log_scale)
-#       res = rbind(res, 
-#                   -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
-#       )
-#     }
-#     res
-    mean_mat = 0*beta 
-    mean_mat[1,1] = beta0_mean
-    var_mat = 0*beta 
-    var_mat[] = .01
-    var_mat[1,1] = beta0_var
-    var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
-    var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
+    mean_mat <- matrix(0, dim(beta)) 
+    var_mat <- matrix(0.01, dim(beta)) 
+    mean_mat[1,1] <- beta0_mean
+    var_mat[1,1] <- beta0_var
+    var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
+    if(ncol(beta)==3) {
+      var_mat[-seq(nrow(beta)-n_PP), c(2,3)]<- exp(log_scale[2])
+    }
     return(-(beta - mean_mat)/ var_mat)
   }
 
