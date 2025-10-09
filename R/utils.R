@@ -4,7 +4,16 @@
 #'
 #' @returns a vector of colors, of length the number of rows of M
 #' @examples
-#' naive_greedy_coloring(Matrix(rnorm(200), 100))
+
+
+#' M = Matrix::sparseMatrix(i = seq(10), j = seq(10))
+#' M[,1]=1
+#' M[1,]=1
+#' naive_greedy_coloring(M)
+#' M[2,3]=1
+#' M[3,2]=1
+#' naive_greedy_coloring(M)
+
 naive_greedy_coloring = function(M)
 {
   #number of nodes
