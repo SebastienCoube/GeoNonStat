@@ -7,8 +7,9 @@ GeoNonStatSimulator = function(vecchia_approx,
                                matern_smoothness = 1.5,
                                #Matern smoothness
                                noise_X = NULL,
-                               range_X = NULL,
                                noise_PP = NULL,
+                               range_X = NULL,
+                               range_PP = NULL,
                                anisotropic = F) {
   covariates = list()
   covariates$X = process_covariates(
@@ -21,7 +22,7 @@ GeoNonStatSimulator = function(vecchia_approx,
   covariates$range_X = process_covariates(
     X = range_X,
     vecchia_approx = vecchia_approx,
-    PP = NULL,
+    PP = range_PP,
     one_obs_per_locs = T
   )
   # fixed effects and PP for noise
@@ -36,6 +37,7 @@ GeoNonStatSimulator = function(vecchia_approx,
       "covariates" =  covariates,
       "vecchia_approx" = vecchia_approx,
       "noise_PP" = noise_PP,
+      "range_PP" = range_PP,
       "matern_smoothness" = matern_smoothness,
       "anisotropic" = anisotropic
     )
@@ -59,19 +61,25 @@ create_coeff_list = function(GNSSimulator) {
     ),
     "range_X_coeff" = matrix(
       0,
-      nrow = ncol(covs$range_X$X),
-      dimnames = list(colnames(covs$range_X$X), c("det", "aniso", "aniso")[seq(1 + 2 *
-                                                                                 GNSSimulator$anisotropic)]),
+      nrow = ncol(covs$range_X$X_locs),
+      dimnames = list(colnames(covs$range_X$X_locs), 
+                      c("det", "aniso", "aniso")[seq(1 + 2 *GNSSimulator$anisotropic)]),
       ncol = 1 + 2 * GNSSimulator$anisotropic
     ),
     "noise_PP_coeff" = NULL,
     "field_log_var" = 0
   )
-  if (!is.null(GNSSimulator$PPs$noise_PP))
+  if (!is.null(GNSSimulator$noise_PP))
     res$noise_PP_coeff = matrix(0,
-                                nrow = GNSSimulator$PPs$noise_PP$n_knots,
+                                nrow = GNSSimulator$noise_PP$n_knots,
                                 dimnames = list(paste(
-                                  "PP", seq(GNSSimulator$PPs$noise_PP$n_knots), sep = ""
+                                  "PP", seq(GNSSimulator$noise_PP$n_knots), sep = ""
+                                )))
+  if (!is.null(GNSSimulator$range_PP))
+    res$range_PP_coeff = matrix(0,
+                                nrow = GNSSimulator$range_PP$n_knots, ncol = 1 + 2*GNSSimulator$anisotropic,
+                                dimnames = list(paste(
+                                  "PP", seq(GNSSimulator$range_PP$n_knots), sep = ""
                                 )))
   res
 }
@@ -82,7 +90,7 @@ create_coeff_list = function(GNSSimulator) {
 simulate = function(GNSSimulator, coeff_list, num_threads = 5) {
   log_range_field = X_PP_mult_right(
     X = GNSSimulator$covariates$range_X$X_locs,
-    PP = NULL,
+    PP = GNSSimulator$range_PP,
     vecchia_approx = GNSSimulator$vecchia_approx,
     Y = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff),
     permutate_PP_to_obs = F
@@ -91,7 +99,7 @@ simulate = function(GNSSimulator, coeff_list, num_threads = 5) {
   
   log_noise_field = X_PP_mult_right(
     X = GNSSimulator$covariates$noise_X$X,
-    PP = GNSSimulator$PPs$noise_PP,
+    PP = GNSSimulator$noise_PP,
     vecchia_approx = GNSSimulator$vecchia_approx,
     Y = rbind(coeff_list$noise_X_coeff, coeff_list$noise_PP_coeff),
     permutate_PP_to_obs = T
@@ -103,7 +111,7 @@ simulate = function(GNSSimulator, coeff_list, num_threads = 5) {
       range_beta = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff),
       vecchia_approx = GNSSimulator$vecchia_approx,
       range_X = GNSSimulator$covariates$range_X,
-      PP = NULL,
+      PP = GNSSimulator$range_PP,
       matern_smoothness = GNSSimulator$matern_smoothness,
       compute_derivative = F,
       num_threads = num_threads
