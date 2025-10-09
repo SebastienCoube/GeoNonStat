@@ -394,6 +394,7 @@ beta_prior_log_dens = function(beta,
 
 
 
+
 #' Compute gradient of logarithmic density prior
 #'
 #' @param beta a numerical matrix of spatial coordinates. 
@@ -405,20 +406,23 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
-#' beta = matrix(rnorm(300), 100)
-#' for(i in seq(100))
-#' {
-#'   for(j in seq(3)){
-#'     beta1 = beta 
-#'     beta1[i,j] = beta1[i,j]+ .0001
-#'     print((
-#'       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-#'         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-#'     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j])
-#'   }
-#' }
 #' 
-#' 
+#' # Comparison between differentiation using 
+#' # finite difference and using the formula
+# beta = matrix(rnorm(300), 100)
+# for(i in seq(100))
+# {
+#   for(j in seq(3)){
+#     beta1 = beta 
+#     beta1[i,j] = beta1[i,j]+ .0001
+#     print((
+#       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+#         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+#     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j])
+#   }
+# }
+ 
+ 
 beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
@@ -442,7 +446,7 @@ beta_prior_log_dens_derivative =
     var_mat[1,1] = beta0_var
     var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
     var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
-    return((beta - mean_mat)/ var_mat)
+    return(-(beta - mean_mat)/ var_mat)
   }
 
 
