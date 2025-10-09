@@ -286,8 +286,9 @@ process_covariates = function(X,
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
 #' @examples 
-#' myPP <- createPP(observed_locs = cbind(runif(100), runif(100))) 
-#' PPPP <- process_PP_prior(pepito, c(1,2), "example")
+#' vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
+#' myPP <- createPP(vecchia_approx) 
+#' PPPP <- process_PP_prior(myPP, c(1,2), "example")
 process_PP_prior = function(
     PP = NULL, 
     log_scale_bounds = NULL, 
@@ -295,7 +296,7 @@ process_PP_prior = function(
 ){
   if(is.null(PP) & is.null(log_scale_bounds)) return(log_scale_bounds)
   if(is.null(PP) & !is.null(log_scale_bounds))stop(paste("No PP object was provided for the", parameter_name, "parameters, but log - marginal variance bounds were provided") )
-  if(class(PP)!= "PP")stop(paste("PP who describes the", parameter_name, "parameters must be of class PP"))
+  if(!inherits(PP,"PP")) stop(paste("PP who describes the", parameter_name, "parameters must be of class PP"))
   if (!is.null(PP) & is.null(log_scale_bounds)){
     message(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters were automatically set to (-6, 3)"))
     log_scale_bounds = c(-6, 3)
@@ -316,8 +317,6 @@ process_PP_prior = function(
 #'
 #' @returns a list
 #' @examples
-#' 
-#' 
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
 #' observed_field = rnorm(nobs)
@@ -329,16 +328,15 @@ process_PP_prior = function(
 #' 
 #'hm1 = process_hierarchical_model(vecchia_approx = vecchia_approx,
 #' noise_PP = PP, noise_log_scale_bounds = NULL,
-#' observed_locs,
+#' range_PP = NULL, 
+#' observed_locs = observed_locs,
 #' matern_smoothness = 1.5,
 #' observed_field = observed_field,
 #' covariates = covariates,
 #' anisotropic = T) 
-
-
 process_hierarchical_model <- function(vecchia_approx, 
-                                       noise_PP, noise_log_scale_bounds,
-                                       range_PP, range_log_scale_bounds,
+                                       noise_PP=NULL, noise_log_scale_bounds=NULL,
+                                       range_PP=NULL, range_log_scale_bounds=NULL,
                                        observed_locs,
                                        matern_smoothness,
                                        observed_field,
@@ -404,8 +402,8 @@ process_hierarchical_model <- function(vecchia_approx,
 #' covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=FALSE)
 #' 
 #' hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
-#'   noise_PP = PP, noise_log_scale_bounds = NULL,
-#'   observed_locs,
+#'   noise_PP = PP, 
+#'   observed_locs = observed_locs,
 #'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
