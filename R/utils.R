@@ -330,11 +330,12 @@ beta_prior_log_dens = function(beta,
   #   PP_prior
   #     -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[seq(nrow(beta)-n_PP),,drop = F][-1])^2) / .01)
   # )
-  mean_mat = 0*beta 
-  mean_mat[1,1] = beta0_mean
-  var_mat = 0*beta 
+  mean_mat <- var_mat <- 0*beta 
+  mean_mat[1,1] = beta0_mean  # Intercept for range
   var_mat[] = .01
-  var_mat[1,1] = beta0_var
+  var_mat[1,1] = beta0_var # Intercept for range
+  # For predictive process. Diagonal matrix
+  # Upper left : range, remaining of diagonal : anisotropy
   var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
   var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
   return(-0.5 * sum((beta - mean_mat)^2 / var_mat))
