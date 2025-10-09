@@ -308,8 +308,59 @@ compute_sparse_chol = function(range_beta,
 #'     
 #'   }
 #' }
-
-
+#' 
+#' 
+#' 
+#'   beta follows a Normal distribution, with independent components. 
+#'   
+#'   -------------------------------------------------------------------------------                    
+#'   In the isotropic case, beta has one column. 
+#'   It has 3 categories of rows : 
+#'   - the first row, corresponding to the Intercept. 
+#'   - the next rows, corresponding to the rest of the explnanatory variables if there are any.
+#'   - the last rows, corresponding to the PP coefficients if there are any.
+#'   
+#'                 The mean is a vector     The diagonal of the variance matrix is 
+#'                      with shape :                    a vector with shape : 
+#'                                                                                                               
+#'    (Intercept)      beta_0_mean                           beta_0_var                                              
+#'                 |-       0                                   0.01                                                
+#'                 |        0                                   0.01                                                
+#'            X   -|        0                                   0.01                                                
+#'                 |        0                                   0.01                                                
+#'                 |_       0                                   0.01                                                
+#'                 |-       0                          exp(range_log_scale)                                    
+#'                 |        0                          exp(range_log_scale)                                    
+#'            PP  -|        0                          exp(range_log_scale)                                    
+#'                 |        0                          exp(range_log_scale)                                    
+#'                 |        0                          exp(range_log_scale)                                    
+#'                 |_       0                          exp(range_log_scale)                                    
+#'                    
+#'   -------------------------------------------------------------------------------                    
+#'                                                                                                            
+#'   In the anisotropic case, beta has 3 columns, one for the Range, two for the Anisotropy 
+#'   The categories of rows are the same as in the Isotropic case. 
+#'   
+#'   The mean and the diagonal of the variance matrix are stored under 
+#'   the shape of matrices with 3 columns, like beta.
+#'                                                                                                            
+#'                                     mean                                                        variance                                                                                        
+#'                                                                                                                          
+#'                      (range)      (aniso)    (aniso)                                                                  
+#'                                                                                                                                                   
+#'    (Intercept)      beta_0_mean      0           0                     beta_0_var                  0.01                      0.01
+#'                 |-       0           0           0                        0.01                     0.01                      0.01                                                                                      
+#'                 |        0           0           0                        0.01                     0.01                      0.01                                                                                      
+#'            X   -|        0           0           0                        0.01                     0.01                      0.01                                                                                      
+#'                 |        0           0           0                        0.01                     0.01                      0.01                                                                                      
+#'                 |_       0           0           0                        0.01                     0.01                      0.01                                                                                      
+#'                 |-       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
+#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
+#'            PP  -|        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
+#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
+#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                                                          
+#'                 |_       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])                                             
+#'                 
 
 beta_prior_log_dens = function(beta, 
                                n_PP, 
