@@ -34,6 +34,12 @@ naive_greedy_coloring = function(M)
   return(cols)
 }
 
+#' Title
+#'
+#' @param vecchia_approx  an object created with `createVecchia()`
+#' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
+#'
+#' @returns a sparse triangular matrix
 decompress_chol = function(vecchia_approx, compressed_sparse_chol){
   Matrix::sparseMatrix(
     i = vecchia_approx$sparse_chol_i, 
@@ -43,32 +49,13 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
   ) 
 }
 
-
-#' Exponential of a square matrix, adding a small numeric value on the diagonal
-#'
-#' @param coords a numeric vector
-#' @param eps a numeric value, default to .0001
-#'
-#' @returns a square matrix
-#' @export
-#'
-#' @examples
-#' expmat(c(-1))
-#' expmat(c(-1,-2))
-expmat = function(coords, eps = .0001)
-{
-  if(length(coords)==1)return(matrix(exp(coords)))
-  if(length(coords)==2)return(diag(exp(coords)[c(1,2,2)]))
-}
-
-
 #' Computes a Vecchia sparse Cholesky factor and its derivatives
 #' 
 #' @param range_beta parameter for the range.
 #' If the covariance is anisotropic, it must have 3 columns. It the covariance is isotropic, it must have 1 column. 
 #' The first coefficients are multiplied with range_X 
 #' The last coefficients are multiplied with the spatial basis functions of PP
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created with `createVecchia()`
 #' @param range_X covariates for range, treated using process_covariates
 #' @param PP predictive process obtained through `createPP()`
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
