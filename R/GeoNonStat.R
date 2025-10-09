@@ -388,6 +388,12 @@ process_hierarchical_model <- function(vecchia_approx,
 #'
 #' @param init a numeric value
 #' @returns a list
+#' @description 
+#' Transition kernel state
+#' transition kernel variance is given as the log
+#' can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
+#' have an ancillary and a sufficient version when applicable
+#' rangedescription
 #' @examples
 #' tk <- process_transition_kernels()
 #' nobs = 10000
@@ -410,12 +416,6 @@ process_hierarchical_model <- function(vecchia_approx,
 #'   anisotropic = T) 
 #' process_transition_kernels(hm = hm)
 process_transition_kernels <- function(init=-4, hm){
-  # Transition kernels ###################################################################
-  # Transition kernel state
-  # transition kernel variance is given as the log
-  # can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
-  # have an ancillary and a sufficient version when applicable
-  # range
   res =   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
