@@ -164,11 +164,3 @@ stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 
 ker_var$range_beta_ancillary
 
-
-source("Tset/MCMC_messy.R")
-
-dev.off()
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= .5)
-plot_ellipses(vecchia_approx$locs[seq(100),], log_range = covariates$range_X$X_locs[seq(100),]%*%params$range_beta, add = T, shrink =  sqrt(8*1.5))
-
-plot_pointillist_painting(vecchia_approx$observed_locs, X_range[,5], cex= .5)

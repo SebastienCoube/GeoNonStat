@@ -691,7 +691,7 @@ process_states <- function(
             seed = chain_number + seed,
             hm = hierarchical_model, covariates = covariates,
             observed_field = observed_field, vecchia_approx = vecchia_approx,
-            init_tk = -10
+            init_tk = -8
           )
       )
     names(states) = paste("chain", seq(n_chains), sep = "_")
