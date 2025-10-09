@@ -245,7 +245,6 @@ compute_sparse_chol = function(range_beta,
 
 
 #' Compute prior logarithmic density of a matrix
-#' TODO A reformater.
 #'
 #' @param beta TODO
 #' @param n_PP TODO
@@ -367,11 +366,6 @@ beta_prior_log_dens = function(beta,
 #' @examples
 #' # Comparison between differentiation using 
 #' # finite difference and using the formula
-#' # TODO Elise : ceci n'est pas un exemple.
-#' # Par contre passer ça en test pour vérifier 
-#' # que ça a bonne taille et que ça tourne autour de 1. 
-#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-#' # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
 #' beta = matrix(rnorm(300), 100)
 #' n_PP = 90 
 #' beta0_mean = -5
@@ -398,6 +392,11 @@ beta_prior_log_dens = function(beta,
 #'   beta0_var,
 #'   log_scale
 #' )
+#' # TODO Elise : ceci n'est pas un exemple.
+#' # Par contre passer ça en test pour vérifier 
+#' # que ça a bonne taille et que ça tourne autour de 1. 
+#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
+#' # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
 #' res <-matrix(0, 100, 3)
 #' for(i in seq(100))
 #' {
