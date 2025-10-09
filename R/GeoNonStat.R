@@ -271,6 +271,7 @@ process_covariates = function(X,
   res$crossprod_X_locs = crossprod(X_locs_) + diag(1e-10, ncol(X_locs_), ncol(X_locs_))
   res$chol_crossprod_X_locs = chol(res$crossprod_X_locs)
   
+  res$X_locs_ = X_locs_
   if(one_obs_per_locs){
     res$X = NULL
     res$chol_crossprod_X = NULL
@@ -420,8 +421,9 @@ process_transition_kernels <- function(init=-4, hm){
   res =   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
-    range_beta_sufficient = init,
-    range_beta_ancillary  = init,
+    range_beta_sufficient = c(init, .5),
+    range_beta_ancillary  = c(init, .5),
+    range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 2), 
     
     scale_beta_sufficient = init,
     scale_beta_ancillary  = init,
@@ -506,8 +508,21 @@ process_states <- function(
   stuff$lm_residuals = observed_field - stuff$lm_fit
   # Range of the NNGP and stuff depending on it ################################
   # parameter format and value
-    params$range_beta = matrix(0, ncol(covariates$range_X$X), 1 + 2 * hm$anisotropic)
-    row.names(params$range_beta) = colnames(covariates$range_X$X)
+  if(is.null(hm$range$PP)) {
+    params$range_beta = matrix(data =  0, 
+                               nrow = ncol(covariates$range_X$X_locs), 
+                               ncol = 1 + 2 * hm$anisotropic) #random starting values
+    row.names(params$range_beta) = colnames(covariates$range_X$X_locs)
+  }
+  if(!is.null(hm$range$PP)) {
+    params$range_beta = matrix(data =  0, 
+                               nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots, 
+                               ncol = 1 + 2 * hm$anisotropic) #random starting values
+    row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
+                                     paste("PP", seq(hm$range$PP$n_knots), sep = "_"))
+    params$range_log_scale = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic)
+  }
+    #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
   params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
   # momenta
   momenta$range_beta_ancillary = matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
@@ -516,7 +531,7 @@ process_states <- function(
   stuff$compressed_chol = compute_sparse_chol(
     range_beta = params$range_beta, vecchia_approx = vecchia_approx, 
     range_X = covariates$range_X, 
-    PP = NULL, matern_smoothness = hm$matern_smoothness, 
+    PP = hm$range$PP, matern_smoothness = hm$matern_smoothness, 
     compute_derivative = T, num_threads = min(5, max(parallel::detectCores()-1, 1))
   )
   stuff$sparse_chol = decompress_chol(vecchia_approx, stuff$compressed_chol)
@@ -535,6 +550,7 @@ process_states <- function(
     params$noise_log_scale = hm$noise$log_scale_bounds[1]
   }
   params$noise_beta[1] = hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
+  
   # momenta
   momenta$noise_beta = rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
@@ -648,7 +664,7 @@ process_states <- function(
                                       PP = NULL, one_obs_per_locs=FALSE)
     # fixed effects and PP for range
     covariates$range_X = process_covariates(X = range_X, vecchia_approx = vecchia_approx, 
-                                            PP = NULL, one_obs_per_locs=TRUE)
+                                            PP = range_PP, one_obs_per_locs=TRUE)
     # fixed effects and PP for noise
     covariates$noise_X = process_covariates(X = noise_X, vecchia_approx = vecchia_approx, 
                                             PP = noise_PP, one_obs_per_locs=FALSE)
@@ -678,7 +694,7 @@ process_states <- function(
             seed = chain_number + seed,
             hm = hierarchical_model, covariates = covariates,
             observed_field = observed_field, vecchia_approx = vecchia_approx,
-            init_tk = -4.5
+            init_tk = -10
           )
       )
     names(states) = paste("chain", seq(n_chains), sep = "_")

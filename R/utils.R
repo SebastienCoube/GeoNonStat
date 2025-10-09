@@ -37,46 +37,13 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' @export
 #'
 #' @examples
-#' expmat(c(1,2,3,4,5,6))
+#' expmat(c(-1))
+#' expmat(c(-1,-2))
 expmat = function(coords, eps = .0001)
 {
-  res = expm::expm(symmat(coords))
-  if(eps != 0) diag(res) <- diag(res) + eps
-  return(res)
+  if(length(coords)==1)return(matrix(exp(coords)))
+  if(length(coords)==2)return(diag(exp(coords)[c(1,2,2)]))
 }
-
-
-#' Create symetric matrix from coordinates
-#'
-#' @param coords a numeric vector, of length 1, 3 or 6
-#'
-#' @returns a matrix
-#' @export
-#'
-#' @examples
-#' symmat(c(1,2,3,4,5,6))
-symmat = function(coords)
-{
-  # Trouver la taille n de la matrice symétrique n x n
-  # Longueur du vecteur doit être égale à n + n*(n-1)/2 = n*(n+1)/2
-  n <- (sqrt(8 * length(coords) + 1) - 1) / 2
-  if (n != floor(n)) {
-    stop("length of coords incompatible with a symetric matrix.")
-  }
-  mat <- matrix(0, n, n)
-  
-  diag_indices <- which(row(mat) == col(mat))
-  lower_indices <- which(lower.tri(mat))
-  
-  # 1st fill diagonal elements
-  mat[diag_indices] <- coords[1:n]
-  # Then lower and upper mat
-  mat[lower_indices] <- coords[(n + 1):length(coords)]
-  mat[upper.tri(mat)] <- t(mat)[upper.tri(mat)]
-  
-  return(mat)
-}
-
 
 
 #' Computes a Vecchia sparse Cholesky factor and its derivatives
@@ -348,22 +315,29 @@ beta_prior_log_dens = function(beta,
                                n_PP, 
                                beta0_mean,
                                beta0_var,
-                               chol_crossprod_X, 
                                log_scale){
-  PP_prior = 0
-  if(n_PP>0) 
-  {
-    scale_mat = expmat(-log_scale)
-    PP_prior = (
-      # PP coefficients follow N(0, scale_mat)
-      +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
-      -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
-    )
-  }
-  return(
-    PP_prior
-      -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[-1])^2) / .01)
-  )
+  # PP_prior = 0
+  # if(n_PP>0) 
+  # {
+  #   scale_mat = expmat(-log_scale)
+  #   PP_prior = (
+  #     # PP coefficients follow N(0, scale_mat)
+  #     +.5 * n_PP * determinant(scale_mat, logarithm = T)$mod # determinant is changed by log scale
+  #     -sum(.5 * c(beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat) * beta[-seq(nrow(beta)-n_PP),,drop = F])
+  #   )
+  # }
+  # return(
+  #   PP_prior
+  #     -.5*((beta[1,1]-beta0_mean)^2/beta0_var + sum((beta[seq(nrow(beta)-n_PP),,drop = F][-1])^2) / .01)
+  # )
+  mean_mat = 0*beta 
+  mean_mat[1,1] = beta0_mean
+  var_mat = 0*beta 
+  var_mat[] = .01
+  var_mat[1,1] = beta0_var
+  var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
+  var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
+  return(-0.5 * sum((beta - mean_mat)^2 / var_mat))
 }
 
 
@@ -380,96 +354,45 @@ beta_prior_log_dens = function(beta,
 #'
 #' @examples
 #' beta = matrix(rnorm(300), 100)
-#' beta1 = beta 
-#' derived_idx=  cbind(1,1)
-#' derived_idx=  cbind(1,2)
-#' derived_idx=  cbind(2,1)
-#'  derived_idx=  cbind(10,3)
-#'  beta1[derived_idx] = beta1[derived_idx]+ .0001
-#'  (
-#'   beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6)) -
-#'    beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))
-#'  )*10000
-#'  beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = rep(0, 6))[derived_idx]
+#' for(i in seq(100))
+#' {
+#'   for(j in seq(3)){
+#'     beta1 = beta 
+#'     beta1[i,j] = beta1[i,j]+ .0001
+#'     print((
+#'       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+#'         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+#'     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j])
+#'   }
+#' }
+#' 
+#' 
 beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
            beta0_var,
-           chol_crossprod_X, 
            log_scale){
-    res =  beta[seq(nrow(beta)- n_PP),,drop = F]
-    res[1,1] = -(res[1,1] - beta0_mean)/beta0_var
-    res[-1] = -(res[-1] - 0)/.01
-    if(n_PP>0) 
-    {
-      scale_mat = expmat(-log_scale)
-      res = rbind(res, 
-                  -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
-      )
-    }
-    res
+#     res =  beta[seq(nrow(beta)- n_PP),,drop = F]
+#     res[1,1] = -(res[1,1] - beta0_mean)/beta0_var
+#     res[-1] = -(res[-1] - 0)/.01
+#     if(n_PP>0) 
+#     {
+#       scale_mat = expmat(-log_scale)
+#       res = rbind(res, 
+#                   -beta[-seq(nrow(beta)-n_PP),,drop = F] %*% scale_mat
+#       )
+#     }
+#     res
+    mean_mat = 0*beta 
+    mean_mat[1,1] = beta0_mean
+    var_mat = 0*beta 
+    var_mat[] = .01
+    var_mat[1,1] = beta0_var
+    var_mat[-seq(nrow(beta)-n_PP), 1]  = exp(log_scale[1])
+    var_mat[-seq(nrow(beta)-n_PP), -1]  = exp(log_scale[2])
+    return((beta - mean_mat)/ var_mat)
   }
 
-
-#PP$idx : match between the non redundant locations of PP and the redundant observed locations
-#locs_idx : match between the redundant observed locations and those of X
-
-
-#' Title
-#'
-#' @param coords a numeric vector of length 1 or 6
-#' @param eps a numeric value, default to 0.00001
-#'
-#' @returns an 3 dimensional array
-#'
-#' @examples
-#' derivative_chol_expmat(c(1,2,3, 3,2,4))
-derivative_chol_expmat = function(coords, eps=0.00001)
-{
-  dimres = 1
-  if(length(coords)==6) dimres = 3
-  res = array(data = 0, dim = c(dimres, dimres, length(coords)))
-  chol_expmat = chol(expmat(coords))
-  for(i in seq(length(coords)))
-  {
-    coords_ = coords
-    coords_[i] = coords_[i] + eps
-    res[,,i] = 100000 * (chol(expmat(coords_)) - chol_expmat)
-  }
-  res
-}
-
-#' Title TODO
-#'
-#' @param field TODO
-#' @param coordsTODO
-#'
-#' @returns an array
-#'
-#' @examples
-#' field <- matrix(rnorm(30), ncol = 3)
-#' log_scale_vec=  rnorm(6)
-#' res <- derivative_field_wrt_scale(field, log_scale_vec)
-#' par(mfrow = c(3,2))
-#' for(i in seq(length(log_scale_vec))){
-#'   log_scale_vec_ = log_scale_vec
-#'   log_scale_vec_[i] = log_scale_vec_[i] + .0001
-#'   field_ = field %*% solve(chol(expmat(log_scale_vec))) %*% chol(expmat(log_scale_vec_))
-#'   plot((field_-field)*10000, res[,,i], xlab = "finite diff", ylab = "using function", main = paste(i, "-th derivative"))
-#'   abline(a=0, b=1)
-#' }
- 
-derivative_field_wrt_scale = function(field, coords)
-{
-  d_chol_expmat = derivative_chol_expmat(coords)
-  white_field = field %*% solve(chol(expmat(coords)))
-  res = array(0, dim = c(dim(field), length(coords)))
-  for(i in seq(length(coords)))
-  {
-    res[,,i] = white_field %*% d_chol_expmat[,,i]
-  }
-  res
-}
 
 
 
