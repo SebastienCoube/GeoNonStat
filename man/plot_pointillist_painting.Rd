@@ -24,5 +24,7 @@ a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.
 }
 \examples{
-plot_pointillist_painting(locs=c(2,3,6), field=c(1,2,3))
+locs <- matrix(rnorm(2000), ncol=2)
+plot_pointillist_painting(locs=locs, field=locs[,1])
+plot_pointillist_painting(locs=locs, field=rnorm(1000))
 }

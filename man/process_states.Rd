@@ -32,18 +32,16 @@ observed_locs = cbind(runif(nobs), runif(nobs))
 observed_field = rnorm(nobs)
 
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-vecchia_approx = createVecchia(observed_locs, 12)
+vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
 PP = createPP(vecchia_approx)
 
 covariates = list(
   X = process_covariates(X = X, vecchia_approx), 
-  scale_X = process_covariates(X = X, vecchia_approx, PP),
   noise_X = process_covariates(X = X, vecchia_approx, PP),
-  range_X = process_covariates(X = X, vecchia_approx, PP)
+  range_X = process_covariates(X = X, vecchia_approx)
 )
-hm = process_hierarchical_model(
+hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
   noise_PP = PP, noise_log_scale_bounds = NULL,
-  scale_PP = PP, scale_log_scale_bounds = NULL,
   range_PP = PP, range_log_scale_bounds = NULL,
   observed_locs,
   matern_smoothness = 1.5,

@@ -15,8 +15,7 @@
 Summary of a 'PP' object
 }
 \examples{
-observed_locs = cbind(runif(1000), runif(1000))
-observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-pepito = createPP(observed_locs)
+vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
+pepito = createPP(vecchia_approx, plot=FALSE)
 summary(pepito)
 }

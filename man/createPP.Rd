@@ -5,19 +5,27 @@
 \title{Create an object of class PP, a low rank Predictive Process used as a prior to describe 
 spatial variations of covariance parameters}
 \usage{
-createPP(vecchia_approx, matern_range = NULL, knots = NULL, seed = 1234)
+createPP(
+  vecchia_approx,
+  matern_range = NULL,
+  knots = NULL,
+  seed = 1234,
+  plot = TRUE
+)
 }
 \arguments{
 \item{vecchia_approx}{obtained by `createVecchia()`}
 
-\item{matern_range}{either a positive number used to set the Matérn range of the PP or NULL, 
+\item{matern_range}{either a positive number used to set the Matérn range of the PP or NULL (default), 
 if NULL, a default PP range is guessed from the spatial locations.}
 
 \item{knots}{either (i) a matrix of spatial knots used for the PP, 
 (ii) or a positive integer used to set the number of knots, the knots being then found using kmeans, 
-(iii) or NULL, a default number and placement of knots being guessed from the spatial locations.}
+(iii) or NULL (default), a default number and placement of knots being guessed from the spatial locations.}
 
-\item{seed}{integer used as a seed}
+\item{seed}{integer. Used as a seed to reproduce results.}
+
+\item{plot}{logical, should diagnostic plots of PP be produced ? Default to TRUE.}
 }
 \value{
 a list
@@ -27,7 +35,7 @@ Create an object of class PP, a low rank Predictive Process used as a prior to d
 spatial variations of covariance parameters
 }
 \examples{
-vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
+vecchia_approx = createVecchia(cbind(runif(10000), runif(10000)), 10, ncores=1)
 # automatic 
 pepito = createPP(vecchia_approx)
 # choosing manually Matérn range, too small wrt number of knots

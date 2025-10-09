@@ -1,19 +1,17 @@
 #' Title
 #'
-#' @param M a sparse matrix
+#' @param M a SparseMatrix
 #'
 #' @returns a vector of colors, of length the number of rows of M
 #' @examples
-
-
-#' M = Matrix::sparseMatrix(i = seq(10), j = seq(10))
-#' M[,1]=1
-#' M[1,]=1
+#' n <- 5  # taille de la matrice
+#' i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
+#' j <- c(1:n, rep(1, n - 1))
+#' M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
 #' naive_greedy_coloring(M)
 #' M[2,3]=1
 #' M[3,2]=1
 #' naive_greedy_coloring(M)
-
 naive_greedy_coloring = function(M)
 {
   #number of nodes
@@ -25,7 +23,7 @@ naive_greedy_coloring = function(M)
   #creating a color * node matrix of incompatibilities
   incompatibilities = matrix(0, n_obs+1, max(degrees))
   cols = rep(0, n_obs)
-  
+
   for(i in seq(n_obs))
   {
     cols[i] = match(0, incompatibilities[i,])

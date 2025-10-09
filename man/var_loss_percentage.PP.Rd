@@ -4,7 +4,7 @@
 \alias{var_loss_percentage.PP}
 \title{Compute the percentage of marginal variance who is lost because of the use of a PP}
 \usage{
-var_loss_percentage.PP(x, ...)
+var_loss_percentage.PP(x)
 }
 \arguments{
 \item{x}{an object of class \code{PP}}
@@ -13,8 +13,7 @@ var_loss_percentage.PP(x, ...)
 Compute the percentage of marginal variance who is lost because of the use of a PP
 }
 \examples{
-observed_locs = cbind(runif(1000), runif(1000))
-observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-pepito = createPP(observed_locs)
+vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores=1)
+pepito = createPP(vecchia, plot=FALSE)
 var_loss_percentage.PP(pepito)
 }

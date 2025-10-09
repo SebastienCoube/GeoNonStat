@@ -10,19 +10,15 @@ GeoNonStat(
   vecchia_approx,
   observed_field,
   X = NULL,
-  m = 10,
   matern_smoothness = 1.5,
   anisotropic = FALSE,
   n_chains = 2,
-  noise_X = NULL,
   range_X = NULL,
-  scale_X = NULL,
-  noise_PP = F,
-  range_PP = F,
-  scale_PP = F,
-  noise_log_scale_prior = NULL,
-  range_log_scale_prior = NULL,
-  scale_log_scale_prior = NULL,
+  range_PP = NULL,
+  range_log_scale_bounds = NULL,
+  noise_X = NULL,
+  noise_PP = NULL,
+  noise_log_scale_bounds = NULL,
   seed = 1
 )
 }
@@ -39,27 +35,27 @@ GeoNonStat(
 
 \item{n_chains}{TODO}
 
-\item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
-
 \item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
-
-\item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
-
-\item{noise_PP}{TODO}
 
 \item{range_PP}{TODO}
 
-\item{scale_PP}{TODO}
+\item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
+
+\item{noise_PP}{TODO}
 
 \item{seed}{TODO}
 
 \item{PP}{TODO}
 
-\item{noise_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
+\item{scale_PP}{TODO}
 
-\item{scale_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
+\item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
 
-\item{range_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+\item{noise$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
+
+\item{scale$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
+
+\item{range$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
 }
 \value{
 a list
@@ -72,26 +68,18 @@ set.seed(100)
 nobs = 10000
 observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
 observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs)
+vecchia_approx = createVecchia(observed_locs, ncores=1)
 myPP = createPP(
   vecchia_approx = vecchia_approx,
   matern_range = .1,
   knots = 600
 )
-range_PP = myPP
-scale_PP = myPP
 noise_PP = myPP
-
 noise_log_scale_bounds = c(-6, 3)
-scale_log_scale_bounds = c(-6, 3)
-range_log_scale_bounds = c(-6, 3)
 
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
 range_X = as.data.frame(observed_locs)
-scale_X = as.data.frame(observed_locs)
 noise_X = X
-
-
 
 matern_smoothness = 1.5
 n_chains = 4
@@ -107,15 +95,8 @@ myobj = GeoNonStat(
   anisotropic = FALSE, 
   n_chains = 5,
   # number of MCMC chains
-  noise_X =  noise_X ,
+  noise_X =  noise_X , noise_PP = noise_PP , noise_log_scale_bounds = NULL,
   range_X =  range_X ,
-  scale_X =  scale_X ,
-  noise_PP = noise_PP ,
-  range_PP = range_PP ,
-  scale_PP = scale_PP ,
-  noise_log_scale_prior = NULL,
-  range_log_scale_prior = NULL,
-  scale_log_scale_prior = NULL,
   seed = 1
 )
 }
