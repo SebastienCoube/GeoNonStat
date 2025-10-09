@@ -1,3 +1,10 @@
+#' Title
+#'
+#' @param M a sparse matrix
+#'
+#' @returns a vector of colors, of length the number of rows of M
+#' @examples
+#' naive_greedy_coloring(Matrix(rnorm(200), 100))
 naive_greedy_coloring = function(M)
 {
   #number of nodes
@@ -167,16 +174,15 @@ compute_sparse_chol = function(range_beta,
                                num_threads = 1)
 {
   if (!matern_smoothness %in% c(.5, 1.5)) stop("matern_smoothness must be equal to 0.5 or 1.5")
-  # converting to canonical basis
-  # TODO ici est-ce que ncol(range_beta) peut être autre que 1 ou 3 ?
   if(ncol(range_beta)==3) {
     range_beta = range_beta %*% matrix(
       c(1/sqrt(2), 1/sqrt(2),  0, 
         1/sqrt(2), -1/sqrt(2), 0,
         0,       0,        1), 3)*sqrt(2)*2
-  }
-  if(ncol(range_beta)==1) {
+  } else if(ncol(range_beta)==1) {
     range_beta = range_beta * 2
+  } else {
+    stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }
   
   log_range = as.matrix(

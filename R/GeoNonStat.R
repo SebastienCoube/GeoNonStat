@@ -474,7 +474,6 @@ process_transition_kernels <- function(init=-4, hm){
 #'     vecchia_approx,
 #'     init_tk = -4
 #' )
-
 process_states <- function(
     hm,
     covariates,
