@@ -186,9 +186,10 @@ for(sm in smoothness){
   
 }
 
-# testing derivative sandwich #####
+###############################
+# testing derivative sandwich #
+###############################
 
-set.seed(1)
 # spatial locations 
 n = 10000
 locs = cbind(runif(n), runif(n))
@@ -206,6 +207,7 @@ tatato = vecchia(
 # computing new Vecchia approx with a new range parameter
 range_row_idx = 30
 range_col_idx = 1
+
 for(range_col_idx in seq(3)){
   print(paste("range_col_idx = ", range_col_idx))
   # computing new Vecchia approx and derivatrives
@@ -243,7 +245,16 @@ for(range_col_idx in seq(3)){
   print("finite diff sandwich with determinant sauce")
   print(tatata[range_col_idx, range_row_idx])
   print("=========================")
+  
+  print("determinant only, analytical")
+  ttt = derivative_sandwiches(vecchia = tatato, left_vector = 0*v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
+  print(ttt[range_col_idx, range_row_idx])
+    print("determinant only, finite diff")
+  print(sum(log(tatato_[1,1,]) - log(tatato[1,1,]))*100000)
+  print("=========================")
 }
+
+
 
 
 

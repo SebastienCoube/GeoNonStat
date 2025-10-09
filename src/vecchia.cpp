@@ -38,7 +38,7 @@ arma::cube vecchia(
   omp_set_num_threads(num_threads);
 #endif
   double diag_term = 1.01;
-  double diff_term = 0.0001;
+  double diff_term = 0.00001;
   
   // initializing stuff
   int n = locs.n_cols;
@@ -426,18 +426,18 @@ arma::mat derivative_sandwiches
     arma::mat vecchia_slice= vecchia.slice(row_idx);
     arma::rowvec mini_sandwich = right_vector_sub * vecchia_slice * left_vector(row_idx)  ;
      if(!sauce_determinant_chef){
-// # pragma omp critical 
+ # pragma omp critical 
      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
        for(int col_idx = 0; col_idx < bsize; col_idx++){
          res(aniso_idx, NNarray_col(col_idx)-1) += mini_sandwich(1 + col_idx + aniso_idx*m);
        }
      }
      }else{
-// # pragma omp critical 
+ # pragma omp critical 
      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
        for(int col_idx = 0; col_idx < bsize; col_idx++){
          res(aniso_idx, NNarray_col(col_idx)-1) += 
-           mini_sandwich(1 + col_idx + aniso_idx*m) -  
+           mini_sandwich(   1 + col_idx + aniso_idx*m) +  
            vecchia_slice(0, 1 + col_idx + aniso_idx*m)/vecchia_slice(0, 0);
        }
      }
