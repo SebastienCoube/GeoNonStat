@@ -76,6 +76,7 @@ log_range[,3] = -3*locs[,2]
 NNarray = GpGp::find_ordered_nn(locs, 10)
 NNarray[is.na(NNarray)] = 0
 smoothness = c(0.5, 1.5)
+par(mfrow = c(2,2))
 for(sm in smoothness){
   # computing Vecchia 
   tatato = vecchia(
@@ -120,6 +121,7 @@ for(sm in smoothness){
     abline(a = 0, b=1)
   }
 }
+
 
 
 ########################################################################
@@ -184,9 +186,7 @@ for(sm in smoothness){
   
 }
 
-
-
-# testing derivative sandwich
+# testing derivative sandwich #####
 
 set.seed(1)
 # spatial locations 
