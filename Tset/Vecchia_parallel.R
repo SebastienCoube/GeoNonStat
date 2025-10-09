@@ -240,7 +240,7 @@ for(range_col_idx in seq(3)){
   print(((
     v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato_[,1,])[!is.na(NNarray)]) %*% v_right -
       v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato [,1,])[!is.na(NNarray)]) %*% v_right 
-    + sum(log(tatato_[1,1,])) - sum(log(tatato[1,1,]))
+    - sum(log(tatato_[1,1,])) + sum(log(tatato[1,1,]))
   )*100000)[1,1])
   print("finite diff sandwich with determinant sauce")
   print(tatata[range_col_idx, range_row_idx])

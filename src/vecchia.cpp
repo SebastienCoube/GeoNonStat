@@ -437,7 +437,7 @@ arma::mat derivative_sandwiches
      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
        for(int col_idx = 0; col_idx < bsize; col_idx++){
          res(aniso_idx, NNarray_col(col_idx)-1) += 
-           mini_sandwich(   1 + col_idx + aniso_idx*m) +  
+           mini_sandwich(   1 + col_idx + aniso_idx*m) -  
            vecchia_slice(0, 1 + col_idx + aniso_idx*m)/vecchia_slice(0, 0);
        }
      }

@@ -88,7 +88,7 @@
 ###############
 
 set.seed(2)
-observed_locs = cbind(runif(10000), runif(10000))[sample(seq(10000),size = 10000, replace = F),]
+observed_locs = cbind(runif(12000), runif(12000))[sample(seq(12000),size = 10000, replace = F),]
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
 # fixed effects
@@ -113,10 +113,10 @@ coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
 coeff_list$noise_X_coeff[1] = -4
 
 
-range_log_scale = c(-1,-1)
-coeff_list$range_PP_coeff[,1] = exp(range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = exp(range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] = -4
+range_log_scale = c(-5,-5)
+coeff_list$range_PP_coeff[,1] = exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+coeff_list$range_X_coeff[1,1] = -4.5
 
 fake_data = simulate(
   GNSSimulator = GNSSimulator, 
@@ -164,3 +164,4 @@ stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 
 ker_var$range_beta_ancillary
 
+source("Tset/MCMC_messy.R")
