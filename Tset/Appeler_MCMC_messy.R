@@ -82,7 +82,6 @@
 # abline(h = reg_coeffs[5])
 
 
-
 ###############
 # Anisotropic #
 ###############
@@ -110,10 +109,10 @@ GNSSimulator = GeoNonStatSimulator(
 
 coeff_list = create_coeff_list(GNSSimulator)
 coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-coeff_list$noise_X_coeff[1] = -4
+coeff_list$noise_X_coeff[1] = 1
 
 
-range_log_scale = c(-5,-5)
+range_log_scale = c(-1,-1)
 coeff_list$range_PP_coeff[,1] = exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
 coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
 coeff_list$range_X_coeff[1,1] = -4.5
