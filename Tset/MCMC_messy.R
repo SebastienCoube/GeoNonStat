@@ -31,7 +31,24 @@ update_kernel = function(
 }
 
 
-
+get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
+  prior = diag(c(
+    hierarchical_model$range$beta0_sd, 
+    rep(.1, ncol(covariates$range_X$X_locs)-1),
+    rep(exp(ker_var$range_log_scale_estimate[1]), hierarchical_model$range$PP$n_knots),
+    rep(.1, ncol(covariates$range_X$X_locs)),
+    rep(exp(ker_var$range_log_scale_estimate[2]), hierarchical_model$range$PP$n_knots),
+    rep(.1, ncol(covariates$range_X$X_locs)),
+    rep(exp(ker_var$range_log_scale_estimate[2]), hierarchical_model$range$PP$n_knots)
+  ))
+  prior= prior/max(prior)
+  lik = diag(1,3) %x%solve(covariates$range_X$crossprod_X_locs)/max(solve(covariates$range_X$crossprod_X_locs))
+  p = exp(ker_var$range_beta_mix_covariance)/(1+ exp(exp(ker_var$range_beta_mix_covariance)))
+  L_minus_one =  solve(t(chol(
+     p * prior + (1-p)* lik
+  )))
+  return(L_minus_one)
+}
 
 #list2env(mcmc_nngp_list, envir = environment())
 #state = mcmc_nngp_list$states$chain_1; n_iterations_update  =100; num_threads = 10; iter_start = 0; seed = 1; iter=1
@@ -169,6 +186,9 @@ update_kernel = function(
     ###############
     # Range beta  #
     ###############
+    ker_var$range_log_scale_estimate = 
+      ker_var$range_log_scale_estimate * (iter_start + iter-1) / (iter_start + iter) + params$range_log_scale / (iter_start + iter)
+    
     range_reparam_mat = matrix(1)
     if(hierarchical_model$anisotropic){
       range_reparam_mat = matrix(c(2, 2,  0, 
@@ -176,10 +196,15 @@ update_kernel = function(
                                    0, 0,  2*sqrt(2)), 3)
     }
     #L_minus_one = diag(1,3) %x% ((chol((covariates$range_X$crossprod_X_locs))))
-    L_minus_one = diag(1,3) %x% solve(t(chol(solve(covariates$range_X$crossprod_X_locs)))) / max(solve(t(chol(solve(covariates$range_X$crossprod_X_locs)))))
     ##########################
     # Range beta (ancillary) #
     ##########################
+    new_range_beta_mix_covariance = ker_var$range_beta_mix_covariance + rnorm(1, 0, 1/sqrt(iter+ iter_start))
+    new_range_beta_mix_covariance=  max(-2, new_range_beta_mix_covariance)     
+    new_range_beta_mix_covariance=  min(2, new_range_beta_mix_covariance)     
+    new_range_beta_mix_covariance = ker_var$range_beta_mix_covariance + rnorm(1, 0, 1/sqrt(iter+ iter_start))
+    L_minus_one = get_L_minus_one(
+      hierarchical_model = hierarchical_model, covariates = covariates, ker_var = ker_var)
     hmc_stepsize = exp(ker_var$range_beta_ancillary[1])
     # initializing position 
     q = 0*params$range_beta
@@ -386,7 +411,7 @@ update_kernel = function(
        {
          if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
          {
-           
+           ker_var$range_beta_mix_covariance = new_range_beta_mix_covariance
           ker_var$range_beta_ancillary[1] = ker_var$range_beta_ancillary[1] + 1/sqrt(iter)
            print("tatato ancillary !")
            momenta$range_beta_ancillary = p
@@ -401,7 +426,11 @@ update_kernel = function(
     ###########################
     # Range beta (sufficient) #
     ###########################
-    
+    new_range_beta_mix_covariance = ker_var$range_beta_mix_covariance + rnorm(1, 0, 1/sqrt(iter+ iter_start))
+         new_range_beta_mix_covariance=  max(-2, new_range_beta_mix_covariance)     
+         new_range_beta_mix_covariance=  min(2, new_range_beta_mix_covariance)     
+    L_minus_one = get_L_minus_one(
+      hierarchical_model = hierarchical_model, covariates = covariates, ker_var = ker_var)
     
     hmc_stepsize = exp(ker_var$range_beta_sufficient[1])
     # initializing position 
@@ -608,6 +637,7 @@ update_kernel = function(
     {
       if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
       {
+        ker_var$range_beta_mix_covariance = new_range_beta_mix_covariance
         ker_var$range_beta_sufficient[1] = ker_var$range_beta_sufficient[1] + 1/sqrt(iter)
         print("tatato sufficient!")
         momenta$range_beta_sufficient = p
@@ -619,6 +649,8 @@ update_kernel = function(
     
     #     print(ker_var$range_beta_sufficient)
     #     print(ker_var$range_beta_ancillary)
+    
+    
     
     
     #########

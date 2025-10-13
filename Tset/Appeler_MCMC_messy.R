@@ -160,10 +160,11 @@ remove(state)
 params_records = list()
 
 params$field_log_var = 0
-params$range_log_scale = range_log_scale
+params$range_log_scale = c(-2, -6)
 stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 
-ker_var$range_beta_ancillary
+ker_var$range_log_scale_estimate = range_log_scale
 
 source("Tset/MCMC_messy.R")
+
 

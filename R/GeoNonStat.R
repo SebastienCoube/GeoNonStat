@@ -419,10 +419,11 @@ process_transition_kernels <- function(init=-4, hm){
   res =   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
-    range_beta_sufficient = rep(init, 3),
-    range_beta_ancillary  = rep(init, 3),
-    range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 2), 
-    
+    range_beta_sufficient = c(init),
+    range_beta_mix_covariance  = c(0),
+    range_beta_sufficient = c(init),
+    range_beta_ancillary = c(init),
+    range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 1 + hierarchical_model$anisotropic), 
     scale_beta_sufficient = init,
     scale_beta_ancillary  = init,
     scale_log_scale_sufficient = init,
