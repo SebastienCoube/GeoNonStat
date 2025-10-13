@@ -37,8 +37,8 @@ arma::cube vecchia(
 #if _OPENMP
   omp_set_num_threads(num_threads);
 #endif
-  double diag_term = 1.01;
-  double diff_term = 0.00001;
+  double diag_term = 1.0001;
+  double diff_term = 0.0000001;
   
   // initializing stuff
   int n = locs.n_cols;
@@ -386,6 +386,7 @@ arma::cube vecchia(
           }
       }
     }
+//# pragma omp critical
     result.slice(i) = out;
   }
   

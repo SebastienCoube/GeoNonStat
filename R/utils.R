@@ -340,7 +340,7 @@ beta_prior_log_dens = function(beta,
                                beta0_var,
                                log_scale){
   mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
-  var_mat <- matrix(0.01, dim(beta)[1], dim(beta)[2])  
+  var_mat <- matrix(0.1, dim(beta)[1], dim(beta)[2])  
   mean_mat[1,1] <- beta0_mean  # Intercept for range
   var_mat[1,1] <- beta0_var # Intercept for range
   var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
@@ -379,11 +379,11 @@ beta_prior_log_dens = function(beta,
 #'   log_scale
 #' )
 #' 
-#' beta = matrix(rnorm(100), 100)
+#' beta = matrix(rnorm(300), 100)
 #' n_PP = 90 
 #' beta0_mean = -5
 #' beta0_var = 2
-#' log_scale = c(-3)
+#' log_scale = c(-3, -5)
 #' 
 #' beta_prior_log_dens_derivative(
 #'   beta, 
@@ -392,31 +392,37 @@ beta_prior_log_dens = function(beta,
 #'   beta0_var,
 #'   log_scale
 #' )
-#' # TODO Elise : ceci n'est pas un exemple.
-#' # Par contre passer ça en test pour vérifier 
-#' # que ça a bonne taille et que ça tourne autour de 1. 
-#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-#' # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
-#' res <-matrix(0, 100, 3)
-#' for(i in seq(100))
-#' {
-#'   for(j in seq(3)){
-#'     beta1 = beta 
-#'     beta1[i,j] = beta1[i,j]+ .0001
-#'     res[i,j] <- (
-#'       beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-#'         beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-#'     )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
-#'  }
+ # TODO Elise : ceci n'est pas un exemple.
+ # Par contre passer ça en test pour vérifier 
+ # que ça a bonne taille et que ça tourne autour de 1. 
+ # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
+ # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
+#'res <-matrix(0, 100, 3)
+#'for(i in seq(100))
+#'{
+#'  for(j in seq(3)){
+#'    beta1 = beta 
+#'    beta1[i,j] = beta1[i,j]+ .000001
+#'    res[i,j] <- (
+#'      beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+#'        beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+#'    )*1000000
 #' }
-#' mean(res); var(c(res))
+#'}
+#'nalytical_der =  beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+#'ar(mfrow = c(1,3))
+#'oxplot(res- analytical_der)
+#'oxplot(res/analytical_der)
+#'lot(res,analytical_der)
+#'bline(a=0, b=1)
+ 
 beta_prior_log_dens_derivative = 
   function(beta, n_PP, 
            beta0_mean,
            beta0_var,
            log_scale){
     mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
-    var_mat <- matrix(0.01,dim(beta)[1], dim(beta)[2]) 
+    var_mat <- matrix(0.1,dim(beta)[1], dim(beta)[2]) 
     mean_mat[1,1] <- beta0_mean
     var_mat[1,1] <- beta0_var
     var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])

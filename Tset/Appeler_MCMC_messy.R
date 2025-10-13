@@ -112,10 +112,12 @@ coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
 coeff_list$noise_X_coeff[1] = 1
 
 
-range_log_scale = c(-1,-1)
+range_log_scale = c(-1,-6)
 coeff_list$range_PP_coeff[,1] = exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+coeff_list$range_PP_coeff[,-1] = 0*exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
 coeff_list$range_X_coeff[1,1] = -4.5
+coeff_list$range_X_coeff[1,2] = -1
+coeff_list$range_X_coeff[1,3] = -1
 
 fake_data = simulate(
   GNSSimulator = GNSSimulator, 
@@ -164,3 +166,4 @@ stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 ker_var$range_beta_ancillary
 
 source("Tset/MCMC_messy.R")
+
