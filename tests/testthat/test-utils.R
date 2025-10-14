@@ -7,14 +7,26 @@ PP = createPP(vecchia_approx, plot=FALSE)
 X = matrix(rnorm(500), nrow(locs))
 Y = matrix(rnorm(30*nrow(X)), nrow(X))
 
-
-test_that("derivative_sandwiches produce expected output", {
-  # TODO
+test_that("naive_greedy_coloring produce expected results", {
+  n <- 5  
+  i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
+  j <- c(1:n, rep(1, n - 1))
+  M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
+  expect_error(
+    tt <- naive_greedy_coloring(M), 
+    NA
+  )
+  expect_identical(tt, c(1, 2, 2, 2, 2))
+  M[2,3]=1
+  M[3,2]=1
+  expect_identical(naive_greedy_coloring(M),
+                   c(1, 2, 3, 2, 2))
+  i <- c(1,3:8); j <- c(2,9,6:10); x <- 7 * (1:7)
+  A <- sparseMatrix(i, j, x = x)
+  expect_error(naive_greedy_coloring(A),
+               "M must be symmetric")
 })
 
-test_that("log_determinant_derivatives produce expected output", {
-  # TODO
-})
 
 test_that("expmat produce expected output", {
   coords <- c(1,2,3,4,5,6)

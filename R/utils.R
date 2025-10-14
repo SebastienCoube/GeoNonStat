@@ -4,7 +4,7 @@
 #'
 #' @returns a vector of colors, of length the number of rows of M
 #' @examples
-#' n <- 5  # taille de la matrice
+#' n <- 5  
 #' i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
 #' j <- c(1:n, rep(1, n - 1))
 #' M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
@@ -15,6 +15,8 @@
 naive_greedy_coloring = function(M)
 {
   #number of nodes
+  if(!Matrix::isSymmetric(M, checkDN=FALSE)) 
+    stop("M must be symmetric")
   n_obs = nrow(M)
   #deducting degrees
   degrees = as.vector(rep(1, n_obs)%*%M)
