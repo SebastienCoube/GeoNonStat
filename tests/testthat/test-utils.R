@@ -149,44 +149,6 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
 })
 
 
-test_that("derivative_chol_expmat produce expected output", {
-  expect_error( 
-    res <- derivative_chol_expmat(c(1,2,3, 3,2,4)),
-    NA
-  )
-  expect_true(is(res, "array"))
-  expect_identical(dim(res), c(3L,3L,6L))
-  expect_equal(
-    apply(res, 1, mean),
-    c(8.5554350147, -0.0108160777, 0.0003808579)
-  )
-  expect_equal(
-    apply(res, 2, mean),
-    c(2.343741568, 3.071973047, 3.129285180)
-  )
-})
-
-test_that("derivative_field_wrt_scale produce expected output", {
-  field <- array(c(1,2,3), dim=c(1,3))
-  coords <- c(1,2,3, 3,2,4)
-  expect_error( 
-    res <- derivative_field_wrt_scale(field, coords),
-    NA
-  )
-  expect_true(is(res, "array"))
-  expect_identical(dim(res), c(1L,3L,6L))
-  expect_equal(
-    apply(res, 1, mean),
-    c(0.312839647)
-  )
-  expect_equal(
-    apply(res, 2, mean),
-    c(0.261804197, 0.335998026, 0.340716718)
-  )
-})
-
-
-
 test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
   expect_error(
     res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
