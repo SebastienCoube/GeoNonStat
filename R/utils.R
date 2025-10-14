@@ -347,7 +347,10 @@ beta_prior_log_dens = function(beta,
   if(ncol(beta)==3) {
     var_mat[-seq(nrow(beta)-n_PP), c(2,3)] <- exp(log_scale[2])
   }
-  return(-0.5 * sum((beta - mean_mat)^2 / var_mat))
+  
+  determinant_part = -0.5* log_scale[1] * n_PP
+  if(length(log_scale)==2) determinant_part = determinant_part - 2*0.5*log_scale[2]*n_PP
+  return(-0.5 * sum((beta - mean_mat)^2 / var_mat) + determinant_part)
 }
 
 

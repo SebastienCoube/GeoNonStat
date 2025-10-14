@@ -109,16 +109,32 @@ GNSSimulator = GeoNonStatSimulator(
 )
 
 coeff_list = create_coeff_list(GNSSimulator)
+
+# case with nice non-stationarity and little noise
+if(F){
 coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-coeff_list$noise_X_coeff[1] = 1
-
-
+coeff_list$noise_X_coeff[1] = -1
 range_log_scale = c(-1,-1)
 coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
 coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
 coeff_list$range_X_coeff[1,1] =  -4.5
 coeff_list$range_X_coeff[1,2] = -0
 coeff_list$range_X_coeff[1,3] = -0
+}
+
+# awkward case with non-stationarity only in range, not in aniso
+if(T){
+coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
+coeff_list$noise_X_coeff[1] = -1
+range_log_scale = c(-.5,-6)
+coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+coeff_list$range_X_coeff[1,1] =  -4.5
+coeff_list$range_X_coeff[1,2] = -0
+coeff_list$range_X_coeff[1,3] = -0
+}
+
+
 
 fake_data = simulate(
   GNSSimulator = GNSSimulator, 
@@ -161,7 +177,6 @@ remove(state)
 params_records = list()
 
 params$field_log_var = 0
-params$range_log_scale =range_log_scale
 stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 
 ker_var$range_log_scale_estimate = range_log_scale

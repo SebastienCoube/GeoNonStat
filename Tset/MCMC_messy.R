@@ -225,7 +225,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
     ##########################
     # Range beta (ancillary) #
     ##########################
-    if(T){
+    
     new_range_beta_mix_covariance = ker_var$range_beta_mix_covariance + rnorm(1, 0, 1/sqrt(iter+ iter_start))
     new_range_beta_mix_covariance=  max(-2, new_range_beta_mix_covariance)     
     new_range_beta_mix_covariance=  min(2, new_range_beta_mix_covariance)     
@@ -449,7 +449,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
          }
        }
     
-     }
+     
     ###########################
     # Range beta (sufficient) #
     ###########################
@@ -682,68 +682,68 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
     # Variance of the  range PP #
     #############################
     
-    if(F){
+    if(!is.null(hierarchical_model$range$PP)){
       
-#     # ancillary - sufficient
-#     q = params$range_log_scale + rnorm(1, 0, exp(ker_var$range_log_scale_sufficient))
+     # ancillary - sufficient
+     q = params$range_log_scale + rnorm(1, 0, exp(ker_var$range_log_scale_sufficient))
 
-#     new_range_beta = params$range_beta
-#     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
-#       diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% 
-#       diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
-#     new_compressed_sparse_chol = 
-#       compute_sparse_chol(
-#         hierarchical_model$range$PP,
-#         range_beta = new_range_beta, 
-#         vecchia_approx = vecchia_approx, 
-#         range_X = covariates$range_X, 
-#         matern_smoothness = hierarchical_model$matern_smoothness, 
-#         compute_derivative = T, num_threads = num_threads
-#       )
-#     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
-#     
-#     
-#     current_U =
-#       (
-#         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
-#         - sum(log(stuff$compressed_chol[1,1,]))
-#       )
-#     proposed_U =
-#       (
-#         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
-#         - sum(log(new_compressed_sparse_chol[1,1,]))
-#       )
-#     current_K = sum (momenta$range_beta_sufficient ^2) / 2
-#     proposed_K = sum(p^2) / 2
-#     
-#     ker_var$range_log_scale_sufficient = update_kernel(
-#       iter = iter, iter_start = iter_start, 
-#       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
-#       mult = -.25
-#     )
-#     
-#     if (
-#       (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
-#       (all(q > hierarchical_model$range$log_scale_bounds[1] ))
-#     ){
-#       if(!is.nan(current_U-proposed_U+current_K-proposed_K)){
-#         if(log(runif(1)) < (current_U-proposed_U+current_K-proposed_K))
-#         {
-#           print("turlututu sufficient !")
-#           
-#           ker_var$range_log_scale_sufficient = update_kernel(
-#             iter = iter, iter_start = iter_start, 
-#             update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
-#             mult = 1
-#           )
-#           momenta$range_beta_sufficient = p
-#           
-#           params$range_beta = new_range_beta
-#           params$range_log_scale = q
-#           
-#           stuff$sparse_chol= new_sparse_chol
-#           stuff$compressed_chol = new_compressed_sparse_chol
-#         }}}
+     new_range_beta = params$range_beta
+     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
+       diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% 
+       diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
+     new_compressed_sparse_chol = 
+       compute_sparse_chol(
+         hierarchical_model$range$PP,
+         range_beta = new_range_beta, 
+         vecchia_approx = vecchia_approx, 
+         range_X = covariates$range_X, 
+         matern_smoothness = hierarchical_model$matern_smoothness, 
+         compute_derivative = T, num_threads = num_threads
+       )
+     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+     
+     
+     current_U =
+       (
+         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
+         - sum(log(stuff$compressed_chol[1,1,]))
+       )
+     proposed_U =
+       (
+         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
+         - sum(log(new_compressed_sparse_chol[1,1,]))
+       )
+     current_K = sum (momenta$range_beta_sufficient ^2) / 2
+     proposed_K = sum(p^2) / 2
+     
+     ker_var$range_log_scale_sufficient = update_kernel(
+       iter = iter, iter_start = iter_start, 
+       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
+       mult = -.25
+     )
+     
+     if (
+       (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
+       (all(q > hierarchical_model$range$log_scale_bounds[1] ))
+     ){
+       if(!is.nan(current_U-proposed_U+current_K-proposed_K)){
+         if(log(runif(1)) < (current_U-proposed_U+current_K-proposed_K))
+         {
+           print("turlututu sufficient !")
+           
+           ker_var$range_log_scale_sufficient = update_kernel(
+             iter = iter, iter_start = iter_start, 
+             update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
+             mult = 1
+           )
+           momenta$range_beta_sufficient = p
+           
+           params$range_beta = new_range_beta
+           params$range_log_scale = q
+           
+           stuff$sparse_chol= new_sparse_chol
+           stuff$compressed_chol = new_compressed_sparse_chol
+         }}}
      # sufficient - sufficient ####
      for(i in seq(10))
      {
@@ -753,12 +753,12 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
          (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
          (
            + beta_prior_log_dens(
-             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
              beta0_mean = hierarchical_model$range$beta0_mean,
              beta0_var =  hierarchical_model$range$beta0_sd^2, 
              log_scale = q)
            - beta_prior_log_dens(
-             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
              beta0_mean = hierarchical_model$range$beta0_mean,
              beta0_var =  hierarchical_model$range$beta0_sd^2, 
              log_scale = params$range_log_scale) 
@@ -833,12 +833,12 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
          (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
          (
            + beta_prior_log_dens(
-             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
              beta0_mean = hierarchical_model$range$beta0_mean,
              beta0_var =  hierarchical_model$range$beta0_sd^2, 
              log_scale = q)
            - beta_prior_log_dens(
-             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
              beta0_mean = hierarchical_model$range$beta0_mean,
              beta0_var =  hierarchical_model$range$beta0_sd^2, 
              log_scale = params$range_log_scale) 
@@ -867,7 +867,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #    current_U =
 #      (
 #        - beta_prior_log_dens(
-#          beta = params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#          beta = params$noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #          chol_crossprod_X = noise_X$chol_crossprod_X,
 #          beta0_mean = hierarchical_model$noise_beta0_mean,
 #          beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -884,7 +884,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #      (
 #        + solve(t(noise_X$chol_crossprod_X), # solving by prior chol because of whitening
 #                - beta_prior_log_dens_derivative(
-#                  beta = params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#                  beta = params$noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #                  chol_crossprod_X = noise_X$chol_crossprod_X,
 #                  beta0_mean = hierarchical_model$noise_beta0_mean,
 #                  beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -907,7 +907,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #    #### )
 #    #### U_ =
 #    ####   (
-#    ####     - beta_prior_log_dens(beta = noise_beta_, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#    ####     - beta_prior_log_dens(beta = noise_beta_, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #    ####                                   beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
 #    ####                                   beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
 #    ####                                   log_scale = params$noise_log_scale) # normal prior 
@@ -916,7 +916,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #    ####   )
 #    #### print(
 #    ####   (
-#    ####             - beta_prior_log_dens_derivative(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#    ####             - beta_prior_log_dens_derivative(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #    ####                                                      beta_mean = hierarchical_model$beta_priors$noise_beta_mean, 
 #    ####                                                      beta_precision =  hierarchical_model$beta_priors$noise_beta_precision, 
 #    ####                                                      log_scale = params$noise_log_scale) # normal prior
@@ -941,7 +941,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #      (
 #        + solve(t(noise_X$chol_crossprod_X), # solving by prior sparse chol because of whitening
 #                - beta_prior_log_dens_derivative(
-#                  beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#                  beta = new_noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #                  chol_crossprod_X = noise_X$chol_crossprod_X,
 #                  beta0_mean = hierarchical_model$noise_beta0_mean,
 #                  beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -957,7 +957,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #    current_K = sum (momenta$noise_beta ^2) / 2
 #    proposed_U = 
 #      (
-#        - beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#        - beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #                              chol_crossprod_X = noise_X$chol_crossprod_X,
 #                              beta0_mean = hierarchical_model$noise_beta0_mean,
 #                              beta0_var =  hierarchical_model$noise_beta0_var, 
@@ -1023,12 +1023,12 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
 #        new_noise_log_scale = params$noise_log_scale + rnorm(1, 0, .1)
 #        if(
 #          (
-#            + beta_prior_log_dens(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#            + beta_prior_log_dens(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #                                  chol_crossprod_X = noise_X$chol_crossprod_X,
 #                                  beta0_mean = hierarchical_model$noise_beta0_mean,
 #                                  beta0_var =  hierarchical_model$noise_beta0_var, 
 #                                  log_scale = new_noise_log_scale) - 
-#            beta_prior_log_dens(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_PP*hierarchical_model$noise_PP, 
+#            beta_prior_log_dens(beta = params$noise_beta, n_PP = hierarchical_model$PP$n_knots*hierarchical_model$noise_PP, 
 #                                chol_crossprod_X = noise_X$chol_crossprod_X,
 #                                beta0_mean = hierarchical_model$noise_beta0_mean,
 #                                beta0_var =  hierarchical_model$noise_beta0_var, 
