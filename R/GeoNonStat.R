@@ -423,7 +423,7 @@ process_transition_kernels <- function(init=-4, hm){
     range_beta_mix_covariance  = c(0),
     range_beta_sufficient = c(init),
     range_beta_ancillary = c(init),
-    range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 1 + hierarchical_model$anisotropic), 
+    range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic), 
     scale_beta_sufficient = init,
     scale_beta_ancillary  = init,
     scale_log_scale_sufficient = init,
@@ -519,6 +519,8 @@ process_states <- function(
     row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
                                      paste("PP", seq(hm$range$PP$n_knots), sep = "_"))
     params$range_log_scale = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic)
+    momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
+    momenta$range_log_scale_ancillary = rnorm(length(params$range_log_scale))
   }
     #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
   params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)

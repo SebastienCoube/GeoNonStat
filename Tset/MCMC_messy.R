@@ -32,7 +32,7 @@ update_kernel = function(
 
 
 get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
-  prior = diag(c(
+  prior =  diag(c(
     hierarchical_model$range$beta0_sd, 
     rep(.1, ncol(covariates$range_X$X_locs)-1),
     rep(exp(ker_var$range_log_scale_estimate[1]), hierarchical_model$range$PP$n_knots),
@@ -46,6 +46,27 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
   p = exp(ker_var$range_beta_mix_covariance)/(1+ exp(exp(ker_var$range_beta_mix_covariance)))
   L_minus_one =  solve(t(chol(
      p * prior + (1-p)* lik
+  )))
+  return(L_minus_one)
+}
+
+
+
+get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
+  prior =  diag(c(
+    hierarchical_model$range$beta0_sd, 
+    rep(.1, ncol(covariates$range_X$X_locs)-1),
+    rep(exp(ker_var$range_log_scale_estimate[1]), hierarchical_model$range$PP$n_knots),
+    rep(.1, ncol(covariates$range_X$X_locs)),
+    rep(exp(ker_var$range_log_scale_estimate[2]), hierarchical_model$range$PP$n_knots),
+    rep(.1, ncol(covariates$range_X$X_locs)),
+    rep(exp(ker_var$range_log_scale_estimate[2]), hierarchical_model$range$PP$n_knots)
+  ))
+  prior= 0*prior/max(prior)
+  lik = diag(1,3) %x%solve(covariates$range_X$crossprod_X_locs)/max(solve(covariates$range_X$crossprod_X_locs))
+  p = exp(ker_var$range_beta_mix_covariance)/(1+ exp(exp(ker_var$range_beta_mix_covariance)))
+  L_minus_one =  solve(t(chol(
+     lik
   )))
   return(L_minus_one)
 }
@@ -179,8 +200,13 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
           plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter/5, iter)]), ylab = "", main  = paste(i, j))
           abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
         }}
-      par(mfrow = c(1,1 ))
-      }
+    range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter/5, iter-1),])
+    plot(range_log_scale_samples[,1], main = "range log scale")
+    plot(range_log_scale_samples[,2], main = "aniso log scale")
+    }
+    
+    
+    par(mfrow = c(1,1 ))
     print(iter)
     
     ###############
@@ -199,6 +225,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
     ##########################
     # Range beta (ancillary) #
     ##########################
+    if(T){
     new_range_beta_mix_covariance = ker_var$range_beta_mix_covariance + rnorm(1, 0, 1/sqrt(iter+ iter_start))
     new_range_beta_mix_covariance=  max(-2, new_range_beta_mix_covariance)     
     new_range_beta_mix_covariance=  min(2, new_range_beta_mix_covariance)     
@@ -422,7 +449,7 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
          }
        }
     
-     
+     }
     ###########################
     # Range beta (sufficient) #
     ###########################
@@ -649,6 +676,180 @@ get_L_minus_one  = function(hierarchical_model, covariates, ker_var){
     
     #     print(ker_var$range_beta_sufficient)
     #     print(ker_var$range_beta_ancillary)
+    
+    
+    #############################
+    # Variance of the  range PP #
+    #############################
+    
+    if(F){
+      
+#     # ancillary - sufficient
+#     q = params$range_log_scale + rnorm(1, 0, exp(ker_var$range_log_scale_sufficient))
+
+#     new_range_beta = params$range_beta
+#     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
+#       diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% 
+#       diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
+#     new_compressed_sparse_chol = 
+#       compute_sparse_chol(
+#         hierarchical_model$range$PP,
+#         range_beta = new_range_beta, 
+#         vecchia_approx = vecchia_approx, 
+#         range_X = covariates$range_X, 
+#         matern_smoothness = hierarchical_model$matern_smoothness, 
+#         compute_derivative = T, num_threads = num_threads
+#       )
+#     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+#     
+#     
+#     current_U =
+#       (
+#         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
+#         - sum(log(stuff$compressed_chol[1,1,]))
+#       )
+#     proposed_U =
+#       (
+#         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
+#         - sum(log(new_compressed_sparse_chol[1,1,]))
+#       )
+#     current_K = sum (momenta$range_beta_sufficient ^2) / 2
+#     proposed_K = sum(p^2) / 2
+#     
+#     ker_var$range_log_scale_sufficient = update_kernel(
+#       iter = iter, iter_start = iter_start, 
+#       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
+#       mult = -.25
+#     )
+#     
+#     if (
+#       (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
+#       (all(q > hierarchical_model$range$log_scale_bounds[1] ))
+#     ){
+#       if(!is.nan(current_U-proposed_U+current_K-proposed_K)){
+#         if(log(runif(1)) < (current_U-proposed_U+current_K-proposed_K))
+#         {
+#           print("turlututu sufficient !")
+#           
+#           ker_var$range_log_scale_sufficient = update_kernel(
+#             iter = iter, iter_start = iter_start, 
+#             update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
+#             mult = 1
+#           )
+#           momenta$range_beta_sufficient = p
+#           
+#           params$range_beta = new_range_beta
+#           params$range_log_scale = q
+#           
+#           stuff$sparse_chol= new_sparse_chol
+#           stuff$compressed_chol = new_compressed_sparse_chol
+#         }}}
+     # sufficient - sufficient ####
+     for(i in seq(10))
+     {
+       q = params$range_log_scale + rnorm(length(params$range_log_scale), 0, .1)
+       if(
+         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
+         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
+         (
+           + beta_prior_log_dens(
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta0_mean = hierarchical_model$range$beta0_mean,
+             beta0_var =  hierarchical_model$range$beta0_sd^2, 
+             log_scale = q)
+           - beta_prior_log_dens(
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta0_mean = hierarchical_model$range$beta0_mean,
+             beta0_var =  hierarchical_model$range$beta0_sd^2, 
+             log_scale = params$range_log_scale) 
+           > log(runif(1))
+         )
+       )
+       {
+         params$range_log_scale = q
+       }
+     }
+     # ancillary-ancillary ####
+     
+     q = params$range_log_scale 
+     q = q + exp(ker_var$range_log_scale_ancillary) * rnorm(length(q))
+     new_range_beta = params$range_beta
+     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
+       diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
+     new_compressed_sparse_chol = 
+       compute_sparse_chol(
+         hierarchical_model$range$PP,
+         range_beta = new_range_beta, 
+         vecchia_approx = vecchia_approx, 
+         range_X = covariates$range_X, 
+         matern_smoothness = hierarchical_model$matern_smoothness, 
+         compute_derivative = T, num_threads = num_threads
+       )
+     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+     new_field = as.vector(Matrix::solve(new_sparse_chol, stuff$sparse_chol %*% (params$field)))
+     
+     current_U =
+       (
+         + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise) # observation ll
+       )
+     proposed_U =
+       (
+         + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise) # observation ll
+       )
+     ker_var$range_log_scale_ancillary = update_kernel(
+       iter = iter, iter_start = iter_start, 
+       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_ancillary, 
+       mult = -.25
+     )
+     
+     if (
+       (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
+       (all(q > hierarchical_model$range$log_scale_bounds[1] ))
+     )
+     {
+       if(!is.nan(current_U-proposed_U)){
+         if(log(runif(1)) < (current_U-proposed_U)){
+           ker_var$range_log_scale_ancillary = update_kernel(
+             iter = iter, iter_start = iter_start, 
+             update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_ancillary, 
+             mult = 1
+           )
+           print("turlututu ancillary !")
+           
+           params$range_beta = new_range_beta
+           params$range_log_scale = q
+           params$field = new_field
+           
+           stuff$sparse_chol= new_sparse_chol
+           stuff$compressed_chol = new_compressed_sparse_chol
+         }}}
+     
+     # sufficient - sufficient 
+     for(i in seq(10))
+     {
+       q = params$range_log_scale + rnorm(length(params$range_log_scale), 0, .1)
+       if(
+         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
+         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
+         (
+           + beta_prior_log_dens(
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta0_mean = hierarchical_model$range$beta0_mean,
+             beta0_var =  hierarchical_model$range$beta0_sd^2, 
+             log_scale = q)
+           - beta_prior_log_dens(
+             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_PP, 
+             beta0_mean = hierarchical_model$range$beta0_mean,
+             beta0_var =  hierarchical_model$range$beta0_sd^2, 
+             log_scale = params$range_log_scale) 
+           > log(runif(1))
+         )
+       )
+       {
+         params$range_log_scale = q
+       }
+     }
+    }
     
     
     

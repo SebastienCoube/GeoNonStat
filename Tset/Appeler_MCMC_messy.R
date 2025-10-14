@@ -87,7 +87,8 @@
 ###############
 
 set.seed(2)
-observed_locs = cbind(runif(12000), runif(12000))[sample(seq(12000),size = 10000, replace = F),]
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
 # fixed effects
@@ -112,12 +113,12 @@ coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
 coeff_list$noise_X_coeff[1] = 1
 
 
-range_log_scale = c(-1,-6)
-coeff_list$range_PP_coeff[,1] = exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = 0*exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] = -4.5
-coeff_list$range_X_coeff[1,2] = -1
-coeff_list$range_X_coeff[1,3] = -1
+range_log_scale = c(-1,-1)
+coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+coeff_list$range_X_coeff[1,1] =  -4.5
+coeff_list$range_X_coeff[1,2] = -0
+coeff_list$range_X_coeff[1,3] = -0
 
 fake_data = simulate(
   GNSSimulator = GNSSimulator, 
@@ -160,7 +161,7 @@ remove(state)
 params_records = list()
 
 params$field_log_var = 0
-params$range_log_scale = c(-2, -6)
+params$range_log_scale =range_log_scale
 stuff$noise_var[] = exp(fake_data$log_noise_var_field)
 
 ker_var$range_log_scale_estimate = range_log_scale
