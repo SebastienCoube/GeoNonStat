@@ -6,6 +6,7 @@ set.seed(123)
 PP = createPP(vecchia_approx, plot=FALSE)
 X = matrix(rnorm(500), nrow(locs))
 Y = matrix(rnorm(30*nrow(X)), nrow(X))
+range_X = matrix(1, nrow(locs))
 
 test_that("naive_greedy_coloring produce expected results", {
   n <- 5  
@@ -27,6 +28,9 @@ test_that("naive_greedy_coloring produce expected results", {
                "M must be symmetric")
 })
 
+test_that("decompress_chol produce expected results", {
+# TODO  
+})
 
 test_that("expmat produce expected output", {
   coords <- c(1,2,3,4,5,6)
@@ -44,7 +48,7 @@ test_that("expmat produce expected output", {
     nrow=3)
   expect_equal(res, expected_mat)
   expect_error(
-    res <- expmat(coords, eps=0), 
+    res <- expmat(coords), 
     NA
   )
   diag(expected_mat) <- diag(expected_mat) - 0.0001
@@ -94,9 +98,9 @@ test_that("symmat produce expected output", {
   )
 })
 
-
-# test_that("compute_sparse_chol produce expected output", {
-#   set.seed(123)
+test_that("compute_sparse_chol produce expected output", {
+  # TODO
+  #   set.seed(123)
 #   X <- data.frame(cbind(runif(vecchia_approx$n_obs), rnorm(vecchia_approx$n_obs), rpois(vecchia_approx$n_obs, 5)))
 #   tt <- process_covariates(
 #     X = X, 
@@ -149,17 +153,121 @@ test_that("symmat produce expected output", {
 #   expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
 #   expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
 #   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
-# })
-
+})
 
 test_that("beta_prior_log_dens produce expected output", {
-  # TODO
+  set.seed(123)
+  beta1 <- matrix(rnorm(100), 100, ncol=3)
+  beta3 <- matrix(rnorm(300), 100, ncol=3)
+  expect_error(
+    tmp <- beta_prior_log_dens(
+      beta = beta3, 
+      n_PP = 120, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3)
+    ),
+    "n_PP can't be greater than")
+  expect_error(
+    tmp <- beta_prior_log_dens(
+      beta = beta3, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3)
+    ),
+    "log_scale is supposed to be of length 2")
+  
+  expect_error(
+    tmp <- beta_prior_log_dens(
+      beta = beta3, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3, -2)
+     ),
+    NA)
+  expect_equal(tmp, -2972.982)
+  
+  expect_error(
+    tmp <- beta_prior_log_dens(
+      beta = beta1, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3)
+    ),
+    NA)
+  expect_equal(tmp, -1155.226)
 })
 
 test_that("beta_prior_log_dens_derivative produce expected output", {
-  # TODO
+  set.seed(123)
+  beta1 <- matrix(rnorm(100), 100, ncol=1)
+  beta3 <- matrix(rnorm(300), 100, ncol=3)
+  expect_error(
+    tmp <- beta_prior_log_dens_derivative(
+      beta = beta3, 
+      n_PP = 120, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3, 2)
+    ),
+    "n_PP can't be greater than")
+  expect_error(
+    tmp <- beta_prior_log_dens_derivative(
+      beta = beta3, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3)
+    ),
+    "log_scale is supposed to be of length 2")
+  
+  expect_error(
+    tmp <- beta_prior_log_dens_derivative(
+      beta = beta3, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3, -2)
+    ),
+    NA)
+  expect_true(inherits(tmp, "matrix"))
+  expect_identical(dim(tmp), dim(beta3))
+  expect_equal(mean(tmp), 1.00837737)
+  
+  expect_error(
+    tmp <- beta_prior_log_dens_derivative(
+      beta = beta1, 
+      n_PP = 90, 
+      beta0_mean = -5,
+      beta0_var = 2,
+      log_scale = c(-3)
+    ),
+    NA)
+  expect_true(inherits(tmp, "matrix"))
+  expect_identical(dim(tmp), dim(beta1))
+  expect_equal(mean(tmp), -2.9948913)
 })
 
+test_that("getting correct values using beta_prior_log_dens and beta_prior_log_dens_derivative", {
+  set.seed(123)
+  beta = matrix(rnorm(300), 100)
+  res <-matrix(0, 100, 3)
+  for(i in seq(100)) {
+    for(j in seq(3)) {
+      beta1 = beta 
+      beta1[i,j] = beta1[i,j]+ .0001
+      res[i,j] <- (
+        beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+          beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+      )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
+   }
+  }
+  expect_equal(mean(res), 1.00004157)
+  expect_equal(var(c(res)), 3.722309e-07, tolerance = 1e-7)
+})
 
 test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
   expect_error(

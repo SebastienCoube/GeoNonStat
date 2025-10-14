@@ -160,7 +160,11 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' range_beta = matrix(rnorm(1 + PP$n_knots))
 #' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
 #' range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
-#' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
+#' compute_sparse_chol(range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, 
+#' PP = PP, 
+#' matern_smoothness = 1.5, compute_derivative = T)
 compute_sparse_chol = function(range_beta, 
                                vecchia_approx,
                                range_X, 
@@ -246,11 +250,12 @@ compute_sparse_chol = function(range_beta,
 
 #' Compute prior logarithmic density of a matrix
 #'
-#' @param beta TODO
-#' @param n_PP TODO
-#' @param beta_mean TODO
-#' @param beta_precision TODO
-#' @param log_scale TODO
+#' @param beta a numeric matrix, with 1 or 3 columns
+#' @param n_PP number of PP
+#' @param beta0_mean mean of beta, numeric value
+#' @param beta0_var var of beta, numeric value
+#' @param log_scale numeric vector of length 1 for a 1 column beta matrix
+#' and length 2 for a 1 column beta matrix
 #' @description
 #' #'   beta follows a Normal distribution, with independent components. 
 #'   
@@ -306,26 +311,11 @@ compute_sparse_chol = function(range_beta,
 #' @export
 #'
 #' @examples
-#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-#' beta = matrix(rnorm(300), 100)
+#' beta = matrix(rnorm(300), 100, ncol=3)
 #' n_PP = 90 
 #' beta0_mean = -5
 #' beta0_var = 2
 #' log_scale = c(-3,-2)
-#' 
-#' beta_prior_log_dens(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
-#' )
-#' 
-#' beta = matrix(rnorm(100), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3)
 #' 
 #' beta_prior_log_dens(
 #'   beta, 
@@ -339,19 +329,24 @@ beta_prior_log_dens = function(beta,
                                beta0_mean,
                                beta0_var,
                                log_scale){
-  mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
-  var_mat <- matrix(0.1, dim(beta)[1], dim(beta)[2])  
+
+  nrb <- nrow(beta)
+  ncb <- ncol(beta)
+  if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")
+  if(n_PP > nrb + 2) {
+    stop("n_PP can't be greater than nrow(beta) + 2")
+  }
+  mean_mat <- matrix(0, nrb, ncb) 
+  var_mat <- matrix(0.01, nrb, ncb)  
   mean_mat[1,1] <- beta0_mean  # Intercept for range
   var_mat[1,1] <- beta0_var # Intercept for range
-  var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
-  if(ncol(beta)==3) {
-    var_mat[-seq(nrow(beta)-n_PP), c(2,3)] <- exp(log_scale[2])
+  var_mat[-seq(nrb-n_PP), 1] <- exp(log_scale[1])
+  if(ncb==3) {
+    if(!length(log_scale) == 2) stop("log_scale is supposed to be of length 2")
+    var_mat[-seq(nrb-n_PP), c(2,3)] <- exp(log_scale[2])
   }
   return(-0.5 * sum((beta - mean_mat)^2 / var_mat))
 }
-
-
-
 
 #' Compute gradient of logarithmic density prior
 #'
@@ -364,20 +359,14 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
-#' # Comparison between differentiation using 
-#' # finite difference and using the formula
-#' beta = matrix(rnorm(300), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3, -2)
 #' beta_prior_log_dens_derivative(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
+#'   beta = matrix(rnorm(300), 100, 3), 
+#'   n_PP = 90, 
+#'   beta0_mean = -5,
+#'   beta0_var = 2,
+#'   log_scale = c(-3, -2)
 #' )
+<<<<<<< HEAD
 #' 
 #' beta = matrix(rnorm(300), 100)
 #' n_PP = 90 
@@ -416,18 +405,33 @@ beta_prior_log_dens = function(beta,
 #'lot(res,analytical_der)
 #'bline(a=0, b=1)
  
+=======
+>>>>>>> 8fd9265 (tests and sanity checks on beta_prior_log_dens)
 beta_prior_log_dens_derivative = 
-  function(beta, n_PP, 
+  function(beta, 
+           n_PP, 
            beta0_mean,
            beta0_var,
            log_scale){
+<<<<<<< HEAD
     mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
     var_mat <- matrix(0.1,dim(beta)[1], dim(beta)[2]) 
+=======
+    nrb <- nrow(beta)
+    ncb <- ncol(beta)
+    if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")
+    if(n_PP > nrb + 2) {
+      stop("n_PP can't be greater than nrow(beta) + 2")
+    }
+    mean_mat <- matrix(0, nrb, ncb) 
+    var_mat <- matrix(0.01, nrb, ncb) 
+>>>>>>> 8fd9265 (tests and sanity checks on beta_prior_log_dens)
     mean_mat[1,1] <- beta0_mean
     var_mat[1,1] <- beta0_var
-    var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
-    if(ncol(beta)==3) {
-      var_mat[-seq(nrow(beta)-n_PP), c(2,3)]<- exp(log_scale[2])
+    var_mat[-seq(nrb-n_PP), 1] <- exp(log_scale[1])
+    if(ncb==3) {
+      if(!length(log_scale) == 2) stop("log_scale is supposed to be of length 2")
+      var_mat[-seq(nrb-n_PP), c(2,3)]<- exp(log_scale[2])
     }
     return(-(beta - mean_mat)/ var_mat)
   }
