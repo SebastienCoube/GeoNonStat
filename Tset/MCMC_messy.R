@@ -664,11 +664,13 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
+        3 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(stuff$compressed_chol[1,1,]))
       )
     proposed_U =
       (
+        3 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(new_compressed_sparse_chol[1,1,]))
       )
@@ -711,6 +713,9 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
+          - 3 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+          + 3 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+          
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
             beta0_mean = hierarchical_model$range$beta0_mean,
@@ -750,10 +755,12 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
+        3 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
         + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise) # observation ll
       )
     proposed_U =
       (
+        3 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
         + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise) # observation ll
       )
     ker_var$range_log_scale_ancillary = update_kernel(
@@ -792,6 +799,9 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
+          - 3 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+          + 3 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+          
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
             beta0_mean = hierarchical_model$range$beta0_mean,

@@ -158,6 +158,17 @@ if(T){
   coeff_list$range_X_coeff[1,2] = -0
   coeff_list$range_X_coeff[1,3] = -0
 }
+# case with no non-stationarity and crazy noise. 
+if(F){
+  coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
+  coeff_list$range_PP_coeff[,1] =  0*exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+  coeff_list$range_PP_coeff[,-1] = 0*exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+  coeff_list$noise_X_coeff[1] = 2
+  range_log_scale = c(-1,-1)
+  coeff_list$range_X_coeff[1,1] =  -4.5
+  coeff_list$range_X_coeff[1,2] = -0
+  coeff_list$range_X_coeff[1,3] = -0
+}
 
 
 fake_data = simulate(
