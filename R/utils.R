@@ -7,10 +7,10 @@
 #'
 #' @examples
 #' expmat(c(1,2,3,4,5,6))
-expmat = function(coords)
+expmat = function(coords, eps=0.0001)
 {
   res = expm::expm(symmat(coords)) 
-  res + diag(.0001,nrow(res), ncol(res))
+  res + diag(eps,nrow(res), ncol(res))
 }
 
 
@@ -72,7 +72,7 @@ naive_greedy_coloring = function(M)
   return(cols)
 }
 
-#' Title
+#' Title TODO
 #'
 #' @param vecchia_approx  an object created with `createVecchia()`
 #' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
