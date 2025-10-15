@@ -187,7 +187,7 @@ for(iter in seq(iter, n_iterations_update)){
   # Range beta (ancillary) #
   ##########################
   
-  hmc_stepsize = diag(exp(ker_var$range_beta_ancillary)[c(1, rep(2, 2*hierarchical_model$anisotropic))])
+  hmc_stepsize = diag(exp(ker_var$range_beta_ancillary)[c(1, rep(2, 2*hierarchical_model$anisotropic))], 1 + 2*hierarchical_model$anisotropic)
   # initializing position 
   q = 0*params$range_beta
   q[] = L_minus_one %*% (params$range_beta)
@@ -413,7 +413,7 @@ for(iter in seq(iter, n_iterations_update)){
   ###########################
   # Range beta (sufficient) #
   ###########################
-  hmc_stepsize = diag(exp(ker_var$range_beta_sufficient)[c(1, rep(2, 2*hierarchical_model$anisotropic))])
+  hmc_stepsize = diag(exp(ker_var$range_beta_sufficient)[c(1, rep(2, 2*hierarchical_model$anisotropic))], 1 + 2*hierarchical_model$anisotropic)
   # initializing position 
   q = 0*params$range_beta
   q[] = L_minus_one %*% (params$range_beta)
@@ -648,8 +648,8 @@ for(iter in seq(iter, n_iterations_update)){
     
     new_range_beta = params$range_beta
     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
-      diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% 
-      diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
+      diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*% 
+      diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
     new_compressed_sparse_chol = 
       compute_sparse_chol(
         hierarchical_model$range$PP,
@@ -734,7 +734,8 @@ for(iter in seq(iter, n_iterations_update)){
     q = q + exp(ker_var$range_log_scale_ancillary) * rnorm(length(q))
     new_range_beta = params$range_beta
     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
-      diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))])) %*% diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]))
+      diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
+      diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
     new_compressed_sparse_chol = 
       compute_sparse_chol(
         hierarchical_model$range$PP,

@@ -123,17 +123,41 @@ coeff_list$range_X_coeff[1,3] = -0
 }
 
 # awkward case with non-stationarity only in range, not in aniso
-if(T){
+if(F){
 coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
 coeff_list$noise_X_coeff[1] = -1
 range_log_scale = c(-.5,-6)
 coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
 coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] =  -4.5
+coeff_list$range_X_coeff[1,1] =  -4
+coeff_list$range_X_coeff[1,2] = .5
+coeff_list$range_X_coeff[1,3] = -.5
+}
+
+# awkward case with non-stationarity only in range, not in aniso
+if(F){
+coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
+coeff_list$noise_X_coeff[1] = -1
+range_log_scale = c(-6, .5)
+coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+coeff_list$range_X_coeff[1,1] =  -4
 coeff_list$range_X_coeff[1,2] = -0
 coeff_list$range_X_coeff[1,3] = -0
 }
 
+
+# case with nice non-stationarity and crazy noise. 
+if(T){
+  coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
+  coeff_list$noise_X_coeff[1] = 2
+  range_log_scale = c(-1,-1)
+  coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
+  coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
+  coeff_list$range_X_coeff[1,1] =  -4.5
+  coeff_list$range_X_coeff[1,2] = -0
+  coeff_list$range_X_coeff[1,3] = -0
+}
 
 
 fake_data = simulate(
