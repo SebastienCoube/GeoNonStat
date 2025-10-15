@@ -419,10 +419,8 @@ process_transition_kernels <- function(init=-4, hm){
   res =   list(
     range_log_scale_sufficient = init,
     range_log_scale_ancillary =  init,
-    range_beta_sufficient = c(init),
-    range_beta_mix_covariance  = c(0),
-    range_beta_sufficient = c(init),
-    range_beta_ancillary = c(init),
+    range_beta_sufficient = rep(init, 1 + hm$anisotropic),
+    range_beta_ancillary = rep(init, 1 + hm$anisotropic),
     range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic), 
     scale_beta_sufficient = init,
     scale_beta_ancillary  = init,
@@ -694,7 +692,7 @@ process_states <- function(
             seed = chain_number + seed,
             hm = hierarchical_model, covariates = covariates,
             observed_field = observed_field, vecchia_approx = vecchia_approx,
-            init_tk = -7
+            init_tk = -3
           )
       )
     names(states) = paste("chain", seq(n_chains), sep = "_")
