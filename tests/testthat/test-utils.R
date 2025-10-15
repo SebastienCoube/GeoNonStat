@@ -99,7 +99,6 @@ test_that("symmat produce expected output", {
 })
 
 test_that("compute_sparse_chol produce expected output", {
-  # TODO
   set.seed(123)
   X <- data.frame(cbind(runif(vecchia_approx$n_obs), 
                         rnorm(vecchia_approx$n_obs), 
@@ -108,52 +107,22 @@ test_that("compute_sparse_chol produce expected output", {
     X = X,
     vecchia_approx = vecchia_approx)
 
-  range_beta = matrix(rnorm(1 + PP$n_knots))
-  compute_sparse_chol(range_beta = range_beta,
-                      vecchia_approx = vecchia_approx,
-                      range_X = range_X,
-                      PP = PP,
-                      matern_smoothness = 1.5,
-                      compute_derivative = T)
-
-#   expect_error(
-#     res <- compute_sparse_chol(
-#       range_beta = matrix(.5/sqrt(2),1,1),
-#       NNarray = NNarray,
-#       locs = locs,
-#       nu = 2
-#     ),
-#     "nu must be equal to 0.5 or 1.5"
-#   )
-# 
-#   set.seed(123)
-#   expect_error(
-#     res <- compute_sparse_chol(
-#               range_beta = matrix(.5/sqrt(2),1,1),
-#               NNarray = NNarray,
-#               locs = locs,
-#               use_PP = F,
-#               num_threads = 1,
-#               anisotropic = F,
-#               range_X = matrix(1, nrow(locs), 1),
-#               nu = 1.5
-#             ),
-#     NA
-#   )
-#   expect_type(res, "list")
-#   expect_length(res, 2)
-# 
-#   expect_true(is(res[[1]], "array"))
-#   expect_identical(dim(res[[1]]), c(100L, 11L))
-#   expect_equal(mean(res[[1]]), 0.01397719, tolerance = 1e-7)
-#   expect_equal(res[[1]][2,1:3], c(13.8705735, -13.8310216, 0.00000))
-# 
-#   expect_type(res[[2]], "list")
-#   expect_true(is(res[[2]][[1]], "array"))
-#   expect_identical(dim(res[[2]][[1]]), c(100L, 11L, 11L))
-#   expect_equal(mean(res[[2]][[1]]), -0.00044410, tolerance = 1e-6)
-#   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
+  range_beta <- matrix(rnorm(4 + PP$n_knots))
+  
+  expect_error(
+    tmp <- compute_sparse_chol(range_beta = range_beta,
+                        vecchia_approx = vecchia_approx,
+                        range_X = range_X,
+                        PP = PP,
+                        matern_smoothness = 1.5,
+                        compute_derivative = T),
+    NA)
+  
+  expect_true(inherits(tmp, "array"))
+  expect_identical(dim(tmp), c(11L, 12L, 1000L))
+  expect_equal(mean(tmp), 0.0008364, tolerance = 1e-5)
 })
+
 
 ## beta_prior_log_dens ##################################
 test_that("beta_prior_log_dens produce expected output", {
@@ -273,12 +242,18 @@ test_that("getting correct values using beta_prior_log_dens and beta_prior_log_d
 
 ## X_PP_crossprod ##################################
 test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
+  X = matrix(rnorm(100), 50)
+  Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
-    res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
+    res1 <- X_PP_crossprod(X = X, 
+                           PP = NULL, 
+                           Y = Y, 
+                           vecchia_approx = vecchia_approx),
     NA
   )
+  
   expect_true(is(res1, "matrix"))
-  expect_identical(dim(res1), c(1L, 30L))
+  expect_identical(dim(res1), c(2L, 30L))
   expect_identical(res1,crossprod(X, Y))
   
   # Simple corssprod, vecchia unused. 
@@ -290,50 +265,62 @@ test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
 })
 
 test_that("X_PP_crossprod with PP", {
+  set.seed(123)
+  X = matrix(rnorm(100), 50)
+  Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
     res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx),
     NA
   )
   expect_true(is(res2, "matrix"))
-  expect_identical(dim(res2), c(26L, 30L))
+  expect_identical(dim(res2), c(27L, 30L))
   
   # First line is crossprod
   expect_identical(res2[1,],crossprod(X, Y)[1,])
   expect_equal(colMeans(res2)[1:5], 
-               c(-1.5635618, -1.9717004, -0.4042749, -1.5152377, 0.2128007),
+               c(-1.2353077, -0.2666516, -0.5238175,  0.6992207,  0.2442785),
                tolerance = 1e-5)
 })
 
 test_that("X_PP_crossprod with PP and permute obs", {
+  set.seed(123)
+  X = matrix(rnorm(100), 50)
+  Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
     res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
     NA
   )
   expect_true(is(res3, "matrix"))
-  expect_identical(dim(res3), c(26L, 30L))
+  expect_identical(dim(res3), c(27L, 30L))
   
   # First line is crossprod
   expect_identical(res3[1,],crossprod(X, Y)[1,])
   expect_equal(colMeans(res3)[1:5], 
-               c(-1.76029590, -2.13252284, -0.03348243, -1.66303884, -0.71303914),
+               c(-1.2334375, -0.2906708, -0.6123371, 0.9166211,  0.2427284),
                tolerance = 1e-5)
 })
 
 ## X_PP_mult_right ##################################
 test_that("X_PP_mult_right with PP and permute obs", {
   set.seed(123)
+  X = matrix(rnorm(100), 50)
+  Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
     resmr <- X_PP_mult_right(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     "Y should have"
   )
   # No PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = NULL, Y = matrix(c(0.5, 1, 1.1, 0.2), nrow = 1), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- X_PP_mult_right(X = X, 
+                             PP = NULL, 
+                             Y = matrix(rep(c(0.5, 1, 1.1, 0.2),2), nrow = 2), 
+                             vecchia_approx = vecchia_approx, 
+                             permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "matrix"))
-  expect_identical(dim(resmr), c(1000L, 4L))
-  expect_equal(mean(resmr), -0.053030, tolerance = 1e-5)
+  expect_identical(dim(resmr), c(50L, 4L))
+  expect_equal(mean(resmr), 0.1153678, tolerance = 1e-5)
   
   # No X
   expect_error(
@@ -341,19 +328,17 @@ test_that("X_PP_mult_right with PP and permute obs", {
     NA
   )
   expect_true(is(resmr, "matrix"))
-  expect_identical(dim(resmr), c(1000L, 10L))
-  mean(as.matrix(resmr))
-  expect_equal(mean(as.matrix(resmr)), 0.063284, tolerance = 1e-5)
+  expect_identical(dim(resmr), c(50L, 10L))
+  expect_equal(mean(as.matrix(resmr)), -0.160772, tolerance = 1e-5)
   
   # X and PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(260), nrow = 26), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(270), nrow = 27), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "matrix"))
-  expect_identical(dim(resmr), c(1000L, 10L))
-  expect_equal(mean(as.matrix(resmr)), 0.089596, tolerance = 1e-5)
-  
+  expect_identical(dim(resmr), c(50L, 10L))
+  expect_equal(mean(as.matrix(resmr)), -0.03502011, tolerance = 1e-5)
 })
 
 
