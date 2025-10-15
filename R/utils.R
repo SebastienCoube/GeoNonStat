@@ -24,19 +24,16 @@ expmat = function(coords)
 #' symmat(c(1,2,3,4,5,6))
 symmat = function(coords)
 {
-  if(length(coords)==1)logm = matrix(coords)
-  if(length(coords)==3)
-  {
-    logm = matrix(coords [c(1, 3, 3, 2)] , 2)
+  # check if length of vector is compatible
+  n <- (sqrt(8 * length(coords) + 1) - 1) / 2
+  if (as.integer(n) != n || n <= 0) {
+    stop("length of coords incompatible with a symetric matrix")
   }
-  if(length(coords)==6)
-  {
-    logm = matrix(0, 3, 3)
-    diag(logm) = coords[seq(3)]
-    logm[lower.tri(logm)] = coords[-seq(3)]
-    logm[upper.tri(logm)] = logm[lower.tri(logm)]
-  }
-  logm
+  symmat <- matrix(0, nrow = n, ncol = n)
+  diag(symmat) <- coords[1:n]
+  symmat[lower.tri(symmat)] = coords[-seq(n)]
+  symmat[upper.tri(symmat)] = symmat[lower.tri(symmat)]
+  return(symmat)
 }
 
 #' Title

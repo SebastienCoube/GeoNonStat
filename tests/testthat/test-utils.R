@@ -2,8 +2,9 @@ set.seed(123)
 locs <- cbind(runif(1000), runif(1000))
 vecchia_approx = createVecchia(locs, 10, ncores = 1)
 
-set.seed(123)
-PP = createPP(vecchia_approx, plot=FALSE)
+PP <- suppressMessages(
+  createPP(vecchia_approx, plot=FALSE)
+)
 X = matrix(rnorm(500), nrow(locs))
 Y = matrix(rnorm(30*nrow(X)), nrow(X))
 range_X = matrix(1, nrow(locs))
@@ -57,45 +58,45 @@ test_that("expmat produce expected output", {
 
 test_that("symmat produce expected output", {
   # 1x1 matrix
-  # coords <- c(1)
-  # expect_error(
-  #   res <- symmat(coords), 
-  #   NA
-  # )
-  # expect_true(is(res, "matrix"))
-  # expect_identical(dim(res), c(1L,1L))
-  # expect_equal(res, matrix(c(1)))
-  # 
-  # # 2x2 matrix
-  # coords <- c(1,2,3)
-  # expect_error(
-  #   res <- symmat(coords), 
-  #   NA
-  # )
-  # expect_true(is(res, "matrix"))
-  # expect_identical(dim(res), c(2L,2L))
-  # expect_equal(res, 
-  #              matrix(c(1,3,3,2),
-  #                     nrow=2))
-  # 
-  # # 3x3 matrix
-  # coords <- c(1,2,3,4,5,6)
-  # expect_error(
-  #   res <- symmat(coords), 
-  #   NA
-  # )
-  # expect_true(is(res, "matrix"))
-  # expect_identical(dim(res), c(3L,3L))
-  # expect_equal(res, 
-  #              matrix(c(1,4,5,4,2,6,5,6,3),
-  #                     nrow=3))
-  # 
-  # # Vector incompatible
-  # coords <- c(1,2,3,4,5)
-  # expect_error(
-  #   res <- symmat(coords), 
-  #   "length of coords incompatible with a symetric matrix"
-  # )
+  coords <- c(1)
+  expect_error(
+    res <- symmat(coords),
+    NA
+  )
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(1L,1L))
+  expect_equal(res, matrix(c(1)))
+
+  # 2x2 matrix
+  coords <- c(1,2,3)
+  expect_error(
+    res <- symmat(coords),
+    NA
+  )
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(2L,2L))
+  expect_equal(res,
+               matrix(c(1,3,3,2),
+                      nrow=2))
+
+  # 3x3 matrix
+  coords <- c(1,2,3,4,5,6)
+  expect_error(
+    res <- symmat(coords),
+    NA
+  )
+  expect_true(is(res, "matrix"))
+  expect_identical(dim(res), c(3L,3L))
+  expect_equal(res,
+               matrix(c(1,4,5,4,2,6,5,6,3),
+                      nrow=3))
+
+  # Vector incompatible
+  coords <- c(1,2,3,4,5)
+  expect_error(
+    res <- symmat(coords),
+    "length of coords incompatible with a symetric matrix"
+  )
 })
 
 test_that("compute_sparse_chol produce expected output", {
