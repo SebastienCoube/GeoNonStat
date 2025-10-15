@@ -123,47 +123,6 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
   par(mar=omar, mgp=def.par[["mgp"]])
 }
 
-
-#' Exponential of a square matrix, adding a small numeric value on the diagonal
-#'
-#' @param coords a numeric vector
-#' @param eps a numeric value, default to .0001
-#'
-#' @returns a square matrix
-#'
-#' @examples
-#' expmat(c(1,2,3,4,5,6))
-expmat = function(coords)
-{
-  res = expm::expm(symmat(coords)) 
-  res + diag(.0001,nrow(res), ncol(res))
-}
-
-#' Create symetric matrix from coordinates
-#'
-#' @param coords a numeric vector, of length 1, 3 or 6
-#'
-#' @returns a matrix
-#'
-#' @examples
-#' symmat(c(1,2,3,4,5,6))
-symmat = function(coords)
-{
-  if(length(coords)==1)logm = matrix(coords)
-  if(length(coords)==3)
-  {
-    logm = matrix(coords [c(1, 3, 3, 2)] , 2)
-  }
-  if(length(coords)==6)
-  {
-    logm = matrix(0, 3, 3)
-    diag(logm) = coords[seq(3)]
-    logm[lower.tri(logm)] = coords[-seq(3)]
-    logm[upper.tri(logm)] = logm[lower.tri(logm)]
-  }
-  logm
-}
-
 #' Plots range ellipses for nonstationary covariance functions.
 #' @param locs ellipses centers. A matrix with 2 columns, 1 row  for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.

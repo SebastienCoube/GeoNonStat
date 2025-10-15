@@ -1,3 +1,44 @@
+#' Exponential of a square matrix, adding a small numeric value on the diagonal
+#'
+#' @param coords a numeric vector
+#' @param eps a numeric value, default to .0001
+#'
+#' @returns a square matrix
+#'
+#' @examples
+#' expmat(c(1,2,3,4,5,6))
+expmat = function(coords)
+{
+  res = expm::expm(symmat(coords)) 
+  res + diag(.0001,nrow(res), ncol(res))
+}
+
+
+#' Create symetric matrix from coordinates
+#'
+#' @param coords a numeric vector, of length 1, 3 or 6
+#'
+#' @returns a matrix
+#'
+#' @examples
+#' symmat(c(1,2,3,4,5,6))
+symmat = function(coords)
+{
+  if(length(coords)==1)logm = matrix(coords)
+  if(length(coords)==3)
+  {
+    logm = matrix(coords [c(1, 3, 3, 2)] , 2)
+  }
+  if(length(coords)==6)
+  {
+    logm = matrix(0, 3, 3)
+    diag(logm) = coords[seq(3)]
+    logm[lower.tri(logm)] = coords[-seq(3)]
+    logm[upper.tri(logm)] = logm[lower.tri(logm)]
+  }
+  logm
+}
+
 #' Title
 #'
 #' @param M a SparseMatrix
@@ -506,7 +547,11 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' 
 #' # crossprod + PP with observations of X on the obs
 #' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
-X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_obs = F)
+X_PP_crossprod = function(X, 
+                          PP = NULL, 
+                          Y, 
+                          vecchia_approx=NULL, 
+                          permutate_PP_to_obs = F)
 {
   if(nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
