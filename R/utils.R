@@ -70,11 +70,8 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' @examples
 #' locs = cbind(runif(1000), runif(1000))
 #' vecchia_approx = createVecchia(locs)
-#' Rcpp::sourceCpp("src/vecchia.cpp")
 #' range_X = matrix(1, nrow(locs))
-#' PP = createPP(vecchia_approx)
-#' 
-#' 
+#' PP = createPP(vecchia_approx, plot=FALSE)
 #' 
 #' # test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness= 1.5
 #' range_beta = matrix(c(-2))

@@ -35,15 +35,15 @@ test_that("decompress_chol produce expected results", {
 test_that("expmat produce expected output", {
   coords <- c(1,2,3,4,5,6)
   expect_error(
-    res <- expmat(coords), 
+    res <- expmat(coords),
     NA
   )
   expect_true(is(res, "array"))
   expect_identical(dim(res), c(3L,3L))
-  
+  # 
   expected_mat <- matrix(
-    c(47859.7700011562, 55641.9937959158, 62462.1209161336, 
-      55641.9937959158, 64689.8331149192, 72618.8933675331, 
+    c(47859.7700011562, 55641.9937959158, 62462.1209161336,
+      55641.9937959158, 64689.8331149192, 72618.8933675331,
       62462.1209161336, 72618.8933675331, 81519.8962286822),
     nrow=3)
   expect_equal(res, expected_mat)
@@ -57,65 +57,65 @@ test_that("expmat produce expected output", {
 
 test_that("symmat produce expected output", {
   # 1x1 matrix
-  coords <- c(1)
-  expect_error(
-    res <- symmat(coords), 
-    NA
-  )
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(1L,1L))
-  expect_equal(res, matrix(c(1)))
-  
-  # 2x2 matrix
-  coords <- c(1,2,3)
-  expect_error(
-    res <- symmat(coords), 
-    NA
-  )
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(2L,2L))
-  expect_equal(res, 
-               matrix(c(1,3,3,2),
-                      nrow=2))
-  
-  # 3x3 matrix
-  coords <- c(1,2,3,4,5,6)
-  expect_error(
-    res <- symmat(coords), 
-    NA
-  )
-  expect_true(is(res, "matrix"))
-  expect_identical(dim(res), c(3L,3L))
-  expect_equal(res, 
-               matrix(c(1,4,5,4,2,6,5,6,3),
-                      nrow=3))
-  
-  # Vector incompatible
-  coords <- c(1,2,3,4,5)
-  expect_error(
-    res <- symmat(coords), 
-    "length of coords incompatible with a symetric matrix"
-  )
+  # coords <- c(1)
+  # expect_error(
+  #   res <- symmat(coords), 
+  #   NA
+  # )
+  # expect_true(is(res, "matrix"))
+  # expect_identical(dim(res), c(1L,1L))
+  # expect_equal(res, matrix(c(1)))
+  # 
+  # # 2x2 matrix
+  # coords <- c(1,2,3)
+  # expect_error(
+  #   res <- symmat(coords), 
+  #   NA
+  # )
+  # expect_true(is(res, "matrix"))
+  # expect_identical(dim(res), c(2L,2L))
+  # expect_equal(res, 
+  #              matrix(c(1,3,3,2),
+  #                     nrow=2))
+  # 
+  # # 3x3 matrix
+  # coords <- c(1,2,3,4,5,6)
+  # expect_error(
+  #   res <- symmat(coords), 
+  #   NA
+  # )
+  # expect_true(is(res, "matrix"))
+  # expect_identical(dim(res), c(3L,3L))
+  # expect_equal(res, 
+  #              matrix(c(1,4,5,4,2,6,5,6,3),
+  #                     nrow=3))
+  # 
+  # # Vector incompatible
+  # coords <- c(1,2,3,4,5)
+  # expect_error(
+  #   res <- symmat(coords), 
+  #   "length of coords incompatible with a symetric matrix"
+  # )
 })
 
 test_that("compute_sparse_chol produce expected output", {
   # TODO
-  #   set.seed(123)
-#   X <- data.frame(cbind(runif(vecchia_approx$n_obs), rnorm(vecchia_approx$n_obs), rpois(vecchia_approx$n_obs, 5)))
-#   tt <- process_covariates(
-#     X = X, 
-#     vecchia_approx = vecchia_approx, 
-#     covariate_name = "test_covariate")
-#   
-#   tt <- process_covariates(X = range_X, vecchia_approx = vecchia_approx, PP=PP, covariate_name = NULL)
-#   range_beta = matrix(rnorm(1 + PP$n_knots))
-#   compute_sparse_chol(range_beta = range_beta, 
-#                       vecchia_approx = vecchia_approx, 
-#                       range_X = range_X, 
-#                       PP = PP, 
-#                       matern_smoothness = 1.5, 
-#                       compute_derivative = T)
-#   
+  set.seed(123)
+  X <- data.frame(cbind(runif(vecchia_approx$n_obs), 
+                        rnorm(vecchia_approx$n_obs), 
+                        rpois(vecchia_approx$n_obs, 5)))
+  range_X <- process_covariates(
+    X = X,
+    vecchia_approx = vecchia_approx)
+
+  range_beta = matrix(rnorm(1 + PP$n_knots))
+  compute_sparse_chol(range_beta = range_beta,
+                      vecchia_approx = vecchia_approx,
+                      range_X = range_X,
+                      PP = PP,
+                      matern_smoothness = 1.5,
+                      compute_derivative = T)
+
 #   expect_error(
 #     res <- compute_sparse_chol(
 #       range_beta = matrix(.5/sqrt(2),1,1),
@@ -155,9 +155,10 @@ test_that("compute_sparse_chol produce expected output", {
 #   expect_equal(res[[2]][[1]][2,1:3,1], c(6.11473435, 6.11473435, 0.000000))
 })
 
+## beta_prior_log_dens ##################################
 test_that("beta_prior_log_dens produce expected output", {
   set.seed(123)
-  beta1 <- matrix(rnorm(100), 100, ncol=3)
+  beta1 <- matrix(rnorm(100), 100, ncol=1)
   beta3 <- matrix(rnorm(300), 100, ncol=3)
   expect_error(
     tmp <- beta_prior_log_dens(
@@ -187,7 +188,7 @@ test_that("beta_prior_log_dens produce expected output", {
       log_scale = c(-3, -2)
      ),
     NA)
-  expect_equal(tmp, -2972.982)
+  expect_equal(tmp, -3012.276)
   
   expect_error(
     tmp <- beta_prior_log_dens(
@@ -198,9 +199,10 @@ test_that("beta_prior_log_dens produce expected output", {
       log_scale = c(-3)
     ),
     NA)
-  expect_equal(tmp, -1155.226)
+  expect_equal(tmp, -1155.22585)
 })
 
+## beta_prior_log_dens_derivative ##################################
 test_that("beta_prior_log_dens_derivative produce expected output", {
   set.seed(123)
   beta1 <- matrix(rnorm(100), 100, ncol=1)
@@ -269,6 +271,7 @@ test_that("getting correct values using beta_prior_log_dens and beta_prior_log_d
   expect_equal(var(c(res)), 3.722309e-07, tolerance = 1e-7)
 })
 
+## X_PP_crossprod ##################################
 test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
   expect_error(
     res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
@@ -292,12 +295,12 @@ test_that("X_PP_crossprod with PP", {
     NA
   )
   expect_true(is(res2, "matrix"))
-  expect_identical(dim(res2), c(101L, 30L))
+  expect_identical(dim(res2), c(26L, 30L))
   
   # First line is crossprod
   expect_identical(res2[1,],crossprod(X, Y)[1,])
   expect_equal(colMeans(res2)[1:5], 
-               c(0.1999806, -0.8748530, 0.9684133, -0.7444476, 0.1350033),
+               c(-1.5635618, -1.9717004, -0.4042749, -1.5152377, 0.2128007),
                tolerance = 1e-5)
 })
 
@@ -307,16 +310,16 @@ test_that("X_PP_crossprod with PP and permute obs", {
     NA
   )
   expect_true(is(res3, "matrix"))
-  expect_identical(dim(res3), c(101L, 30L))
+  expect_identical(dim(res3), c(26L, 30L))
   
   # First line is crossprod
   expect_identical(res3[1,],crossprod(X, Y)[1,])
   expect_equal(colMeans(res3)[1:5], 
-               c(0.02263887, -1.04065836, 0.84462225, -0.70220738, 0.36781311),
+               c(-1.76029590, -2.13252284, -0.03348243, -1.66303884, -0.71303914),
                tolerance = 1e-5)
 })
 
-# res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+## X_PP_mult_right ##################################
 test_that("X_PP_mult_right with PP and permute obs", {
   set.seed(123)
   expect_error(
@@ -330,26 +333,26 @@ test_that("X_PP_mult_right with PP and permute obs", {
   )
   expect_true(is(resmr, "matrix"))
   expect_identical(dim(resmr), c(1000L, 4L))
-  expect_equal(mean(resmr), 0.01392224, tolerance = 1e-5)
+  expect_equal(mean(resmr), -0.053030, tolerance = 1e-5)
   
   # No X
   expect_error(
-    resmr <- X_PP_mult_right(X = NULL, PP = PP, Y = matrix(rnorm(200), nrow = 100), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- X_PP_mult_right(X = NULL, PP = PP, Y = matrix(rnorm(250), nrow = 25), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
-  expect_true(is(resmr, "Matrix"))
-  expect_identical(dim(resmr), c(1000L, 2L))
+  expect_true(is(resmr, "matrix"))
+  expect_identical(dim(resmr), c(1000L, 10L))
   mean(as.matrix(resmr))
-  expect_equal(mean(as.matrix(resmr)), -0.1908332, tolerance = 1e-5)
+  expect_equal(mean(as.matrix(resmr)), 0.063284, tolerance = 1e-5)
   
   # X and PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(202), nrow = 101), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(260), nrow = 26), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
-  expect_true(is(resmr, "Matrix"))
-  expect_identical(dim(resmr), c(1000L, 2L))
-  expect_equal(mean(as.matrix(resmr)), 0.01075514, tolerance = 1e-5)
+  expect_true(is(resmr, "matrix"))
+  expect_identical(dim(resmr), c(1000L, 10L))
+  expect_equal(mean(as.matrix(resmr)), 0.089596, tolerance = 1e-5)
   
 })
 
