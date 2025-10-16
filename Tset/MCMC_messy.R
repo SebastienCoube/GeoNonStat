@@ -124,7 +124,7 @@ for(iter in seq(iter, n_iterations_update)){
   Sys.time()-t1
   
   t1 = Sys.time()
-  for(pass in seq(4)){
+  for(pass in seq(1)){
     for(cluster_idx in unique(locs_partition)){
       selected_idx = which(locs_partition==cluster_idx)
       additional_mean_from_field =
@@ -271,6 +271,8 @@ for(iter in seq(iter, n_iterations_update)){
   ###    plot(c(derivative_test), c(dens_grad))
   ###    abline(a=0, b=1)
   
+  n_hmc_steps = 1
+  for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
   new_range_beta = params$range_beta
@@ -316,8 +318,8 @@ for(iter in seq(iter, n_iterations_update)){
           )
         )) %*% range_reparam_mat 
   )
-  p[] = p[] - (dens_grad)%*%hmc_stepsize/ 2
-  
+  p[] = p[] - (dens_grad)%*%hmc_stepsize/ (1+  (hmc_step==n_hmc_steps))
+  }
   ###       #testing the gradient
   ###       derivative_test = 0*q
   ###       for(i in seq(nrow(params$range_beta))){
@@ -495,6 +497,8 @@ for(iter in seq(iter, n_iterations_update)){
   ###     plot(c(derivative_test), c(dens_grad))
   ###     abline(a=0, b=1)
   
+  n_hmc_steps = 1
+  for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
   new_range_beta = params$range_beta      
@@ -538,8 +542,8 @@ for(iter in seq(iter, n_iterations_update)){
     )  %*% range_reparam_mat
   )
   # updating momentum
-  p[] = p[] - (dens_grad) %*% hmc_stepsize/ 2
-  
+  p[] = p[] - (dens_grad) %*% hmc_stepsize/ (1 + (hmc_step == n_hmc_steps))
+}
   ####testing the gradient
   #     derivative_test = 0*q
   #     for(i in seq(nrow(params$range_beta))){
