@@ -1,22 +1,60 @@
+#' Exponential of a square matrix, adding a small numeric value on the diagonal
+#'
+#' @param coords a numeric vector
+#' @param eps a numeric value, default to .0001
+#'
+#' @returns a square matrix
+#'
+#' @examples
+#' expmat(c(1,2,3,4,5,6))
+expmat = function(coords, eps=0.0001)
+{
+  res = expm::expm(symmat(coords)) 
+  res + diag(eps,nrow(res), ncol(res))
+}
+
+
+#' Create symetric matrix from coordinates
+#'
+#' @param coords a numeric vector, of length 1, 3 or 6
+#'
+#' @returns a matrix
+#'
+#' @examples
+#' symmat(c(1,2,3,4,5,6))
+symmat = function(coords)
+{
+  # check if length of vector is compatible
+  n <- (sqrt(8 * length(coords) + 1) - 1) / 2
+  if (as.integer(n) != n || n <= 0) {
+    stop("length of coords incompatible with a symetric matrix")
+  }
+  symmat <- matrix(0, nrow = n, ncol = n)
+  diag(symmat) <- coords[1:n]
+  symmat[lower.tri(symmat)] = coords[-seq(n)]
+  symmat[upper.tri(symmat)] = symmat[lower.tri(symmat)]
+  return(symmat)
+}
+
 #' Title
 #'
-#' @param M a sparse matrix
+#' @param M a SparseMatrix
 #'
 #' @returns a vector of colors, of length the number of rows of M
 #' @examples
-
-
-#' M = Matrix::sparseMatrix(i = seq(10), j = seq(10))
-#' M[,1]=1
-#' M[1,]=1
+#' n <- 5  
+#' i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
+#' j <- c(1:n, rep(1, n - 1))
+#' M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
 #' naive_greedy_coloring(M)
 #' M[2,3]=1
 #' M[3,2]=1
 #' naive_greedy_coloring(M)
-
 naive_greedy_coloring = function(M)
 {
   #number of nodes
+  if(!Matrix::isSymmetric(M, checkDN=FALSE)) 
+    stop("M must be symmetric")
   n_obs = nrow(M)
   #deducting degrees
   degrees = as.vector(rep(1, n_obs)%*%M)
@@ -25,7 +63,7 @@ naive_greedy_coloring = function(M)
   #creating a color * node matrix of incompatibilities
   incompatibilities = matrix(0, n_obs+1, max(degrees))
   cols = rep(0, n_obs)
-  
+
   for(i in seq(n_obs))
   {
     cols[i] = match(0, incompatibilities[i,])
@@ -34,7 +72,7 @@ naive_greedy_coloring = function(M)
   return(cols)
 }
 
-#' Title
+#' Title TODO
 #'
 #' @param vecchia_approx  an object created with `createVecchia()`
 #' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
@@ -70,12 +108,17 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' @examples
 #' locs = cbind(runif(1000), runif(1000))
 #' vecchia_approx = createVecchia(locs)
-#' Rcpp::sourceCpp("src/vecchia.cpp")
-#' range_X = matrix(1, nrow(locs))
-#' PP = createPP(vecchia_approx)
-#' 
-#' 
-#' 
+#' X = data.frame(rnorm(nrow(locs)))
+#' range_X <- process_covariates(X, vecchia_approx)
+#' range_beta = matrix(c(1, -2))
+#' PP = suppressMessages(createPP(vecchia_approx, plot=FALSE))
+#' compute_sparse_chol(
+#' range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, 
+#' PP = NULL, 
+#' matern_smoothness = 1.5, 
+#' compute_derivative = F)
 #' # test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness= 1.5
 #' range_beta = matrix(c(-2))
 #' GpGpcov = tcrossprod(solve(
@@ -157,10 +200,18 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' image(mycov_aniso[vecchia_approx$locs_match, vecchia_approx$locs_match])
 #' hist(mycov - mycov_aniso)
 #' # test with a PP
-#' range_beta = matrix(rnorm(1 + PP$n_knots))
-#' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
-#' range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
-#' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
+#' range_beta = matrix(rnorm(2 + PP$n_knots), ncol=1)
+#' compute_sparse_chol(range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, PP = PP, 
+#' matern_smoothness = 1.5, 
+#' compute_derivative = T)
+#' range_beta = matrix(rnorm(3*(2 + PP$n_knots)), ncol = 3)
+#' compute_sparse_chol(range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, 
+#' PP = PP, 
+#' matern_smoothness = 1.5, compute_derivative = T)
 compute_sparse_chol = function(range_beta, 
                                vecchia_approx,
                                range_X, 
@@ -171,12 +222,12 @@ compute_sparse_chol = function(range_beta,
 {
   if (!matern_smoothness %in% c(.5, 1.5)) stop("matern_smoothness must be equal to 0.5 or 1.5")
   if(ncol(range_beta)==3) {
-    range_beta = range_beta %*% matrix(
+    Y = range_beta %*% matrix(
       c(1/sqrt(2), 1/sqrt(2),  0, 
         1/sqrt(2), -1/sqrt(2), 0,
         0,       0,        1), 3)*sqrt(2)*2
   } else if(ncol(range_beta)==1) {
-    range_beta = range_beta * 2
+    Y = range_beta * 2
   } else {
     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }
@@ -186,7 +237,7 @@ compute_sparse_chol = function(range_beta,
       vecchia_approx=  vecchia_approx, 
       X = range_X$X_locs, 
       PP = PP, 
-      Y = range_beta, 
+      Y = Y, 
       permutate_PP_to_obs = F))
   res <- vecchia(num_threads=num_threads,
                  log_range = t(log_range), 
@@ -246,11 +297,12 @@ compute_sparse_chol = function(range_beta,
 
 #' Compute prior logarithmic density of a matrix
 #'
-#' @param beta TODO
-#' @param n_PP TODO
-#' @param beta_mean TODO
-#' @param beta_precision TODO
-#' @param log_scale TODO
+#' @param beta a numeric matrix, with 1 or 3 columns
+#' @param n_PP number of PP
+#' @param beta0_mean mean of beta, numeric value
+#' @param beta0_var var of beta, numeric value
+#' @param log_scale numeric vector of length 1 for a 1 column beta matrix
+#' and length 2 for a 1 column beta matrix
 #' @description
 #' #'   beta follows a Normal distribution, with independent components. 
 #'   
@@ -306,55 +358,39 @@ compute_sparse_chol = function(range_beta,
 #' @export
 #'
 #' @examples
-#' # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-#' beta = matrix(rnorm(300), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3,-2)
-#' 
 #' beta_prior_log_dens(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
-#' )
-#' 
-#' beta = matrix(rnorm(100), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3)
-#' 
-#' beta_prior_log_dens(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
+#'   beta = matrix(rnorm(300), 100, ncol=3), 
+#'   n_PP = 90, 
+#'   beta0_mean =  -5,
+#'   beta0_var = 2,
+#'   log_scale = c(-3,-2)
 #' )
 beta_prior_log_dens = function(beta, 
                                n_PP, 
                                beta0_mean,
                                beta0_var,
                                log_scale){
-  mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
-  var_mat <- matrix(0.1, dim(beta)[1], dim(beta)[2])  
+
+  nrb <- nrow(beta)
+  ncb <- ncol(beta)
+  if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")
+  if(n_PP > nrb + 2) {
+    stop("n_PP can't be greater than nrow(beta) + 2")
+  }
+  mean_mat <- matrix(0, nrb, ncb) 
+  var_mat <- matrix(0.01, nrb, ncb)  
   mean_mat[1,1] <- beta0_mean  # Intercept for range
   var_mat[1,1] <- beta0_var # Intercept for range
-  var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
-  if(ncol(beta)==3) {
-    var_mat[-seq(nrow(beta)-n_PP), c(2,3)] <- exp(log_scale[2])
+  var_mat[-seq(nrb-n_PP), 1] <- exp(log_scale[1])
+  if(ncb==3) {
+    if(!length(log_scale) == 2) stop("log_scale is supposed to be of length 2")
+    var_mat[-seq(nrb-n_PP), c(2,3)] <- exp(log_scale[2])
   }
   
   determinant_part = -0.5* log_scale[1] * n_PP
   if(length(log_scale)==2) determinant_part = determinant_part - 2*0.5*log_scale[2]*n_PP
   return(-0.5 * sum((beta - mean_mat)^2 / var_mat) + determinant_part)
 }
-
-
-
 
 #' Compute gradient of logarithmic density prior
 #'
@@ -367,70 +403,33 @@ beta_prior_log_dens = function(beta,
 #' @returns an array
 #'
 #' @examples
-#' # Comparison between differentiation using 
-#' # finite difference and using the formula
-#' beta = matrix(rnorm(300), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3, -2)
 #' beta_prior_log_dens_derivative(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
+#'   beta = matrix(rnorm(300), 100, 3), 
+#'   n_PP = 90, 
+#'   beta0_mean = -5,
+#'   beta0_var = 2,
+#'   log_scale = c(-3, -2)
 #' )
-#' 
-#' beta = matrix(rnorm(300), 100)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3, -5)
-#' 
-#' beta_prior_log_dens_derivative(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
-#' )
- # TODO Elise : ceci n'est pas un exemple.
- # Par contre passer ça en test pour vérifier 
- # que ça a bonne taille et que ça tourne autour de 1. 
- # TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
- # TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
-#'res <-matrix(0, 100, 3)
-#'for(i in seq(100))
-#'{
-#'  for(j in seq(3)){
-#'    beta1 = beta 
-#'    beta1[i,j] = beta1[i,j]+ .000001
-#'    res[i,j] <- (
-#'      beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-#'        beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-#'    )*1000000
-#' }
-#'}
-#'nalytical_der =  beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-#'ar(mfrow = c(1,3))
-#'oxplot(res- analytical_der)
-#'oxplot(res/analytical_der)
-#'lot(res,analytical_der)
-#'bline(a=0, b=1)
- 
 beta_prior_log_dens_derivative = 
-  function(beta, n_PP, 
+  function(beta, 
+           n_PP, 
            beta0_mean,
            beta0_var,
            log_scale){
-    mean_mat <- matrix(0, dim(beta)[1], dim(beta)[2]) 
-    var_mat <- matrix(0.1,dim(beta)[1], dim(beta)[2]) 
+    nrb <- nrow(beta)
+    ncb <- ncol(beta)
+    if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")
+    if(n_PP > nrb + 2) {
+      stop("n_PP can't be greater than nrow(beta) + 2")
+    }
+    mean_mat <- matrix(0, nrb, ncb) 
+    var_mat <- matrix(0.01, nrb, ncb) 
     mean_mat[1,1] <- beta0_mean
     var_mat[1,1] <- beta0_var
-    var_mat[-seq(nrow(beta)-n_PP), 1] <- exp(log_scale[1])
-    if(ncol(beta)==3) {
-      var_mat[-seq(nrow(beta)-n_PP), c(2,3)]<- exp(log_scale[2])
+    var_mat[-seq(nrb-n_PP), 1] <- exp(log_scale[1])
+    if(ncb==3) {
+      if(!length(log_scale) == 2) stop("log_scale is supposed to be of length 2")
+      var_mat[-seq(nrb-n_PP), c(2,3)]<- exp(log_scale[2])
     }
     return(-(beta - mean_mat)/ var_mat)
   }
@@ -554,7 +553,11 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' 
 #' # crossprod + PP with observations of X on the obs
 #' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
-X_PP_crossprod = function(X, PP = NULL, Y, vecchia_approx=NULL, permutate_PP_to_obs = F)
+X_PP_crossprod = function(X, 
+                          PP = NULL, 
+                          Y, 
+                          vecchia_approx=NULL, 
+                          permutate_PP_to_obs = F)
 {
   if(nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")

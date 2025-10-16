@@ -13,27 +13,28 @@ process_transition_kernels(init = -4, hm)
 a list
 }
 \description{
-Initialize transition kernels
+Transition kernel state
+transition kernel variance is given as the log
+can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
+have an ancillary and a sufficient version when applicable
+rangedescription
 }
 \examples{
 tk <- process_transition_kernels()
 nobs = 10000
 observed_locs = cbind(runif(nobs), runif(nobs))
 observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs)
+vecchia_approx = createVecchia(observed_locs, ncores=1)
 PP = createPP(vecchia_approx)
 X = as.data.frame(cbind(rnorm(nobs), runif(nobs)))
 covariates = list()
-covariates$X = process_covariates(X, vecchia_approx = vecchia_approx)
-covariates$X_range = process_covariates(X, vecchia_approx = vecchia_approx)
-covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx)
-covariates$X_scale = process_covariates(X, vecchia_approx = vecchia_approx)
+covariates$X = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=FALSE)
+covariates$X_range = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=TRUE)
+covariates$X_noise = process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs=FALSE)
 
-hm = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = NULL,
-  scale_PP = PP, scale_log_scale_bounds = NULL,
-  range_PP = PP, range_log_scale_bounds = NULL,
-  observed_locs,
+hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
+  noise_PP = PP, 
+  observed_locs = observed_locs,
   matern_smoothness = 1.5,
   observed_field = observed_field,
   covariates = covariates,

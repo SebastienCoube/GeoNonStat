@@ -4,15 +4,35 @@
 \alias{createVecchia}
 \title{Vecchia approximation setup}
 \usage{
-createVecchia(observed_locs, m = 12)
+createVecchia(observed_locs, m = 12, ncores = 1)
 }
 \arguments{
 \item{observed_locs}{a matrix of spatial coordinates where observations are done}
 
 \item{m}{number of nearest neighbors to do Vecchia's approximation}
+
+\item{ncores}{number of cores to run in parallel, default to 5.}
 }
 \value{
-a list
+a list of Vecchia approximation objects and metadata.
+\describe{
+  \item{\code{n_locs}}{Number of unique locations}
+  \item{\code{n_obs}}{Number of observed locations}
+  \item{\code{observed_locs}}{Observed locations} 
+  \item{\code{locs}}{Unique locations} 
+  \item{\code{t_locs}}{t(locs)}  # TODO : A mon avis ça ne sert à rien de stocker ça. 
+  \item{\code{locs_match}}{locs_match}
+  \item{\code{locs_match_matrix}}{locs_match_matrix}
+  \item{\code{hctam_scol}}{hctam_scol}
+  \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
+  \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol, length))} # count how many observations correspond to one location
+  \item{\code{NNarray}}{NNarray}
+  \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
+  \item{\code{sparse_chol_i}}{sparse_mat at i+1} 
+  \item{\code{sparse_chol_p}}{sparse_mat at p} 
+  \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder} 
+  \item{\code{locs_partition}}{locs_partition}
+}
 }
 \description{
 Vecchia approximation setup
@@ -21,5 +41,5 @@ Vecchia approximation setup
 set.seed(100)
 size <- 20000
 observed_locs = cbind(runif(size), runif(size))
-res <- createVecchia(observed_locs, m=10) 
+res <- createVecchia(observed_locs, m=10, ncores=1) 
 }

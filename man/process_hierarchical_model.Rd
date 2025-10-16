@@ -5,12 +5,11 @@
 \title{Initialize hierarchical model}
 \usage{
 process_hierarchical_model(
-  noise_PP,
-  noise_log_scale_bounds,
-  scale_PP,
-  scale_log_scale_bounds,
-  range_PP,
-  range_log_scale_bounds,
+  vecchia_approx,
+  noise_PP = NULL,
+  noise_log_scale_bounds = NULL,
+  range_PP = NULL,
+  range_log_scale_bounds = NULL,
   observed_locs,
   matern_smoothness,
   observed_field,
@@ -22,14 +21,6 @@ process_hierarchical_model(
 \item{noise_PP}{either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary}
 
 \item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}
-
-\item{scale_PP}{either an object of class PP used to model the field of log-scale parameters, or NULL in which case the model is stationary}
-
-\item{scale_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the scale's PP, or NULL in which case the bounds are set automatically}
-
-\item{range_PP}{either an object of class PP used to model the field of log-range parameters, or NULL in which case the model is stationary}
-
-\item{range_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the range's PP, or NULL in which case the bounds are set automatically}
 
 \item{matern_smoothness}{a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5}
 
@@ -46,73 +37,21 @@ a list
 Initialize hierarchical model
 }
 \examples{
-
-
 nobs = 10000
 observed_locs = cbind(runif(nobs), runif(nobs))
 observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs)
+vecchia_approx = createVecchia(observed_locs, ncores=1)
 PP = createPP(vecchia_approx)
-X = as.data.frame(cbind(rnorm(nobs), runif(nobs)))
+X = as.data.frame(cbind(observed_locs, observed_locs^2))
 covariates = list()
 covariates$X = process_covariates(X, vecchia_approx = vecchia_approx)
 
-hm1 = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = NULL,
-  scale_PP = PP, scale_log_scale_bounds = NULL,
-  range_PP = PP, range_log_scale_bounds = NULL,
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-
-hm2 = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = c(1, 3),
-  scale_PP = PP, scale_log_scale_bounds = c(1, 3),
-  range_PP = PP, range_log_scale_bounds = c(1, 3),
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-
-hm3 = process_hierarchical_model(
-  noise_PP = NULL, noise_log_scale_bounds = NULL,
-  scale_PP = NULL, scale_log_scale_bounds = NULL,
-  range_PP = NULL, range_log_scale_bounds = NULL,
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-
-# there is an error, it's normal
-hm4 = process_hierarchical_model(
-  noise_PP = NULL, noise_log_scale_bounds = c(1, 3),
-  scale_PP = PP, scale_log_scale_bounds = c(1, 3),
-  range_PP = PP, range_log_scale_bounds = c(1, 3),
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-hm5 = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = c(1, 3),
-  scale_PP = NULL, scale_log_scale_bounds = c(1, 3),
-  range_PP = PP, range_log_scale_bounds = c(1, 3),
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
-hm6 = process_hierarchical_model(
-  noise_PP = PP, noise_log_scale_bounds = c(1, 3),
-  scale_PP = PP, scale_log_scale_bounds = c(1, 3),
-  range_PP = NULL, range_log_scale_bounds = c(1, 3),
-  observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = T) 
+hm1 = process_hierarchical_model(vecchia_approx = vecchia_approx,
+noise_PP = PP, noise_log_scale_bounds = NULL,
+range_PP = NULL, 
+observed_locs = observed_locs,
+matern_smoothness = 1.5,
+observed_field = observed_field,
+covariates = covariates,
+anisotropic = T) 
 }

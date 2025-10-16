@@ -12,7 +12,6 @@
 #' #' @param lib.loc character, location of parallel package. Default to NULL (current library)
 #' #'
 #' #' @returns a list
-#' #' @export
 #' #' @examples
 #' #' \dontrun{TODO}
 #' run_socket = function(mcmc_nngp_list,

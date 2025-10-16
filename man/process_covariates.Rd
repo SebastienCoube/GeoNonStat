@@ -5,13 +5,7 @@
 \title{process_covariates : pre-processes covariates by adding an intercept,
 creating useful indices, and pre-computing useful matrices and vectors}
 \usage{
-process_covariates(
-  X,
-  vecchia_approx,
-  PP = NULL,
-  covariate_name = "<missing covariate name>",
-  one_obs_per_site = F
-)
+process_covariates(X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 }
 \arguments{
 \item{X}{a data.frame with as many rows as vecchia_approx$observed_locs}
@@ -20,9 +14,9 @@ process_covariates(
 
 \item{PP}{NULL,}
 
-\item{covariate_name}{"<missing covariate name>",}
-
-\item{one_obs_per_site}{= F}
+\item{one_obs_per_locs}{(logical, default to FALSE). Should the covariate be 
+constrained to not vary within a spatial location 
+(should be TRUE to range_X and scale_X)}
 }
 \value{
 a list
@@ -38,31 +32,31 @@ nobs = 10000
 unique_locs = cbind(runif(nlocs), runif(nlocs))
 observed_locs = unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))),]
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-vecchia_approx = createVecchia(observed_locs, 12)
-PP = createPP(vecchia_approx)
+vecchia_approx = createVecchia(observed_locs, 12, ncores=1)
+PP = createPP(vecchia_approx, plot=FALSE)
 
 # Good cases ######################
 # no PP, an X
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = F)
 # no PP, no X
-res = process_covariates(X = NULL, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = F)
+res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = F)
 # PP and X
-res = process_covariates(X = X, vecchia_approx, PP = PP, covariate_name = "test_covariate", one_obs_per_site = F)
+res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = F)
 # one obs of x per loc
 X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 
 # Errors ##########################
 # one obs of x per loc
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 # bad X number of rows
 X = X[-1,]
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 # bad X format
 X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 # not independent covariates
 X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, covariate_name = "test_covariate", one_obs_per_site = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 }
