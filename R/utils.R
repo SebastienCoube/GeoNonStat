@@ -108,9 +108,17 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' @examples
 #' locs = cbind(runif(1000), runif(1000))
 #' vecchia_approx = createVecchia(locs)
-#' range_X = matrix(1, nrow(locs))
-#' PP = createPP(vecchia_approx, plot=FALSE)
-#' 
+#' X = data.frame(rnorm(nrow(locs)))
+#' range_X <- process_covariates(X, vecchia_approx)
+#' range_beta = matrix(c(1, -2))
+#' PP = suppressMessages(createPP(vecchia_approx, plot=FALSE))
+#' compute_sparse_chol(
+#' range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, 
+#' PP = NULL, 
+#' matern_smoothness = 1.5, 
+#' compute_derivative = F)
 #' # test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness= 1.5
 #' range_beta = matrix(c(-2))
 #' GpGpcov = tcrossprod(solve(
@@ -192,9 +200,13 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' image(mycov_aniso[vecchia_approx$locs_match, vecchia_approx$locs_match])
 #' hist(mycov - mycov_aniso)
 #' # test with a PP
-#' range_beta = matrix(rnorm(1 + PP$n_knots))
-#' compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
-#' range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
+#' range_beta = matrix(rnorm(2 + PP$n_knots), ncol=1)
+#' compute_sparse_chol(range_beta = range_beta, 
+#' vecchia_approx = vecchia_approx, 
+#' range_X = range_X, PP = PP, 
+#' matern_smoothness = 1.5, 
+#' compute_derivative = T)
+#' range_beta = matrix(rnorm(3*(2 + PP$n_knots)), ncol = 3)
 #' compute_sparse_chol(range_beta = range_beta, 
 #' vecchia_approx = vecchia_approx, 
 #' range_X = range_X, 
@@ -210,12 +222,12 @@ compute_sparse_chol = function(range_beta,
 {
   if (!matern_smoothness %in% c(.5, 1.5)) stop("matern_smoothness must be equal to 0.5 or 1.5")
   if(ncol(range_beta)==3) {
-    range_beta = range_beta %*% matrix(
+    Y = range_beta %*% matrix(
       c(1/sqrt(2), 1/sqrt(2),  0, 
         1/sqrt(2), -1/sqrt(2), 0,
         0,       0,        1), 3)*sqrt(2)*2
   } else if(ncol(range_beta)==1) {
-    range_beta = range_beta * 2
+    Y = range_beta * 2
   } else {
     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }
@@ -225,7 +237,7 @@ compute_sparse_chol = function(range_beta,
       vecchia_approx=  vecchia_approx, 
       X = range_X$X_locs, 
       PP = PP, 
-      Y = range_beta, 
+      Y = Y, 
       permutate_PP_to_obs = F))
   res <- vecchia(num_threads=num_threads,
                  log_range = t(log_range), 
@@ -346,18 +358,12 @@ compute_sparse_chol = function(range_beta,
 #' @export
 #'
 #' @examples
-#' beta = matrix(rnorm(300), 100, ncol=3)
-#' n_PP = 90 
-#' beta0_mean = -5
-#' beta0_var = 2
-#' log_scale = c(-3,-2)
-#' 
 #' beta_prior_log_dens(
-#'   beta, 
-#'   n_PP, 
-#'   beta0_mean,
-#'   beta0_var,
-#'   log_scale
+#'   beta = matrix(rnorm(300), 100, ncol=3), 
+#'   n_PP = 90, 
+#'   beta0_mean =  -5,
+#'   beta0_var = 2,
+#'   log_scale = c(-3,-2)
 #' )
 beta_prior_log_dens = function(beta, 
                                n_PP, 

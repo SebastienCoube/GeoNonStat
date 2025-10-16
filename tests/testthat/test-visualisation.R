@@ -1,14 +1,17 @@
 set.seed(123)
 obs_locs <- matrix(rnorm(200), ncol=2)
 vecchia_approx = createVecchia(obs_locs, ncores=1)
-pepito = createPP(vecchia_approx, plot=FALSE)
+pepito <- suppressMessages(
+  createPP(vecchia_approx, plot=FALSE)
+)
 
 test_that("plot_knots.PP doesn't produce errors", {
   expect_error(
     res <- plot_knots.PP(pepito),
     NA
   )
-  mar_var = var_loss_percentage.PP(pepito)
+  set.seed(123)
+  mar_var = rnorm(125)
   expect_error(
     res <- plot_knots.PP(pepito, mar_var_loss = mar_var),
     NA
