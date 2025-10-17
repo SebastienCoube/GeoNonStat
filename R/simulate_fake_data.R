@@ -161,8 +161,8 @@ createGnsSimulatorParameters = function(
     res$range_X_coeff[1,1] = range_intercept
     if(flap_the_gums)message(paste("The range intercept (range_X_coeff[1,1]) has been set to the chosen value of", range_intercept))
   }else{
-    res$range_X_coeff[1,1] = max(dist(gns_simulator$vecchia_approx$locs[seq(10000),])) / 20
-    if(flap_the_gums)message(paste("The range intercept (range_X_coeff[1,1]) has been set to 1/20-th of the spatial domain approximate radius, that is", res$range_X_coeff[1,1]))
+    res$range_X_coeff[1,1] = -0.5 * log(8 * gns_simulator$matern_smoothness) + log(max(dist(gns_simulator$vecchia_approx$locs[seq(10000),])) / 20)
+    if(flap_the_gums)message(paste("The log range intercept (range_X_coeff[1,1]) has been set automatically to", round(res$range_X_coeff[1,1], 3)))
   }
   if(flap_the_gums)message("Except for the range intercept (range_X_coeff[1,1]), all the coefficients in range_X_coeff are still set to 0")
   # PP effects for the range
@@ -184,7 +184,7 @@ createGnsSimulatorParameters = function(
       res$range_PP_coeff[,1] = exp(.5 * range_PP_log_var[1]) * rnorm(nrow(res$range_PP_coef))
       if(flap_the_gums) message(paste("The first column of range_PP_coeff (who parametrizes brute range) has been filled with independent Normal coefficients with log-variance range_PP_log_var[1]=", range_PP_log_var[1]))
       if(gns_simulator$anisotropic){ 
-        res$range_PP_coeff[,c(1,2)] = exp(.5 * range_PP_log_var[2]) * rnorm(2*nrow(res$range_PP_coeff))
+        res$range_PP_coeff[,c(2,3)] = exp(.5 * range_PP_log_var[2]) * rnorm(2*nrow(res$range_PP_coeff))
         if(flap_the_gums) message(paste("The second and third columns of range_PP_coeff (who parametrize anisotropy) have been filled with independent Normal coefficients with log-variance range_PP_log_var[2]=", range_PP_log_var[2]))
       }
     }

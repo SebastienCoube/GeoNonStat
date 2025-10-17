@@ -97,10 +97,10 @@ X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nro
 #X_range = as.data.frame(observed_locs)
   
 PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
-PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
+PP_noise = createPP(vecchia_approx, knots = 30, matern_range = .25)
 
 
-GNSSimulator = GeoNonStatSimulator(
+gns_simulator = createGnsSimulator(
   vecchia_approx = vecchia_approx,
   X = X, 
   noise_X = X, noise_PP = PP_noise, 
@@ -108,72 +108,21 @@ GNSSimulator = GeoNonStatSimulator(
   anisotropic = T
 )
 
-coeff_list = create_coeff_list(GNSSimulator)
 
-# case with nice non-stationarity and little noise
-if(F){
-coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-coeff_list$noise_X_coeff[1] = -1
+
+
+
+  # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1,-1)
-coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] =  -4.5
-coeff_list$range_X_coeff[1,2] = -0
-coeff_list$range_X_coeff[1,3] = -0
-}
-
-# awkward case with non-stationarity only in range, not in aniso
-if(F){
-coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-coeff_list$noise_X_coeff[1] = -1
-range_log_scale = c(-.5,-6)
-coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] =  -4
-coeff_list$range_X_coeff[1,2] = .5
-coeff_list$range_X_coeff[1,3] = -.5
-}
-
-# awkward case with non-stationarity only in range, not in aniso
-if(F){
-coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-coeff_list$noise_X_coeff[1] = -1
-range_log_scale = c(-6, .5)
-coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-coeff_list$range_X_coeff[1,1] =  -4
-coeff_list$range_X_coeff[1,2] = -0
-coeff_list$range_X_coeff[1,3] = -0
-}
+noise_intercept = -.5
+noise_PP_log_var = -1
+# case with no non-stationarity and little noise. 
+  # case with nice non-stationarity and crazy noise. 
+  # case with no non-stationarity and crazy noise. 
+coeff_list = createGnsSimulatorParameters(gns_simulator, range_PP_log_var =range_log_scale, noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var)
 
 
-# case with nice non-stationarity and crazy noise. 
-if(T){
-  coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-  coeff_list$noise_X_coeff[1] = 3
-  range_log_scale = c(-1,-1)
-  coeff_list$range_PP_coeff[,1] =  exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-  coeff_list$range_PP_coeff[,-1] = exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-  coeff_list$range_X_coeff[1,1] =  -4.5
-  coeff_list$range_X_coeff[1,2] = -0
-  coeff_list$range_X_coeff[1,3] = -0
-}
-# case with no non-stationarity and crazy noise. 
-if(F){
-  coeff_list$noise_PP_coeff[] = 0*rnorm(length(coeff_list$noise_PP_coeff))
-  coeff_list$range_PP_coeff[,1] =  0*exp(.5*range_log_scale[1])*rnorm(nrow(coeff_list$range_PP_coeff))
-  coeff_list$range_PP_coeff[,-1] = 0*exp(.5*range_log_scale[2])*rnorm(2*nrow(coeff_list$range_PP_coeff))
-  coeff_list$noise_X_coeff[1] = 2
-  range_log_scale = c(-1,-1)
-  coeff_list$range_X_coeff[1,1] =  -4.5
-  coeff_list$range_X_coeff[1,2] = -0
-  coeff_list$range_X_coeff[1,3] = -0
-}
-
-
-fake_data = simulate(
-  GNSSimulator = GNSSimulator, 
-  coeff_list = coeff_list)
+fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = coeff_list)
 dev.off()
 
 
@@ -212,9 +161,7 @@ remove(state)
 params_records = list()
 
 params$field_log_var = 0
-stuff$noise_var[] = exp(fake_data$log_noise_var_field)
-
-ker_var$range_log_scale_estimate = range_log_scale
+params$noise_log_scale = noise_PP_log_var 
 
 source("Tset/MCMC_messy.R")
 
