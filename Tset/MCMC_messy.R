@@ -191,11 +191,14 @@ for(iter in seq(iter, n_iterations_update)){
   L_minus_one =  solve(t(chol(
     solve(covariates$range_X$crossprod_X_locs)/max(solve(covariates$range_X$crossprod_X_locs))
   )))
+  
+  for(regime in seq(1 + hierarchical_model$anisotropic)){
   ##########################
   # Range beta (ancillary) #
   ##########################
-  
-  hmc_stepsize = diag(exp(ker_var$range_beta_ancillary)[c(1, rep(2, 2*hierarchical_model$anisotropic))], 1 + 2*hierarchical_model$anisotropic)
+  if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(ker_var$range_beta_ancillary))
+  if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(ker_var$range_beta_ancillary[1]),0,0))
+  if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(ker_var$range_beta_ancillary[2]), 2)))
   # initializing position 
   q = 0*params$range_beta
   q[] = L_minus_one %*% (params$range_beta)
@@ -397,19 +400,19 @@ for(iter in seq(iter, n_iterations_update)){
   current_U-proposed_U
   current_K- proposed_K
   
-  ker_var$range_beta_ancillary = update_kernel(
-    iter = iter, iter_start = iter_start, update_kernel_groupsize = 2, 
+  ker_var$range_beta_ancillary[regime] = update_kernel(
+    iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
     kernel_value = ker_var$range_beta_ancillary, mult = -.7
-  )
+  )[regime]
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
   {
     if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
     {
-      ker_var$range_beta_ancillary = update_kernel(
-        iter = iter, iter_start = iter_start, update_kernel_groupsize = 2, 
+      ker_var$range_beta_ancillary[regime] = update_kernel(
+        iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
         kernel_value = ker_var$range_beta_ancillary, mult = 1
-      )
+      )[regime]
       print("tatato ancillary !")
       momenta$range_beta_ancillary = p
       params$field = new_field
@@ -423,9 +426,9 @@ for(iter in seq(iter, n_iterations_update)){
   ###########################
   # Range beta (sufficient) #
   ###########################
-  hmc_stepsize = diag(exp(ker_var$range_beta_sufficient)[c(1, rep(2, 2*hierarchical_model$anisotropic))], 1 + 2*hierarchical_model$anisotropic)
-  # initializing position 
-  q = 0*params$range_beta
+  if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(ker_var$range_beta_sufficient))
+  if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(ker_var$range_beta_sufficient[1]),0,0))
+  if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(ker_var$range_beta_sufficient[2]), 2)))
   q[] = L_minus_one %*% (params$range_beta)
   # initializing momentum
   momenta$range_beta_sufficient = 
@@ -625,18 +628,19 @@ for(iter in seq(iter, n_iterations_update)){
   current_U-proposed_U
   current_K- proposed_K
   
-  ker_var$range_beta_sufficient = update_kernel(
-    iter = iter, iter_start = iter_start, update_kernel_groupsize = 2, 
+  ker_var$range_beta_sufficient[regime] = update_kernel(
+    iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
     kernel_value = ker_var$range_beta_sufficient, mult = -.7
-  )
+  )[regime]
+  
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
   {
     if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
     {
-      ker_var$range_beta_sufficient = update_kernel(
-        iter = iter, iter_start = iter_start, update_kernel_groupsize = 2, 
+      ker_var$range_beta_sufficient[regime] = update_kernel(
+        iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
         kernel_value = ker_var$range_beta_sufficient, mult = 1
-      )
+      )[regime]
       print("tatato sufficient!")
       momenta$range_beta_sufficient = p
       stuff$sparse_chol= new_sparse_chol
@@ -647,8 +651,7 @@ for(iter in seq(iter, n_iterations_update)){
   
   print(ker_var$range_beta_sufficient)
   print(ker_var$range_beta_ancillary)
-  
-  
+  }
   #############################
   # Variance of the  range PP #
   #############################
