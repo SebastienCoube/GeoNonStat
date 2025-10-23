@@ -45,95 +45,28 @@ Computes a Vecchia sparse Cholesky factor and its derivatives
 \examples{
 locs = cbind(runif(1000), runif(1000))
 vecchia_approx = createVecchia(locs)
-Rcpp::sourceCpp("src/vecchia.cpp")
-range_X = matrix(1, nrow(locs))
-PP = createPP(vecchia_approx)
-
-
-
-# test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness= 1.5
-range_beta = matrix(c(-2))
-GpGpcov = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = row(t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
-    j = t(vecchia_approx$NNarray)[!is.na(t(vecchia_approx$NNarray))], 
-    x=  
-  GpGp::vecchia_Linv(
-  c(1, exp(range_beta[1]), 1.5, .000001), covfun_name = "matern_isotropic", 
-  (vecchia_approx$locs), NNarray = t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
-  triangular = T
-  )
-  ))
-image(GpGpcov[vecchia_approx$locs_match, vecchia_approx$locs_match])
-mycov = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
-    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
-    x=  
-      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
-    triangular = T
-  )
-))
-image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
-hist(mycov- GpGpcov)
-# test equivalence of parametrizations for locally isotropic Matérn covariance, smoothness = 0.5 aka exponential
-GpGpcov = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = row(t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
-    j = t(vecchia_approx$NNarray)[!is.na(t(vecchia_approx$NNarray))], 
-    x=  
-  GpGp::vecchia_Linv(
-  c(1, exp(range_beta[1]), .5, .000001), covfun_name = "matern_isotropic", 
-  (vecchia_approx$locs), NNarray = t(vecchia_approx$NNarray))[!is.na(t(vecchia_approx$NNarray))], 
-  triangular = T
-  )
-  ))
-image(GpGpcov[vecchia_approx$locs_match, vecchia_approx$locs_match])
-mycov = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
-    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
-    x=  
-      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = .5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
-    triangular = T
-  )
-))
-image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
-hist(mycov- GpGpcov)
-range_beta = matrix(rnorm(1 + PP$n_knots))
-compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = F)
-range_beta = matrix(rnorm(1 + PP$n_knots))
-compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = F)
-
-
-# test equivalence of parametrizations for locally isotropic and locally aniso
-range_beta = matrix(c(-2))
-mycov = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
-    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
-    x=  
-      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
-    triangular = T
-  )
-))
-image(mycov[vecchia_approx$locs_match, vecchia_approx$locs_match])
-
-range_beta = matrix(c(-2, 0,0), 1)
-mycov_aniso = tcrossprod(solve(
-  Matrix::sparseMatrix(
-    i = col((vecchia_approx$NNarray))[!is.na((vecchia_approx$NNarray))], 
-    j = (vecchia_approx$NNarray)[!is.na((vecchia_approx$NNarray))], 
-    x=  
-      compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = NULL, matern_smoothness = 1.5, compute_derivative = F)[!is.na((vecchia_approx$NNarray))], 
-    triangular = T
-  )
-))
-image(mycov_aniso[vecchia_approx$locs_match, vecchia_approx$locs_match])
-hist(mycov - mycov_aniso)
+X = data.frame(rnorm(nrow(locs)))
+range_X <- process_covariates(X, vecchia_approx)
+range_beta = matrix(c(1, -2))
+PP = suppressMessages(createPP(vecchia_approx, plot=FALSE))
+compute_sparse_chol(
+range_beta = range_beta, 
+vecchia_approx = vecchia_approx, 
+range_X = range_X, 
+PP = NULL, 
+matern_smoothness = 1.5, 
+compute_derivative = F)
 # test with a PP
-range_beta = matrix(rnorm(1 + PP$n_knots))
-compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
-range_beta = matrix(rnorm(3*(1 + PP$n_knots)), ncol = 3)
-compute_sparse_chol(range_beta = range_beta, vecchia_approx = vecchia_approx, range_X = range_X, PP = PP, matern_smoothness = 1.5, compute_derivative = T)
+range_beta = matrix(rnorm(ncol(range_X$X_locs) + PP$n_knots), ncol=1)
+compute_sparse_chol(range_beta = range_beta, 
+vecchia_approx = vecchia_approx, 
+range_X = range_X, PP = PP, 
+matern_smoothness = 1.5, 
+compute_derivative = T)
+range_beta = matrix(rnorm(3*(2 + PP$n_knots)), ncol = 3)
+compute_sparse_chol(range_beta = range_beta, 
+vecchia_approx = vecchia_approx, 
+range_X = range_X, 
+PP = PP, 
+matern_smoothness = 1.5, compute_derivative = T)
 }

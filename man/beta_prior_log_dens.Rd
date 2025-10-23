@@ -7,15 +7,16 @@
 beta_prior_log_dens(beta, n_PP, beta0_mean, beta0_var, log_scale)
 }
 \arguments{
-\item{beta}{TODO}
+\item{beta}{a numeric matrix, with 1 or 3 columns}
 
-\item{n_PP}{TODO}
+\item{n_PP}{number of PP}
 
-\item{log_scale}{TODO}
+\item{beta0_mean}{mean of beta, numeric value}
 
-\item{beta_mean}{TODO}
+\item{beta0_var}{var of beta, numeric value}
 
-\item{beta_precision}{TODO}
+\item{log_scale}{numeric vector of length 1 for a 1 column beta matrix
+and length 2 for a 1 column beta matrix}
 }
 \value{
 a numeric value
@@ -72,32 +73,11 @@ a numeric value
                 |_       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
 }
 \examples{
-# TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-beta = matrix(rnorm(300), 100)
-n_PP = 90 
-beta0_mean = -5
-beta0_var = 2
-log_scale = c(-3,-2)
-
 beta_prior_log_dens(
-  beta, 
-  n_PP, 
-  beta0_mean,
-  beta0_var,
-  log_scale
-)
-
-beta = matrix(rnorm(100), 100)
-n_PP = 90 
-beta0_mean = -5
-beta0_var = 2
-log_scale = c(-3)
-
-beta_prior_log_dens(
-  beta, 
-  n_PP, 
-  beta0_mean,
-  beta0_var,
-  log_scale
+  beta = matrix(rnorm(300), 100, ncol=3), 
+  n_PP = 90, 
+  beta0_mean =  -5,
+  beta0_var = 2,
+  log_scale = c(-3,-2)
 )
 }

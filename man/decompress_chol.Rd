@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{decompress_chol}
 \alias{decompress_chol}
-\title{Title}
+\title{Title TODO}
 \usage{
 decompress_chol(vecchia_approx, compressed_sparse_chol)
 }
@@ -15,5 +15,5 @@ decompress_chol(vecchia_approx, compressed_sparse_chol)
 a sparse triangular matrix
 }
 \description{
-Title
+Title TODO
 }
