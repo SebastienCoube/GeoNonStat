@@ -1,17 +1,21 @@
 # TODO ELISE TU PEUX Y ALLER LA DESSUS
 
-# S3 class PP 
-#' Create an object of class PP, a low rank Predictive Process used as a prior to describe 
-#' spatial variations of covariance parameters
-#' @param vecchia_approx obtained by `createVecchia()`
-#' @param matern_range either a positive number used to set the Matérn range of the PP or NULL (default), 
-#' if NULL, a default PP range is guessed from the spatial locations.
-#' @param knots either (i) a matrix of spatial knots used for the PP, 
-#' (ii) or a positive integer used to set the number of knots, the knots being then found using kmeans, 
-#' (iii) or NULL (default), a default number and placement of knots being guessed from the spatial locations.
-#' @param seed integer. Used as a seed to reproduce results.
-#' @param plot logical, should diagnostic plots of PP be produced ? Default to TRUE.
-#' @returns a list
+#' @title Create a Predictive Process (PP) object
+#' @description 
+#' Creates an object of class `PP`, a low-rank predictive process used as a prior 
+#' to describe spatial variations of covariance parameters.
+#'
+#' @param vecchia_approx List obtained by `createVecchia()`.
+#' @param matern_range Numeric (optional). Matérn range parameter for the PP. 
+#' If `NULL`, a default value is inferred from spatial locations.
+#' @param knots Either:
+#'   * a matrix of spatial knots,
+#'   * a positive integer (number of knots, determined via k-means), or
+#'   * `NULL` (default) — in which case a default number and placement of knots is used.
+#' @param seed Integer, random seed for reproducibility.
+#' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
+#'
+#' @return An object of class `PP`.
 #' @export
 #'
 #' @examples
@@ -35,7 +39,14 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234, plot=TRUE){
-  # TODO : est-ce que le nombre de knots peut être plus grand que la dimention des locs de vecchia_approx ?
+  if (!is.list(vecchia_approx)) stop("Argument 'vecchia_approx' must be a list.")
+  if (!is.null(matern_range) && matern_range <= 0) stop("'matern_range' must be positive.")
+  if (!is.null(knots) && is.numeric(knots) && knots <= 0) stop("'knots' must be positive.")
+  if (is.matrix(knots) && ncol(knots) != ncol(vecchia_approx$locs))
+    stop("Matrix 'knots' must have the same number of columns as spatial locations.")
+  if (is.numeric(knots) && knots > nrow(vecchia_approx$locs))
+    warning("You requested more knots than spatial locations.")
+  
   # Generate knots
   if(is.null(knots)){
     knots = 25
