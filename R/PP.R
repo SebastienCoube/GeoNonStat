@@ -1,3 +1,4 @@
+# TODO ELISE TU PEUX Y ALLER LA DESSUS
 
 # S3 class PP 
 #' Create an object of class PP, a low rank Predictive Process used as a prior to describe 

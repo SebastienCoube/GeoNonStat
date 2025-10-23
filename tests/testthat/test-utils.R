@@ -307,7 +307,10 @@ test_that("X_PP_mult_right with PP and permute obs", {
   X = matrix(rnorm(100), 50)
   Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- X_PP_mult_right(X = X, 
+                             PP = PP, 
+                             Y = Y, 
+                             vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     "Y should have"
   )
   # No PP
