@@ -112,7 +112,7 @@ gns_simulator = createGnsSimulator(
 
 
 
-  # case with nice non-stationarity and little noise. 
+# case with nice non-stationarity and little noise. 
 range_log_scale = c(-1,-1)
 noise_intercept = -.5
 noise_PP_log_var = -1
@@ -161,7 +161,6 @@ remove(state)
 params_records = list()
 
 params$field_log_var = 0
-params$noise_log_scale = noise_PP_log_var 
 
 source("Tset/MCMC_messy.R")
 
