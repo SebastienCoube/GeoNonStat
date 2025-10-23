@@ -151,7 +151,7 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #'
 #' @param X a data.frame with as many rows as vecchia_approx$observed_locs
 #' @param vecchia_approx TODO
-#' @param PP NULL, 
+#' @param PP an object of class PP, 
 #' @param one_obs_per_locs (logical, default to FALSE). Should the covariate be 
 #' constrained to not vary within a spatial location 
 #' (should be TRUE to range_X and scale_X)
@@ -577,28 +577,25 @@ process_states <- function(
 
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
-#' @param vecchia_approx TODO
+#'
+#' @param vecchia_approx an object created by the `vecchia_approx()` function
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
 #' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
-#' @param anisotropic anisotropic covariance
-#' @param PP TODO
-#' @param n_chains TODO
-#' @param noise_PP TODO
-#' @param scale_PP TODO
-#' @param range_PP TODO
-#' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
-#' @param scale_X  a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects
+#' @param anisotropic boolean, default to FALSE. Is the covariance anisotropic ?
+#' @param n_chains number of MCMC chains
 #' @param range_X  a data.frame of covariates explaining the Gaussian process range through fixed linear effects
-#' @param noise$log_scale_bounds  1 times 2 matrix for the prior on the log-variance of the noise PP field.
-#' @param scale$log_scale_bounds  1 times 2 matrix for the prior on the log-variance of the scale PP field.
-#' @param range$log_scale_bounds 1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.
-#' @param seed TODO
+#' @param range_PP TODO
+#' @param range_log_scale_bounds TODO
+#' @param noise_X a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects
+#' @param noise_PP TODO
+#' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
+#' @param seed a seed from which to generate the GeoNonStat object. 
 #'
-#' @returns a list
+#' @returns an object of class `GeoNonStat`
 #' @export
 #'
-#' @examples
+#' @examples 
 #' set.seed(100)
 #' nobs = 10000
 #' observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
@@ -616,10 +613,6 @@ process_states <- function(
 #' range_X = as.data.frame(observed_locs)
 #' noise_X = X
 #' 
-#' matern_smoothness = 1.5
-#' n_chains = 4
-#' anisotropic = T
-#' seed = 1
 #' 
 #' myobj = GeoNonStat(
 #'   vecchia_approx = vecchia_approx,
@@ -629,11 +622,11 @@ process_states <- function(
 #'   matern_smoothness = 1.5, #Matern smoothness
 #'   anisotropic = FALSE, 
 #'   n_chains = 5,
-#'   # number of MCMC chains
 #'   noise_X =  noise_X , noise_PP = noise_PP , noise_log_scale_bounds = NULL,
 #'   range_X =  range_X ,
 #'   seed = 1
 #' )
+#' 
  GeoNonStat <- 
   function(
     vecchia_approx,
@@ -728,8 +721,10 @@ process_states <- function(
 #' Print a 'GeoNonStat' object
 #'
 #' @param x an object of class \code{GeoNonStat}
-#' @param ... Unused yet
+#' @param ... additional arguments (unused)
+#' @rdname GeoNonStat
 #' @export
+#' @method print GeoNonStat
 print.GeoNonStat <- function(x, ...) {
   cat("Object of class 'GeoNonStat'\n")
   print(paste(length(x$data$observed_field), "observed fields"))
@@ -737,13 +732,32 @@ print.GeoNonStat <- function(x, ...) {
   print(paste("Currently", length(x$states$params$beta), "states"))
 }
 
+
+#' summary of a part of a GeoNonStat object
+#'
+#' @param partobject 
+detailed_summary <- function(partobject){
+  sumdata <- summary(partobject)
+  sumdata <- cbind(sumdata, 
+                   "Value" = as.character(sapply(dimnames(sumdata)[[1]],
+                                                 function(x) {
+                                                   res <- ""
+                                                   if(sumdata[x,"Length"] == 1 & sumdata[x,"Mode"] %in% c("numeric", "character"))
+                                                     res <- partobject[[x]]
+                                                   res
+                                                 }
+                   )))
+  return(sumdata)
+}
+
 #' Summary of a 'GeoNonStat' object 
 #'
-#' @param object an object of class \code{object}
-#' @param ... additional arguments
-#' @export
+#' @param object an object of class \code{GeoNonStat}
+#' @param ... additional arguments (unused)
+#' @rdname GeoNonStat
+#' @export 
+#' @method summary GeoNonStat
 summary.GeoNonStat <- function(object, ...) {
-  
   cat("### data ###")
   detailed_summary(object$data)
   cat("### hierarchical_model ###")
@@ -764,19 +778,5 @@ summary.GeoNonStat <- function(object, ...) {
       ),
       sep="\n"
   )
-}
-
-detailed_summary <- function(partobject){
-  sumdata <- summary(partobject)
-  sumdata <- cbind(sumdata, 
-                   "Value" = as.character(sapply(dimnames(sumdata)[[1]],
-                                                 function(x) {
-                                                   res <- ""
-                                                   if(sumdata[x,"Length"] == 1 & sumdata[x,"Mode"] %in% c("numeric", "character"))
-                                                     res <- partobject[[x]]
-                                                   res
-                                                 }
-                   )))
-  return(sumdata)
 }
 
