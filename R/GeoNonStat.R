@@ -298,8 +298,8 @@ process_PP_prior = function(
   if(is.null(PP) & !is.null(log_scale_bounds))stop(paste("No PP object was provided for the", parameter_name, "parameters, but log - marginal variance bounds were provided") )
   if(!inherits(PP,"PP")) stop(paste("PP who describes the", parameter_name, "parameters must be of class PP"))
   if (!is.null(PP) & is.null(log_scale_bounds)){
-    message(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters were automatically set to (-8, 3)"))
-    log_scale_bounds = c(-8, 3)
+    message(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters were automatically set to (-6, 1)"))
+    log_scale_bounds = c(-6, 1)
   }
   if(!is.numeric(log_scale_bounds) | length(log_scale_bounds) != 2)stop(paste("The log - marginal variance (log_scale) bounds for the PP who describes the", parameter_name, "parameters must be a numeric vector of length 2"))
   log_scale_bounds = sort(log_scale_bounds)
@@ -426,6 +426,7 @@ process_transition_kernels <- function(init=-4, hm){
     scale_beta_ancillary  = init,
     scale_log_scale_sufficient = init,
     scale_log_scale_ancillary =  init,
+    field_log_var_ancillary =  init,
     
     noise_beta_mala = init,
     noise_log_scale = init

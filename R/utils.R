@@ -247,6 +247,7 @@ beta_prior_log_dens = function(beta,
 
   nrb <- nrow(beta)
   ncb <- ncol(beta)
+  if(is.null(n_PP))n_PP = 0
   if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")
   if(n_PP > nrb + 2) {
     stop("n_PP can't be greater than nrow(beta) + 2")

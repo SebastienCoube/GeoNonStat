@@ -158,7 +158,7 @@ for(iter in seq(iter, n_iterations_update)){
     par(mfrow = c(3,3))
     for(i in seq(nrow(params$range_beta))){
       for(j in seq(ncol(params$range_beta))){
-        plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter/5, iter)]), ylab = "", main  = paste("PPcoeff", i, c("range", "aniso 1", "aniso 2")[j]))
+        plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter/5, iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
         abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
       }}
     range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter/5, iter-1),])
@@ -171,12 +171,17 @@ for(iter in seq(iter, n_iterations_update)){
     plot(noise_log_scale_samples, main = "noise log scale")
     abline(h = noise_PP_log_var)
     
+    field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/5, iter-1)])
+    plot(field_log_var_samples, main = "field log var")
+    abline(h = field_log_var)
+    
     par(mfrow = c(2,1))
     plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
     plot_pointillist_painting(vecchia_approx$observed_locs, log(stuff$noise_var))
     
     par(mfrow = c(1,1))
     plot(log(stuff$noise_var), fake_data$log_noise_var_field)
+    
     abline(a=0, b=1)
   }
   
@@ -188,6 +193,65 @@ for(iter in seq(iter, n_iterations_update)){
   #################
   # Field log var #
   #################
+  
+  # ancillary 
+  
+#  for(field_log_var_idx in seq(4)){
+#  new_field_log_var = params$field_log_var + exp(.5 * ker_var$field_log_var_ancillary) * rnorm(1)
+#  new_field = params$field * exp(.5 * (new_field_log_var - params$field_log_var))
+#  current_U =
+#    (
+#      - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
+#                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+#                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+#      + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
+#    )
+#  
+#  proposed_U =
+#    (
+#      - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+#                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+#                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+#      + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
+#    )
+#  ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
+#                                                  kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = -.25)
+#  if(current_U - proposed_U > log(runif(1))){
+#    ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
+#                                                    kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = 1)
+#    params$field_log_var = new_field_log_var
+#    params$field = new_field
+#    print("SCAAAALE ANCILLARY")
+#  }
+#  }
+  
+  # Sufficient 
+  
+ #  fieldT_cholT_chol_field = sum((stuff$sparse_chol %*% params$field)^2)
+ #  for(field_log_var_idx in seq(10)){
+ #  new_field_log_var = params$field_log_var + .3 * rnorm(1)
+ #  current_U =
+ #    (
+ #      - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
+ #                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+ #                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+ #      + .5 * fieldT_cholT_chol_field/exp(params$field_log_var)  # observation ll
+ #      +  vecchia_approx$n_locs * exp(.5 * params$field_log_var)  # observation ll
+ #    )
+ #  
+ #  proposed_U =
+ #    (
+ #      - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+ #                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+ #                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+ #      + .5 * fieldT_cholT_chol_field/exp(new_field_log_var)  # observation ll
+ #      +  vecchia_approx$n_locs * exp(.5 * new_field_log_var)  # observation ll
+ #    )
+ #  if(current_U - proposed_U > log(runif(1))){
+ #    params$field_log_var = new_field_log_var
+ #    print("SCAAAALE SUFF")
+ #  }
+ #  }
   
   ###############
   # Range beta  #
@@ -203,10 +267,10 @@ for(iter in seq(iter, n_iterations_update)){
     solve(covariates$range_X$crossprod_X_locs)/max(solve(covariates$range_X$crossprod_X_locs))
   )))
   
-  for(regime in seq(1 + hierarchical_model$anisotropic)){
   ##########################
   # Range beta (ancillary) #
   ##########################
+  for(regime in seq(1 + hierarchical_model$anisotropic)){
   if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(ker_var$range_beta_ancillary))
   if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(ker_var$range_beta_ancillary[1]),0,0))
   if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(ker_var$range_beta_ancillary[2]), 2)))
@@ -293,7 +357,7 @@ for(iter in seq(iter, n_iterations_update)){
   ###    plot(c(derivative_test), c(dens_grad))
   ###    abline(a=0, b=1)
   
-  n_hmc_steps = 1
+  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/2))
   for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
@@ -413,8 +477,8 @@ for(iter in seq(iter, n_iterations_update)){
   
   ker_var$range_beta_ancillary[regime] = update_kernel(
     iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-    kernel_value = ker_var$range_beta_ancillary, mult = -.8
-  )[regime]
+    kernel_value = ker_var$range_beta_ancillary[regime], mult = -.75
+  )
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
   {
@@ -422,8 +486,8 @@ for(iter in seq(iter, n_iterations_update)){
     {
       ker_var$range_beta_ancillary[regime] = update_kernel(
         iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-        kernel_value = ker_var$range_beta_ancillary, mult = 1
-      )[regime]
+        kernel_value = ker_var$range_beta_ancillary[regime], mult = 1
+      )
       print("tatato ancillary !")
       momenta$range_beta_ancillary = p
       params$field = new_field
@@ -432,11 +496,12 @@ for(iter in seq(iter, n_iterations_update)){
       params$range_beta[] = new_range_beta
     }
   }
-  
+  }
   
   ###########################
   # Range beta (sufficient) #
   ###########################
+  for(regime in seq(1 + hierarchical_model$anisotropic)){
   if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(ker_var$range_beta_sufficient))
   if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(ker_var$range_beta_sufficient[1]),0,0))
   if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(ker_var$range_beta_sufficient[2]), 2)))
@@ -519,7 +584,7 @@ for(iter in seq(iter, n_iterations_update)){
   ###     plot(c(derivative_test), c(dens_grad))
   ###     abline(a=0, b=1)
   
-  n_hmc_steps = 1
+  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/2))
   for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
@@ -641,8 +706,8 @@ for(iter in seq(iter, n_iterations_update)){
   
   ker_var$range_beta_sufficient[regime] = update_kernel(
     iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-    kernel_value = ker_var$range_beta_sufficient, mult = -.8
-  )[regime]
+    kernel_value = ker_var$range_beta_sufficient[regime], mult = -.75
+  )
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
   {
@@ -650,8 +715,8 @@ for(iter in seq(iter, n_iterations_update)){
     {
       ker_var$range_beta_sufficient[regime] = update_kernel(
         iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-        kernel_value = ker_var$range_beta_sufficient, mult = 1
-      )[regime]
+        kernel_value = ker_var$range_beta_sufficient[regime], mult = 1
+      )
       print("tatato sufficient!")
       momenta$range_beta_sufficient = p
       stuff$sparse_chol= new_sparse_chol
@@ -668,7 +733,8 @@ for(iter in seq(iter, n_iterations_update)){
   #############################
   
   if(!is.null(hierarchical_model$range$PP)){
-    
+    n_range_log_scale_update = 3
+    for(i in seq(n_range_log_scale_update)){
     # ancillary - sufficient
     q = params$range_log_scale + rnorm(1, 0, exp(ker_var$range_log_scale_sufficient))
     
@@ -683,7 +749,7 @@ for(iter in seq(iter, n_iterations_update)){
         vecchia_approx = vecchia_approx, 
         range_X = covariates$range_X, 
         matern_smoothness = hierarchical_model$matern_smoothness, 
-        compute_derivative = T, num_threads = num_threads
+        compute_derivative = F, num_threads = num_threads
       )
     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     
@@ -706,7 +772,7 @@ for(iter in seq(iter, n_iterations_update)){
     ker_var$range_log_scale_sufficient = update_kernel(
       iter = iter, iter_start = iter_start, 
       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
-      mult = -.25
+      mult = -.4
     )
     
     if (
@@ -731,6 +797,7 @@ for(iter in seq(iter, n_iterations_update)){
           stuff$sparse_chol= new_sparse_chol
           stuff$compressed_chol = new_compressed_sparse_chol
         }}}
+    }
     # sufficient - sufficient ####
     for(i in seq(10))
     {
@@ -761,6 +828,7 @@ for(iter in seq(iter, n_iterations_update)){
     }
     # ancillary-ancillary ####
     
+    for(i in seq(n_range_log_scale_update)){
     q = params$range_log_scale 
     q = q + exp(ker_var$range_log_scale_ancillary) * rnorm(length(q))
     new_range_beta = params$range_beta
@@ -774,7 +842,7 @@ for(iter in seq(iter, n_iterations_update)){
         vecchia_approx = vecchia_approx, 
         range_X = covariates$range_X, 
         matern_smoothness = hierarchical_model$matern_smoothness, 
-        compute_derivative = T, num_threads = num_threads
+        compute_derivative = F, num_threads = num_threads
       )
     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     new_field = as.vector(Matrix::solve(new_sparse_chol, stuff$sparse_chol %*% (params$field)))
@@ -792,7 +860,7 @@ for(iter in seq(iter, n_iterations_update)){
     ker_var$range_log_scale_ancillary = update_kernel(
       iter = iter, iter_start = iter_start, 
       update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_ancillary, 
-      mult = -.25
+      mult = -.4
     )
     
     if (
@@ -816,7 +884,7 @@ for(iter in seq(iter, n_iterations_update)){
           stuff$sparse_chol= new_sparse_chol
           stuff$compressed_chol = new_compressed_sparse_chol
         }}}
-    
+    }
     # sufficient - sufficient 
     for(i in seq(10))
     {
@@ -845,6 +913,17 @@ for(iter in seq(iter, n_iterations_update)){
         params$range_log_scale = q
       }
     }
+    stuff$compressed_chol = 
+      compute_sparse_chol(
+        hierarchical_model$range$PP,
+        range_beta = params$range_beta, 
+        vecchia_approx = vecchia_approx, 
+        range_X = covariates$range_X, 
+        matern_smoothness = hierarchical_model$matern_smoothness, 
+        compute_derivative = T, num_threads = num_threads
+      )
+    stuff$sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, stuff$compressed_chol)
+    
   }
   
   
