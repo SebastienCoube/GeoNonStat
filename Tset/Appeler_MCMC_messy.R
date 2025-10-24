@@ -114,7 +114,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1,-1)
-noise_intercept = 0
+noise_intercept = 1
 noise_PP_log_var = -1
 # case with no non-stationarity and little noise. 
   # case with nice non-stationarity and crazy noise. 
@@ -156,9 +156,9 @@ list2env(mygns, environment())
 state = mygns$states$chain_1
 list2env(state, envir = environment())
 remove(state)
-#cl = parallel::makeCluster(num_threads)
 
 params_records = list()
+#params$field_log_var = field_log_var
 
 source("Tset/MCMC_messy.R")
 

@@ -196,62 +196,62 @@ for(iter in seq(iter, n_iterations_update)){
   
   # ancillary 
   
-#  for(field_log_var_idx in seq(4)){
-#  new_field_log_var = params$field_log_var + exp(.5 * ker_var$field_log_var_ancillary) * rnorm(1)
-#  new_field = params$field * exp(.5 * (new_field_log_var - params$field_log_var))
-#  current_U =
-#    (
-#      - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
-#                            beta0_mean = hierarchical_model$scale$beta0_mean, 
-#                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
-#      + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
-#    )
-#  
-#  proposed_U =
-#    (
-#      - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
-#                            beta0_mean = hierarchical_model$scale$beta0_mean, 
-#                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
-#      + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
-#    )
-#  ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
-#                                                  kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = -.25)
-#  if(current_U - proposed_U > log(runif(1))){
-#    ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
-#                                                    kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = 1)
-#    params$field_log_var = new_field_log_var
-#    params$field = new_field
-#    print("SCAAAALE ANCILLARY")
-#  }
-#  }
+  for(field_log_var_idx in seq(4)){
+  new_field_log_var = params$field_log_var + exp(.5 * ker_var$field_log_var_ancillary) * rnorm(1)
+  new_field = params$field * exp(.5 * (new_field_log_var - params$field_log_var))
+  current_U =
+    (
+      - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
+                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+      + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
+    )
+  
+  proposed_U =
+    (
+      - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+                            beta0_mean = hierarchical_model$scale$beta0_mean, 
+                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+      + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
+    )
+  ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
+                                                  kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = -.4)
+  if(current_U - proposed_U > log(runif(1))){
+    ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
+                                                    kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = 1)
+    params$field_log_var = new_field_log_var
+    params$field = new_field
+    print("SCAAAALE ANCILLARY")
+  }
+  }
   
   # Sufficient 
   
- #  fieldT_cholT_chol_field = sum((stuff$sparse_chol %*% params$field)^2)
- #  for(field_log_var_idx in seq(10)){
- #  new_field_log_var = params$field_log_var + .3 * rnorm(1)
- #  current_U =
- #    (
- #      - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
- #                            beta0_mean = hierarchical_model$scale$beta0_mean, 
- #                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
- #      + .5 * fieldT_cholT_chol_field/exp(params$field_log_var)  # observation ll
- #      +  vecchia_approx$n_locs * exp(.5 * params$field_log_var)  # observation ll
- #    )
- #  
- #  proposed_U =
- #    (
- #      - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
- #                            beta0_mean = hierarchical_model$scale$beta0_mean, 
- #                            beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
- #      + .5 * fieldT_cholT_chol_field/exp(new_field_log_var)  # observation ll
- #      +  vecchia_approx$n_locs * exp(.5 * new_field_log_var)  # observation ll
- #    )
- #  if(current_U - proposed_U > log(runif(1))){
- #    params$field_log_var = new_field_log_var
- #    print("SCAAAALE SUFF")
- #  }
- #  }
+   fieldT_cholT_chol_field = sum((stuff$sparse_chol %*% params$field)^2)
+   for(field_log_var_idx in seq(10)){
+   new_field_log_var = params$field_log_var + .05 * rnorm(1)
+   current_U =
+     (
+       - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
+                             beta0_mean = hierarchical_model$scale$beta0_mean, 
+                             beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+       + .5 * fieldT_cholT_chol_field/exp(params$field_log_var)  # observation ll
+       +  vecchia_approx$n_locs * (.5 * params$field_log_var)  # observation ll
+     )
+   
+   proposed_U =
+     (
+       - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+                             beta0_mean = hierarchical_model$scale$beta0_mean, 
+                             beta0_var =  hierarchical_model$scale$beta0_sd^2) # normal prior
+       + .5 * fieldT_cholT_chol_field/exp(new_field_log_var)  # observation ll
+       +  vecchia_approx$n_locs * (.5 * new_field_log_var)  # observation ll
+     )
+   if(current_U - proposed_U > log(runif(1))){
+     params$field_log_var = new_field_log_var
+     print("SCAAAALE SUFF")
+   }
+   }
   
   ###############
   # Range beta  #
@@ -357,7 +357,7 @@ for(iter in seq(iter, n_iterations_update)){
   ###    plot(c(derivative_test), c(dens_grad))
   ###    abline(a=0, b=1)
   
-  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/2))
+  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
   for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
@@ -477,7 +477,7 @@ for(iter in seq(iter, n_iterations_update)){
   
   ker_var$range_beta_ancillary[regime] = update_kernel(
     iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-    kernel_value = ker_var$range_beta_ancillary[regime], mult = -.75
+    kernel_value = ker_var$range_beta_ancillary[regime], mult = -.8
   )
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
@@ -584,7 +584,7 @@ for(iter in seq(iter, n_iterations_update)){
   ###     plot(c(derivative_test), c(dens_grad))
   ###     abline(a=0, b=1)
   
-  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/2))
+  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
   for(hmc_step in seq(n_hmc_steps)){
   # Make a full step for the position
   q = q + p %*% hmc_stepsize
@@ -706,7 +706,7 @@ for(iter in seq(iter, n_iterations_update)){
   
   ker_var$range_beta_sufficient[regime] = update_kernel(
     iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-    kernel_value = ker_var$range_beta_sufficient[regime], mult = -.75
+    kernel_value = ker_var$range_beta_sufficient[regime], mult = -.8
   )
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K))
@@ -756,13 +756,13 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
-        10 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+        3 *  sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(stuff$compressed_chol[1,1,]))
       )
     proposed_U =
       (
-        10 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+        3 *  sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(new_compressed_sparse_chol[1,1,]))
       )
@@ -806,8 +806,8 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
-          - 10 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
-          + 10 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+          - 3 * sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+          + 3 * sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
           
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
@@ -849,12 +849,12 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
-        10 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+        3 *  sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
         + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
       )
     proposed_U =
       (
-        10 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+        3 *  sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
         + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
       )
     ker_var$range_log_scale_ancillary = update_kernel(
@@ -893,8 +893,8 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
-          - 10 * sum(sqrt(max(0, q - hierarchical_model$range$log_scale_bounds[1])))
-          + 10 * sum(sqrt(max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+          -3 * sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+          +3 * sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
           
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
