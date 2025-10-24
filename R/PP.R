@@ -1,17 +1,54 @@
 # TODO ELISE TU PEUX Y ALLER LA DESSUS
 
-# S3 class PP 
-#' Create an object of class PP, a low rank Predictive Process used as a prior to describe 
-#' spatial variations of covariance parameters
-#' @param vecchia_approx obtained by `createVecchia()`
-#' @param matern_range either a positive number used to set the Matérn range of the PP or NULL (default), 
-#' if NULL, a default PP range is guessed from the spatial locations.
-#' @param knots either (i) a matrix of spatial knots used for the PP, 
-#' (ii) or a positive integer used to set the number of knots, the knots being then found using kmeans, 
-#' (iii) or NULL (default), a default number and placement of knots being guessed from the spatial locations.
-#' @param seed integer. Used as a seed to reproduce results.
-#' @param plot logical, should diagnostic plots of PP be produced ? Default to TRUE.
-#' @returns a list
+#' Generate spatial knots using k-means clustering
+#'
+#' Selects a set of spatial knots using k-means clustering from the observed locations.
+#' If the number of locations is large, a subsample of up to 10,000 points is used,
+#' and a small random perturbation is added to break ties and improve cluster separation.
+#'
+#' @param knots_number Integer. The number of knots (i.e., clusters) to generate.
+#' @param locs A matrix of spatial coordinates (typically with two columns for 2D locations).
+#' 
+#' @return A matrix of size \code{knots_number} × ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
+
+#' @examples
+#' locs <- cbind(runif(5000), runif(5000))
+#' knots <- generate_knots_from_kmeans(100, locs)
+#' plot(locs, col = "grey", pch = 16, cex = 0.5)
+#' points(knots, col = "red", pch = 19)
+generate_knots_from_kmeans <- function(knots_number, locs) {
+  n_sample <- min(nrow(locs), 50000)
+  if(knots_number>n_sample) {
+    stop("50000 knots numer maximum allowed")
+  }
+  sampled_locs <- locs[sample(seq_len(nrow(locs)), n_sample, replace=FALSE), ]
+  
+  # TODO ici j'ai un warning Les étapes de transfer (quick-TRANSfer stage) ont dépassé le maximum (= 2500000)
+  # Si on met l'algorithme "Lloyd" ça résoud le pb.
+  centers <- kmeans(sampled_locs, 
+                    knots_number,
+                    algorithm = "Hartigan-Wong", 
+                    iter.max = 50)$centers
+  return(centers)
+}
+
+#' @title Create a Predictive Process (PP) object
+#' @description 
+#' Creates an object of class `PP`, a low-rank predictive process used as a prior 
+#' to describe spatial variations of covariance parameters.
+#'
+#' @param vecchia_approx List obtained by `createVecchia()`.
+#' @param matern_range Numeric (optional). Matérn range parameter for the PP. 
+#' If `NULL`, a default value is inferred from spatial locations.
+#' @param knots Either:
+#'   * a matrix of spatial knots,
+#'   * a positive integer (number of knots, determined via k-means), or
+#'   * `NULL` (default) — in which case a default number and placement of knots is used.
+#' @param seed Integer, random seed for reproducibility.
+#' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
+#'
+#' @rdname PP
+#' @return An object of class `PP`.
 #' @export
 #'
 #' @examples
@@ -35,7 +72,14 @@
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
 #' pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
 createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234, plot=TRUE){
-  # TODO : est-ce que le nombre de knots peut être plus grand que la dimention des locs de vecchia_approx ?
+  if (!is.list(vecchia_approx)) stop("Argument 'vecchia_approx' must be a list.")
+  if (!is.null(matern_range) && matern_range <= 0) stop("'matern_range' must be positive.")
+  if (!is.null(knots) && is.numeric(knots) && knots <= 0) stop("'knots' must be positive.")
+  if (is.matrix(knots) && ncol(knots) != ncol(vecchia_approx$locs))
+    stop("Matrix 'knots' must have the same number of columns as spatial locations.")
+  if (is.numeric(knots) && knots > nrow(vecchia_approx$locs))
+    warning("You requested more knots than spatial locations.")
+  
   # Generate knots
   if(is.null(knots)){
     knots = 25
@@ -105,46 +149,22 @@ createPP = function(vecchia_approx, matern_range = NULL, knots = NULL, seed=1234
   )
   
   if(plot) {
-    plot.PP(res, mar_var_loss=TRUE)
+    plot(res, mar_var_loss=TRUE)
   } else {
+    # Just to print the diagnostic of var loss
     varloss <- var_loss_percentage.PP(res)
   }
   
   return(res)
 }
 
-#' Generate spatial knots using k-means clustering
-#'
-#' Selects a set of spatial knots using k-means clustering from the observed locations.
-#' If the number of locations is large, a subsample of up to 10,000 points is used,
-#' and a small random perturbation is added to break ties and improve cluster separation.
-#'
-#' @param knots_number Integer. The number of knots (i.e., clusters) to generate.
-#' @param locs A matrix of spatial coordinates (typically with two columns for 2D locations).
-#' 
-#' @return A matrix of size \code{knots_number} × ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
-
-#' @examples
-#' locs <- cbind(runif(5000), runif(5000))
-#' knots <- generate_knots_from_kmeans(100, locs)
-#' plot(locs, col = "grey", pch = 16, cex = 0.5)
-#' points(knots, col = "red", pch = 19)
-generate_knots_from_kmeans <- function(knots_number, locs) {
-  n_sample <- min(nrow(locs), 50000)
-  sampled_locs <- locs[seq(n_sample), ]
-  
-  # TODO ici j'ai un warning Les étapes de transfer (quick-TRANSfer stage) ont dépassé le maximum (= 2500000)
-  # Si on met l'algorithme "Lloyd" ça résoud le pb.
-  centers <- kmeans(sampled_locs, knots_number,
-                    algorithm = "Hartigan-Wong", iter.max = 50)$centers
-  return(centers)
-}
-
 #' Summary of a 'PP' object 
 #'
 #' @param object an object of class \code{PP}
-#' @param ... additional arguments
+#' @param ... additional arguments, unused
 #' @export
+#' @rdname PP
+#' @method summary PP
 #' @examples
 #' vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
@@ -158,7 +178,6 @@ summary.PP <- function(object, ...) {
   return(invisible(NULL))
 }
 
-
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @param x an object of class \code{PP}
 #' @examples
@@ -166,9 +185,13 @@ summary.PP <- function(object, ...) {
 #' pepito = createPP(vecchia, plot=FALSE)
 #' var_loss_percentage.PP(pepito)
 var_loss_percentage.PP = function(x) {
+  if(is.null(x$knots | is.null(x$sparse_chol))) {
+    stop("x must contains 'knots' and 'sparse_chol'")
+  }
   PP_mar_var = apply(
     Matrix::solve(x$sparse_chol, 
-                  Matrix::diag(nrow =  nrow(x$sparse_chol), ncol = nrow(x$knots))), 
+                  Matrix::diag(nrow =  nrow(x$sparse_chol), 
+                               ncol = nrow(x$knots))), 
     1, 
     function(x) sum(x^2)
   )
@@ -183,13 +206,18 @@ var_loss_percentage.PP = function(x) {
     "great !"
   }
   message(round(mean_mar_var, 1), 
-          "% of marginal variance on average is lost with the use of a PP.\nThis is ", msg)
+          "% of marginal variance on average is lost with the use of a PP.\nThis is ", 
+          msg)
   
   return(PP_mar_var)
 }
 
 
-
+#' TODO : est-ce que cette fonction est utilisée ? 
+#'
+#' @param PP an object of class `PP`
+#' @param vecchia_approx an object created by `vecchia_approx()`
+#' @param df boolean
 get_basis = function(PP, vecchia_approx, df = T){
   res = X_PP_mult_right(
     X= NULL, PP = PP, vecchia_approx = vecchia_approx, 
@@ -197,7 +225,7 @@ get_basis = function(PP, vecchia_approx, df = T){
   )
   colnames(res) = paste("Basis_", seq(ncol(res)), sep = "")
   res[res<.001] = 0
-  if(df)res = as.data.frame(res)
-  if(!df)res = as(res, "sparseMatrix")
+  if(df) res = as.data.frame(res)
+  if(!df) res = as(res, "sparseMatrix")
   return(res)
 }

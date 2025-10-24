@@ -4,6 +4,8 @@
 \name{GeoNonStat}
 \alias{GeoNonStat-package}
 \alias{GeoNonStat}
+\alias{print.GeoNonStat}
+\alias{summary.GeoNonStat}
 \title{GeoNonStat: Hierarchical Nonstationary Nearest Neighbor Gaussian Process}
 \usage{
 GeoNonStat(
@@ -21,9 +23,13 @@ GeoNonStat(
   noise_log_scale_bounds = NULL,
   seed = 1
 )
+
+\method{print}{GeoNonStat}(x, ...)
+
+\method{summary}{GeoNonStat}(object, ...)
 }
 \arguments{
-\item{vecchia_approx}{TODO}
+\item{vecchia_approx}{an object created by the `vecchia_approx()` function}
 
 \item{observed_field}{a vector of observations of the interest variable}
 
@@ -31,34 +37,32 @@ GeoNonStat(
 
 \item{matern_smoothness}{Matern smoothness, either 0.5 or 1.5}
 
-\item{anisotropic}{anisotropic covariance}
+\item{anisotropic}{boolean, default to FALSE. Is the covariance anisotropic ?}
 
-\item{n_chains}{TODO}
+\item{n_chains}{number of MCMC chains}
 
 \item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
 
 \item{range_PP}{TODO}
 
+\item{range_log_scale_bounds}{TODO}
+
 \item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
 
 \item{noise_PP}{TODO}
 
-\item{seed}{TODO}
+\item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}
 
-\item{PP}{TODO}
+\item{seed}{a seed from which to generate the GeoNonStat object.}
 
-\item{scale_PP}{TODO}
+\item{x}{an object of class \code{GeoNonStat}}
 
-\item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
+\item{...}{additional arguments (unused)}
 
-\item{noise$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
-
-\item{scale$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
-
-\item{range$log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+\item{object}{an object of class \code{GeoNonStat}}
 }
 \value{
-a list
+an object of class `GeoNonStat`
 }
 \description{
 This package provides functions for hierarchical nonstationary nearest neighbor Gaussian processes.
@@ -75,16 +79,12 @@ myPP = createPP(
   knots = 600
 )
 noise_PP = myPP
-noise_log_scale_bounds = c(-6, 3)
+noise_log_scale_bounds = c(-8, 3)
 
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
 range_X = as.data.frame(observed_locs)
 noise_X = X
 
-matern_smoothness = 1.5
-n_chains = 4
-anisotropic = T
-seed = 1
 
 myobj = GeoNonStat(
   vecchia_approx = vecchia_approx,
@@ -94,9 +94,9 @@ myobj = GeoNonStat(
   matern_smoothness = 1.5, #Matern smoothness
   anisotropic = FALSE, 
   n_chains = 5,
-  # number of MCMC chains
   noise_X =  noise_X , noise_PP = noise_PP , noise_log_scale_bounds = NULL,
   range_X =  range_X ,
   seed = 1
 )
+
 }

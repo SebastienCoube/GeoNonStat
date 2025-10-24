@@ -261,7 +261,6 @@ beta_prior_log_dens = function(beta,
     if(!length(log_scale) == 2) stop("log_scale is supposed to be of length 2")
     var_mat[-seq(nrb-n_PP), c(2,3)] <- exp(log_scale[2])
   }
-  
   determinant_part = -0.5* log_scale[1] * n_PP
   if(length(log_scale)==2) determinant_part = determinant_part - 2*0.5*log_scale[2]*n_PP
   return(-0.5 * sum((beta - mean_mat)^2 / var_mat) + determinant_part)
@@ -324,21 +323,17 @@ beta_prior_log_dens_derivative =
 #' locs = cbind(runif(1000), runif(1000))
 #' locs = rbind(locs, locs)
 #' vecchia_approx = createVecchia(locs, 12, ncores=1)
-#' PP = createPP(vecchia_approx, plot=FALSE)
+#' PP = suppressMessages(createPP(vecchia_approx, plot=FALSE))
 #' covariate_coefficients = c(4, 1, 1, .5)
 #' knots_coeffs = rnorm(PP$n_knots)
 #' X = cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
 #' 
 #' # multiplying X alone
 #' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-#' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
-#' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-#' plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
-#' 
+
 #' # multiplying PP alone
 #' res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
-#' plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
-#' 
+
 #' # multiplying PP and matrix of covariate, one obs for each location
 #' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
 #' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)

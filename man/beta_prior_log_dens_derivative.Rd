@@ -24,50 +24,11 @@ an array
 Compute gradient of logarithmic density prior
 }
 \examples{
-# Comparison between differentiation using 
-# finite difference and using the formula
-beta = matrix(rnorm(300), 100)
-n_PP = 90 
-beta0_mean = -5
-beta0_var = 2
-log_scale = c(-3, -2)
 beta_prior_log_dens_derivative(
-  beta, 
-  n_PP, 
-  beta0_mean,
-  beta0_var,
-  log_scale
+  beta = matrix(rnorm(300), 100, 3), 
+  n_PP = 90, 
+  beta0_mean = -5,
+  beta0_var = 2,
+  log_scale = c(-3, -2)
 )
-
-beta = matrix(rnorm(100), 100)
-n_PP = 90 
-beta0_mean = -5
-beta0_var = 2
-log_scale = c(-3)
-
-beta_prior_log_dens_derivative(
-  beta, 
-  n_PP, 
-  beta0_mean,
-  beta0_var,
-  log_scale
-)
-# TODO Elise : ceci n'est pas un exemple.
-# Par contre passer ça en test pour vérifier 
-# que ça a bonne taille et que ça tourne autour de 1. 
-# TODO : rajouter un exemple pour dire que ça tourne avec beta 1 colonne
-# TODO : rajouter un exemple pour dire que ça tourne et avec n_PP=0
-res <-matrix(0, 100, 3)
-for(i in seq(100))
-{
-  for(j in seq(3)){
-    beta1 = beta 
-    beta1[i,j] = beta1[i,j]+ .0001
-    res[i,j] <- (
-      beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-        beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-    )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
- }
-}
-mean(res); var(c(res))
 }

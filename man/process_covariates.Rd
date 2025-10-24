@@ -12,7 +12,7 @@ process_covariates(X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 
 \item{vecchia_approx}{TODO}
 
-\item{PP}{NULL,}
+\item{PP}{an object of class PP,}
 
 \item{one_obs_per_locs}{(logical, default to FALSE). Should the covariate be 
 constrained to not vary within a spatial location 

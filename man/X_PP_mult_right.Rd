@@ -33,21 +33,15 @@ Multiply the concatenation of a matrix of covariates and a PP by a matrix
 locs = cbind(runif(1000), runif(1000))
 locs = rbind(locs, locs)
 vecchia_approx = createVecchia(locs, 12, ncores=1)
-PP = createPP(vecchia_approx, plot=FALSE)
+PP = suppressMessages(createPP(vecchia_approx, plot=FALSE))
 covariate_coefficients = c(4, 1, 1, .5)
 knots_coeffs = rnorm(PP$n_knots)
 X = cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
 
 # multiplying X alone
 res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
-res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
-
 # multiplying PP alone
 res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
-plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
-
 # multiplying PP and matrix of covariate, one obs for each location
 X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
 res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)

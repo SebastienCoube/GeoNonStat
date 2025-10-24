@@ -1,16 +1,20 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
 #' 
 #' @param PP an object of class PP, create with `createPP`
+#' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
+#' @param ... unused additional arguments
 #'
 #' @returns NULL
+#' @rdname PP
+#' @method plot PP
 #' @export
 #'
 #' @examples
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
-#' plot.PP(pepito)
-plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE) {
+#' plot(pepito)
+plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE, ...) {
   def.par <- par(no.readonly = TRUE)
   par(mar=c(3, 3, 3, 1) + 0.5)
   par(mgp=c(2, 1, 0))
