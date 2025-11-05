@@ -196,7 +196,8 @@ for(iter in seq(iter, n_iterations_update)){
   
   # ancillary 
   
-  for(field_log_var_idx in seq(4)){
+  for(idx_for_field_logvar in seq(4)){
+  for(field_log_var_idx in seq(2)){
   new_field_log_var = params$field_log_var + exp(.5 * ker_var$field_log_var_ancillary) * rnorm(1)
   new_field = params$field * exp(.5 * (new_field_log_var - params$field_log_var))
   current_U =
@@ -215,7 +216,7 @@ for(iter in seq(iter, n_iterations_update)){
       + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
     )
   ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
-                                                  kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = -.4)
+                                                  kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = -.25)
   if(current_U - proposed_U > log(runif(1))){
     ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, update_kernel_groupsize = 1, 
                                                     kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = 1)
@@ -229,7 +230,7 @@ for(iter in seq(iter, n_iterations_update)){
   
    fieldT_cholT_chol_field = sum((stuff$sparse_chol %*% params$field)^2)
    for(field_log_var_idx in seq(10)){
-   new_field_log_var = params$field_log_var + .05 * rnorm(1)
+   new_field_log_var = params$field_log_var + .1 * rnorm(1)
    current_U =
      (
        - beta_prior_log_dens(beta = as.matrix(params$field_log_var), n_PP = 0,log_scale = 0,
@@ -252,7 +253,7 @@ for(iter in seq(iter, n_iterations_update)){
      print("SCAAAALE SUFF")
    }
    }
-  
+  }
   ###############
   # Range beta  #
   ###############
@@ -733,10 +734,10 @@ for(iter in seq(iter, n_iterations_update)){
   #############################
   
   if(!is.null(hierarchical_model$range$PP)){
-    n_range_log_scale_update = 3
+    n_range_log_scale_update = 2
     for(i in seq(n_range_log_scale_update)){
     # ancillary - sufficient
-    q = params$range_log_scale + rnorm(1, 0, exp(ker_var$range_log_scale_sufficient))
+    q = params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(ker_var$range_log_scale_sufficient))
     
     new_range_beta = params$range_beta
     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
@@ -756,13 +757,13 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
-        3 *  sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+        sum((params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
         + .5* sum((stuff$sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(stuff$compressed_chol[1,1,]))
       )
     proposed_U =
       (
-        3 *  sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+        sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
         + .5* sum((new_sparse_chol %*% (params$field/exp(params$field_log_var / 2)))^2)
         - sum(log(new_compressed_sparse_chol[1,1,]))
       )
@@ -771,8 +772,8 @@ for(iter in seq(iter, n_iterations_update)){
     
     ker_var$range_log_scale_sufficient = update_kernel(
       iter = iter, iter_start = iter_start, 
-      update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
-      mult = -.4
+      update_kernel_groupsize = 3, kernel_value = ker_var$range_log_scale_sufficient, 
+      mult = -.25
     )
     
     if (
@@ -786,7 +787,7 @@ for(iter in seq(iter, n_iterations_update)){
           
           ker_var$range_log_scale_sufficient = update_kernel(
             iter = iter, iter_start = iter_start, 
-            update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_sufficient, 
+            update_kernel_groupsize = 3, kernel_value = ker_var$range_log_scale_sufficient, 
             mult = 1
           )
           momenta$range_beta_sufficient = p
@@ -806,9 +807,8 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
-          - 3 * sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
-          + 3 * sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
-          
+          -sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
+          +sum((params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
             beta0_mean = hierarchical_model$range$beta0_mean,
@@ -829,8 +829,8 @@ for(iter in seq(iter, n_iterations_update)){
     # ancillary-ancillary ####
     
     for(i in seq(n_range_log_scale_update)){
-    q = params$range_log_scale 
-    q = q + exp(ker_var$range_log_scale_ancillary) * rnorm(length(q))
+    q = params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(ker_var$range_log_scale_ancillary))
+    
     new_range_beta = params$range_beta
     new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
       diag(exp(-.5 * params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
@@ -849,18 +849,18 @@ for(iter in seq(iter, n_iterations_update)){
     
     current_U =
       (
-        3 *  sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+        sum((params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
         + .5 * sum((stuff$lm_residuals -  params$field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
       )
     proposed_U =
       (
-        3 *  sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
+        sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
         + .5 * sum((stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/stuff$noise_var) # observation ll
       )
     ker_var$range_log_scale_ancillary = update_kernel(
       iter = iter, iter_start = iter_start, 
-      update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_ancillary, 
-      mult = -.4
+      update_kernel_groupsize = 2, kernel_value = ker_var$range_log_scale_ancillary, 
+      mult = -.25
     )
     
     if (
@@ -872,7 +872,7 @@ for(iter in seq(iter, n_iterations_update)){
         if(log(runif(1)) < (current_U-proposed_U)){
           ker_var$range_log_scale_ancillary = update_kernel(
             iter = iter, iter_start = iter_start, 
-            update_kernel_groupsize = 1, kernel_value = ker_var$range_log_scale_ancillary, 
+            update_kernel_groupsize = 2, kernel_value = ker_var$range_log_scale_ancillary, 
             mult = 1
           )
           print("turlututu ancillary !")
@@ -893,8 +893,8 @@ for(iter in seq(iter, n_iterations_update)){
         (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
         (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
         (
-          -3 * sum((max(0, q - hierarchical_model$range$log_scale_bounds[1])))
-          +3 * sum((max(0, params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])))
+          -sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
+          +sum((params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
           
           + beta_prior_log_dens(
             beta = params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
@@ -996,30 +996,32 @@ for(iter in seq(iter, n_iterations_update)){
  ####  abline(a=0, b=1)
       
       
-      # Make a full step for the position
-      q = q + exp(ker_var$noise_beta_mala) * p
-      new_noise_beta = solve(L_minus_one, q)
-      new_noise_var = as.vector(exp(X_PP_mult_right(
+      for(hmc_step in seq(n_hmc_steps)){
+        # Make a full step for the position
+        q = q + exp(ker_var$noise_beta_mala) * p
+        new_noise_beta = solve(L_minus_one, q)
+        new_noise_var = as.vector(exp(X_PP_mult_right(
           X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
           vecchia_approx = vecchia_approx, Y = new_noise_beta, 
           permutate_PP_to_obs = T
         )))
-      # Make a half step for momentum at the end
-      dens_grad = (
-        - beta_prior_log_dens_derivative(
-          beta = new_noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-          beta0_mean = hierarchical_model$noise$beta0_mean,
-          beta0_var =  hierarchical_model$noise$beta0_sd^2, 
-          log_scale = params$noise_log_scale) # normal prior
-        + X_PP_crossprod(
-          X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
-          Y = 
-            (
-              + .5 # determinant part of normal likelihood
-              - (squared_residuals/new_noise_var)/2 # exponential part of normal likelihood
-            ))
-      )
-      p = p - exp(ker_var$noise_beta_mala) * solve(t(L_minus_one), dens_grad) / 2
+        # Make a half step for momentum at the end
+        dens_grad = (
+          - beta_prior_log_dens_derivative(
+            beta = new_noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
+            beta0_mean = hierarchical_model$noise$beta0_mean,
+            beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+            log_scale = params$noise_log_scale) # normal prior
+          + X_PP_crossprod(
+            X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
+            Y = 
+              (
+                + .5 # determinant part of normal likelihood
+                - (squared_residuals/new_noise_var)/2 # exponential part of normal likelihood
+              ))
+        )
+        p = p - exp(ker_var$noise_beta_mala) * solve(t(L_minus_one), dens_grad) / (1 + (hmc_step == n_hmc_steps))
+      }
       
       # Evaluate potential and kinetic energies at start and end of trajectory
       current_U =
@@ -1064,42 +1066,45 @@ for(iter in seq(iter, n_iterations_update)){
       if(!is.null(hierarchical_model$noise$PP))
       {
         # ancillary -- sufficient ####
-        new_noise_log_scale = params$noise_log_scale + rnorm(1, 0, exp(ker_var$noise_log_scale))
-        new_noise_beta = params$noise_beta
-        new_noise_beta[-seq(covariates$noise_X$n_regressors)] = new_noise_beta[-seq(covariates$noise_X$n_regressors)] *
-          exp((new_noise_log_scale - params$noise_log_scale)/2)
-        new_noise_var = as.vector(exp(X_PP_mult_right(
-          X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
-          vecchia_approx = vecchia_approx, Y = new_noise_beta, 
-          permutate_PP_to_obs = T
-        )))
-        dens_ratio = (
-          -.5* sum(log(new_noise_var)) 
-          -.5*sum(squared_residuals/new_noise_var)
-          +.5* sum(log(stuff$noise_var)) 
-          +.5*sum(squared_residuals/stuff$noise_var)
-        )
-        if(!is.nan(dens_ratio))
+        for(i in seq(4))
         {
-          if(dens_ratio > log(runif(1)))
+          new_noise_log_scale = params$noise_log_scale + rnorm(1, 0, exp(ker_var$noise_log_scale))
+          new_noise_beta = params$noise_beta
+          new_noise_beta[-seq(covariates$noise_X$n_regressors)] = new_noise_beta[-seq(covariates$noise_X$n_regressors)] *
+            exp((new_noise_log_scale - params$noise_log_scale)/2)
+          new_noise_var = as.vector(exp(X_PP_mult_right(
+            X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
+            vecchia_approx = vecchia_approx, Y = new_noise_beta, 
+            permutate_PP_to_obs = T
+          )))
+          dens_ratio = (
+            -.5* sum(log(new_noise_var)) 
+            -.5*sum(squared_residuals/new_noise_var)
+            +.5* sum(log(stuff$noise_var)) 
+            +.5*sum(squared_residuals/stuff$noise_var)
+          )
+          if(!is.nan(dens_ratio))
           {
-            if(
-              (new_noise_log_scale > hierarchical_model$noise$log_scale_bounds[1])&
-              (new_noise_log_scale < hierarchical_model$noise$log_scale_bounds[2])
-            )
+            if(dens_ratio > log(runif(1)))
             {
-              params$noise_log_scale = new_noise_log_scale
-              params$noise_beta = new_noise_beta 
-              stuff$noise_var = new_noise_var
-              ker_var$noise_log_scale = update_kernel(
-                iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-                kernel_value = ker_var$noise_log_scale, mult = 1)
+              if(
+                (new_noise_log_scale > hierarchical_model$noise$log_scale_bounds[1])&
+                (new_noise_log_scale < hierarchical_model$noise$log_scale_bounds[2])
+              )
+              {
+                params$noise_log_scale = new_noise_log_scale
+                params$noise_beta = new_noise_beta 
+                stuff$noise_var = new_noise_var
+                ker_var$noise_log_scale = update_kernel(
+                  iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
+                  kernel_value = ker_var$noise_log_scale, mult = 1)
+              }
             }
           }
+          ker_var$noise_log_scale = update_kernel(
+            iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
+            kernel_value = ker_var$noise_log_scale, mult = -.25)
         }
-        ker_var$noise_log_scale = update_kernel(
-          iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
-          kernel_value = ker_var$noise_log_scale, mult = -.25)
         
         # sufficient -- sufficient ####
         for(i in seq(10))

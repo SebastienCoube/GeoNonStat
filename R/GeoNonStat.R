@@ -364,17 +364,17 @@ process_hierarchical_model <- function(vecchia_approx,
       PP = noise_PP,
       log_scale_bounds = noise_log_scale_bounds,
       beta0_mean = (sigma_max + sigma_min)/2,
-      beta0_sd = (sigma_max-sigma_min)/4
+      beta0_sd = (sigma_max-sigma_min)/8
     ), 
     scale = list(
       beta0_mean = (sigma_max + sigma_min)/2,
-      beta0_sd = (sigma_max-sigma_min)/4
+      beta0_sd = (sigma_max-sigma_min)/8
     ), 
     range = list(
       PP = range_PP,
       log_scale_bounds = range_log_scale_bounds,
       beta0_mean = (alpha_max + alpha_min)/2,
-      beta0_sd = (alpha_max-alpha_min)/4
+      beta0_sd = (alpha_max-alpha_min)/8
     ), 
     anisotropic= anisotropic,
     matern_smoothness= matern_smoothness,
@@ -417,8 +417,8 @@ process_hierarchical_model <- function(vecchia_approx,
 #' process_transition_kernels(hm = hm)
 process_transition_kernels <- function(init=-4, hm){
   res =   list(
-    range_log_scale_sufficient = init,
-    range_log_scale_ancillary =  init,
+    range_log_scale_sufficient = rep(init, 1 + hm$anisotropic),
+    range_log_scale_ancillary =  rep(init, 1 + hm$anisotropic),
     range_beta_sufficient = rep(init, 1 + hm$anisotropic),
     range_beta_ancillary = rep(init, 1 + hm$anisotropic),
     range_log_scale_estimate  = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic), 
