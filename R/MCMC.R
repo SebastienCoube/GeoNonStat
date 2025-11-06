@@ -1051,4 +1051,25 @@ for(iter in seq(n_iterations_update)){
 }
 
 
+run_parallel_version_goret = function(geo_non_stat, n_chains_in_parallel = NULL, n_threads_per_chain = 10, n_iterations = 100, seed = 1){
+  if(is.null(n_chains_in_parallel))n_chains_in_parallel = length(geo_non_stat$states)
+  iter_start = length(geo_non_stat$records$chain_1)
+  cl = parallel::makeCluster(n_chains_in_parallel)
+  parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "geo_non_stat", "n_iterations"), envir = environment())
+  res = parallel::parLapply(
+    cl = cl, 
+    X = seq(length(geo_non_stat$states)), function(chain_idx){
+      devtools::load_all()
+      MessyMessyMcmc(
+        covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
+        hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
+        state = geo_non_stat$states[[chain_idx]], 
+        n_iterations_update = n_iterations, 
+        num_threads = n_threads_per_chain, 
+        iter_start = iter_start, 
+        seed = iter_start + seed + chain_idx
+        )
+    }
+  )
+}
 

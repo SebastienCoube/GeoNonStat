@@ -22,8 +22,6 @@ gns_simulator = createGnsSimulator(
 )
 
 
-
-
 field_log_var=  2
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1,-1)
@@ -58,18 +56,31 @@ mygns = GeoNonStat(
 )
 
 
-#Run MCMC chain for 40 iterations
-samples = MessyMessyMcmc(
-  covariates = mygns$covariates, observed_field = mygns$observed_field, 
-  hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
-  state = mygns$states$chain_1, n_iterations_update = 40, num_threads = 10, iter_start = 1, seed = 1
-)
+# #Run MCMC chain for 40 iterations
+# samples = MessyMessyMcmc(
+#   covariates = mygns$covariates, observed_field = mygns$observed_field, 
+#   hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
+#   state = mygns$states$chain_1, n_iterations_update = 40, num_threads = 10, iter_start = 1, seed = 1
+# )
+# 
+# # Current i.e. last  state of the MCMC chain
+# samples$state
+# # e.g. current utils 
+# samples$state$stuff
+# # e.g. current model parameters 
+# samples$state$params
+# # History of the samples
+# samples$params_records[[1]]$beta
 
-# Current i.e. last  state of the MCMC chain
-samples$state
-# e.g. current utils 
-samples$state$stuff
-# e.g. current model parameters 
-samples$state$params
-# History of the samples
-samples$params_records[[1]]$beta
+# on veut arriver à ça... mais en version pas º(00)º : 
+
+# parallel run
+mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+  geo_non_stat = mygns, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 10, n_iterations = 30, seed = 1)
+
+# update of the state and the records
+for(chain_idx in seq(length(mygns$states))){
+  mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
+  mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
+}
