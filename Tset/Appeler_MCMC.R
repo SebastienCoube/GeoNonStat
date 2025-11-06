@@ -58,12 +58,18 @@ mygns = GeoNonStat(
 )
 
 
-#params$field_log_var = field_log_var
-samples = MessyMessyMcmc(covariates = mygns$covariates, observed_field = mygns$observed_field, 
-     hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
-     state = mygns$states$chain_1, n_iterations_update = 20, num_threads = 10, iter_start = 1, seed = 1
-     )
+#Run MCMC chain for 40 iterations
+samples = MessyMessyMcmc(
+  covariates = mygns$covariates, observed_field = mygns$observed_field, 
+  hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
+  state = mygns$states$chain_1, n_iterations_update = 40, num_threads = 10, iter_start = 1, seed = 1
+)
 
-samples$state$params
+# Current i.e. last  state of the MCMC chain
+samples$state
+# e.g. current utils 
 samples$state$stuff
+# e.g. current model parameters 
+samples$state$params
+# History of the samples
 samples$params_records[[1]]$beta
