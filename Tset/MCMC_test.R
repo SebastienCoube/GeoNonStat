@@ -60,6 +60,44 @@ set.seed(seed)
 
 t1 = Sys.time()
 for(iter in seq(iter, n_iterations_update)){
+  if(iter%/%20 == iter /20){
+    par(mfrow = c(1,2))
+    plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled")
+    plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, main = "true")
+    par(mar = rep(2, 4))
+    par(mfrow = c(3,3))
+    for(i in seq(nrow(params$range_beta))){
+      for(j in seq(ncol(params$range_beta))){
+        plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter/5, iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
+        abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
+      }}
+    range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter/5, iter-1),])
+    plot(range_log_scale_samples[,1], main = "range log scale")
+    abline(h = range_log_scale[1])
+    plot(range_log_scale_samples[,2], main = "aniso log scale")
+    abline(h = range_log_scale[2])
+    
+    noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter/5, iter-1)])
+    plot(noise_log_scale_samples, main = "noise log scale")
+    abline(h = noise_PP_log_var)
+    
+    field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/5, iter-1)])
+    plot(field_log_var_samples, main = "field log var")
+    abline(h = field_log_var)
+    
+    par(mfrow = c(2,1))
+    plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
+    plot_pointillist_painting(vecchia_approx$observed_locs, log(stuff$noise_var))
+    
+    par(mfrow = c(1,1))
+    plot(log(stuff$noise_var), fake_data$log_noise_var_field)
+    
+    abline(a=0, b=1)
+  }
+  
+  
+  
+  
   if((iter + iter_start)/50 ==(iter + iter_start) %/% 50)print(paste("iteration", (iter + iter_start)))
   
   ###########################
@@ -124,7 +162,7 @@ for(iter in seq(iter, n_iterations_update)){
   Sys.time()-t1
   
   t1 = Sys.time()
-  for(pass in seq(1)){
+  for(pass in seq(3)){
     for(cluster_idx in unique(locs_partition)){
       selected_idx = which(locs_partition==cluster_idx)
       additional_mean_from_field =
@@ -150,44 +188,6 @@ for(iter in seq(iter, n_iterations_update)){
   Sys.time()-t1
   
   
-  if(iter%/%20 == iter /20){
-    par(mfrow = c(1,2))
-    plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled")
-    plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, main = "true")
-    par(mar = rep(2, 4))
-    par(mfrow = c(3,3))
-    for(i in seq(nrow(params$range_beta))){
-      for(j in seq(ncol(params$range_beta))){
-        plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter/5, iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
-        abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
-      }}
-    range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter/5, iter-1),])
-    plot(range_log_scale_samples[,1], main = "range log scale")
-    abline(h = range_log_scale[1])
-    plot(range_log_scale_samples[,2], main = "aniso log scale")
-    abline(h = range_log_scale[2])
-    
-    noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter/5, iter-1)])
-    plot(noise_log_scale_samples, main = "noise log scale")
-    abline(h = noise_PP_log_var)
-    
-    field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/5, iter-1)])
-    plot(field_log_var_samples, main = "field log var")
-    abline(h = field_log_var)
-    
-    par(mfrow = c(2,1))
-    plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
-    plot_pointillist_painting(vecchia_approx$observed_locs, log(stuff$noise_var))
-    
-    par(mfrow = c(1,1))
-    plot(log(stuff$noise_var), fake_data$log_noise_var_field)
-    
-    abline(a=0, b=1)
-  }
-  
-  
-  par(mfrow = c(1,1 ))
-  print(iter)
   
   
   #################
@@ -222,7 +222,6 @@ for(iter in seq(iter, n_iterations_update)){
                                                     kernel_value = ker_var$field_log_var_ancillary, iter = iter, mult = 1)
     params$field_log_var = new_field_log_var
     params$field = new_field
-    print("SCAAAALE ANCILLARY")
   }
   }
   
@@ -250,7 +249,6 @@ for(iter in seq(iter, n_iterations_update)){
      )
    if(current_U - proposed_U > log(runif(1))){
      params$field_log_var = new_field_log_var
-     print("SCAAAALE SUFF")
    }
    }
   }
@@ -489,7 +487,6 @@ for(iter in seq(iter, n_iterations_update)){
         iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
         kernel_value = ker_var$range_beta_ancillary[regime], mult = 1
       )
-      print("tatato ancillary !")
       momenta$range_beta_ancillary = p
       params$field = new_field
       stuff$sparse_chol= new_sparse_chol
@@ -718,7 +715,6 @@ for(iter in seq(iter, n_iterations_update)){
         iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, 
         kernel_value = ker_var$range_beta_sufficient[regime], mult = 1
       )
-      print("tatato sufficient!")
       momenta$range_beta_sufficient = p
       stuff$sparse_chol= new_sparse_chol
       stuff$compressed_chol = new_compressed_sparse_chol
@@ -726,8 +722,6 @@ for(iter in seq(iter, n_iterations_update)){
     }
   }
   
-  print(ker_var$range_beta_sufficient)
-  print(ker_var$range_beta_ancillary)
   }
   #############################
   # Variance of the  range PP #
@@ -783,7 +777,6 @@ for(iter in seq(iter, n_iterations_update)){
       if(!is.nan(current_U-proposed_U+current_K-proposed_K)){
         if(log(runif(1)) < (current_U-proposed_U+current_K-proposed_K))
         {
-          print("turlututu sufficient !")
           
           ker_var$range_log_scale_sufficient = update_kernel(
             iter = iter, iter_start = iter_start, 
@@ -875,7 +868,6 @@ for(iter in seq(iter, n_iterations_update)){
             update_kernel_groupsize = 2, kernel_value = ker_var$range_log_scale_ancillary, 
             mult = 1
           )
-          print("turlututu ancillary !")
           
           params$range_beta = new_range_beta
           params$range_log_scale = q
@@ -1052,7 +1044,6 @@ for(iter in seq(iter, n_iterations_update)){
       {
         if (log(runif(1)) < current_U-proposed_U+current_K- proposed_K)
         {
-          print("MAKE SUM NOIIIIIZE")
           ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, kernel_value = ker_var$noise_beta_mala, mult = 1)
           momenta$noise_beta = p
           params$noise_beta[] = new_noise_beta
@@ -1140,7 +1131,6 @@ for(iter in seq(iter, n_iterations_update)){
   #     if(iter>10){
   #     HMC_range_cond = solve(chol(var(t(sapply(params_records[seq(iter/5, iter)], function(x)c(x$range_beta)))) + diag(.05, length(params$range_beta))))}
 }
-print(Sys.time()-t1)
 #return(list("state" = state, "params_records" = params_records))
 #}
 

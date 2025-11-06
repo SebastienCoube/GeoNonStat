@@ -1,69 +1,69 @@
-observed_locs = cbind(runif(400000), 1)
-X = cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
 
-NNarray = GpGp::find_ordered_nn(observed_locs, 12)
-Linv = GpGp::vecchia_Linv(c(1, .0005, .0001), "matern15_isotropic", locs = observed_locs, NNarray)
-w = GpGp::fast_Gp_sim_Linv(Linv, NNarray)
-reg_coeffs = rnorm(ncol(X)+1)
+set.seed(2)
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))
+vecchia_approx = createVecchia(observed_locs, m = 6)
 
-observed_field = c(cbind(1, X) %*% reg_coeffs + w + rnorm(nrow(observed_locs)))
+# fixed effects
+X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
 
-plot(observed_locs[,1], observed_field)
-points(observed_locs[,1], w, col = 2, cex = .5, pch = 16)
+#X_range = as.data.frame(observed_locs)
+
+PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
+PP_noise = createPP(vecchia_approx, knots = 30, matern_range = .25)
 
 
-vecchia_approx = createVecchia(observed_locs, ncores = 3)
-PP = createPP(vecchia_approx)
+gns_simulator = createGnsSimulator(
+  vecchia_approx = vecchia_approx,
+  X = X, 
+  noise_X = X, noise_PP = PP_noise, 
+  range_X = NULL,range_PP = PP_range, 
+  anisotropic = T
+)
+
+
+
+
+field_log_var=  2
+# case with nice non-stationarity and little noise. 
+range_log_scale = c(-1,-1)
+noise_intercept = 1
+noise_PP_log_var = -1
+# case with no non-stationarity and little noise. 
+# case with nice non-stationarity and crazy noise. 
+# case with no non-stationarity and crazy noise. 
+coeff_list = createGnsSimulatorParameters(gns_simulator, range_PP_log_var =range_log_scale, noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, field_log_var = field_log_var)
+coeff_list$range_X_coeff[1] = -5
+
+
+fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = coeff_list)
+dev.off()
+
+
+plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 1)
+
+plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field)
+plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise)
+plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
+
 
 mygns = GeoNonStat(
   vecchia_approx = vecchia_approx, 
-  observed_field = c(observed_field), X = as.data.frame(X), 
-  matern_smoothness = 1.5, anisotropic = F, 
+  observed_field = fake_data$observed_field, X = X, 
+  matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
-  noise_X = NULL, 
-  range_X = NULL, 
-  # scale_X = NULL, 
-  noise_PP = NULL, 
-  range_PP = NULL, 
-  # scale_PP = NULL, 
-  seed = 1
+  noise_X = NULL, range_X = NULL,
+  noise_PP = PP_noise,
+  range_PP = PP_range
 )
 
-samples1 = MCMC(
-  covariates = mygns$covariates, 
-  observed_field = mygns$observed_field, 
-  hierarchical_model =  mygns$hierarchical_model, 
-  vecchia_approx = mygns$vecchia_approx, 
-  n_iterations_update = 100, 
-  state = mygns$states$chain_1,
-  num_threads = 5, 
-  iter_start = 1, 
-  seed = 1
-    )
-samples2 = MCMC(
-  covariates = mygns$covariates, 
-  observed_field = mygns$observed_field, 
-  hierarchical_model =  mygns$hierarchical_model, 
-  vecchia_approx = mygns$vecchia_approx, 
-  n_iterations_update = 100, 
-  state = mygns$states$chain_2,
-  num_threads = 5, 
-  iter_start = 1, 
-  seed = 1
-    )
-samples3 = MCMC(
-  covariates = mygns$covariates, 
-  observed_field = mygns$observed_field, 
-  hierarchical_model =  mygns$hierarchical_model, 
-  vecchia_approx = mygns$vecchia_approx, 
-  n_iterations_update = 100, 
-  state = mygns$states$chain_3,
-  num_threads = 5, 
-  iter_start = 1, 
-  seed = 1
-    )
 
-samples3$params_records[[1]]$scale_beta
+#params$field_log_var = field_log_var
+samples = MessyMessyMcmc(covariates = mygns$covariates, observed_field = mygns$observed_field, 
+     hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
+     state = mygns$states$chain_1, n_iterations_update = 20, num_threads = 10, iter_start = 1, seed = 1
+     )
 
-mygns.run(100)
-
+samples$state$params
+samples$state$stuff
+samples$params_records[[1]]$beta
