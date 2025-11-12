@@ -161,8 +161,7 @@ plot_ellipses = function(locs,
   }
   if (ncol(log_range) == 1) {
     matrices = lapply(log_range, function(x)
-      diag(exp(x#/sqrt(2))
-               , 2))
+      diag(exp(x), 2)
     )
   }
   if (!add) {
