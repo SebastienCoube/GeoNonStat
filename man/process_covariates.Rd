@@ -47,16 +47,18 @@ X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2)
 res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 
 # Errors ##########################
-# one obs of x per loc
+\dontrun{
+one obs of x per loc
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-# bad X number of rows
+bad X number of rows
 X = X[-1,]
 res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-# bad X format
+bad X format
 X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-# not independent covariates
+not independent covariates
 X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
 res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+}
 }

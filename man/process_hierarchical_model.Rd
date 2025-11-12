@@ -18,6 +18,8 @@ process_hierarchical_model(
 )
 }
 \arguments{
+\item{vecchia_approx}{TODO}
+
 \item{noise_PP}{either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary}
 
 \item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}

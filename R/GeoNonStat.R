@@ -157,6 +157,7 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' (should be TRUE to range_X and scale_X)
 #' 
 #' @returns a list
+#' @export
 #'
 #' @examples
 #' \dontrun{TODO}
@@ -180,18 +181,20 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
 #' 
 #' # Errors ##########################
-#' # one obs of x per loc
+#' \dontrun{
+#' one obs of x per loc
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-#' # bad X number of rows
+#' bad X number of rows
 #' X = X[-1,]
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-#' # bad X format
+#' bad X format
 #' X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
-#' # not independent covariates
+#' not independent covariates
 #' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
 #' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' }
 process_covariates = function(X, 
                               vecchia_approx, 
                               PP = NULL, 
@@ -309,6 +312,7 @@ process_PP_prior = function(
 
 #' Initialize hierarchical model
 #'
+#' @param vecchia_approx TODO
 #' @param noise_PP either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary
 #' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
 #' @param range_PP TODO
@@ -402,7 +406,6 @@ process_hierarchical_model <- function(vecchia_approx,
 #' have an ancillary and a sufficient version when applicable
 #' rangedescription
 #' @examples
-#' tk <- process_transition_kernels()
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
 #' observed_field = rnorm(nobs)

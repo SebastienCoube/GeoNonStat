@@ -22,7 +22,6 @@ have an ancillary and a sufficient version when applicable
 rangedescription
 }
 \examples{
-tk <- process_transition_kernels()
 nobs = 10000
 observed_locs = cbind(runif(nobs), runif(nobs))
 observed_field = rnorm(nobs)

@@ -17,9 +17,11 @@ X_PP_mult_right(
 
 \item{PP}{either a PP whose basis will be multiplied by the last columns of Y}
 
+\item{vecchia_approx}{TODO}
+
 \item{Y}{the matrix who multiplies the covariates and the PP}
 
-\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates or NULL}
+\item{permutate_PP_to_obs}{TODO}
 }
 \value{
 a matrix
@@ -46,7 +48,8 @@ X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
 res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, 
                         Y = c(covariate_coefficients, knots_coeffs), 
                         vecchia_approx = vecchia_approx)
-plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
+plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, 
+                              \n one covariate for each location")
 
 # TODO Nun functional example
 

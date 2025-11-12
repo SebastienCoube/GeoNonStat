@@ -13,7 +13,9 @@ X_PP_crossprod(X, PP = NULL, Y, vecchia_approx = NULL, permutate_PP_to_obs = F)
 
 \item{Y}{the matrix who multiplies the covariates and the PP}
 
-\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates, or NULL}
+\item{vecchia_approx}{TODO}
+
+\item{permutate_PP_to_obs}{boolean, default to FALSE. TODO}
 }
 \value{
 a matrix

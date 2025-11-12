@@ -51,7 +51,7 @@ symmat = function(coords)
 #' n <- 5  
 #' i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
 #' j <- c(1:n, rep(1, n - 1))
-#' M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
+#' M <- Matrix::sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
 #' naive_greedy_coloring(M)
 #' M[2,3]=1
 #' M[3,2]=1
@@ -325,8 +325,9 @@ beta_prior_log_dens_derivative =
 #'
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
-#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates or NULL
 #' @param Y the matrix who multiplies the covariates and the PP
+#' @param vecchia_approx TODO
+#' @param permutate_PP_to_obs TODO
 #'
 #' @returns a matrix
 #' @export
@@ -352,7 +353,8 @@ beta_prior_log_dens_derivative =
 #' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, 
 #'                         Y = c(covariate_coefficients, knots_coeffs), 
 #'                         vecchia_approx = vecchia_approx)
-#' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
+#' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, 
+#'                               \n one covariate for each location")
 #' 
 #' # TODO Nun functional example
 ## # multiplying PP and matrix of covariates with an index
@@ -417,8 +419,9 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' `t(X|PP) %*% Y`
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
-#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
 #' @param Y the matrix who multiplies the covariates and the PP
+#' @param vecchia_approx TODO
+#' @param permutate_PP_to_obs boolean, default to FALSE. TODO
 #'
 #' @returns a matrix
 #' @export

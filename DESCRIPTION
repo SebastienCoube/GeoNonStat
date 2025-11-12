@@ -26,7 +26,7 @@ LinkingTo:
     Rcpp, 
     RcppArmadillo
 RoxygenNote: 7.3.2
-SystemRequirements: C++11
+SystemRequirements: C++
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs
 Suggests: 

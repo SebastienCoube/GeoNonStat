@@ -19,7 +19,7 @@ Title
 n <- 5  
 i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
 j <- c(1:n, rep(1, n - 1))
-M <- sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
+M <- Matrix::sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
 naive_greedy_coloring(M)
 M[2,3]=1
 M[3,2]=1
