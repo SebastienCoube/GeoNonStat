@@ -20,3 +20,4 @@ Exponential of a square matrix, adding a small numeric value on the diagonal
 \examples{
 expmat(c(1,2,3,4,5,6))
 }
+\keyword{internal}

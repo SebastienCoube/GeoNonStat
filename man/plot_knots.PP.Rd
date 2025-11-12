@@ -12,8 +12,6 @@ plot_knots.PP(x, mar_var_loss = NULL, show_knots = TRUE)
 \item{mar_var_loss}{optional, the var loss computed by var_loss_percentage.PP}
 
 \item{show_knots}{logical, default to TRUE. Should the knots be plotted ?}
-
-\item{locs}{locations}
 }
 \description{
 Plot the knots and the spatial locations of a PP

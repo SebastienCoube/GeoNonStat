@@ -19,6 +19,24 @@ update_kernel = function(
 
 
 
+#' Title TODO
+#'
+#' @param covariates  TODO
+#' @param observed_field TODO
+#' @param hierarchical_model TODO
+#' @param vecchia_approx TODO
+#' @param state TODO
+#' @param n_iterations_update TODO
+#' @param num_threads TODO
+#' @param iter_start TODO
+#' @param seed TODO
+#'
+#' @returns TODO
+#' @export
+#'
+#' @examples
+#' #TODO
+#' #TODO
 MessyMessyMcmc = function(
     covariates,
     observed_field,
@@ -1059,7 +1077,6 @@ run_parallel_version_goret = function(geo_non_stat, n_chains_in_parallel = NULL,
   res = parallel::parLapply(
     cl = cl, 
     X = seq(length(geo_non_stat$states)), function(chain_idx){
-      devtools::load_all()
       MessyMessyMcmc(
         covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
         hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 

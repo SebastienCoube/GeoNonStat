@@ -4,6 +4,8 @@
 #' @param eps a numeric value, default to .0001
 #'
 #' @returns a square matrix
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' expmat(c(1,2,3,4,5,6))
@@ -19,6 +21,8 @@ expmat = function(coords, eps=0.0001)
 #' @param coords a numeric vector, of length 1, 3 or 6
 #'
 #' @returns a matrix
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' symmat(c(1,2,3,4,5,6))
@@ -41,6 +45,8 @@ symmat = function(coords)
 #' @param M a SparseMatrix
 #'
 #' @returns a vector of colors, of length the number of rows of M
+#' @export
+#' @keywords internal
 #' @examples
 #' n <- 5  
 #' i <- c(rep(1, n), 2:n)       # 1re ligne + 1re colonne sauf la 1re case
@@ -78,6 +84,8 @@ naive_greedy_coloring = function(M)
 #' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
 #'
 #' @returns a sparse triangular matrix
+#' @export
+#' @keywords internal
 decompress_chol = function(vecchia_approx, compressed_sparse_chol){
   Matrix::sparseMatrix(
     i = vecchia_approx$sparse_chol_i, 
@@ -96,14 +104,13 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' @param vecchia_approx an object created with `createVecchia()`
 #' @param range_X covariates for range, treated using process_covariates
 #' @param PP predictive process obtained through `createPP()`
+#' @param matern_smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
-#' @param smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
-#' @param anisotropic Logical, default to FALSE. TODO
 #' @param num_threads numerical, number of treads to use. Default to 1.
-#' @param locs_idx match between the duplicated locations used to buile the PP basis function and the non-redundant locs used to compute the sparse chol
 #'
 #' @returns a list
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' locs = cbind(runif(1000), runif(1000))
@@ -118,20 +125,20 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
 #' range_X = range_X, 
 #' PP = NULL, 
 #' matern_smoothness = 1.5, 
-#' compute_derivative = F)
+#' compute_derivative = FALSE)
 #' # test with a PP
 #' range_beta = matrix(rnorm(ncol(range_X$X_locs) + PP$n_knots), ncol=1)
 #' compute_sparse_chol(range_beta = range_beta, 
 #' vecchia_approx = vecchia_approx, 
 #' range_X = range_X, PP = PP, 
 #' matern_smoothness = 1.5, 
-#' compute_derivative = T)
+#' compute_derivative = TRUE)
 #' range_beta = matrix(rnorm(3*(2 + PP$n_knots)), ncol = 3)
 #' compute_sparse_chol(range_beta = range_beta, 
 #' vecchia_approx = vecchia_approx, 
 #' range_X = range_X, 
 #' PP = PP, 
-#' matern_smoothness = 1.5, compute_derivative = T)
+#' matern_smoothness = 1.5, compute_derivative = TRUE)
 compute_sparse_chol = function(range_beta, 
                                vecchia_approx,
                                range_X, 
@@ -230,6 +237,7 @@ compute_sparse_chol = function(range_beta,
 #'                 
 #' @returns a numeric value
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' beta_prior_log_dens(
@@ -270,14 +278,15 @@ beta_prior_log_dens = function(beta,
 #'
 #' @param beta a numerical matrix of spatial coordinates. 
 #' @param n_PP number of prediction points.
-#' @param beta_mean TODO
-#' @param beta_precision TODO
+#' @param beta0_mean TODO
+#' @param beta0_var TODO
 #' @param log_scale TODO
 #'
 #' @returns an array
-#'
+#' @export
+#' @keywords internal
 #' @examples
-#' beta_prior_log_dens_derivative(
+#' GeoNonStat:::beta_prior_log_dens_derivative(
 #'   beta = matrix(rnorm(300), 100, 3), 
 #'   n_PP = 90, 
 #'   beta0_mean = -5,
@@ -309,15 +318,19 @@ beta_prior_log_dens_derivative =
   }
 
 
+#' @title Multiply the concatenation of a matrix of covariates and a PP by a matrix
+#' @description 
 #' Multiply the concatenation of a matrix of covariates and a PP by a matrix
-#' (X|PP) %*% Y
+#' `(X|PP) %*% Y`
 #'
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
-#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
+#' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates or NULL
 #' @param Y the matrix who multiplies the covariates and the PP
 #'
 #' @returns a matrix
+#' @export
+#' @keywords internal
 #' 
 #' @examples
 #' locs = cbind(runif(1000), runif(1000))
@@ -336,23 +349,27 @@ beta_prior_log_dens_derivative =
 
 #' # multiplying PP and matrix of covariate, one obs for each location
 #' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-#' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
+#' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, 
+#'                         Y = c(covariate_coefficients, knots_coeffs), 
+#'                         vecchia_approx = vecchia_approx)
 #' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
 #' 
-#' # multiplying PP and matrix of covariates with an index
-#' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-#' res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
-#'                        Y = c(covariate_coefficients, knots_coeffs), 
-#'                        vecchia_approx = vecchia_approx
-#'                        )
-#' plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
+#' # TODO Nun functional example
+## # multiplying PP and matrix of covariates with an index
+## X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+## res4 <- X_PP_mult_right(X = X_by_obs, PP = PP,
+##                        Y = c(covariate_coefficients, knots_coeffs),
+##                        vecchia_approx = vecchia_approx)
+## plot_pointillist_painting(vecchia_approx$observed_locs,
+##                           res4,
+##                           main = "PP + covariates,\n  one covariate for each observation")
 #' 
 #' # multiplying 
 #' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
 #' res5 <- X_PP_mult_right(X = NULL, PP = PP, 
 #'                        Y = diag(1, PP$n_knots), 
 #'                        vecchia_approx = vecchia_approx,
-#'                        permutate_PP_to_obs = T
+#'                        permutate_PP_to_obs = TRUE
 #'                        )
 X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
 {
@@ -395,16 +412,17 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
   res
 }
 
-#' Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
-#' t(X|PP) %*% Y
-#'
+#' @title Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix
+#' @description Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix
+#' `t(X|PP) %*% Y`
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param locs_idx either a vector of integers who dispatch the PP basis to the covariates, or NULL
 #' @param Y the matrix who multiplies the covariates and the PP
 #'
-#'
 #' @returns a matrix
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' set.seed(123)
@@ -419,10 +437,14 @@ X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_
 #' identical(crossprod(X, Y) , res1)
 #' 
 #' # crossprod + PP with observations of X on the locs
-#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
+#' res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, 
+#'                       vecchia_approx = vecchia_approx, 
+#'                       permutate_PP_to_obs = FALSE)
 #' 
 #' # crossprod + PP with observations of X on the obs
-#' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+#' res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, 
+#'                        vecchia_approx = vecchia_approx, 
+#'                        permutate_PP_to_obs = TRUE)
 X_PP_crossprod = function(X, 
                           PP = NULL, 
                           Y, 

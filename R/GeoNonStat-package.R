@@ -10,6 +10,7 @@
 #' @importFrom GpGp find_ordered_nn order_maxmin vecchia_Linv matern_isotropic fast_Gp_sim
 #' @import parallel
 #' @import fields
+#' @importFrom grDevices heat.colors
 #' @importFrom ellipse ellipse
 #' @import BH
 #' @importFrom expm expm
@@ -19,5 +20,7 @@
 #' @importFrom graphics plot
 #' @importFrom FNN get.knn
 #' @importFrom coda effectiveSize
+#' @importFrom stats dist dnorm kmeans lm median model.matrix quantile sd var vcov
+#' @importFrom graphics abline barplot hist layout legend lines par points text
 #' @useDynLib GeoNonStat, .registration = TRUE
 "_PACKAGE"

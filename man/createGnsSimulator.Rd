@@ -2,10 +2,7 @@
 % Please edit documentation in R/simulate_fake_data.R
 \name{createGnsSimulator}
 \alias{createGnsSimulator}
-\title{set.seed(2)
-nlocs = 15000
-observed_locs = cbind(runif(nlocs), runif(nlocs))
-vecchia_approx = createVecchia(observed_locs, m = 6)}
+\title{Ingredients needed to simulate observations from GeoNonStat model}
 \usage{
 createGnsSimulator(
   vecchia_approx,
@@ -18,52 +15,29 @@ createGnsSimulator(
   anisotropic = F
 )
 }
-\description{
-# fixed effects
-X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+\arguments{
+\item{vecchia_approx}{TODO}
+
+\item{X}{TODO}
+
+\item{matern_smoothness}{TODO}
+
+\item{noise_X}{TODO}
+
+\item{noise_PP}{TODO}
+
+\item{range_X}{TODO}
+
+\item{range_PP}{TODO}
+
+\item{anisotropic}{TODO}
 }
-\details{
-#X_range = as.data.frame(observed_locs)
-
-PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
-PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
-
-
-# full monty
-gns_simulator = createGnsSimulator(
- vecchia_approx = vecchia_approx,
- X = X, 
- noise_X = X, noise_PP = PP_noise, 
- range_X = NULL,range_PP = PP_range, 
- anisotropic = T
-)
-gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-
-# full monty with specified range PP log var
-gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator, range_PP_log_var = c(1,1), range_intercept = -2)
-gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-
-# isotropic
-gns_simulator = createGnsSimulator(
- vecchia_approx = vecchia_approx,
- X = X, 
- noise_X = X, noise_PP = PP_noise, 
- range_X = NULL,range_PP = PP_range, 
- anisotropic = F
-)
-gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-
-
-# isotropic and no PP for range
-gns_simulator = createGnsSimulator(
- vecchia_approx = vecchia_approx,
- X = X, 
- noise_X = X, noise_PP = PP_noise, 
- range_X = NULL,range_PP = NULL, 
- anisotropic = F
-)
-gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
+\value{
+TODO
+}
+\description{
+Ingredients needed to simulate observations from GeoNonStat model
+}
+\examples{
+#TODO
 }

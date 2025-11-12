@@ -25,3 +25,4 @@ M[2,3]=1
 M[3,2]=1
 naive_greedy_coloring(M)
 }
+\keyword{internal}

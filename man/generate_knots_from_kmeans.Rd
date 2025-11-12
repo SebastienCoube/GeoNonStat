@@ -12,7 +12,7 @@ generate_knots_from_kmeans(knots_number, locs)
 \item{locs}{A matrix of spatial coordinates (typically with two columns for 2D locations).}
 }
 \value{
-A matrix of size \code{knots_number} × ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
+A matrix of size \code{knots_number} x ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
 }
 \description{
 Selects a set of spatial knots using k-means clustering from the observed locations.

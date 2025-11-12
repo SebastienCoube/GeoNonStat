@@ -22,6 +22,12 @@ process_hierarchical_model(
 
 \item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}
 
+\item{range_PP}{TODO}
+
+\item{range_log_scale_bounds}{TODO}
+
+\item{observed_locs}{TODO}
+
 \item{matern_smoothness}{a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{observed_field}{a vector of observations.}

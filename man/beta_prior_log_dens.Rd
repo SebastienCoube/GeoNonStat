@@ -81,3 +81,4 @@ beta_prior_log_dens(
   log_scale = c(-3,-2)
 )
 }
+\keyword{internal}

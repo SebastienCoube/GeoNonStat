@@ -1,60 +1,77 @@
 
 
-#'set.seed(2)
-#'nlocs = 15000
-#'observed_locs = cbind(runif(nlocs), runif(nlocs))
-#'vecchia_approx = createVecchia(observed_locs, m = 6)
-#'
-#'# fixed effects
-#'X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
-#'
-#'#X_range = as.data.frame(observed_locs)
-#'
-#'PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
-#'PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
-#'
-#'
-#'# full monty
-#'gns_simulator = createGnsSimulator(
-#'  vecchia_approx = vecchia_approx,
-#'  X = X, 
-#'  noise_X = X, noise_PP = PP_noise, 
-#'  range_X = NULL,range_PP = PP_range, 
-#'  anisotropic = T
-#')
-#'gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-#'gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-#'
-#'# full monty with specified range PP log var
-#'gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator, range_PP_log_var = c(1,1), range_intercept = -2)
-#'gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-#'
-#'# isotropic
-#'gns_simulator = createGnsSimulator(
-#'  vecchia_approx = vecchia_approx,
-#'  X = X, 
-#'  noise_X = X, noise_PP = PP_noise, 
-#'  range_X = NULL,range_PP = PP_range, 
-#'  anisotropic = F
-#')
-#'gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-#'gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
-#'
-#'
-#'# isotropic and no PP for range
-#'gns_simulator = createGnsSimulator(
-#'  vecchia_approx = vecchia_approx,
-#'  X = X, 
-#'  noise_X = X, noise_PP = PP_noise, 
-#'  range_X = NULL,range_PP = NULL, 
-#'  anisotropic = F
-#')
-#'gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
-#'gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
+#set.seed(2)
+#nlocs = 15000
+#observed_locs = cbind(runif(nlocs), runif(nlocs))
+#vecchia_approx = createVecchia(observed_locs, m = 6)
+#
+## fixed effects
+#X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+#
+##X_range = as.data.frame(observed_locs)
+#
+#PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
+#PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
+#
+#
+## full monty
+#gns_simulator = createGnsSimulator(
+#  vecchia_approx = vecchia_approx,
+#  X = X, 
+#  noise_X = X, noise_PP = PP_noise, 
+#  range_X = NULL,range_PP = PP_range, 
+#  anisotropic = T
+#)
+#gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
+#gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
+#
+## full monty with specified range PP log var
+#gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator, range_PP_log_var = c(1,1), range_intercept = -2)
+#gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
+#
+## isotropic
+#gns_simulator = createGnsSimulator(
+#  vecchia_approx = vecchia_approx,
+#  X = X, 
+#  noise_X = X, noise_PP = PP_noise, 
+#  range_X = NULL,range_PP = PP_range, 
+#  anisotropic = F
+#)
+#gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
+#gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
+#
+#
+## isotropic and no PP for range
+#gns_simulator = createGnsSimulator(
+#  vecchia_approx = vecchia_approx,
+#  X = X, 
+#  noise_X = X, noise_PP = PP_noise, 
+#  range_X = NULL,range_PP = NULL, 
+#  anisotropic = F
+#)
+#gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
+#gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = gns_simulator_parameters)
 
 
 
-# ingredients needed to simulate observations from GeoNonStat model
+
+
+#' Ingredients needed to simulate observations from GeoNonStat model
+#'
+#' @param vecchia_approx TODO
+#' @param X TODO
+#' @param matern_smoothness TODO
+#' @param noise_X TODO
+#' @param noise_PP TODO
+#' @param range_X TODO
+#' @param range_PP TODO
+#' @param anisotropic TODO
+#'
+#' @returns TODO
+#' @export
+#' 
+#' @examples
+#' #TODO
 createGnsSimulator = function(vecchia_approx,
                                X = NULL,
                                # Response variable
@@ -99,7 +116,23 @@ createGnsSimulator = function(vecchia_approx,
 }
 
 
-# From a GeoNonStatSimulator object, creates regression coefficients at the right format
+#' @title From a GeoNonStatSimulator object, creates regression coefficients at the right format
+#'
+#' @param gns_simulator TODO
+#' @param range_intercept TODO
+#' @param range_PP_log_var TODO
+#' @param noise_intercept TODO
+#' @param noise_PP_log_var TODO
+#' @param field_log_var TODO
+#' @param flap_the_gums TODO
+#' @param seed TODO
+#'
+#' @returns TODO
+#' @export
+#'
+#' @examples
+#' # TODO
+#' #TODO
 createGnsSimulatorParameters = function(
     gns_simulator, 
     range_intercept = NULL, 
@@ -228,8 +261,23 @@ createGnsSimulatorParameters = function(
 }
 
 
-# From a GeoNonStatSimulator object and regression coefficients at the right format,
-# simulates fake data
+
+
+
+#' @title simulates fake data
+#' @description From a GeoNonStatSimulator object and 
+#' regression coefficients at the right format,
+#' simulates fake data
+#'
+#' @param gns_simulator TODO
+#' @param gns_simulator_parameters  TODO
+#' @param num_threads TODO
+#'
+#' @returns TODO
+#' @export
+#'
+#' @examples
+#' # TODO
 simulateGnsData = function(gns_simulator, gns_simulator_parameters, num_threads = 5) {
   log_range_field = X_PP_mult_right(
     X = gns_simulator$covariates$range_X$X_locs,

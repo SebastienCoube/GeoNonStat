@@ -7,7 +7,7 @@
 detailed_summary(partobject)
 }
 \arguments{
-\item{partobject}{}
+\item{partobject}{object to summarize}
 }
 \description{
 summary of a part of a GeoNonStat object

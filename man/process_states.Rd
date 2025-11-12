@@ -23,9 +23,16 @@ process_states(
 \item{vecchia_approx}{TODO}
 
 \item{init_tk}{TODO}
+
+\item{seed}{seed used, for reproducipility purposes. Default to 1}
 }
 \value{
 a list
+}
+\description{
+Title
+}
+\examples{
 set.seed(100)
 nobs = 10000
 observed_locs = cbind(runif(nobs), runif(nobs))
@@ -56,7 +63,4 @@ process_states(
     vecchia_approx,
     init_tk = -4
 )
-}
-\description{
-Title
 }

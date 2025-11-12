@@ -2,6 +2,7 @@
 % Please edit documentation in R/PP.R, R/visualisation.R
 \name{createPP}
 \alias{createPP}
+\alias{PP}
 \alias{summary.PP}
 \alias{plot.PP}
 \title{Create a Predictive Process (PP) object}
@@ -16,18 +17,18 @@ createPP(
 
 \method{summary}{PP}(object, ...)
 
-\method{plot}{PP}(PP, mar_var_loss = TRUE, separate = FALSE, ...)
+\method{plot}{PP}(x, ..., mar_var_loss = TRUE, separate = FALSE)
 }
 \arguments{
 \item{vecchia_approx}{List obtained by `createVecchia()`.}
 
-\item{matern_range}{Numeric (optional). Matérn range parameter for the PP. 
+\item{matern_range}{Numeric (optional). Matern range parameter for the PP. 
 If `NULL`, a default value is inferred from spatial locations.}
 
 \item{knots}{Either:
 * a matrix of spatial knots,
 * a positive integer (number of knots, determined via k-means), or
-* `NULL` (default) — in which case a default number and placement of knots is used.}
+* `NULL` (default) - in which case a default number and placement of knots is used.}
 
 \item{seed}{Integer, random seed for reproducibility.}
 
@@ -37,7 +38,7 @@ If `NULL`, a default value is inferred from spatial locations.}
 
 \item{...}{unused additional arguments}
 
-\item{PP}{an object of class PP, create with `createPP`}
+\item{x}{an object of class PP, create with `createPP`}
 
 \item{mar_var_loss}{boolean, default to TRUE. Should loss of margine variance be computed and plotted ?}
 
@@ -54,22 +55,39 @@ to describe spatial variations of covariance parameters.
 vecchia_approx = createVecchia(cbind(runif(10000), runif(10000)), 10, ncores=1)
 # automatic 
 pepito = createPP(vecchia_approx)
-# choosing manually Matérn range, too small wrt number of knots
+\dontrun{
+# choosing manually Matern range, too small wrt number of knots
 pepito = createPP(vecchia_approx, matern_range = .1)
-# choosing manually Matérn range, way too small wrt number of knots
+# choosing manually Matern range, way too small wrt number of knots
 pepito = createPP(vecchia_approx, matern_range = .01)
-# choosing manually number of knots in order to adjust to Matérn range
+# choosing manually number of knots in order to adjust to Matern range
 pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
-# choosing manually number of knots, but picking too few for default Matérn range
+# choosing manually number of knots, but picking too few for default Matern range
 pepito = createPP(vecchia_approx, knots = 20)
-# choosing manually Matérn range in order to adjust to the number of knots
+# choosing manually Matern range in order to adjust to the number of knots
 pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
 # inputing an user-specified grid of knots
-pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))))
-# inputing an user-specified grid of knots in order to adjust to small Matérn range
-pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .1)
-pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .05), seq(-.05, 1.05, .05))), matern_range = .05)
-pepito = createPP(vecchia_approx, knots = as.matrix(expand.grid(seq(-.05, 1.05, .025), seq(-.05, 1.05, .025))), matern_range = .05)
+pepito = createPP(vecchia_approx, 
+                  knots = as.matrix(
+                            expand.grid(seq(-.05, 1.05, .05), 
+                                        seq(-.05, 1.05, .05))))
+# inputing an user-specified grid of knots in order to adjust to small Matern range
+pepito = createPP(vecchia_approx, 
+                  knots = as.matrix(
+                            expand.grid(seq(-.05, 1.05, .05), 
+                                        seq(-.05, 1.05, .05))), 
+                  matern_range = .1)
+pepito = createPP(vecchia_approx, 
+                  knots = as.matrix(
+                            expand.grid(seq(-.05, 1.05, .05), 
+                            seq(-.05, 1.05, .05))), 
+                 matern_range = .05)
+pepito = createPP(vecchia_approx, 
+                  knots = as.matrix(
+                    expand.grid(seq(-.05, 1.05, .025), 
+                                seq(-.05, 1.05, .025))), 
+                  matern_range = .05)
+}
 vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
 pepito = createPP(vecchia_approx, plot=FALSE)
 summary(pepito)

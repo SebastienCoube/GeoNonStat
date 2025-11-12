@@ -18,3 +18,4 @@ Create symetric matrix from coordinates
 \examples{
 symmat(c(1,2,3,4,5,6))
 }
+\keyword{internal}

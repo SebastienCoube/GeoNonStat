@@ -26,15 +26,11 @@ The last coefficients are multiplied with the spatial basis functions of PP}
 
 \item{PP}{predictive process obtained through `createPP()`}
 
+\item{matern_smoothness}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
+
 \item{compute_derivative}{logical, indicates if derivatives of Vecchia factors are to be computed}
 
 \item{num_threads}{numerical, number of treads to use. Default to 1.}
-
-\item{smoothness}{Matern smoothness Default to 1.5. Can be 0.5 or 1.5.}
-
-\item{anisotropic}{Logical, default to FALSE. TODO}
-
-\item{locs_idx}{match between the duplicated locations used to buile the PP basis function and the non-redundant locs used to compute the sparse chol}
 }
 \value{
 a list
@@ -55,18 +51,19 @@ vecchia_approx = vecchia_approx,
 range_X = range_X, 
 PP = NULL, 
 matern_smoothness = 1.5, 
-compute_derivative = F)
+compute_derivative = FALSE)
 # test with a PP
 range_beta = matrix(rnorm(ncol(range_X$X_locs) + PP$n_knots), ncol=1)
 compute_sparse_chol(range_beta = range_beta, 
 vecchia_approx = vecchia_approx, 
 range_X = range_X, PP = PP, 
 matern_smoothness = 1.5, 
-compute_derivative = T)
+compute_derivative = TRUE)
 range_beta = matrix(rnorm(3*(2 + PP$n_knots)), ncol = 3)
 compute_sparse_chol(range_beta = range_beta, 
 vecchia_approx = vecchia_approx, 
 range_X = range_X, 
 PP = PP, 
-matern_smoothness = 1.5, compute_derivative = T)
+matern_smoothness = 1.5, compute_derivative = TRUE)
 }
+\keyword{internal}

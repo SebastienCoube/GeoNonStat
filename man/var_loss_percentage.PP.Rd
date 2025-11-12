@@ -17,3 +17,4 @@ vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores=1)
 pepito = createPP(vecchia, plot=FALSE)
 var_loss_percentage.PP(pepito)
 }
+\keyword{internal}

@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{X_PP_mult_right}
 \alias{X_PP_mult_right}
-\title{Multiply the concatenation of a matrix of covariates and a PP by a matrix
-(X|PP) %*% Y}
+\title{Multiply the concatenation of a matrix of covariates and a PP by a matrix}
 \usage{
 X_PP_mult_right(
   X = NULL,
@@ -20,14 +19,14 @@ X_PP_mult_right(
 
 \item{Y}{the matrix who multiplies the covariates and the PP}
 
-\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates, or NULL}
+\item{locs_idx}{either a vector of integers who dispatch the PP basis to the covariates or NULL}
 }
 \value{
 a matrix
 }
 \description{
 Multiply the concatenation of a matrix of covariates and a PP by a matrix
-(X|PP) %*% Y
+`(X|PP) %*% Y`
 }
 \examples{
 locs = cbind(runif(1000), runif(1000))
@@ -44,22 +43,19 @@ res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecc
 res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 # multiplying PP and matrix of covariate, one obs for each location
 X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
+res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, 
+                        Y = c(covariate_coefficients, knots_coeffs), 
+                        vecchia_approx = vecchia_approx)
 plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
 
-# multiplying PP and matrix of covariates with an index
-X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
-                       Y = c(covariate_coefficients, knots_coeffs), 
-                       vecchia_approx = vecchia_approx
-                       )
-plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covariates,\n  one covariate for each observation")
+# TODO Nun functional example
 
 # multiplying 
 X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
 res5 <- X_PP_mult_right(X = NULL, PP = PP, 
                        Y = diag(1, PP$n_knots), 
                        vecchia_approx = vecchia_approx,
-                       permutate_PP_to_obs = T
+                       permutate_PP_to_obs = TRUE
                        )
 }
+\keyword{internal}

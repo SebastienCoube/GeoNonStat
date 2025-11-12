@@ -22,3 +22,4 @@ M <- matrix(1:6, nrow = 3, ncol = 2)
 x <- array(1:24, dim = c(2, 3, 4))
 result <- array_multiply_1(x, M)
 }
+\keyword{internal}

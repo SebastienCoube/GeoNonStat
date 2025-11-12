@@ -22,3 +22,4 @@ x <- array(1:12, dim = c(2, 2, 3))
 M <- Matrix::Matrix(matrix(1:9, nrow = 3, ncol = 3), sparse = TRUE)
 result <- array_multiply_3(x, M)
 }
+\keyword{internal}

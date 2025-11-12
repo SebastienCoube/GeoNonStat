@@ -285,6 +285,7 @@ process_covariates = function(X,
 #' @param log_scale_bounds a numeric vector of size 2 indicating the lower and upper PP log-variance bounds
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
+#' @export
 #' @examples 
 #' vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
 #' myPP <- createPP(vecchia_approx) 
@@ -310,10 +311,14 @@ process_PP_prior = function(
 #'
 #' @param noise_PP either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary
 #' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
+#' @param range_PP TODO
+#' @param range_log_scale_bounds TODO
+#' @param observed_locs TODO
 #' @param matern_smoothness a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations. 
 #' @param covariates The list of covariates obtained with process_covariates, contianing X, X_noise, X_range, X_scale
 #' @param anisotropic Boolean indicating if anisotropic
+#' @export
 #'
 #' @returns a list
 #' @examples
@@ -387,7 +392,9 @@ process_hierarchical_model <- function(vecchia_approx,
 #' Initialize transition kernels
 #'
 #' @param init a numeric value
+#' @param hm a hierarchical model
 #' @returns a list
+#' @export
 #' @description 
 #' Transition kernel state
 #' transition kernel variance is given as the log
@@ -442,8 +449,11 @@ process_transition_kernels <- function(init=-4, hm){
 #' @param observed_field TODO
 #' @param vecchia_approx TODO
 #' @param init_tk TODO
+#' @param seed seed used, for reproducipility purposes. Default to 1
+#' @export
 #'
 #' @returns a list
+#' @examples
 #' set.seed(100)
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
@@ -627,7 +637,8 @@ process_states <- function(
 #'   range_X =  range_X ,
 #'   seed = 1
 #' )
-#' 
+#' summary(myobj)
+#' myobj
  GeoNonStat <- 
   function(
     vecchia_approx,
@@ -736,7 +747,7 @@ print.GeoNonStat <- function(x, ...) {
 
 #' summary of a part of a GeoNonStat object
 #'
-#' @param partobject 
+#' @param partobject object to summarize
 detailed_summary <- function(partobject){
   sumdata <- summary(partobject)
   sumdata <- cbind(sumdata, 

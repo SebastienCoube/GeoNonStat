@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{X_PP_crossprod}
 \alias{X_PP_crossprod}
-\title{Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
-t(X|PP) %*% Y}
+\title{Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix}
 \usage{
 X_PP_crossprod(X, PP = NULL, Y, vecchia_approx = NULL, permutate_PP_to_obs = F)
 }
@@ -20,8 +19,8 @@ X_PP_crossprod(X, PP = NULL, Y, vecchia_approx = NULL, permutate_PP_to_obs = F)
 a matrix
 }
 \description{
-Do the cross-product of the concatenation of a matrix of covariates and a PP, and a matrix
-t(X|PP) %*% Y
+Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix
+`t(X|PP) %*% Y`
 }
 \examples{
 set.seed(123)
@@ -36,8 +35,13 @@ res1 <- X_PP_crossprod(X = X, Y = Y)
 identical(crossprod(X, Y) , res1)
 
 # crossprod + PP with observations of X on the locs
-res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = F)
+res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, 
+                      vecchia_approx = vecchia_approx, 
+                      permutate_PP_to_obs = FALSE)
 
 # crossprod + PP with observations of X on the obs
-res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T)
+res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, 
+                       vecchia_approx = vecchia_approx, 
+                       permutate_PP_to_obs = TRUE)
 }
+\keyword{internal}

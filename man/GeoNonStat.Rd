@@ -98,5 +98,6 @@ myobj = GeoNonStat(
   range_X =  range_X ,
   seed = 1
 )
-
+summary(myobj)
+myobj
 }

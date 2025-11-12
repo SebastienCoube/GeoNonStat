@@ -2,7 +2,7 @@
 % Please edit documentation in R/PP.R
 \name{get_basis}
 \alias{get_basis}
-\title{TODO : est-ce que cette fonction est utilisée ?}
+\title{TODO : est-ce que cette fonction est utilisee ?}
 \usage{
 get_basis(PP, vecchia_approx, df = T)
 }
@@ -14,5 +14,5 @@ get_basis(PP, vecchia_approx, df = T)
 \item{df}{boolean}
 }
 \description{
-TODO : est-ce que cette fonction est utilisée ?
+TODO : est-ce que cette fonction est utilisee ?
 }

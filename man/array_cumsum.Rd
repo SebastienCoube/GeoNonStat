@@ -19,3 +19,4 @@ Cumulative sum of an array
 myarray <- array(abs(rnorm(200)), dim = c(10, 10, 2))
 array_cumsum(myarray)
 }
+\keyword{internal}

@@ -1,12 +1,13 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
 #' 
-#' @param PP an object of class PP, create with `createPP`
+#' @param x an object of class PP, create with `createPP`
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
 #' @param ... unused additional arguments
 #'
 #' @returns NULL
 #' @rdname PP
+#' @aliases PP
 #' @method plot PP
 #' @export
 #'
@@ -14,7 +15,7 @@
 #' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
 #' pepito = createPP(vecchia_approx, plot=FALSE)
 #' plot(pepito)
-plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE, ...) {
+plot.PP <- function(x, ..., mar_var_loss = TRUE, separate=FALSE) {
   def.par <- par(no.readonly = TRUE)
   par(mar=c(3, 3, 3, 1) + 0.5)
   par(mgp=c(2, 1, 0))
@@ -23,9 +24,9 @@ plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE, ...) {
   }
   mar_var <- NULL
   if(mar_var_loss) {
-    mar_var = var_loss_percentage.PP(PP)
+    mar_var = var_loss_percentage.PP(x)
   }
-  plot_knots.PP(x = PP, mar_var_loss = mar_var)
+  plot_knots.PP(x = x, mar_var_loss = mar_var)
   if(mar_var_loss) {
     hist(mar_var,
          xlab = "percentage of lost variance", 
@@ -38,9 +39,9 @@ plot.PP <- function(PP, mar_var_loss = TRUE, separate=FALSE, ...) {
 
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class \code{PP}
-#' @param locs locations
 #' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
+#' @export
 #' @examples
 #' observed_locs = cbind(runif(1000), runif(1000))
 #' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
@@ -352,6 +353,7 @@ plot_pointillist_painting = function(locs,
 #' @param scalename vector, default to ""
 #'
 #' @returns a plot
+#' @export
 #'
 #' @examples
 #' pointillist_colorscale(field=c(1,2,3))
@@ -404,6 +406,7 @@ pointillist_colorscale = function(field, scalename = "") {
 #'
 #' @returns an array, the same dimension as x
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' myarray <- array(abs(rnorm(200)), dim = c(10, 10, 2))
@@ -429,6 +432,7 @@ array_cumsum = function(x)
 #'
 #' @returns an 3 dimensional array, of dimension `(dim(x)[1], dim(x)[2], M@Dim[2])`
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' x <- array(1:12, dim = c(2, 2, 3))
@@ -480,6 +484,7 @@ array_multiply_2 = function(x, M)
 #'
 #' @returns a 3 dimensional array of dimensions `(dim(M)[1], dim(x)[2], dim(x)[3]).`
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' M <- matrix(1:6, nrow = 3, ncol = 2)
@@ -590,7 +595,10 @@ grb_diags_field = function(record_arrays,
 #'   array(rnorm(600), dim = c(4, 2, 100)),
 #'   array(rnorm(600), dim = c(4, 2, 100))
 #' )
-#' test = grb_diags_field(record_arrays = myarrays, iterations = seq(100), burn_in = .5, starting_proportion = .5)
+#' test = grb_diags_field(record_arrays = myarrays, 
+#'                        iterations = seq(100), 
+#'                        burn_in = .5, 
+#'                        starting_proportion = .5)
 #' plot_PSRF(test, varname = "Example")
 plot_PSRF = function(PSRF,
                      individual_varnames = NULL,

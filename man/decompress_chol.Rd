@@ -17,3 +17,4 @@ a sparse triangular matrix
 \description{
 Title TODO
 }
+\keyword{internal}

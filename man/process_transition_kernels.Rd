@@ -8,6 +8,8 @@ process_transition_kernels(init = -4, hm)
 }
 \arguments{
 \item{init}{a numeric value}
+
+\item{hm}{a hierarchical model}
 }
 \value{
 a list

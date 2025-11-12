@@ -35,7 +35,6 @@ update_kernel = function(
 #list2env(mcmc_nngp_list, envir = environment())
 #state = mcmc_nngp_list$states$chain_1; n_iterations_update  =100; num_threads = 10; iter_start = 0; seed = 1; iter=1
 #
-##' @export
 #MCMC = function(
     #    covariates,
 #    observed_field,

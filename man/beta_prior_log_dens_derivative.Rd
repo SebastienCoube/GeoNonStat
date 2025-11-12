@@ -11,11 +11,11 @@ beta_prior_log_dens_derivative(beta, n_PP, beta0_mean, beta0_var, log_scale)
 
 \item{n_PP}{number of prediction points.}
 
+\item{beta0_mean}{TODO}
+
+\item{beta0_var}{TODO}
+
 \item{log_scale}{TODO}
-
-\item{beta_mean}{TODO}
-
-\item{beta_precision}{TODO}
 }
 \value{
 an array
@@ -24,7 +24,7 @@ an array
 Compute gradient of logarithmic density prior
 }
 \examples{
-beta_prior_log_dens_derivative(
+GeoNonStat:::beta_prior_log_dens_derivative(
   beta = matrix(rnorm(300), 100, 3), 
   n_PP = 90, 
   beta0_mean = -5,
@@ -32,3 +32,4 @@ beta_prior_log_dens_derivative(
   log_scale = c(-3, -2)
 )
 }
+\keyword{internal}
