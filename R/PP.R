@@ -37,7 +37,7 @@ generate_knots_from_kmeans <- function(knots_number, locs) {
 #' to describe spatial variations of covariance parameters.
 #'
 #' @param vecchia_approx List obtained by `createVecchia()`.
-#' @param matern_range Numeric (optional). Matern range parameter for the PP. 
+#' @param matern_range numeric (optional). Matern range parameter for the PP. 
 #' If `NULL`, a default value is inferred from spatial locations.
 #' @param knots Either:
 #'   * a matrix of spatial knots,

@@ -39,7 +39,7 @@ plot.PP <- function(x, ..., mar_var_loss = TRUE, separate=FALSE) {
 
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class \code{PP}
-#' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
+#' @param mar_var_loss optional, the var loss computed by `var_loss_percentage.PP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @examples
@@ -129,14 +129,14 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
 }
 
 #' Plots range ellipses for nonstationary covariance functions.
-#' @param locs ellipses centers. A matrix with 2 columns, 1 row  for each ellipse
+#' @param locs ellipses centers coordinates. A matrix with 2 columns, 1 row for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
-#' @param main string. Main title of the plot. Not used if `add=TRUE`.
 #' @param add logical, default to FALSE. Add on existing plot ?
 #' @param shrink numeric, shrinks or inflates the ellipses. shrink = 1 gives the
 #' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
-#'
+#' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
+
 #' @returns a plot object
 #' @export
 #'
@@ -151,8 +151,8 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
 plot_ellipses = function(locs,
                          log_range,
                          shrink = .1,
-                         main = "ellipses",
-                         add  = F)
+                         add  = FALSE,
+                         ...)
 {
   if (ncol(log_range) == 3) {
     #to match parametrization in compute sparse chol
@@ -169,9 +169,7 @@ plot_ellipses = function(locs,
     plot(
       locs,
       type = "n",
-      xlab = "",
-      ylab = "",
-      main = main
+      ...
     )
   }
   for (i in seq(nrow(locs)))
@@ -297,11 +295,18 @@ plot_ellipses = function(locs,
 #'
 #' @examples
 #' get_colors(c(1,2,3))
-get_colors = function(x) {
+get_colors = function(x, alpha=FALSE) {
   colors = rep(1, length(x))
   xnoNA <- x[!is.na(x)]
-  colors[!is.na(x)] = heat.colors(100)[round((xnoNA - min(xnoNA)) /
-                                               (max(xnoNA) - min(xnoNA)) * 90) + 1]
+  col1 <- '#FFFFB2'
+  col2 <- '#B10026'
+  if(alpha) {
+    col1 <- paste0(col1, "CC")
+    col2 <- paste0(col2, "CC")
+  } 
+  cols <- colorRampPalette(c(col1, col2))(100)
+  colors[!is.na(x)] = cols[round((xnoNA - min(xnoNA)) /
+                           (max(xnoNA) - min(xnoNA)) * 99) + 1]
   return(colors)
 }
 
@@ -323,19 +328,20 @@ get_colors = function(x) {
 plot_pointillist_painting = function(locs,
                                      field, 
                                      add=FALSE, 
+                                     alpha=TRUE,
                                      ...)
 {
   if(add) {
     points(
       locs,
-      col = get_colors(field),
+      col = get_colors(field, alpha=TRUE),
       ...
     )
     
   } else {
     plot(
       locs,
-      col = get_colors(field),
+      col = get_colors(field, alpha=TRUE),
       ...
     )
   }
@@ -353,27 +359,32 @@ plot_pointillist_painting = function(locs,
 #' pointillist_colorscale(field=c(1,2,3))
 pointillist_colorscale = function(field, scalename = "") {
   origmar <- par("mar")
+  origlwd <- par("lwd")
   par(mar = c(1, 0, 0, 0))
+  par(lwd = 0.5)
   field <- field[!is.na(field)]
   if(length(field)==0) {
     stop("only NA values in field")
   }
   barplot(
-    rep(0.5, 50),
-    col = (heat.colors(50)),
+    rep(0.3, 50),
+    col = get_colors(1:50),
     width = rep(1, 50),
     space = 0,
+    # lwd = 0.1,
     xlab=scalename,
     ylab = "",
     main = "",
     border = T, ylim = c(0, 50),
-    horiz = T, xlim=c(-0.2, .5), axes=FALSE,
+    horiz = T, xlim=c(-0.2, .3), axes=FALSE,
     mgp = c(0, 0, 0),
   )
   pos <- seq(0, 1, by=0.25)
   values <- stats::quantile(field, probs=pos)
-  text(y = 1 + pos * (50 - 1), -0.1, format(signif(values), trim = 4, width = 4))
-  par(mar = origmar)
+  text(y = 1 + pos * (50 - 1), 
+       x= -0.1, 
+       format(signif(values), trim = 4, width = 4))
+  par(mar = origmar, lwd=origlwd)
 }
 
 

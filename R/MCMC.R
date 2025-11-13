@@ -23,7 +23,7 @@ update_kernel = function(
 #'
 #' @param covariates  The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
-#' @param hierarchical_model TODO
+#' @param hierarchical_model a hierarchical model (obtained with `process_hierarchical_model()`)
 #' @param vecchia_approx TODO
 #' @param state TODO
 #' @param n_iterations_update TODO

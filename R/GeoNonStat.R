@@ -396,15 +396,16 @@ process_hierarchical_model <- function(vecchia_approx,
 #' Initialize transition kernels
 #'
 #' @param init a numeric value
-#' @param hm a hierarchical model
+#' @param hm a hierarchical model (obtained with `process_hierarchical_model()`)
 #' @returns a list
 #' @export
 #' @description 
+#' TODO : revoir la description
 #' Transition kernel state
 #' transition kernel variance is given as the log
-#' can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
-#' have an ancillary and a sufficient version when applicable
-#' rangedescription
+#' can be used in both stationary and nonstationary cases respectively 
+#' as a random walk Metropolis or MALA step size have an ancillary and 
+#' a sufficient version when applicable range description
 #' @examples
 #' nobs = 10000
 #' observed_locs = cbind(runif(nobs), runif(nobs))
@@ -437,7 +438,6 @@ process_transition_kernels <- function(init=-4, hm){
     scale_log_scale_sufficient = init,
     scale_log_scale_ancillary =  init,
     field_log_var_ancillary =  init,
-    
     noise_beta_mala = init,
     noise_log_scale = init
   )
@@ -447,13 +447,14 @@ process_transition_kernels <- function(init=-4, hm){
 
 #' Title
 #'
-#' @param hm hierarchical model (from `process_hierarchical_model()`)
+#' @param hm a hierarchical model (obtained with `process_hierarchical_model()`)
 #' @param covariates The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
 #' @param vecchia_approx TODO
-#' @param init_tk TODO
+#' @param init_tk numerical value to initialize transition kernels
 #' @param seed numeric value, seed used for reproducibility purposes. Default to 1
 #' @export
+#' @keywords internal
 #'
 #' @returns a list
 #' @examples
