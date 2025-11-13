@@ -311,9 +311,8 @@ get_colors = function(x) {
 #' @param locs numeric matrix of spatial locations
 #' @param field numerical vector, interest variable to define color of points
 #' @param add logical, default to FALSE. Add on existing plot ?
-#' @param ... Additional graphical parameters, sent to `plot` or, 
+#' @param ... additional graphical parameters, sent to `plot` or, 
 #' if `add=TRUE`, to `points`
-#' @param cex shrinks or inflates the points
 #'
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
@@ -323,7 +322,8 @@ get_colors = function(x) {
 #' plot_pointillist_painting(locs=locs, field=rnorm(1000))
 plot_pointillist_painting = function(locs,
                                      field, 
-                                     add=FALSE, ...)
+                                     add=FALSE, 
+                                     ...)
 {
   if(add) {
     points(
@@ -343,7 +343,7 @@ plot_pointillist_painting = function(locs,
 
 #' Plot the scale of colors for a given variable
 #'
-#' @param field interest variable, a vector
+#' @param field numerical vector, interest variable to define color of points
 #' @param scalename vector, default to ""
 #'
 #' @returns a plot
@@ -353,43 +353,26 @@ plot_pointillist_painting = function(locs,
 #' pointillist_colorscale(field=c(1,2,3))
 pointillist_colorscale = function(field, scalename = "") {
   origmar <- par("mar")
-  par(mar = c(0, 0, 0, 0))
-  plot(
-    0,
-    0,
-    type = "n",
-    xaxt = 'n',
-    yaxt = 'n',
-    xlim = c(-.007, .005),
-    ylim = c(0, 100),
-    frame = FALSE,
-    xlab = "",
-    ylab = ""
-  )
+  par(mar = c(1, 0, 0, 0))
+  field <- field[!is.na(field)]
+  if(length(field)==0) {
+    stop("only NA values in field")
+  }
   barplot(
-    rep(.005, 100),
-    col = (heat.colors(101)),
-    width = rep(1, 100),
+    rep(0.5, 50),
+    col = (heat.colors(50)),
+    width = rep(1, 50),
     space = 0,
-    xlab = scalename,
+    xlab=scalename,
     ylab = "",
     main = "",
-    border = T,
-    horiz = T,
-    add = T,
-    axes = F
+    border = T, ylim = c(0, 50),
+    horiz = T, xlim=c(-0.2, .5), axes=FALSE,
+    mgp = c(0, 0, 0),
   )
-  text(y = 99, -.004, format(signif(max(field)), trim = 4, width = 4))
-  text(y = 75, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) * 3 / 4), trim = 4, width = 4))
-  text(y = 50, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) / 2), trim = 4, width = 4))
-  text(y = 25, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) * 1 / 4), trim = 4, width = 4))
-  text(y = 1, -.004, format(signif(min(field)), trim = 4, width = 4))
+  pos <- seq(0, 1, by=0.25)
+  values <- stats::quantile(field, probs=pos)
+  text(y = 1 + pos * (50 - 1), -0.1, format(signif(values), trim = 4, width = 4))
   par(mar = origmar)
 }
 
