@@ -171,29 +171,29 @@ generate_location_partitions <- function(locs, n, ncores=1) {
 #' 
 #' # Good cases ######################
 #' # no PP, an X
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = F)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 #' # no PP, no X
-#' res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = F)
+#' res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 #' # PP and X
-#' res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = F)
+#' res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALSE)
 #' # one obs of x per loc
 #' X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' 
 #' # Errors ##########################
 #' \dontrun{
 #' one obs of x per loc
 #' X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' bad X number of rows
 #' X = X[-1,]
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' bad X format
 #' X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' not independent covariates
 #' X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+#' res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' }
 process_covariates = function(X, 
                               vecchia_approx, 
@@ -320,8 +320,8 @@ process_PP_prior = function(
 #' @param observed_locs TODO
 #' @param matern_smoothness a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations. 
-#' @param covariates The list of covariates obtained with process_covariates, contianing X, X_noise, X_range, X_scale
-#' @param anisotropic Boolean indicating if anisotropic
+#' @param covariates The list of covariates obtained with `process_covariates`
+#' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @export
 #'
 #' @returns a list
@@ -448,11 +448,11 @@ process_transition_kernels <- function(init=-4, hm){
 #' Title
 #'
 #' @param hm hierarchical model (from `process_hierarchical_model()`)
-#' @param covariates TODO
+#' @param covariates The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
 #' @param vecchia_approx TODO
 #' @param init_tk TODO
-#' @param seed seed used, for reproducipility purposes. Default to 1
+#' @param seed numeric value, seed used for reproducibility purposes. Default to 1
 #' @export
 #'
 #' @returns a list
@@ -596,7 +596,7 @@ process_states <- function(
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable through fixed linear effects
 #' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
-#' @param anisotropic boolean, default to FALSE. Is the covariance anisotropic ?
+#' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
 #' @param range_X  a data.frame of covariates explaining the Gaussian process range through fixed linear effects
 #' @param range_PP TODO
@@ -642,8 +642,7 @@ process_states <- function(
 #' )
 #' summary(myobj)
 #' myobj
- GeoNonStat <- 
-  function(
+ GeoNonStat <- function(
     vecchia_approx,
     observed_field,  #spatial locations
     X = NULL, # Response variable 

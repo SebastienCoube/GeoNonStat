@@ -3,7 +3,7 @@
 #' @param x an object of class PP, create with `createPP`
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
-#' @param ... unused additional arguments
+#' @param ... additional arguments (unused)
 #'
 #' @returns NULL
 #' @rdname PP
@@ -131,8 +131,8 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
 #' Plots range ellipses for nonstationary covariance functions.
 #' @param locs ellipses centers. A matrix with 2 columns, 1 row  for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
-#' @param main character, main title of the plot. Not used if add is TRUE.
-#' @param add logical, add on existing plot ? cancels main. Default to FALSE
+#' @param main string. Main title of the plot. Not used if `add=TRUE`.
+#' @param add logical, default to FALSE. Add on existing plot ?
 #' @param shrink numeric, shrinks or inflates the ellipses. shrink = 1 gives the
 #' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
@@ -292,59 +292,53 @@ plot_ellipses = function(locs,
 #'
 #' @param x a vector
 #'
-#' @returns a vector of colors
+#' @returns a vector of colors of length `length(x)`
 #' @export
 #'
 #' @examples
 #' get_colors(c(1,2,3))
 get_colors = function(x) {
   colors = rep(1, length(x))
-  colors[!is.na(x)] = heat.colors(100)[round((x[!is.na(x)] - min(x[!is.na(x)])) /
-                                               (max(x[!is.na(x)]) - min(x[!is.na(x)])) * 90) + 1]
-  colors
+  xnoNA <- x[!is.na(x)]
+  colors[!is.na(x)] = heat.colors(100)[round((xnoNA - min(xnoNA)) /
+                                               (max(xnoNA) - min(xnoNA)) * 90) + 1]
+  return(colors)
 }
 
 
 #' Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.
 #'
-#' @param locs spatial locations
-#' @param field interest variable
-#' @param main main title
+#' @param locs numeric matrix of spatial locations
+#' @param field numerical vector, interest variable to define color of points
+#' @param add logical, default to FALSE. Add on existing plot ?
+#' @param ... Additional graphical parameters, sent to `plot` or, 
+#' if `add=TRUE`, to `points`
 #' @param cex shrinks or inflates the points
-#' @param add logical (default to FALSE)
 #'
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
 #'
 #' @examples
 #' locs <- matrix(rnorm(2000), ncol=2)
-#' plot_pointillist_painting(locs=locs, field=locs[,1])
 #' plot_pointillist_painting(locs=locs, field=rnorm(1000))
 plot_pointillist_painting = function(locs,
-                                     field,
-                                     cex = 1,
-                                     main = NULL,
-                                     add = FALSE)
+                                     field, 
+                                     add=FALSE, ...)
 {
-  if (!add)
-    plot(
-      locs,
-      col = get_colors(field),
-      main = main,
-      pch = 15,
-      cex = cex,
-      xlab  = "",
-      ylab = ""
-    )
-  if (add)
+  if(add) {
     points(
       locs,
       col = get_colors(field),
-      pch = 15,
-      cex = cex,
-      xlab  = "",
-      ylab = ""
+      ...
     )
+    
+  } else {
+    plot(
+      locs,
+      col = get_colors(field),
+      ...
+    )
+  }
 }
 
 #' Plot the scale of colors for a given variable

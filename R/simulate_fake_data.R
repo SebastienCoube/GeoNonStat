@@ -65,7 +65,8 @@
 #' @param noise_PP TODO
 #' @param range_X TODO
 #' @param range_PP TODO
-#' @param anisotropic TODO
+#' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
+
 #'
 #' @returns TODO
 #' @export

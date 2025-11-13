@@ -1,6 +1,7 @@
 #' Exponential of a square matrix, adding a small numeric value on the diagonal
 #'
-#' @param coords a numeric vector
+#' @param coords a numeric vector, of length such as 
+#' `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer
 #' @param eps a numeric value, default to .0001
 #'
 #' @returns a square matrix
@@ -18,7 +19,8 @@ expmat = function(coords, eps=0.0001)
 
 #' Create symetric matrix from coordinates
 #'
-#' @param coords a numeric vector, of length 1, 3 or 6
+#' @param coords a numeric vector, of length such as 
+#' `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer
 #'
 #' @returns a matrix
 #' @export
@@ -178,10 +180,10 @@ compute_sparse_chol = function(range_beta,
 
 #' Compute prior logarithmic density of a matrix
 #'
-#' @param beta a numeric matrix, with 1 or 3 columns
+#' @param beta a numeric matrix, with 1 (isotropic case) or 3 (anisotropic case) columns
 #' @param n_PP number of PP
-#' @param beta0_mean mean of beta, numeric value
-#' @param beta0_var var of beta, numeric value
+#' @param beta0_mean numeric value, mean of beta_0 
+#' @param beta0_var numeric value, mean of beta_0 
 #' @param log_scale numeric vector of length 1 for a 1 column beta matrix
 #' and length 2 for a 1 column beta matrix
 #' @description
@@ -191,7 +193,7 @@ compute_sparse_chol = function(range_beta,
 #'   In the isotropic case, beta has one column. 
 #'   It has 3 categories of rows : 
 #'   - the first row, corresponding to the Intercept. 
-#'   - the next rows, corresponding to the rest of the explnanatory variables if there are any.
+#'   - the next rows, corresponding to the rest of the explanatory variables if there are any.
 #'   - the last rows, corresponding to the PP coefficients if there are any.
 #'   
 #'                 The mean is a vector     The diagonal of the variance matrix is 
@@ -276,29 +278,29 @@ beta_prior_log_dens = function(beta,
 
 #' Compute gradient of logarithmic density prior
 #'
-#' @param beta a numerical matrix of spatial coordinates. 
+#' @param beta a numeric matrix, with 1 (isotropic case) or 3 (anisotropic case) columns
 #' @param n_PP number of prediction points.
-#' @param beta0_mean TODO
-#' @param beta0_var TODO
+#' @param beta0_mean numeric value, mean of beta_0 
+#' @param beta0_var numeric value, mean of beta_0 
 #' @param log_scale TODO
 #'
 #' @returns an array
 #' @export
 #' @keywords internal
 #' @examples
-#' GeoNonStat:::beta_prior_log_dens_derivative(
+#' beta_prior_log_dens_derivative(
 #'   beta = matrix(rnorm(300), 100, 3), 
 #'   n_PP = 90, 
 #'   beta0_mean = -5,
 #'   beta0_var = 2,
 #'   log_scale = c(-3, -2)
 #' )
-beta_prior_log_dens_derivative = 
-  function(beta, 
-           n_PP, 
-           beta0_mean,
-           beta0_var,
-           log_scale){
+beta_prior_log_dens_derivative <- function(
+    beta, 
+    n_PP, 
+    beta0_mean,
+    beta0_var,
+    log_scale){
     nrb <- nrow(beta)
     ncb <- ncol(beta)
     if(!ncb %in% c(1,3)) stop("beta is expected to have 1 or 3 columns")

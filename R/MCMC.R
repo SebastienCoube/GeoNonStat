@@ -21,7 +21,7 @@ update_kernel = function(
 
 #' Title TODO
 #'
-#' @param covariates  TODO
+#' @param covariates  The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
 #' @param hierarchical_model TODO
 #' @param vecchia_approx TODO
@@ -29,7 +29,7 @@ update_kernel = function(
 #' @param n_iterations_update TODO
 #' @param num_threads TODO
 #' @param iter_start TODO
-#' @param seed TODO
+#' @param seed numeric value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns TODO
 #' @export
