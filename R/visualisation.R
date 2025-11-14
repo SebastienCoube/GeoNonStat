@@ -1,5 +1,5 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
-#' 
+#'
 #' @param x an object of class PP, create with `createPP`
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
@@ -12,26 +12,30 @@
 #' @export
 #'
 #' @examples
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-#' pepito = createPP(vecchia_approx, plot=FALSE)
+#' vecchia_approx <- createVecchia(observed_locs = cbind(runif(10000), runif(10000)), 10)
+#' pepito <- createPP(vecchia_approx, plot = FALSE)
 #' plot(pepito)
-plot.PP <- function(x, ..., mar_var_loss = TRUE, separate=FALSE) {
+plot.PP <- function(x,
+                    ...,
+                    mar_var_loss = TRUE,
+                    separate = FALSE) {
   def.par <- par(no.readonly = TRUE)
-  par(mar=c(3, 3, 3, 1) + 0.5)
-  par(mgp=c(2, 1, 0))
-  if(mar_var_loss & !separate) {
-    layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
+  par(mar = c(3, 3, 3, 1) + 0.5)
+  par(mgp = c(2, 1, 0))
+  if (mar_var_loss & !separate) {
+    layout(matrix(c(1, 1, 2), 1, 3, byrow = TRUE))
   }
   mar_var <- NULL
-  if(mar_var_loss) {
-    mar_var = var_loss_percentage.PP(x)
+  if (mar_var_loss) {
+    mar_var <- var_loss_percentage.PP(x)
   }
   plot_knots.PP(x = x, mar_var_loss = mar_var)
-  if(mar_var_loss) {
+  if (mar_var_loss) {
     hist(mar_var,
-         xlab = "percentage of lost variance", 
-         main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
-         cex.main=1)
+      xlab = "percentage of lost variance",
+      main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
+      cex.main = 1
+    )
   }
   par(def.par)
 }
@@ -43,90 +47,110 @@ plot.PP <- function(x, ..., mar_var_loss = TRUE, separate=FALSE) {
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @examples
-#' observed_locs = cbind(runif(1000), runif(1000))
-#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' vecchia_approx = createVecchia(observed_locs)
-#' pepito = createPP(vecchia_approx, plot=FALSE)
+#' observed_locs <- cbind(runif(1000), runif(1000))
+#' observed_locs <- observed_locs[ceiling(nrow(observed_locs) * runif(3000)), ]
+#' vecchia_approx <- createVecchia(observed_locs)
+#' pepito <- createPP(vecchia_approx, plot = FALSE)
 #' plot_knots.PP(pepito)
-plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
+plot_knots.PP <- function(x,
+                          mar_var_loss = NULL,
+                          show_knots = TRUE) {
   # Graphical parameters
   def.par <- par(no.readonly = TRUE)
   omar <- def.par[["mar"]]
-  par(mgp=c(2, 1, 0))
-  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
-    par(mar = omar + c(1, 1, 1, 4*1.5), xpd = TRUE)
+  par(mgp = c(2, 1, 0))
+  if (omar[2] >= omar[4] & (show_knots | !is.null(mar_var_loss))) {
+    par(mar = omar + c(1, 1, 1, 4 * 1.5), xpd = TRUE)
   }
-  
+
   locs <- x$vecchia_locs
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
   legendtitle <- NULL
 
-  
+
   ### Colors of locations
-  locs_col = "#CDCDCDCC"
-  if(!is.null(mar_var_loss)) {
+  locs_col <- "#CDCDCDCC"
+  if (!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
     legendtitle <- "\n\n\nLoss of\nmarginal\nvariance\n(%)"
     cols <- mar_var_loss[-seq(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
     cols <- cols[ord]
-    locs <- locs[ord,]
+    locs <- locs[ord, ]
     # Get
-    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = TRUE)
-    base_colors <- get_colors(1:6, alpha=TRUE)
-    locs_col = base_colors[as.numeric(cut_var)]
+    cut_var <- cut(cols,
+      breaks = c(0, 1, 2, 5, 10, 50, 100),
+      include.lowest = TRUE
+    )
+    base_colors <- get_colors(1:6, alpha = TRUE)
+    locs_col <- base_colors[as.numeric(cut_var)]
   }
-  
+
   #### Plot locations and knots
-  maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
-  minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
-  # 
+  maxlim <- pmax(apply(locs, 2, max), apply(x$knots, 2, max))
+  minlim <- pmin(apply(locs, 2, min), apply(x$knots, 2, min))
+  #
   # Plot locations
-  pch = 16
-  if(nlocs>1e6) pch="."
-  title = "Locations of PP"
-  if(show_knots) title = "Knot placement of PP"
-  plot(locs, 
-       cex = 1,
-       col = locs_col, 
-       pch = pch, 
-       xlab = "1st spatial coordinate",
-       ylab = "2nd spatial coordinate",
-       main = title,
-       xlim=c(minlim[1], maxlim[2]),
-       ylim=c(minlim[2], maxlim[2]),
-       cex.main=1
+  pch <- 16
+  if (nlocs > 1e6) {
+    pch <- "."
+  }
+  title <- "Locations of PP"
+  if (show_knots) {
+    title <- "Knot placement of PP"
+  }
+  plot(
+    locs,
+    cex = 1,
+    col = locs_col,
+    pch = pch,
+    xlab = "1st spatial coordinate",
+    ylab = "2nd spatial coordinate",
+    main = title,
+    xlim = c(minlim[1], maxlim[2]),
+    ylim = c(minlim[2], maxlim[2]),
+    cex.main = 1
   )
-  
+
   # ### compute size of legend
-  mylegend <- legend(x="right",
-                     legend="knots",
-                     title="Knots",
-                     plot = FALSE)
-  if(!is.null(mar_var_loss)) {
+  mylegend <- legend(
+    x = "right",
+    legend = "knots",
+    title = "Knots",
+    plot = FALSE
+  )
+  if (!is.null(mar_var_loss)) {
     ### Marginal variance loss scale
-    legend(x="topright",
-           legend=levels(cut_var), 
-           fill=base_colors, 
-           title=legendtitle,
-           inset=c(-1.2*mylegend$rect$w, 0),
-           bty="n")
+    legend(
+      x = "topright",
+      legend = levels(cut_var),
+      fill = base_colors,
+      title = legendtitle,
+      inset = c(-1.2 * mylegend$rect$w, 0),
+      bty = "n"
+    )
   }
   # Plot knots
-  if(show_knots) {
-    points(x$knots, pch = 10, cex=1, col=1)
-    legend(x="topright",
-           legend="knots", 
-           pch =10,
-           col=1,
-           inset=c(-mylegend$rect$w, 0),
-           bty="n")
+  if (show_knots) {
+    points(x$knots,
+      pch = 10,
+      cex = 1,
+      col = 1
+    )
+    legend(
+      x = "topright",
+      legend = "knots",
+      pch = 10,
+      col = 1,
+      inset = c(-mylegend$rect$w, 0),
+      bty = "n"
+    )
   }
-  
+
   #### Restaure margins
-  par(mar=omar, mgp=def.par[["mgp"]])
+  par(mar = omar, mgp = def.par[["mgp"]])
 }
 
 #' Plots range ellipses for nonstationary covariance functions.
@@ -142,47 +166,42 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(20), ncol=2)
-#' log_range <- matrix(rnorm(30), ncol=3)
-#' plot_ellipses(locs, log_range, shrink=0.1)
+#' locs <- matrix(rnorm(20), ncol = 2)
+#' log_range <- matrix(rnorm(30), ncol = 3)
+#' plot_ellipses(locs, log_range, shrink = 0.1)
 #'
-#' locs <- matrix(rnorm(20), ncol=2)
-#' log_range <- matrix(rnorm(10), ncol=1)
-#' plot_ellipses(locs, log_range, shrink=0.1)
-plot_ellipses = function(locs,
-                         log_range,
-                         shrink = .1,
-                         add  = FALSE,
-                         ...)
-{
+#' locs <- matrix(rnorm(20), ncol = 2)
+#' log_range <- matrix(rnorm(10), ncol = 1)
+#' plot_ellipses(locs, log_range, shrink = 0.1)
+plot_ellipses <- function(locs,
+                          log_range,
+                          shrink = .1,
+                          add = FALSE,
+                          ...) {
   if (ncol(log_range) == 3) {
-    #to match parametrization in compute sparse chol
-    log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
-                                         sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
-    matrices = lapply(split(log_range, row(log_range)), expmat)
+    # to match parametrization in compute sparse chol
+    log_range <- log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
+      sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
+    matrices <- lapply(split(log_range, row(log_range)), expmat)
   }
   if (ncol(log_range) == 1) {
-    matrices = lapply(log_range, function(x)
+    matrices <- lapply(log_range, function(x) {
       diag(exp(x), 2)
-    )
+    })
   }
   if (!add) {
-    plot(
-      locs,
-      type = "n",
-      ...
-    )
+    plot(locs, type = "n", ...)
   }
   for (i in seq(nrow(locs)))
   {
     # 2.447747 must be some bivariate confidence interval
     # shrink = 1 gives the package's Mahalanobis distance
-    matrices[[i]] = eigen(matrices[[i]])
-    matrices[[i]] = (matrices[[i]])$vec %*% diag(matrices[[i]]$val^2) %*% t(matrices[[i]]$vec) /
+    matrices[[i]] <- eigen(matrices[[i]])
+    matrices[[i]] <- (matrices[[i]])$vec %*% diag(matrices[[i]]$val^2) %*% t(matrices[[i]]$vec) /
       (2.447747)^2
-    ell = ellipse::ellipse(matrices[[i]]) * shrink
-    ell[, 1] = ell[, 1] + locs[i, 1]
-    ell[, 2] = ell[, 2] + locs[i, 2]
+    ell <- ellipse::ellipse(matrices[[i]]) * shrink
+    ell[, 1] <- ell[, 1] + locs[i, 1]
+    ell[, 2] <- ell[, 2] + locs[i, 2]
     lines(ell)
   }
 }
@@ -274,7 +293,6 @@ plot_ellipses = function(locs,
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
 
 
-
 ## test with GpGp, the empirical rho is always greater than theoretical rho
 # ra = .1
 # locs = cbind(seq(0, 8*ra, .01), 0)
@@ -296,19 +314,19 @@ plot_ellipses = function(locs,
 #' @export
 #'
 #' @examples
-#' get_colors(c(1,2,3))
-get_colors = function(x, alpha=FALSE) {
-  colors = rep(1, length(x))
+#' get_colors(c(1, 2, 3))
+get_colors <- function(x, alpha = FALSE) {
+  colors <- rep(1, length(x))
   xnoNA <- x[!is.na(x)]
-  col1 <- '#FFFFB2'
-  col2 <- '#B10026'
-  if(alpha) {
+  col1 <- "#FFFFB2"
+  col2 <- "#B10026"
+  if (alpha) {
     col1 <- paste0(col1, "CC")
     col2 <- paste0(col2, "CC")
-  } 
+  }
   cols <- colorRampPalette(c(col1, col2))(100)
-  colors[!is.na(x)] = cols[round((xnoNA - min(xnoNA)) /
-                           (max(xnoNA) - min(xnoNA)) * 99) + 1]
+  colors[!is.na(x)] <- cols[round((xnoNA - min(xnoNA)) /
+    (max(xnoNA) - min(xnoNA)) * 99) + 1]
   return(colors)
 }
 
@@ -319,34 +337,24 @@ get_colors = function(x, alpha=FALSE) {
 #' @param field numerical vector, interest variable to define color of points
 #' @param add logical, default to FALSE. Add on existing plot ?
 #' @param alpha logical, default to TRUE. Add transparency to colors ?
-#' @param ... additional graphical parameters, sent to `plot` or, 
+#' @param ... additional graphical parameters, sent to `plot` or,
 #' if `add=TRUE`, to `points`
 #'
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(2000), ncol=2)
-#' plot_pointillist_painting(locs=locs, field=rnorm(1000))
-plot_pointillist_painting = function(locs,
-                                     field, 
-                                     add=FALSE, 
-                                     alpha=TRUE,
-                                     ...)
-{
-  if(add) {
-    points(
-      locs,
-      col = get_colors(field, alpha=TRUE),
-      ...
-    )
-    
+#' locs <- matrix(rnorm(2000), ncol = 2)
+#' plot_pointillist_painting(locs = locs, field = rnorm(1000))
+plot_pointillist_painting <- function(locs,
+                                      field,
+                                      add = FALSE,
+                                      alpha = TRUE,
+                                      ...) {
+  if (add) {
+    points(locs, col = get_colors(field, alpha = TRUE), ...)
   } else {
-    plot(
-      locs,
-      col = get_colors(field, alpha=TRUE),
-      ...
-    )
+    plot(locs, col = get_colors(field, alpha = TRUE), ...)
   }
 }
 
@@ -359,14 +367,14 @@ plot_pointillist_painting = function(locs,
 #' @export
 #'
 #' @examples
-#' pointillist_colorscale(field=c(1,2,3))
-pointillist_colorscale = function(field, scalename = "") {
+#' pointillist_colorscale(field = c(1, 2, 3))
+pointillist_colorscale <- function(field, scalename = "") {
   origmar <- par("mar")
   origlwd <- par("lwd")
   par(mar = c(1, 0, 0, 0))
   par(lwd = 0.5)
   field <- field[!is.na(field)]
-  if(length(field)==0) {
+  if (length(field) == 0) {
     stop("only NA values in field")
   }
   barplot(
@@ -375,19 +383,24 @@ pointillist_colorscale = function(field, scalename = "") {
     width = rep(1, 50),
     space = 0,
     # lwd = 0.1,
-    xlab=scalename,
+    xlab = scalename,
     ylab = "",
     main = "",
-    border = TRUE, ylim = c(0, 50),
-    horiz = TRUE, xlim=c(-0.2, .3), axes=FALSE,
+    border = TRUE,
+    ylim = c(0, 50),
+    horiz = TRUE,
+    xlim = c(-0.2, .3),
+    axes = FALSE,
     mgp = c(0, 0, 0),
   )
-  pos <- seq(0, 1, by=0.25)
-  values <- stats::quantile(field, probs=pos)
-  text(y = 1 + pos * (50 - 1), 
-       x= -0.1, 
-       format(signif(values), trim = 4, width = 4))
-  par(mar = origmar, lwd=origlwd)
+  pos <- seq(0, 1, by = 0.25)
+  values <- stats::quantile(field, probs = pos)
+  text(
+    y = 1 + pos * (50 - 1),
+    x = -0.1,
+    format(signif(values), trim = 4, width = 4)
+  )
+  par(mar = origmar, lwd = origlwd)
 }
 
 
@@ -402,14 +415,13 @@ pointillist_colorscale = function(field, scalename = "") {
 #' @examples
 #' myarray <- array(abs(rnorm(200)), dim = c(10, 10, 2))
 #' array_cumsum(myarray)
-array_cumsum = function(x)
-{
-  res = array(0, dim = dim(x))
+array_cumsum <- function(x) {
+  res <- array(0, dim = dim(x))
   for (i in seq(dim(x)[1]))
   {
     for (j in seq(dim(x)[2]))
     {
-      res[i, j, ] = cumsum(x[i, j, ])
+      res[i, j, ] <- cumsum(x[i, j, ])
     }
   }
   res
@@ -429,14 +441,13 @@ array_cumsum = function(x)
 #' x <- array(1:12, dim = c(2, 2, 3))
 #' M <- Matrix::Matrix(matrix(1:9, nrow = 3, ncol = 3), sparse = TRUE)
 #' result <- array_multiply_3(x, M)
-array_multiply_3 = function(x, M)
-{
-  res = array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
+array_multiply_3 <- function(x, M) {
+  res <- array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
   for (i in seq(dim(res)[1]))
   {
     for (j in seq(dim(res)[2]))
     {
-      res[i, j, ] = as.vector(x[i, j, ] %*% M)
+      res[i, j, ] <- as.vector(x[i, j, ] %*% M)
     }
   }
   res
@@ -453,16 +464,15 @@ array_multiply_3 = function(x, M)
 #' @examples
 #' x <- array(1:24, dim = c(2, 3, 4))
 #' M <- matrix(1:6, nrow = 2, ncol = 3)
-#' #result <- array_multiply_2(x, M)
-array_multiply_2 = function(x, M)
-{
+#' # result <- array_multiply_2(x, M)
+array_multiply_2 <- function(x, M) {
   # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon
-  res = array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
+  res <- array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
   for (i in seq(dim(res)[1]))
   {
     for (j in seq(dim(res)[3]))
     {
-      res[i, , j] = as.vector(M %*% x[i, , j])
+      res[i, , j] <- as.vector(M %*% x[i, , j])
     }
   }
   res
@@ -481,14 +491,13 @@ array_multiply_2 = function(x, M)
 #' M <- matrix(1:6, nrow = 3, ncol = 2)
 #' x <- array(1:24, dim = c(2, 3, 4))
 #' result <- array_multiply_1(x, M)
-array_multiply_1 = function(x, M)
-{
-  res = array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
+array_multiply_1 <- function(x, M) {
+  res <- array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
   for (i in seq(dim(res)[2]))
   {
     for (j in seq(dim(res)[3]))
     {
-      res[, i , j] = as.vector(M %*% x[, i, j])
+      res[, i, j] <- as.vector(M %*% x[, i, j])
     }
   }
   res
@@ -507,60 +516,65 @@ array_multiply_1 = function(x, M)
 #'
 #' @examples
 #' myarrays <- list(
-#'   array(rnorm(100000)+10, dim = c(10, 10, 1000)),
-#'   array(rnorm(100000)+10, dim = c(10, 10, 1000)),
-#'   array(rnorm(100000)+10, dim = c(10, 10, 1000))
+#'   array(rnorm(100000) + 10, dim = c(10, 10, 1000)),
+#'   array(rnorm(100000) + 10, dim = c(10, 10, 1000)),
+#'   array(rnorm(100000) + 10, dim = c(10, 10, 1000))
 #' )
-#' test <- grb_diags_field(myarrays, iterations = seq(1000)*10)
-grb_diags_field = function(record_arrays,
-                           iterations,
-                           burn_in = .5,
-                           starting_proportion = .5)
-{
-  cumsums = lapply(record_arrays, array_cumsum)
-  sqcumsums = lapply(record_arrays, function(x)
-    array_cumsum(x^2))
-  iter_start_idx = which(iterations > iterations[length(iterations)] * starting_proportion)[1]
-  diff_array = cbind(0, seq(iter_start_idx, length(iterations)))
-  n = rep(0, nrow(diff_array))
-  lower_bound_idx = 1
+#' test <- grb_diags_field(myarrays, iterations = seq(1000) * 10)
+grb_diags_field <- function(record_arrays,
+                            iterations,
+                            burn_in = .5,
+                            starting_proportion = .5) {
+  cumsums <- lapply(record_arrays, array_cumsum)
+  sqcumsums <- lapply(record_arrays, function(x) {
+    array_cumsum(x^2)
+  })
+  iter_start_idx <- which(iterations > iterations[length(iterations)] * starting_proportion)[1]
+  diff_array <- cbind(0, seq(iter_start_idx, length(iterations)))
+  n <- rep(0, nrow(diff_array))
+  lower_bound_idx <- 1
   for (i in seq(nrow(diff_array)))
   {
     while (iterations[lower_bound_idx] < iterations[diff_array[i, 2]] * burn_in) {
-      lower_bound_idx = lower_bound_idx + 1
+      lower_bound_idx <- lower_bound_idx + 1
     }
-    diff_array[i, 1] = lower_bound_idx
-    n[i] = i + iter_start_idx - lower_bound_idx - 1
+    diff_array[i, 1] <- lower_bound_idx
+    n[i] <- i + iter_start_idx - lower_bound_idx - 1
   }
-  diff_matrix = Matrix::sparseMatrix(
+  diff_matrix <- Matrix::sparseMatrix(
     j = c(seq(nrow(diff_array)), seq(nrow(diff_array))),
     i = c(diff_array),
     x = rep(c(-1, 1), each = nrow(diff_array)),
   )
-  mean_estimators = lapply(cumsums, function(x)
-    array_multiply_3(x, M = diff_matrix %*% Matrix::Diagonal(x = 1 / n)))
-  sqmean_estimators = lapply(sqcumsums, function(x)
-    array_multiply_3(x, M = diff_matrix %*% Matrix::Diagonal(x = 1 / n)))
-  var_estimators = mapply(
-    function(x, y)
-      array_multiply_3(x - y^2, M = Matrix::Diagonal(x = n / (n - 1))),
+  mean_estimators <- lapply(cumsums, function(x) {
+    array_multiply_3(x, M = diff_matrix %*% Matrix::Diagonal(x = 1 / n))
+  })
+  sqmean_estimators <- lapply(sqcumsums, function(x) {
+    array_multiply_3(x, M = diff_matrix %*% Matrix::Diagonal(x = 1 / n))
+  })
+  var_estimators <- mapply(
+    function(x, y) {
+      array_multiply_3(x - y^2, M = Matrix::Diagonal(x = n / (n - 1)))
+    },
     x = sqmean_estimators,
     y = mean_estimators,
     SIMPLIFY = FALSE
   )
-  within_mean = Reduce("+", mean_estimators) / length(mean_estimators)
-  within_var = Reduce("+", var_estimators) / length(var_estimators)
-  between_var = (Reduce("+", lapply(mean_estimators, function(x)
-    x^2)) / length(mean_estimators) - within_mean^2) * length(mean_estimators) / (length(mean_estimators) -
-                                                                                    1)
-  PSRF =   (length(var_estimators) + 1) / (length(var_estimators)) * array_multiply_3(x = between_var /
-                                                                                        within_var, M = Matrix::Diagonal(x = (n - 1) / n))
+  within_mean <- Reduce("+", mean_estimators) / length(mean_estimators)
+  within_var <- Reduce("+", var_estimators) / length(var_estimators)
+  between_var <- (Reduce("+", lapply(mean_estimators, function(x) {
+    x^2
+  })) / length(mean_estimators) - within_mean^2) * length(mean_estimators) / (length(mean_estimators) -
+    1)
+  PSRF <- (length(var_estimators) + 1) / (length(var_estimators)) * array_multiply_3(x = between_var /
+    within_var, M = Matrix::Diagonal(x = (n - 1) / n))
   for (i in seq(dim(PSRF)[3]))
   {
-    PSRF[, , i] = PSRF[, , i] + (n[i] + 1) / n[i]
+    PSRF[, , i] <- PSRF[, , i] + (n[i] + 1) / n[i]
   }
-  PSRF_quantiles  = apply(PSRF, 3, function(x)
-    quantile(x, probs = c(1, .99, .9, .5), na.rm = TRUE))
+  PSRF_quantiles <- apply(PSRF, 3, function(x) {
+    quantile(x, probs = c(1, .99, .9, .5), na.rm = TRUE)
+  })
   list(
     "iterations" = iterations[diff_array[, 2]],
     "mean" = mean_estimators,
@@ -581,22 +595,22 @@ grb_diags_field = function(record_arrays,
 #' @export
 #'
 #' @examples
-#' myarrays = list(
+#' myarrays <- list(
 #'   array(rnorm(600), dim = c(4, 2, 100)),
 #'   array(rnorm(600), dim = c(4, 2, 100)),
 #'   array(rnorm(600), dim = c(4, 2, 100))
 #' )
-#' test = grb_diags_field(record_arrays = myarrays, 
-#'                        iterations = seq(100), 
-#'                        burn_in = .5, 
-#'                        starting_proportion = .5)
+#' test <- grb_diags_field(
+#'   record_arrays = myarrays,
+#'   iterations = seq(100),
+#'   burn_in = .5,
+#'   starting_proportion = .5
+#' )
 #' plot_PSRF(test, varname = "Example")
-plot_PSRF = function(PSRF,
-                     individual_varnames = NULL,
-                     varname = "")
-{
-  if (any(is.infinite(PSRF$PSRF)) | any(is.na(PSRF$PSRF)))
-  {
+plot_PSRF <- function(PSRF,
+                      individual_varnames = NULL,
+                      varname = "") {
+  if (any(is.infinite(PSRF$PSRF)) | any(is.na(PSRF$PSRF))) {
     plot(
       0,
       0,
@@ -611,7 +625,7 @@ plot_PSRF = function(PSRF,
     )
     return()
   }
-  
+
   plot(
     PSRF$iterations,
     PSRF$PSRF_quantiles[1, ],
@@ -627,8 +641,8 @@ plot_PSRF = function(PSRF,
     for (j in seq(1, dim(PSRF$PSRF)[2]))
     {
       lines(PSRF$iterations,
-            PSRF$PSRF[i, j, ],
-            col = scales::alpha("lightgray", .4),
+        PSRF$PSRF[i, j, ],
+        col = scales::alpha("lightgray", .4),
       )
     }
   }
@@ -641,7 +655,7 @@ plot_PSRF = function(PSRF,
     legend = c("max", .99, .9, .5),
     fill = c(1, 2, 4, 6)
   )
-  
+
   abline(h = 1)
 }
 
@@ -656,23 +670,22 @@ plot_PSRF = function(PSRF,
 #' @export
 #'
 #' @examples
-#' arrays = list(
-#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
-#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000)),
-#'    array(rnorm(6000)+ rep(c(10,10,0,10,0,0), 1000), dim = c(6, 1, 1000))
+#' arrays <- list(
+#'   array(rnorm(6000) + rep(c(10, 10, 0, 10, 0, 0), 1000), dim = c(6, 1, 1000)),
+#'   array(rnorm(6000) + rep(c(10, 10, 0, 10, 0, 0), 1000), dim = c(6, 1, 1000)),
+#'   array(rnorm(6000) + rep(c(10, 10, 0, 10, 0, 0), 1000), dim = c(6, 1, 1000))
 #' )
-#' plot_log_scale(arrays, iterations = seq(1000), starting_proportion = .5, varname="Example")
-plot_log_scale = function(log_scale_arrays,
-                          iterations,
-                          starting_proportion = .5,
-                          varname)
-{
-  kept_iterations = which(iterations > starting_proportion * iterations[length(iterations)])
+#' plot_log_scale(arrays, iterations = seq(1000), starting_proportion = .5, varname = "Example")
+plot_log_scale <- function(log_scale_arrays,
+                           iterations,
+                           starting_proportion = .5,
+                           varname) {
+  kept_iterations <- which(iterations > starting_proportion * iterations[length(iterations)])
   if (dim(log_scale_arrays[[1]])[1] == 1 &
-      dim(log_scale_arrays[[1]])[2] == 1)
-  {
-    log_scale = sapply(log_scale_arrays, function(x)
-      x[, , kept_iterations])
+    dim(log_scale_arrays[[1]])[2] == 1) {
+    log_scale <- sapply(log_scale_arrays, function(x) {
+      x[, , kept_iterations]
+    })
     plot(
       iterations[kept_iterations],
       iterations[kept_iterations],
@@ -688,20 +701,22 @@ plot_log_scale = function(log_scale_arrays,
       lines(iterations[kept_iterations], log_scale[, i])
     }
   }
-  if (dim(log_scale_arrays[[1]])[1] == 6)
-  {
-    log_scale = sapply(log_scale_arrays, function(x)
-      x[, , kept_iterations])
-    #marginal_logvars = lapply(log_scale_arrays, function(x)
+  if (dim(log_scale_arrays[[1]])[1] == 6) {
+    log_scale <- sapply(log_scale_arrays, function(x) {
+      x[, , kept_iterations]
+    })
+    # marginal_logvars = lapply(log_scale_arrays, function(x)
     #  apply(x[,,kept_iterations], 2, function(x) diag(
     #    rbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1)) %*%
     #      symmat(x) %*%
     #      cbind(c(1/sqrt(2), 1/sqrt(2), 0), c(1/sqrt(2), -1/sqrt(2), 0), c(0, 0, 1))
     #    ))
-    #)
-    marginal_logvars = lapply(log_scale_arrays, function(x)
-      apply(x[, , kept_iterations], 2, function(x)
-        diag(symmat(x))))
+    # )
+    marginal_logvars <- lapply(log_scale_arrays, function(x) {
+      apply(x[, , kept_iterations], 2, function(x) {
+        diag(symmat(x))
+      })
+    })
     plot(
       iterations[kept_iterations],
       iterations[kept_iterations],
@@ -744,40 +759,51 @@ plot_log_scale = function(log_scale_arrays,
 #' @export
 #'
 #' @examples
-#' beta_arrays = list(
+#' beta_arrays <- list(
 #'   array(rnorm(400), dim = c(2, 2, 100)),
 #'   array(rnorm(400), dim = c(2, 2, 100)),
 #'   array(rnorm(400), dim = c(2, 2, 100))
 #' )
-#' plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "Example", var_names = c(1, 2))
-#' beta_arrays = lapply(seq(3), function(i){
-#'    res = array(data = 0, dim = c(10, 3, 100))
-#'    res[,1,] = rnorm(length(res[,1,]))
-#'    res
-#'  })
-#' plot_beta(beta_arrays, seq(100), starting_proportion = .5, varname = "Example", var_names = c(1, 2))
-plot_beta = function(beta_arrays,
-                     iterations,
-                     starting_proportion = .5,
-                     varname,
-                     var_names = NULL)
-{
-  #if(dim(beta_arrays[[1]])[2]==3)beta_arrays = lapply(beta_arrays, function(x)array_multiply_2(x, matrix(c(1/sqrt(2), 1/sqrt(2), 0, 1/sqrt(2), -1/sqrt(2), 0, 0, 0, 1), 3)))
-  kept_iterations = which(iterations > starting_proportion * iterations[length(iterations)])
+#' plot_beta(beta_arrays, seq(100),
+#'   starting_proportion = .5,
+#'   varname = "Example",
+#'   var_names = c(1, 2)
+#' )
+#' beta_arrays <- lapply(seq(3), function(i) {
+#'   res <- array(data = 0, dim = c(10, 3, 100))
+#'   res[, 1, ] <- rnorm(length(res[, 1, ]))
+#'   res
+#' })
+#' plot_beta(beta_arrays,
+#'   seq(100),
+#'   starting_proportion = .5,
+#'   varname = "Example",
+#'   var_names = c(1, 2)
+#' )
+plot_beta <- function(beta_arrays,
+                      iterations,
+                      starting_proportion = .5,
+                      varname,
+                      var_names = NULL) {
+  # if(dim(beta_arrays[[1]])[2]==3)beta_arrays = lapply(beta_arrays, function(x)array_multiply_2(x, matrix(c(1/sqrt(2), 1/sqrt(2), 0, 1/sqrt(2), -1/sqrt(2), 0, 0, 0, 1), 3)))
+  kept_iterations <- which(iterations > starting_proportion * iterations[length(iterations)])
   for (i in seq(dim(beta_arrays[[1]])[2]))
   {
-    upper_window = max(sapply(beta_arrays, function(x)
-      max(x[, i, kept_iterations])))
-    lower_window = min(sapply(beta_arrays, function(x)
-      min(x[, i, kept_iterations])))
-    if (dim(beta_arrays[[1]])[2] == 3)
-    {
-      if (i == 1)
-        main = paste("Determinant component of", varname)
-      if (i != 1)
-        main = paste("anisotropy component", i - 1, "of", varname)
-    } else
-      main = varname
+    upper_window <- max(sapply(beta_arrays, function(x) {
+      max(x[, i, kept_iterations])
+    }))
+    lower_window <- min(sapply(beta_arrays, function(x) {
+      min(x[, i, kept_iterations])
+    }))
+    if (dim(beta_arrays[[1]])[2] == 3) {
+      if (i == 1) {
+        main <- paste("Determinant component of", varname)
+      } else {
+        main <- paste("Anisotropy component", i - 1, "of", varname)
+      }
+    } else {
+      main <- varname
+    }
     plot(
       iterations[kept_iterations],
       iterations[kept_iterations],
@@ -788,9 +814,9 @@ plot_beta = function(beta_arrays,
       ylim = c(lower_window, upper_window)
     )
     for (j in seq(dim(beta_arrays[[1]])[1])) {
-      for (x in beta_arrays)
-        lines(iterations[kept_iterations], x[j, i, kept_iterations], col = c(1, 3, 4, 6, 7, 8)[(j) %%
-                                                                                                 6])
+      for (x in beta_arrays) {
+        lines(iterations[kept_iterations], x[j, i, kept_iterations], col = c(1, 3, 4, 6, 7, 8)[(j) %% 6])
+      }
     }
     if (!is.null(var_names)) {
       legend(
@@ -817,31 +843,34 @@ plot_beta = function(beta_arrays,
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
-diagnostic_plots = function(mcmc_nngp_list,
-                            plot_PSRF_fields = FALSE,
-                            burn_in = .5,
-                            starting_proportion = .5)
-{
-  records_names = names(mcmc_nngp_list$records$chain_1)
-  if (!plot_PSRF_fields)
-    records_names = records_names[-grep("field", records_names)]
-  range_names = records_names[grep("range", records_names)]
-  records_names = setdiff(records_names, range_names)
-  noise_names = records_names[grep("noise", records_names)]
-  records_names = setdiff(records_names, noise_names)
-  scale_names = records_names[grep("scale", records_names)]
-  records_names = setdiff(records_names, scale_names)
-  response_names = records_names
+#' \dontrun{
+#' TODO
+#' }
+diagnostic_plots <- function(mcmc_nngp_list,
+                             plot_PSRF_fields = FALSE,
+                             burn_in = .5,
+                             starting_proportion = .5) {
+  records_names <- names(mcmc_nngp_list$records$chain_1)
+  if (!plot_PSRF_fields) {
+    records_names <- records_names[-grep("field", records_names)]
+  }
+  range_names <- records_names[grep("range", records_names)]
+  records_names <- setdiff(records_names, range_names)
+  noise_names <- records_names[grep("noise", records_names)]
+  records_names <- setdiff(records_names, noise_names)
+  scale_names <- records_names[grep("scale", records_names)]
+  records_names <- setdiff(records_names, scale_names)
+  response_names <- records_names
   if (length(mcmc_nngp_list$records) > 1) {
     for (i in list(range_names, noise_names, scale_names, response_names))
     {
       par(mfrow = c(1, 1))
       for (j in i)
       {
-        PSRF = grb_diags_field(
-          record_arrays = lapply(mcmc_nngp_list$records, function(x)
-            x[[j]]),
+        PSRF <- grb_diags_field(
+          record_arrays = lapply(mcmc_nngp_list$records, function(x) {
+            x[[j]]
+          }),
           iterations = mcmc_nngp_list$iterations$thinning,
           burn_in = burn_in,
           starting_proportion = starting_proportion
@@ -856,20 +885,23 @@ diagnostic_plots = function(mcmc_nngp_list,
   }
   for (i in list(range_names, noise_names, scale_names))
   {
-    #print(i)
-    #par(mfrow = c(length(grep("log_scale", i)) + dim(mcmc_nngp_list$records$chain_1 [[i[grep("beta", i)]]])[2], 1))
+    # print(i)
+    # par(mfrow = c(length(grep("log_scale", i)) + dim(mcmc_nngp_list$records$chain_1 [[i[grep("beta", i)]]])[2], 1))
     par(mfrow = c(1, 1))
-    if (length(grep("log_scale", i)) > 0)
+    if (length(grep("log_scale", i)) > 0) {
       plot_log_scale(
-        log_scale_arrays = lapply(mcmc_nngp_list$records, function(x)
-          x[[i[grep("log_scale", i)]]]),
+        log_scale_arrays = lapply(mcmc_nngp_list$records, function(x) {
+          x[[i[grep("log_scale", i)]]]
+        }),
         iterations = mcmc_nngp_list$iterations$thinning,
         starting_proportion = starting_proportion,
         varname = i[grep("log_scale", i)]
       )
+    }
     plot_beta(
-      beta_arrays = lapply(mcmc_nngp_list$records, function(x)
-        x[[i[grep("beta", i)]]]),
+      beta_arrays = lapply(mcmc_nngp_list$records, function(x) {
+        x[[i[grep("beta", i)]]]
+      }),
       iterations = mcmc_nngp_list$iterations$thinning,
       starting_proportion = starting_proportion,
       varname = i[grep("beta", i)],
@@ -888,26 +920,35 @@ diagnostic_plots = function(mcmc_nngp_list,
 #' @export
 #'
 #' @examples
-#' \dontrun{TODO}
-ESS = function(mcmc_nngp_list, burn_in = .5) {
-  iterations = mcmc_nngp_list$iterations
-  iter_start_idx = match(TRUE,
-                         iterations$thinning > (iterations$checkpoints[nrow(iterations$checkpoints), 1] *
-                                                  burn_in))
-  varnames = c("range_beta", "scale_beta", "noise_beta", "beta")
-  if ("range_log_scale" %in% names(mcmc_nngp_list$records$chain_1))
-    varnames = c(varnames, "range_log_scale")
-  if ("noise_log_scale" %in% names(mcmc_nngp_list$records$chain_1))
-    varnames = c(varnames, "noise_log_scale")
-  if ("scale_log_scale" %in% names(mcmc_nngp_list$records$chain_1))
-    varnames = c(varnames, "scale_log_scale")
-  ESSs = lapply(varnames, function(name) {
-    res = as.matrix(Reduce("+", lapply(mcmc_nngp_list$records, function(record)
-      apply(record[[name]][, , -seq(iter_start_idx), drop = FALSE], c(1, 2), function(x)
-        coda::effectiveSize(c(x))))))
-    row.names(res) = row.names(mcmc_nngp_list$states$chain_1$params[[name]])
+#' \dontrun{
+#' TODO
+#' }
+ESS <- function(mcmc_nngp_list, burn_in = .5) {
+  iterations <- mcmc_nngp_list$iterations
+  iter_start_idx <- match(
+    TRUE,
+    iterations$thinning > (iterations$checkpoints[nrow(iterations$checkpoints), 1] *
+      burn_in)
+  )
+  varnames <- c("range_beta", "scale_beta", "noise_beta", "beta")
+  if ("range_log_scale" %in% names(mcmc_nngp_list$records$chain_1)) {
+    varnames <- c(varnames, "range_log_scale")
+  }
+  if ("noise_log_scale" %in% names(mcmc_nngp_list$records$chain_1)) {
+    varnames <- c(varnames, "noise_log_scale")
+  }
+  if ("scale_log_scale" %in% names(mcmc_nngp_list$records$chain_1)) {
+    varnames <- c(varnames, "scale_log_scale")
+  }
+  ESSs <- lapply(varnames, function(name) {
+    res <- as.matrix(Reduce("+", lapply(mcmc_nngp_list$records, function(record) {
+      apply(record[[name]][, , -seq(iter_start_idx), drop = FALSE], c(1, 2), function(x) {
+        coda::effectiveSize(c(x))
+      })
+    })))
+    row.names(res) <- row.names(mcmc_nngp_list$states$chain_1$params[[name]])
     res
   })
-  names(ESSs) = varnames
+  names(ESSs) <- varnames
   ESSs
 }

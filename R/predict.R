@@ -33,8 +33,8 @@
 #   dimnames(out)[[1]] = c("mean", "q0.025", "median", "q0.975", "sd")
 #   out
 # }
-# 
-# 
+#
+#
 # #' Predicts the latent field at unobserved locations
 # #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 # #' @param predicted_locs A set of predicted locations disjunct from the locations of mcmc_nngp_list
@@ -107,7 +107,7 @@
 #     ## plot_pointillist_painting(PP_$unique_reordered_locs[PP_$idx,], X_PP_mult_right(PP = PP_, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
 #     ## plot_pointillist_painting(PP$unique_reordered_locs[PP$idx,], X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
 #   }
-# 
+#
 #   # burn in
 #   kept_iterations = seq(length(mcmc_nngp_list$iterations$thinning))[which(mcmc_nngp_list$iterations$thinning > mcmc_nngp_list$iterations$checkpoints[nrow(mcmc_nngp_list$iterations$checkpoints), 1]* burn_in)]
 #   i_start = max(which(mcmc_nngp_list$iterations$thinning < mcmc_nngp_list$iterations$checkpoints[nrow(mcmc_nngp_list$iterations$checkpoints), 1]* burn_in))
@@ -165,7 +165,7 @@
 #         (
 #           log(scale_field[-seq(vecchia_approx$n_locs)])
 #         )
-# 
+#
 #       # predicting latent field #######
 #       res$field[,,i_predict] =
 #         (
@@ -220,8 +220,8 @@
 #   parallel::stopCluster(cl)
 #   return(list("predicted_locs_unique" = predicted_locs_unique,"predicted_samples" = predicted_samples_, "summaries" = summaries))
 # }
-# 
-# 
+#
+#
 # #' Predicts the fixed effects, whatever the locations
 # #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 # #' @param X_pred New covariates
@@ -251,7 +251,7 @@
 #   hierarchical_model = mcmc_nngp_list$hierarchical_model
 #   vecchia_approx = mcmc_nngp_list$vecchia_approx
 #   parallel::clusterExport(cl = cl, varlist = setdiff(ls(envir = environment()),c("cl", "mcmc_nngp_list")), envir = environment())
-# 
+#
 #   if(!is.null(lib.loc)){
 #     parallel::clusterEvalQ(cl = cl, expr = library(GpGp, lib.loc =   lib.loc))
 #     parallel::clusterEvalQ(cl = cl, expr = library(GeoNonStat, lib.loc = lib.loc))
@@ -279,8 +279,8 @@
 #   summaries = get_array_summary(predicted_samples_)
 #   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries))
 # }
-# 
-# 
+#
+#
 # #' Predicts the noise variance at unobserved locations
 # #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 # #' @param predicted_locs A set of predicted locations, who can be the same as the locations in mcmc_nngp_list
@@ -324,12 +324,12 @@
 #   if (!is.null(X_noise_pred))
 #     if (ncol(X_noise_pred) != ncol(mcmc_nngp_list$data$covariates$noise_X$arg))
 #       stop("The Number of provided covariates does not match")
-# 
+#
 #   # adding intercept to prediction regressors
 #   if(!is.null(X_noise_pred)) X_noise_pred = cbind(rep(1, nrow(X_noise_pred)), X_noise_pred)
 #   if(is.null(X_noise_pred)) X_noise_pred = matrix(1, nrow(predicted_locs), 1)
 #   colnames(X_noise_pred) = colnames(mcmc_nngp_list$data$covariates$noise_X$X)
-# 
+#
 #   # GP if needed
 #   if(mcmc_nngp_list$hierarchical_model$noise_PP)
 #   {
@@ -347,7 +347,7 @@
 #     ### NNarray_non_NA = !is.na(NNarray)
 #     ### sparse_chol_row_idx = row(NNarray)[NNarray_non_NA]
 #     ### sparse_chol_column_idx = NNarray[NNarray_non_NA]
-# 
+#
 #     PP = mcmc_nngp_list$hierarchical_model$PP
 #     PP_ = mcmc_nngp_list$hierarchical_model$PP
 #     # appending predicted locations to NNarray
@@ -397,8 +397,8 @@
 #   summaries = get_array_summary(predicted_samples_)
 #   return(list("predicted_samples" = predicted_samples_, "summaries" = summaries, "predicted_locs" = predicted_locs))
 # }
-# 
-# 
+#
+#
 # #' Estimates the parameters from mcmc_nngp_list
 # #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
 # #' @param burn_in MCMC burn-in
@@ -434,8 +434,8 @@
 #   parallel::stopCluster(cl)
 #   list("summaries" = summaries, "samples" = samples)
 # }
-# 
-# 
+#
+#
 # #' Title
 # #'
 # #' @param mcmc_nngp_list A mcmc_nngp_list object generated using mcmc_nngp_initialize and ran using mcmc_nngp_run
@@ -480,8 +480,8 @@
 #   -2 * (2 * mean(ll) - ll_)
 #   return(ll_)
 # }
-# 
-# 
+#
+#
 # #' Log-density of observations with respect to the model.
 # #' Gives a training score when the observations are used in the model.
 # #' Gives a validation score when the observations are not used in the model.
@@ -512,7 +512,7 @@
 #     "total" = log_score_total
 #   )
 # }
-# 
+#
 # ### #' Log-density of observations with respect to the model.
 # ### #' Gives a training score when the observations are used in the model.
 # ### #' Gives a validation score when the observations are not used in the model.
@@ -544,4 +544,4 @@
 # ###     )/nsamples
 # ###   )
 # ### }
-# 
+#
