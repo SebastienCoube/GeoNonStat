@@ -601,20 +601,23 @@ process_states <- function(hm,
     ) # random starting values
     row.names(params$range_beta) <- colnames(covariates$range_X$X_locs)
   }
-  if (!is.null(hm$range$PP)) {
-    params$range_beta <- matrix(
-      data = 0,
-      nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots,
-      ncol = 1 + 2 * hm$anisotropic
-    ) # random starting values
-    row.names(params$range_beta) <- c(colnames(covariates$range_X$X_locs),
-                                      paste("PP", seq(hm$range$PP$n_knots), sep = "_"))
-    params$range_log_scale <- rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic)
-    momenta$range_log_scale_sufficient <- rnorm(length(params$range_log_scale))
-    momenta$range_log_scale_ancillary <- rnorm(length(params$range_log_scale))
+  
+  if(!is.null(hm$range$PP)) {
+    params$range_beta = matrix(data =  0, 
+                               nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots, 
+                               ncol = 1 + 2 * hm$anisotropic) #random starting values
+    row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
+                                     paste("PP", seq(hm$range$PP$n_knots), sep = "_"))
+    params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[2]))
+    row.names(params$range_log_scale) = c("range", "aniso")[seq(1 + hm$anisotropic)]
+    momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
+    momenta$range_log_scale_ancillary = rnorm(length(params$range_log_scale))
   }
-  # row.names(params$range_beta) = c(colnames(covariates$range_X$X))
-  params$range_beta[1, 1] <- hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
+  params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
+  colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq(1 + 2 * hm$anisotropic)]
+    #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
+  params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
+  
   # momenta
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
@@ -647,19 +650,34 @@ process_states <- function(hm,
         paste("PP", seq(hm$noise$PP$n_knots), sep = "_"))
     params$noise_log_scale <- hm$noise$log_scale_bounds[1]
   }
-  params$noise_beta[1] <- hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
+  
+  if(!is.null(hm$noise$PP)) {
+    params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) #random starting values
+    row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
+                                     paste("PP", seq(hm$noise$PP$n_knots), sep = "_"))
+    params$noise_log_scale = matrix(runif(1, hm$noise$log_scale_bounds[1], hm$noise$log_scale_bounds[2]))
+    row.names(params$noise_log_scale) = " "
+  }
+  params$noise_beta[1] = hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
+  params$noise_beta[-1] = rnorm(length(params$noise_beta[-1]), 0, .2)
   
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  stuff$noise_var <- as.vector(exp(
-    X_PP_mult_right(
-      X = covariates$noise_X$X,
-      PP = hm$noise$PP,
-      vecchia_approx = vecchia_approx,
-      Y = params$noise_beta,
-      permutate_PP_to_obs = TRUE
-    )
+  stuff$noise_var = as.vector(exp(X_PP_mult_right(
+    X = covariates$noise_X$X, PP = hm$noise$PP,
+    vecchia_approx = vecchia_approx, Y = params$noise_beta, 
+    permutate_PP_to_obs = T
+  )))
+  
+  # Marginal variance of the NNGP and stuff depending on it ####################
+  params$field_log_var = matrix(hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1))
+  row.names(params$field_log_var) = " "
+  
+  # Latent field ###############################################################
+  params$field = exp(.5 * params$field_log_var) * as.vector(Matrix::solve(
+    stuff$sparse_chol,
+    rnorm(vecchia_approx$n_locs)
   ))
   
   # Marginal variance of the NNGP and stuff depending on it ####################
