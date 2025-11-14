@@ -80,7 +80,7 @@ naive_greedy_coloring <- function(M) {
 
 #' Title TODO
 #'
-#' @param vecchia_approx  an object created with `createVecchia()`
+#' @param vecchia_approx  an object created by `vecchia_approx()`
 #' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
 #'
 #' @returns a sparse triangular matrix
@@ -101,12 +101,13 @@ decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
 #' If the covariance is anisotropic, it must have 3 columns. It the covariance is isotropic, it must have 1 column.
 #' The first coefficients are multiplied with range_X
 #' The last coefficients are multiplied with the spatial basis functions of PP
-#' @param vecchia_approx an object created with `createVecchia()`
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param range_X covariates for range, treated using process_covariates
 #' @param PP predictive process obtained through `createPP()`
-#' @param matern_smoothness Matern smoothness Default to 1.5. Can be 0.5 or 1.5.
+#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
+#' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
-#' @param num_threads numerical, number of treads to use. Default to 1.
+#' @param num_threads integer, number of treads to use. Default to 1.
 #'
 #' @returns a list
 #' @export
@@ -327,7 +328,6 @@ beta_prior_log_dens_derivative <- function(beta,
   return(-(beta - mean_mat) / var_mat)
 }
 
-
 #' @title Multiply the concatenation of a matrix of covariates and a PP by a matrix
 #' @description
 #' Multiply the concatenation of a matrix of covariates and a PP by a matrix
@@ -336,7 +336,7 @@ beta_prior_log_dens_derivative <- function(beta,
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param Y the matrix who multiplies the covariates and the PP
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param permutate_PP_to_obs TODO
 #'
 #' @returns a matrix
@@ -354,10 +354,8 @@ beta_prior_log_dens_derivative <- function(beta,
 #'
 #' # multiplying X alone
 #' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-
 #' # multiplying PP alone
 #' res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
-
 #' # multiplying PP and matrix of covariate, one obs for each location
 #' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
 #' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc,
@@ -367,14 +365,14 @@ beta_prior_log_dens_derivative <- function(beta,
 #'                               \n one covariate for each location", pch=15)
 #'
 #' # TODO Nun functional example
-## # multiplying PP and matrix of covariates with an index
-## X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-## res4 <- X_PP_mult_right(X = X_by_obs, PP = PP,
-##                        Y = c(covariate_coefficients, knots_coeffs),
-##                        vecchia_approx = vecchia_approx)
-## plot_pointillist_painting(vecchia_approx$observed_locs,
-##                           res4,
-##                           main = "PP + covariates,\n  one covariate for each observation")
+#' # # multiplying PP and matrix of covariates with an index
+#' # X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+#' # res4 <- X_PP_mult_right(X = X_by_obs, PP = PP,
+#' #                        Y = c(covariate_coefficients, knots_coeffs),
+#' #                        vecchia_approx = vecchia_approx)
+#' # plot_pointillist_painting(vecchia_approx$observed_locs,
+#' #                           res4,
+#' #                           main = "PP + covariates,\n  one covariate for each observation")
 #'
 #' # multiplying
 #' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
@@ -440,8 +438,8 @@ X_PP_mult_right <- function(X = NULL,
 #' @param X a matrix of covariates who will be multiplied by the first rows of Y
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param Y the matrix who multiplies the covariates and the PP
-#' @param vecchia_approx TODO
-#' @param permutate_PP_to_obs boolean, default to FALSE. TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
+#' @param permutate_PP_to_obs logical, default to FALSE. TODO
 #'
 #' @returns a matrix
 #' @export
@@ -480,7 +478,7 @@ X_PP_crossprod <- function(X,
   if (nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
   }
-  if (permutate_PP_to_obs & is.null(vecchia_approx)) {
+  if (permutate_PP_to_obs && is.null(vecchia_approx)) {
     stop("To permutate PP to observed values vecchia_approx needs to be provided.")
   }
   if (!is.null(PP)) {

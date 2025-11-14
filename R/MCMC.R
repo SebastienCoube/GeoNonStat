@@ -26,12 +26,12 @@ update_kernel <- function(iter,
 #' @param covariates  The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
 #' @param hierarchical_model a hierarchical model (obtained with `process_hierarchical_model()`)
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param state TODO
 #' @param n_iterations_update TODO
 #' @param num_threads TODO
 #' @param iter_start TODO
-#' @param seed numeric value, seed used for reproducibility purposes. Default to 1
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns TODO
 #' @export
@@ -1077,7 +1077,7 @@ for(iter in seq(n_iterations_update)){
 #' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 10
 #' @param n_iterations numeric value, number of iterations. Default to 100
-#' @param seed numeric value, seed used for reproducibility purposes. Default to 1
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns a list
 #' @export

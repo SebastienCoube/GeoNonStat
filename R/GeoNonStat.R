@@ -161,7 +161,7 @@ generate_location_partitions <- function(locs, n, ncores = 1) {
 #' creating useful indices, and pre-computing useful matrices and vectors
 #'
 #' @param X a data.frame with as many rows as vecchia_approx$observed_locs
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param PP an object of class PP,
 #' @param one_obs_per_locs (logical, default to FALSE). Should the covariate be
 #' constrained to not vary within a spatial location
@@ -269,7 +269,7 @@ process_covariates <- function(X,
   res$crossprod_X <- crossprod_X
   res$chol_crossprod_X <- chol(crossprod_X)
   res$n_regressors <- ncol(res$X)
-  
+
   # identifying  which X do not vary within location
   res$which_locs <- c()
   duplicated_locs <- duplicated(vecchia_approx$observed_locs)
@@ -289,7 +289,7 @@ process_covariates <- function(X,
       )
     }
   }
-  
+
   res$X_locs <- matrix(
     res$X[vecchia_approx$hctam_scol_1, res$which_locs], 
     ncol = length(res$which_locs)
@@ -377,13 +377,14 @@ process_PP_prior <- function(PP = NULL,
 
 #' Initialize hierarchical model
 #'
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param noise_PP either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary
 #' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
 #' @param observed_locs TODO
-#' @param matern_smoothness a Matérn smoothness parameter, either 0.5 (aka ``exponential kernel'') or 1.5
+#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
+#' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations.
 #' @param covariates The list of covariates obtained with `process_covariates`
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
@@ -522,9 +523,9 @@ process_transition_kernels <- function(init = -4, hm) {
 #' @param hm a hierarchical model (obtained with `process_hierarchical_model()`)
 #' @param covariates The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
-#' @param vecchia_approx TODO
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param init_tk numerical value to initialize transition kernels
-#' @param seed numeric value, seed used for reproducibility purposes. Default to 1
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @export
 #' @keywords internal
 #'
@@ -683,24 +684,26 @@ process_states <- function(hm,
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
 #'
-#' @param vecchia_approx an object created by the `vecchia_approx()` function
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param observed_field a vector of observations of the interest variable
 #' @param X a data.frame of covariates explaining the interest variable 
 #' through fixed linear effects
-#' @param matern_smoothness Matern smoothness, either 0.5 or 1.5
+#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
+#' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
-#' @param range_X  a data.frame of covariates explaining the Gaussian process 
+#' @param range_X a data.frame of covariates explaining the Gaussian process 
 #' range through fixed linear effects
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
 #' @param noise_X a data.frame of covariates explaining the Gaussian noise 
 #' variance through fixed linear effects
-#' @param noise_PP TODO
+#' @param noise_PP either an object of class PP used to model the field of 
+#' log-noise parameters, or NULL in which case the model is stationary
 #' @param noise_log_scale_bounds either a vector containing two numeric values 
 #' bounding Uniform prior for the log-marginal variance of the noise's PP, 
 #' or NULL in which case the bounds are set automatically
-#' @param seed a seed from which to generate the GeoNonStat object.
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns an object of class `GeoNonStat`
 #' @export

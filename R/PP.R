@@ -36,14 +36,14 @@ generate_knots_from_kmeans <- function(knots_number, locs) {
 #' Creates an object of class `PP`, a low-rank predictive process used as a prior
 #' to describe spatial variations of covariance parameters.
 #'
-#' @param vecchia_approx List obtained by `createVecchia()`.
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param matern_range numeric (optional). Matern range parameter for the PP.
 #' If `NULL`, a default value is inferred from spatial locations.
 #' @param knots Either:
 #'   * a matrix of spatial knots,
 #'   * a positive integer (number of knots, determined via k-means), or
 #'   * `NULL` (default) - in which case a default number and placement of knots is used.
-#' @param seed Integer, random seed for reproducibility.
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
 #'
 #' @rdname PP
@@ -238,7 +238,7 @@ summary.PP <- function(object, ...) {
 }
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
-#' @param x an object of class \code{PP}
+#' @param x an object of class PP, create with `createPP`
 #' @export
 #' @keywords internal
 #' @examples

@@ -1,9 +1,9 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
 #'
 #' @param x an object of class PP, create with `createPP`
+#' @param ... additional arguments (unused)
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
-#' @param ... additional arguments (unused)
 #'
 #' @returns NULL
 #' @rdname PP
@@ -42,7 +42,7 @@ plot.PP <- function(x,
 
 
 #' @title Plot the knots and the spatial locations of a PP
-#' @param x an object of class \code{PP}
+#' @param x an object of class PP, create with `createPP`
 #' @param mar_var_loss optional, the var loss computed by `var_loss_percentage.PP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
@@ -161,7 +161,7 @@ plot_knots.PP <- function(x,
 #' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
 #' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
-
+#' 
 #' @returns a plot object
 #' @export
 #'
@@ -724,16 +724,13 @@ plot_log_scale <- function(log_scale_arrays,
       xlab = "iteration",
       ylab = "log scale",
       main = paste(varname, "split by component"),
-      ylim = c(min(unlist(
-        marginal_logvars
-      )), max(unlist(
-        marginal_logvars
-      )))
+      ylim = c(
+        min(unlist(marginal_logvars)), 
+        max(unlist(marginal_logvars))
+      )
     )
-    for (i in seq(length(marginal_logvars)))
-    {
-      for (j in seq(nrow(marginal_logvars[[i]])))
-      {
+    for (i in seq(length(marginal_logvars))) {
+      for (j in seq(nrow(marginal_logvars[[i]]))) {
         lines(iterations[kept_iterations], marginal_logvars[[i]][j, ], col = c(1, 2, 4)[j])
       }
     }
