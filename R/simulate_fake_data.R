@@ -82,27 +82,27 @@ createGnsSimulator = function(vecchia_approx,
                                noise_PP = NULL,
                                range_X = NULL,
                                range_PP = NULL,
-                               anisotropic = F) {
+                               anisotropic = FALSE) {
   covariates = list()
   covariates$X = process_covariates(
     X = X,
     vecchia_approx = vecchia_approx,
     PP = NULL,
-    one_obs_per_locs = F
+    one_obs_per_locs = FALSE
   )
   # fixed effects and PP for range
   covariates$range_X = process_covariates(
     X = range_X,
     vecchia_approx = vecchia_approx,
     PP = range_PP,
-    one_obs_per_locs = T
+    one_obs_per_locs = TRUE
   )
   # fixed effects and PP for noise
   covariates$noise_X = process_covariates(
     X = noise_X,
     vecchia_approx = vecchia_approx,
     PP = noise_PP,
-    one_obs_per_locs = F
+    one_obs_per_locs = FALSE
   )
   return(
     list(
@@ -141,7 +141,7 @@ createGnsSimulatorParameters = function(
     noise_intercept = NULL, 
     noise_PP_log_var = NULL, 
     field_log_var = NULL, 
-    flap_the_gums = T, 
+    flap_the_gums = TRUE, 
     seed = 1
 ) {
   set.seed(seed)
@@ -285,7 +285,7 @@ simulateGnsData = function(gns_simulator, gns_simulator_parameters, num_threads 
     PP = gns_simulator$range_PP,
     vecchia_approx = gns_simulator$vecchia_approx,
     Y = rbind(gns_simulator_parameters$range_X_coeff, gns_simulator_parameters$range_PP_coeff),
-    permutate_PP_to_obs = F
+    permutate_PP_to_obs = FALSE
   )
   
   
@@ -294,7 +294,7 @@ simulateGnsData = function(gns_simulator, gns_simulator_parameters, num_threads 
     PP = gns_simulator$noise_PP,
     vecchia_approx = gns_simulator$vecchia_approx,
     Y = rbind(gns_simulator_parameters$noise_X_coeff, gns_simulator_parameters$noise_PP_coeff),
-    permutate_PP_to_obs = T
+    permutate_PP_to_obs = TRUE
   )
   
   sparse_chol = decompress_chol(
@@ -305,7 +305,7 @@ simulateGnsData = function(gns_simulator, gns_simulator_parameters, num_threads 
       range_X = gns_simulator$covariates$range_X,
       PP = gns_simulator$range_PP,
       matern_smoothness = gns_simulator$matern_smoothness,
-      compute_derivative = F,
+      compute_derivative = FALSE,
       num_threads = num_threads
     )
   )

@@ -238,15 +238,19 @@ var_loss_percentage.PP = function(x) {
 #'
 #' @param PP an object of class `PP`
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param df boolean
-get_basis = function(PP, vecchia_approx, df = T){
+#' @param df logical, default to TRUE. Return result as a data.frame ?
+get_basis = function(PP, vecchia_approx, df = TRUE){
   res = X_PP_mult_right(
     X= NULL, PP = PP, vecchia_approx = vecchia_approx, 
-    Y = diag(1, PP$n_knots), permutate_PP_to_obs = T
+    Y = diag(1, PP$n_knots), permutate_PP_to_obs = TRUE
   )
   colnames(res) = paste("Basis_", seq(ncol(res)), sep = "")
-  res[res<.001] = 0
-  if(df) res = as.data.frame(res)
-  if(!df) res = as(res, "sparseMatrix")
+  if(any(res<.001))
+    res[res<.001] <- 0
+  if(df) {
+    res = as.data.frame(res)
+  } else {
+    res = as(res, "sparseMatrix")
+  }
   return(res)
 }

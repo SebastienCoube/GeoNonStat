@@ -69,7 +69,7 @@ createVecchia <- function(observed_locs, m = 12, ncores=1){
     x= seq(sum(NNNoNA)), 
     i = col(NNarray)[NNNoNA], 
     j =NNarray[NNNoNA], 
-    triangular = T
+    triangular = TRUE
   )
   
   sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][
@@ -235,7 +235,7 @@ process_covariates = function(X,
     X_ = cbind(res$X, 
                X_PP_mult_right(PP = PP, 
                                vecchia_approx = vecchia_approx, 
-                               permutate_PP_to_obs = T, 
+                               permutate_PP_to_obs = TRUE, 
                                Y = diag(1, PP$n_knots)))
   # pre- computing XTX
   crossprod_X = as.matrix(crossprod(X_))  + diag(1, ncol(X_), ncol(X_))
@@ -268,7 +268,7 @@ process_covariates = function(X,
     X_locs_ =cbind(X_locs_, 
                    X_PP_mult_right(PP = PP, 
                                    vecchia_approx = vecchia_approx, 
-                                   permutate_PP_to_obs = F, 
+                                   permutate_PP_to_obs = FALSE, 
                                    Y = diag(1, PP$n_knots)))
   }
   res$crossprod_X_locs = crossprod(X_locs_) + diag(1e-10, ncol(X_locs_), ncol(X_locs_))
@@ -342,10 +342,12 @@ process_PP_prior = function(
 #' matern_smoothness = 1.5,
 #' observed_field = observed_field,
 #' covariates = covariates,
-#' anisotropic = T) 
+#' anisotropic = TRUE) 
 process_hierarchical_model <- function(vecchia_approx, 
-                                       noise_PP=NULL, noise_log_scale_bounds=NULL,
-                                       range_PP=NULL, range_log_scale_bounds=NULL,
+                                       noise_PP=NULL, 
+                                       noise_log_scale_bounds=NULL,
+                                       range_PP=NULL, 
+                                       range_log_scale_bounds=NULL,
                                        observed_locs,
                                        matern_smoothness,
                                        observed_field,
@@ -424,7 +426,7 @@ process_hierarchical_model <- function(vecchia_approx,
 #'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
-#'   anisotropic = T) 
+#'   anisotropic = TRUE) 
 #' process_transition_kernels(hm = hm)
 process_transition_kernels <- function(init=-4, hm){
   res =   list(
@@ -479,7 +481,7 @@ process_transition_kernels <- function(init=-4, hm){
 #'   matern_smoothness = 1.5,
 #'   observed_field = observed_field,
 #'   covariates = covariates,
-#'   anisotropic = T) 
+#'   anisotropic = TRUE) 
 #' 
 #' process_states(
 #'     hm,
@@ -545,7 +547,7 @@ process_states <- function(
     range_beta = params$range_beta, vecchia_approx = vecchia_approx, 
     range_X = covariates$range_X, 
     PP = hm$range$PP, matern_smoothness = hm$matern_smoothness, 
-    compute_derivative = T, num_threads = min(5, max(parallel::detectCores()-1, 1))
+    compute_derivative = TRUE, num_threads = min(5, max(parallel::detectCores()-1, 1))
   )
   stuff$sparse_chol = decompress_chol(vecchia_approx, stuff$compressed_chol)
   #plot_pointillist_painting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
@@ -570,7 +572,7 @@ process_states <- function(
   stuff$noise_var = as.vector(exp(X_PP_mult_right(
     X = covariates$noise_X$X, PP = hm$noise$PP,
     vecchia_approx = vecchia_approx, Y = params$noise_beta, 
-    permutate_PP_to_obs = T
+    permutate_PP_to_obs = TRUE
   )))
   
   # Marginal variance of the NNGP and stuff depending on it ####################

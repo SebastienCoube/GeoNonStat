@@ -229,7 +229,7 @@ for(iter in seq(n_iterations_update)){
         beta0_var =  hierarchical_model$range$beta0_sd^2, 
         state$params$range_log_scale) # normal prior
       + X_PP_crossprod(
-        X = covariates$range_X$X_locs,  vecchia_approx = vecchia_approx, permutate_PP_to_obs = F,
+        X = covariates$range_X$X_locs,  vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE,
         PP = hierarchical_model$range$PP,
         Y = # Jacobian of range field wrt range_beta
           t(
@@ -245,7 +245,7 @@ for(iter in seq(n_iterations_update)){
                 )), 
               right_vector = state$params$field/exp(.5 * state$params$field_log_var), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray, 
-              sauce_determinant_chef = F, 
+              sauce_determinant_chef = FALSE, 
               num_threads = num_threads
             )
           )) %*% range_reparam_mat
@@ -307,7 +307,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = T, num_threads = num_threads
+          compute_derivative = TRUE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field = exp(.5 * state$params$field_log_var) * as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var))))
@@ -320,7 +320,7 @@ for(iter in seq(n_iterations_update)){
           state$params$range_log_scale) # normal prior
         + X_PP_crossprod(
           X = covariates$range_X$X_locs, vecchia_approx = vecchia_approx, 
-          permutate_PP_to_obs = F,
+          permutate_PP_to_obs = FALSE,
           PP = hierarchical_model$range$PP,
           Y = # Jacobian of range field wrt range_beta
             t(
@@ -336,7 +336,7 @@ for(iter in seq(n_iterations_update)){
                   )), 
                 right_vector = new_field/exp(.5 * state$params$field_log_var), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                 NNarray = vecchia_approx$NNarray, 
-                sauce_determinant_chef = F, 
+                sauce_determinant_chef = FALSE, 
                 num_threads = num_threads
               )
             )) %*% range_reparam_mat 
@@ -460,7 +460,7 @@ for(iter in seq(n_iterations_update)){
       # normal prior derivative                
       + X_PP_crossprod(
         X = covariates$range_X$X_locs, PP = hierarchical_model$range$PP,
-        permutate_PP_to_obs = F, 
+        permutate_PP_to_obs = FALSE, 
         vecchia_approx = vecchia_approx,
         Y = # Jacobian of range field wrt range_beta
           t(# natural gradient of obs likelihood wrt range field
@@ -469,7 +469,7 @@ for(iter in seq(n_iterations_update)){
               left_vector = as.vector(state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var))), # left vector = whitened latent field
               right_vector = state$params$field/exp(.5 * state$params$field_log_var), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray, 
-              sauce_determinant_chef = T, 
+              sauce_determinant_chef = TRUE, 
               num_threads = num_threads  
             )
           ))  
@@ -533,7 +533,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = T, num_threads = num_threads
+          compute_derivative = TRUE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       
@@ -549,7 +549,7 @@ for(iter in seq(n_iterations_update)){
         # normal prior derivative                
         + X_PP_crossprod(
           X = covariates$range_X$X_locs, PP = hierarchical_model$range$PP,
-          permutate_PP_to_obs = F, 
+          permutate_PP_to_obs = FALSE, 
           vecchia_approx = vecchia_approx,
           Y = # Jacobian of range field wrt range_beta
             t(# natural gradient of obs likelihood wrt range field
@@ -558,7 +558,7 @@ for(iter in seq(n_iterations_update)){
                 left_vector = as.vector(new_sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var))), # left vector = whitened latent field
                 right_vector = state$params$field/exp(.5 * state$params$field_log_var), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                 NNarray = vecchia_approx$NNarray, 
-                sauce_determinant_chef = T, 
+                sauce_determinant_chef = TRUE, 
                 num_threads = num_threads  
               )
             )
@@ -682,7 +682,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = F, num_threads = num_threads
+          compute_derivative = FALSE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       
@@ -773,7 +773,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = F, num_threads = num_threads
+          compute_derivative = FALSE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field = as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
@@ -850,7 +850,7 @@ for(iter in seq(n_iterations_update)){
         vecchia_approx = vecchia_approx, 
         range_X = covariates$range_X, 
         matern_smoothness = hierarchical_model$matern_smoothness, 
-        compute_derivative = T, num_threads = num_threads
+        compute_derivative = TRUE, num_threads = num_threads
       )
     state$stuff$sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, state$stuff$compressed_chol)
     
@@ -881,7 +881,10 @@ for(iter in seq(n_iterations_update)){
       beta0_var =  hierarchical_model$noise$beta0_sd^2, 
       log_scale = state$params$noise_log_scale) # normal prior
     + X_PP_crossprod(
-      X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
+      X = covariates$noise_X$X, 
+      hierarchical_model$noise$PP, 
+      vecchia_approx = vecchia_approx, 
+      permutate_PP_to_obs = TRUE, 
       Y = 
         (
           + .5 # determinant part of normal likelihood
@@ -898,7 +901,7 @@ for(iter in seq(n_iterations_update)){
   ####  noise_ = as.vector(exp(X_PP_mult_right(
   ####    X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
   ####    vecchia_approx = vecchia_approx, Y = noise_beta_, 
-  ####    permutate_PP_to_obs = T
+  ####    permutate_PP_to_obs = TRUE
   ####  )))
   ####  U =
   ####    (
@@ -933,7 +936,7 @@ for(iter in seq(n_iterations_update)){
     new_noise_var = as.vector(exp(X_PP_mult_right(
       X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
       vecchia_approx = vecchia_approx, Y = new_noise_beta, 
-      permutate_PP_to_obs = T
+      permutate_PP_to_obs = TRUE
     )))
     # Make a half step for momentum at the end
     dens_grad = (
@@ -943,7 +946,7 @@ for(iter in seq(n_iterations_update)){
         beta0_var =  hierarchical_model$noise$beta0_sd^2, 
         log_scale = state$params$noise_log_scale) # normal prior
       + X_PP_crossprod(
-        X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
+        X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
         Y = 
           (
             + .5 # determinant part of normal likelihood
@@ -1004,7 +1007,7 @@ for(iter in seq(n_iterations_update)){
       new_noise_var = as.vector(exp(X_PP_mult_right(
         X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
         vecchia_approx = vecchia_approx, Y = new_noise_beta, 
-        permutate_PP_to_obs = T
+        permutate_PP_to_obs = TRUE
       )))
       dens_ratio = (
         -.5* sum(log(new_noise_var)) 

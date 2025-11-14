@@ -93,7 +93,7 @@ decompress_chol = function(vecchia_approx, compressed_sparse_chol){
     i = vecchia_approx$sparse_chol_i, 
     p = vecchia_approx$sparse_chol_p, 
     x = compressed_sparse_chol[,1,][vecchia_approx$sparse_chol_x_reorder], 
-    triangular = T
+    triangular = TRUE
   ) 
 }
 
@@ -146,7 +146,7 @@ compute_sparse_chol = function(range_beta,
                                range_X, 
                                PP = NULL, 
                                matern_smoothness = 1.5, 
-                               compute_derivative = T, 
+                               compute_derivative = TRUE, 
                                num_threads = 1)
 {
   if (!matern_smoothness %in% c(.5, 1.5)) stop("matern_smoothness must be equal to 0.5 or 1.5")
@@ -167,7 +167,7 @@ compute_sparse_chol = function(range_beta,
       X = range_X$X_locs, 
       PP = PP, 
       Y = Y, 
-      permutate_PP_to_obs = F))
+      permutate_PP_to_obs = FALSE))
   res <- vecchia(num_threads=num_threads,
                  log_range = t(log_range), 
                  locs = vecchia_approx$t_locs, 
@@ -356,7 +356,7 @@ beta_prior_log_dens_derivative <- function(
 #'                         Y = c(covariate_coefficients, knots_coeffs), 
 #'                         vecchia_approx = vecchia_approx)
 #' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, 
-#'                               \n one covariate for each location")
+#'                               \n one covariate for each location", pch=15)
 #' 
 #' # TODO Nun functional example
 ## # multiplying PP and matrix of covariates with an index
@@ -375,7 +375,7 @@ beta_prior_log_dens_derivative <- function(
 #'                        vecchia_approx = vecchia_approx,
 #'                        permutate_PP_to_obs = TRUE
 #'                        )
-X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = F)
+X_PP_mult_right = function(X = NULL, PP = NULL, vecchia_approx, Y, permutate_PP_to_obs = FALSE)
 {
   if(is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   # Sanity checks
@@ -454,7 +454,7 @@ X_PP_crossprod = function(X,
                           PP = NULL, 
                           Y, 
                           vecchia_approx=NULL, 
-                          permutate_PP_to_obs = F)
+                          permutate_PP_to_obs = FALSE)
 {
   if(nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
@@ -481,7 +481,7 @@ X_PP_crossprod = function(X,
         Matrix::solve(
           Matrix::t(PP$sparse_chol), 
           rbind(matrix(0, nrow(PP$knots), ncol(Y)), Y)
-        )[1:PP$n_knots,,drop=F]
+        )[1:PP$n_knots,,drop=FALSE]
       )
   }
   if(!is.matrix(res)) res <- as.matrix(res)

@@ -73,8 +73,9 @@ plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
     ord <- order(cols)
     cols <- cols[ord]
     locs <- locs[ord,]
-    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = T)
-    base_colors <- c('#F3D97CCC', '#F5C46FCC', '#EDAB65CC', '#DD8A5BCC', '#C2604FCC', '#A02F42CC')
+    # Get
+    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = TRUE)
+    base_colors <- get_colors(1:6, alpha=TRUE)
     locs_col = base_colors[as.numeric(cut_var)]
   }
   
@@ -204,7 +205,7 @@ plot_ellipses = function(locs,
 #       compute_sparse_chol(
 #         range_beta = range_beta,
 #         NNarray = NNarray, locs = locs,
-#         anisotropic = T,
+#         anisotropic = TRUE,
 #         sphere = F,
 #         PP = NULL, use_PP = F,
 #         range_X = matrix(1, nrow(locs)),
@@ -213,7 +214,7 @@ plot_ellipses = function(locs,
 #         locs_idx = NULL,
 #         num_threads = 10
 #       )[[1]][!is.na(NNarray)],
-#     triangular = T
+#     triangular = TRUE
 #   )
 # sparse_chol_iso =
 #   Matrix::sparseMatrix(
@@ -232,7 +233,7 @@ plot_ellipses = function(locs,
 #         locs_idx = NULL,
 #         num_threads = 10
 #       )[[1]][!is.na(NNarray)],
-#     triangular = T
+#     triangular = TRUE
 #   )
 #
 # log_range =
@@ -263,8 +264,8 @@ plot_ellipses = function(locs,
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
 # plot_ellipses(
-#   locs = locs[1,,drop=F], log_range = log_range[1,,drop=F],
-#   shrink = sqrt(8*nu), add=  T)
+#   locs = locs[1,,drop=FALSE], log_range = log_range[1,,drop=FALSE],
+#   shrink = sqrt(8*nu), add=  TRUE)
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for isotropic")
 # plot_ellipses(
@@ -289,6 +290,7 @@ plot_ellipses = function(locs,
 #' Title get_colors TODO
 #'
 #' @param x a vector
+#' @param alpha logical, default to TRUE. Add transparency to colors ?
 #'
 #' @returns a vector of colors of length `length(x)`
 #' @export
@@ -316,6 +318,7 @@ get_colors = function(x, alpha=FALSE) {
 #' @param locs numeric matrix of spatial locations
 #' @param field numerical vector, interest variable to define color of points
 #' @param add logical, default to FALSE. Add on existing plot ?
+#' @param alpha logical, default to TRUE. Add transparency to colors ?
 #' @param ... additional graphical parameters, sent to `plot` or, 
 #' if `add=TRUE`, to `points`
 #'
@@ -375,8 +378,8 @@ pointillist_colorscale = function(field, scalename = "") {
     xlab=scalename,
     ylab = "",
     main = "",
-    border = T, ylim = c(0, 50),
-    horiz = T, xlim=c(-0.2, .3), axes=FALSE,
+    border = TRUE, ylim = c(0, 50),
+    horiz = TRUE, xlim=c(-0.2, .3), axes=FALSE,
     mgp = c(0, 0, 0),
   )
   pos <- seq(0, 1, by=0.25)
@@ -543,7 +546,7 @@ grb_diags_field = function(record_arrays,
       array_multiply_3(x - y^2, M = Matrix::Diagonal(x = n / (n - 1))),
     x = sqmean_estimators,
     y = mean_estimators,
-    SIMPLIFY = F
+    SIMPLIFY = FALSE
   )
   within_mean = Reduce("+", mean_estimators) / length(mean_estimators)
   within_var = Reduce("+", var_estimators) / length(var_estimators)
@@ -557,7 +560,7 @@ grb_diags_field = function(record_arrays,
     PSRF[, , i] = PSRF[, , i] + (n[i] + 1) / n[i]
   }
   PSRF_quantiles  = apply(PSRF, 3, function(x)
-    quantile(x, probs = c(1, .99, .9, .5), na.rm = T))
+    quantile(x, probs = c(1, .99, .9, .5), na.rm = TRUE))
   list(
     "iterations" = iterations[diff_array[, 2]],
     "mean" = mean_estimators,
@@ -900,7 +903,7 @@ ESS = function(mcmc_nngp_list, burn_in = .5) {
     varnames = c(varnames, "scale_log_scale")
   ESSs = lapply(varnames, function(name) {
     res = as.matrix(Reduce("+", lapply(mcmc_nngp_list$records, function(record)
-      apply(record[[name]][, , -seq(iter_start_idx), drop = F], c(1, 2), function(x)
+      apply(record[[name]][, , -seq(iter_start_idx), drop = FALSE], c(1, 2), function(x)
         coda::effectiveSize(c(x))))))
     row.names(res) = row.names(mcmc_nngp_list$states$chain_1$params[[name]])
     res

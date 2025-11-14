@@ -17,10 +17,10 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom methods as
 #' @importFrom stats rnorm runif
-#' @importFrom graphics plot
+#' @importFrom grDevices colorRampPalette
 #' @importFrom FNN get.knn
 #' @importFrom coda effectiveSize
 #' @importFrom stats dist dnorm kmeans lm median model.matrix quantile sd var vcov
-#' @importFrom graphics abline barplot hist layout legend lines par points text
+#' @importFrom graphics plot abline barplot hist layout legend lines par points text
 #' @useDynLib GeoNonStat, .registration = TRUE
 "_PACKAGE"
