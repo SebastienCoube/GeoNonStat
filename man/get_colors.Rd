@@ -4,13 +4,15 @@
 \alias{get_colors}
 \title{Title get_colors TODO}
 \usage{
-get_colors(x)
+get_colors(x, alpha = FALSE)
 }
 \arguments{
 \item{x}{a vector}
+
+\item{alpha}{logical, default to TRUE. Add transparency to colors ?}
 }
 \value{
-a vector of colors
+a vector of colors of length `length(x)`
 }
 \description{
 Title get_colors TODO

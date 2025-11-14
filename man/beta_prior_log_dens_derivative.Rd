@@ -7,13 +7,13 @@
 beta_prior_log_dens_derivative(beta, n_PP, beta0_mean, beta0_var, log_scale)
 }
 \arguments{
-\item{beta}{a numerical matrix of spatial coordinates.}
+\item{beta}{a numeric matrix, with 1 (isotropic case) or 3 (anisotropic case) columns}
 
 \item{n_PP}{number of prediction points.}
 
-\item{beta0_mean}{TODO}
+\item{beta0_mean}{numeric value, mean of beta_0}
 
-\item{beta0_var}{TODO}
+\item{beta0_var}{numeric value, mean of beta_0}
 
 \item{log_scale}{TODO}
 }
@@ -24,7 +24,7 @@ an array
 Compute gradient of logarithmic density prior
 }
 \examples{
-GeoNonStat:::beta_prior_log_dens_derivative(
+beta_prior_log_dens_derivative(
   beta = matrix(rnorm(300), 100, 3), 
   n_PP = 90, 
   beta0_mean = -5,

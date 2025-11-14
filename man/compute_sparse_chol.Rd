@@ -10,7 +10,7 @@ compute_sparse_chol(
   range_X,
   PP = NULL,
   matern_smoothness = 1.5,
-  compute_derivative = T,
+  compute_derivative = TRUE,
   num_threads = 1
 )
 }

@@ -7,7 +7,8 @@
 symmat(coords)
 }
 \arguments{
-\item{coords}{a numeric vector, of length 1, 3 or 6}
+\item{coords}{a numeric vector, of length such as 
+`(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer}
 }
 \value{
 a matrix

@@ -17,11 +17,11 @@ MessyMessyMcmc(
 )
 }
 \arguments{
-\item{covariates}{TODO}
+\item{covariates}{The list of covariates obtained with `process_covariates`}
 
 \item{observed_field}{TODO}
 
-\item{hierarchical_model}{TODO}
+\item{hierarchical_model}{a hierarchical model (obtained with `process_hierarchical_model()`)}
 
 \item{vecchia_approx}{TODO}
 
@@ -33,7 +33,7 @@ MessyMessyMcmc(
 
 \item{iter_start}{TODO}
 
-\item{seed}{TODO}
+\item{seed}{numeric value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
 TODO

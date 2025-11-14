@@ -37,7 +37,7 @@ GeoNonStat(
 
 \item{matern_smoothness}{Matern smoothness, either 0.5 or 1.5}
 
-\item{anisotropic}{boolean, default to FALSE. Is the covariance anisotropic ?}
+\item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 
 \item{n_chains}{number of MCMC chains}
 

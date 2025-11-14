@@ -37,28 +37,28 @@ PP = createPP(vecchia_approx, plot=FALSE)
 
 # Good cases ######################
 # no PP, an X
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = F)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 # no PP, no X
-res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = F)
+res = process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 # PP and X
-res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = F)
+res = process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALSE)
 # one obs of x per loc
 X = as.data.frame(cbind(observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 
 # Errors ##########################
 \dontrun{
 one obs of x per loc
 X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 bad X number of rows
 X = X[-1,]
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 bad X format
 X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 not independent covariates
 X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = T)
+res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 }
 }

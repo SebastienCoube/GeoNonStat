@@ -4,7 +4,13 @@
 \alias{X_PP_crossprod}
 \title{Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix}
 \usage{
-X_PP_crossprod(X, PP = NULL, Y, vecchia_approx = NULL, permutate_PP_to_obs = F)
+X_PP_crossprod(
+  X,
+  PP = NULL,
+  Y,
+  vecchia_approx = NULL,
+  permutate_PP_to_obs = FALSE
+)
 }
 \arguments{
 \item{X}{a matrix of covariates who will be multiplied by the first rows of Y}

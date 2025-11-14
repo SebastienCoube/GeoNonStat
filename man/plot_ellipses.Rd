@@ -4,10 +4,10 @@
 \alias{plot_ellipses}
 \title{Plots range ellipses for nonstationary covariance functions.}
 \usage{
-plot_ellipses(locs, log_range, shrink = 0.1, main = "ellipses", add = F)
+plot_ellipses(locs, log_range, shrink = 0.1, add = FALSE, ...)
 }
 \arguments{
-\item{locs}{ellipses centers. A matrix with 2 columns, 1 row  for each ellipse}
+\item{locs}{ellipses centers coordinates. A matrix with 2 columns, 1 row for each ellipse}
 
 \item{log_range}{log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.}
 
@@ -15,9 +15,9 @@ plot_ellipses(locs, log_range, shrink = 0.1, main = "ellipses", add = F)
 Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 correlation  = .1 (rho following INLA's terminology)}
 
-\item{main}{character, main title of the plot. Not used if add is TRUE.}
+\item{add}{logical, default to FALSE. Add on existing plot ?}
 
-\item{add}{logical, add on existing plot ? cancels main. Default to FALSE}
+\item{...}{additional graphical parameters, sent to `plot` if `add=FALSE`}
 }
 \value{
 a plot object

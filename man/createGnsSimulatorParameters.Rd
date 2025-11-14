@@ -11,7 +11,7 @@ createGnsSimulatorParameters(
   noise_intercept = NULL,
   noise_PP_log_var = NULL,
   field_log_var = NULL,
-  flap_the_gums = T,
+  flap_the_gums = TRUE,
   seed = 1
 )
 }
