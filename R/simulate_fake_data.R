@@ -371,7 +371,7 @@ createGnsSimulatorParameters <- function(gns_simulator,
 #' @export
 #'
 #' @examples
-#' # set.seed(2)
+#' set.seed(2)
 #' nlocs = 15000
 #' observed_locs = cbind(runif(nlocs), runif(nlocs))
 #' vecchia_approx = createVecchia(observed_locs, m = 6)

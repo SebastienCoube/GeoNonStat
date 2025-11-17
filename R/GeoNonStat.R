@@ -675,18 +675,8 @@ process_states <- function(hm,
   row.names(params$field_log_var) = " "
   
   # Latent field ###############################################################
-  params$field = exp(.5 * params$field_log_var) * as.vector(Matrix::solve(
-    stuff$sparse_chol,
-    rnorm(vecchia_approx$n_locs)
-  ))
-  
-  # Marginal variance of the NNGP and stuff depending on it ####################
-  params$field_log_var <- hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1)
-  
-  # Latent field ###############################################################
-  params$field <- 
-    exp(.5 * params$field_log_var) * 
-    as.vector(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+  params$field = c(exp(.5 * params$field_log_var)) * 
+    as.vector(Matrix::solve(stuff$sparse_chol,rnorm(vecchia_approx$n_locs)))
   
   return(list(
     "params" = params,

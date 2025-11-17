@@ -519,10 +519,8 @@ X_PP_crossprod <- function(X,
 #' array_cumsum(myarray)
 array_cumsum <- function(x) {
   res <- array(0, dim = dim(x))
-  for (i in seq(dim(x)[1]))
-  {
-    for (j in seq(dim(x)[2]))
-    {
+  for (i in seq(dim(x)[1])) {
+    for (j in seq(dim(x)[2])) {
       res[i, j, ] <- cumsum(x[i, j, ])
     }
   }
@@ -545,10 +543,8 @@ array_cumsum <- function(x) {
 #' result <- array_multiply_3(x, M)
 array_multiply_3 <- function(x, M) {
   res <- array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
-  for (i in seq(dim(res)[1]))
-  {
-    for (j in seq(dim(res)[2]))
-    {
+  for (i in seq(dim(res)[1])) {
+    for (j in seq(dim(res)[2])) {
       res[i, j, ] <- as.vector(x[i, j, ] %*% M)
     }
   }
@@ -570,10 +566,8 @@ array_multiply_3 <- function(x, M) {
 array_multiply_2 <- function(x, M) {
   # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon
   res <- array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
-  for (i in seq(dim(res)[1]))
-  {
-    for (j in seq(dim(res)[3]))
-    {
+  for (i in seq(dim(res)[1])) {
+    for (j in seq(dim(res)[3])) {
       res[i, , j] <- as.vector(M %*% x[i, , j])
     }
   }
@@ -595,10 +589,8 @@ array_multiply_2 <- function(x, M) {
 #' result <- array_multiply_1(x, M)
 array_multiply_1 <- function(x, M) {
   res <- array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
-  for (i in seq(dim(res)[2]))
-  {
-    for (j in seq(dim(res)[3]))
-    {
+  for (i in seq(dim(res)[2])) {
+    for (j in seq(dim(res)[3])) {
       res[, i, j] <- as.vector(M %*% x[, i, j])
     }
   }

@@ -34,11 +34,11 @@ coeff_list = createGnsSimulatorParameters(gns_simulator, range_PP_log_var =range
 coeff_list$range_X_coeff[1] = -5
 
 
-fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = coeff_list)
+fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
 dev.off()
 
 
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 1)
+plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 0.5)
 
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field)
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise)
@@ -76,7 +76,7 @@ mygns = GeoNonStat(
 
 # parallel run
 mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-  geo_non_stat = mygns, n_chains_in_parallel = 3, 
+  object = mygns, n_chains_in_parallel = 3, 
   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
 
 # update of the state and the records
