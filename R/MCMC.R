@@ -1096,6 +1096,7 @@ run_parallel_version_goret = function(
   res = parallel::parLapply(
     cl = cl, 
     X = seq(length(object$states)), function(chain_idx){
+      devtools::load_all()
       MessyMessyMcmc(
         covariates = object$covariates, observed_field = object$observed_field, 
         hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
