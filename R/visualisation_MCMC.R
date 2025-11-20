@@ -1,11 +1,14 @@
-AggregateRecords = function(records, burn_in = .1, who = "all"){
+AggregateRecordsPerChain = function(records, burn_in = .1, who = "all"){
   if(identical(who, "all")) who = setdiff(names(records[[1]][[1]]), "field")
+  if(identical(who, "all_even_the_field")) who = names(records[[1]][[1]])
   res = lapply(records, function(record){
     res = list()
     for(name in who){
       res[[name]] = matrix(0, ceiling(length(record)*(1-burn_in)), length(record[[1]][[name]]))
-      if(ncol(record[[1]][[name]])==1)colnames(res[[name]]) = row.names(record[[1]][[name]])
-      if(ncol(record[[1]][[name]])>1)colnames(res[[name]]) = c(outer(row.names(record[[1]][[name]]), colnames(record[[1]][[name]]), function(x, y)paste(x, y, sep = "_")))
+      if(!is.null( row.names(record[[1]][[name]]))){
+        if(ncol(record[[1]][[name]])==1)colnames(res[[name]]) = row.names(record[[1]][[name]])
+        if(ncol(record[[1]][[name]])>1)colnames(res[[name]]) = c(outer(row.names(record[[1]][[name]]), colnames(record[[1]][[name]]), function(x, y)paste(x, y, sep = "_")))
+      }
       for(iter in seq( max(1, floor(length(record) * burn_in)), length(record))){
         res[[name]][iter - floor(length(record) * burn_in),] = record[[iter]][[name]]
       }
@@ -14,8 +17,15 @@ AggregateRecords = function(records, burn_in = .1, who = "all"){
   })
 }
 
+AggregateRecords = function(records, burn_in = .1, who = "all"){
+  aggregated_records = AggregateRecordsPerChain(records = geo_non_stat$records, burn_in = burn_in, who = who)
+  res=  list()
+  for(name in names(aggregated_records[[1]]))res[[name]] = do.call(rbind, lapply(aggregated_records, function(x)x[[name]]))
+  return(res)
+}
+
 PrintMcmcDiags = function(geo_non_stat, burn_in = .1, min_ESS = 50, max_Gelman_upper = 1.05){
-  aggregated_records = AggregateRecords(geo_non_stat$records, burn_in)
+  aggregated_records = AggregateRecordsPerChain(geo_non_stat$records, burn_in)
   ess = lapply(aggregated_records, function(x)lapply(x, function(x)coda::effectiveSize(x)))
   ess = lapply(ess, unlist)
   ess = Reduce("+", ess)
@@ -37,13 +47,13 @@ PrintMcmcDiags = function(geo_non_stat, burn_in = .1, min_ESS = 50, max_Gelman_u
 
 
 TracePlots = function(geo_non_stat, burn_in = .1, who = "all", mfrow = c(3,3)){
-  par(mfrow = mfrow)
-  aggregated_records = AggregateRecords(geo_non_stat$records, burn_in, who = who)
+  aggregated_records = AggregateRecordsPerChain(geo_non_stat$records, burn_in, who = who)
   plotted_iters = seq(
     ceiling(length(geo_non_stat$records[[1]])*(burn_in)), 
     length(geo_non_stat$records[[1]])
     )
   for(name in names(aggregated_records[[1]])){
+    par(mfrow = mfrow)
     for(i in seq(ncol(aggregated_records[[1]][[name]]))){
       to_be_plotted = sapply(aggregated_records, function(x)x[[name]][,i])
       plot(0, 0, ylim = c(min(to_be_plotted), max(to_be_plotted)), 
@@ -55,3 +65,4 @@ TracePlots = function(geo_non_stat, burn_in = .1, who = "all", mfrow = c(3,3)){
     }
   }
 }
+

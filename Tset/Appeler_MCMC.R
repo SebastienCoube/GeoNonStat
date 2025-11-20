@@ -77,7 +77,7 @@ geo_non_stat = GeoNonStat(
 # parallel run
 mise_a_jour_mcmc_parallele = run_parallel_version_goret(
   geo_non_stat = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 10, n_iterations = 30, seed = 1)
+  n_threads_per_chain = 10, n_iterations = 300, seed = 1)
 
 # update of the state and the records
 for(chain_idx in seq(length(geo_non_stat$states))){
@@ -87,10 +87,13 @@ for(chain_idx in seq(length(geo_non_stat$states))){
 
 records = geo_non_stat$records
 
-aggregated_records = AggregateRecords(geo_non_stat$records, .1)
-PrintMcmcDiags(geo_non_stat,burn_in = .25)
-TracePlots(geo_non_stat, .3)
-TracePlots(geo_non_stat, .3, who = "range_beta")
-TracePlots(geo_non_stat, .3, who = c("range_beta", "range_log_scale"))
+PrintMcmcDiags(geo_non_stat,burn_in = .2)
+TracePlots(geo_non_stat, .2)
+#TracePlots(geo_non_stat, .3, who = c("range_beta", "range_log_scale"))
+
+estimation = Estimate(geo_non_stat, .2)
+
+elppd_train = ElppdTrain(geo_non_stat, .2)
 
 
+new_locs = rbind(observed_locs[1,], as.matrix(expand.grid(seq(-.1, 1.1, .01), seq(-.1, 1.1, .01))))

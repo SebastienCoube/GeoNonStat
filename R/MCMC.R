@@ -1075,6 +1075,7 @@ run_parallel_version_goret = function(geo_non_stat, n_chains_in_parallel = NULL,
   res = parallel::parLapply(
     cl = cl, 
     X = seq(length(geo_non_stat$states)), function(chain_idx){
+      devtools::load_all()
       MessyMessyMcmc(
         covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
         hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
