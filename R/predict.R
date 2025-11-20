@@ -563,4 +563,3 @@ geo_non_stat$covariates$X$
 # ###   )
 # ### }
 #
->>>>>>> ad0a9aed072f4eaa83c93525b226c14a96ca5eb1
