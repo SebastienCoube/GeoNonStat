@@ -34,18 +34,18 @@ coeff_list = createGnsSimulatorParameters(gns_simulator, range_PP_log_var =range
 coeff_list$range_X_coeff[1] = -5
 
 
-fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_simulator_parameters = coeff_list)
+fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
 dev.off()
 
 
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 1)
+plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 0.5)
 
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field)
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise)
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
 
 
-geo_non_stat = GeoNonStat(
+mygns = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   observed_field = fake_data$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
@@ -58,9 +58,9 @@ geo_non_stat = GeoNonStat(
 
 # #Run MCMC chain for 40 iterations
 # samples = MessyMessyMcmc(
-#   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
-#   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-#   state = geo_non_stat$states$chain_1, n_iterations_update = 40, num_threads = 10, iter_start = 1, seed = 1
+#   covariates = mygns$covariates, observed_field = mygns$observed_field, 
+#   hierarchical_model = mygns$hierarchical_model, vecchia_approx = mygns$vecchia_approx, 
+#   state = mygns$states$chain_1, n_iterations_update = 40, num_threads = 10, iter_start = 1, seed = 1
 # )
 # 
 # # Current i.e. last  state of the MCMC chain
@@ -76,14 +76,20 @@ geo_non_stat = GeoNonStat(
 
 # parallel run
 mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+<<<<<<< HEAD
   geo_non_stat = geo_non_stat, n_chains_in_parallel = 3, 
   n_threads_per_chain = 10, n_iterations = 300, seed = 1)
+=======
+  object = mygns, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 10, n_iterations = 30, seed = 1)
+>>>>>>> ad0a9aed072f4eaa83c93525b226c14a96ca5eb1
 
 # update of the state and the records
-for(chain_idx in seq(length(geo_non_stat$states))){
-  geo_non_stat$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
-  geo_non_stat$records[[chain_idx]] = c(geo_non_stat$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
+for(chain_idx in seq(length(mygns$states))){
+  mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
+  mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
 }
+<<<<<<< HEAD
 
 records = geo_non_stat$records
 
@@ -97,3 +103,5 @@ elppd_train = ElppdTrain(geo_non_stat, .2)
 
 
 new_locs = rbind(observed_locs[1,], as.matrix(expand.grid(seq(-.1, 1.1, .01), seq(-.1, 1.1, .01))))
+=======
+>>>>>>> ad0a9aed072f4eaa83c93525b226c14a96ca5eb1

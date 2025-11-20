@@ -12,7 +12,7 @@ createGnsSimulator(
   noise_PP = NULL,
   range_X = NULL,
   range_PP = NULL,
-  anisotropic = F
+  anisotropic = FALSE
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ createGnsSimulator(
 
 \item{range_PP}{TODO}
 
-\item{anisotropic}{TODO}
+\item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 }
 \value{
 TODO

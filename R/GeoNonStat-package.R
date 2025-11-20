@@ -6,21 +6,19 @@
 #'
 #' @import Rcpp
 #' @importFrom abind abind
-#' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol 
+#' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol
 #' @importFrom GpGp find_ordered_nn order_maxmin vecchia_Linv matern_isotropic fast_Gp_sim
 #' @import parallel
 #' @import fields
-#' @importFrom grDevices heat.colors
 #' @importFrom ellipse ellipse
 #' @import BH
 #' @importFrom expm expm
-#' @importFrom Rcpp evalCpp
 #' @importFrom methods as
 #' @importFrom stats rnorm runif
-#' @importFrom graphics plot
+#' @importFrom grDevices colorRampPalette
 #' @importFrom FNN get.knn
 #' @importFrom coda effectiveSize
 #' @importFrom stats dist dnorm kmeans lm median model.matrix quantile sd var vcov
-#' @importFrom graphics abline barplot hist layout legend lines par points text
+#' @importFrom graphics plot abline barplot hist layout legend lines par points text
 #' @useDynLib GeoNonStat, .registration = TRUE
 "_PACKAGE"

@@ -7,13 +7,13 @@
 beta_prior_log_dens(beta, n_PP, beta0_mean, beta0_var, log_scale)
 }
 \arguments{
-\item{beta}{a numeric matrix, with 1 or 3 columns}
+\item{beta}{a numeric matrix, with 1 (isotropic case) or 3 (anisotropic case) columns}
 
 \item{n_PP}{number of PP}
 
-\item{beta0_mean}{mean of beta, numeric value}
+\item{beta0_mean}{numeric value, mean of beta_0}
 
-\item{beta0_var}{var of beta, numeric value}
+\item{beta0_var}{numeric value, mean of beta_0}
 
 \item{log_scale}{numeric vector of length 1 for a 1 column beta matrix
 and length 2 for a 1 column beta matrix}
@@ -28,7 +28,7 @@ a numeric value
   In the isotropic case, beta has one column. 
   It has 3 categories of rows : 
   - the first row, corresponding to the Intercept. 
-  - the next rows, corresponding to the rest of the explnanatory variables if there are any.
+  - the next rows, corresponding to the rest of the explanatory variables if there are any.
   - the last rows, corresponding to the PP coefficients if there are any.
   
                 The mean is a vector     The diagonal of the variance matrix is 

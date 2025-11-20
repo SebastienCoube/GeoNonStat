@@ -1,9 +1,9 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
-#' 
+#'
 #' @param x an object of class PP, create with `createPP`
+#' @param ... additional arguments (unused)
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
-#' @param ... unused additional arguments
 #'
 #' @returns NULL
 #' @rdname PP
@@ -12,178 +12,196 @@
 #' @export
 #'
 #' @examples
-#' vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-#' pepito = createPP(vecchia_approx, plot=FALSE)
+#' vecchia_approx <- createVecchia(observed_locs = cbind(runif(10000), runif(10000)), 10)
+#' pepito <- createPP(vecchia_approx, plot = FALSE)
 #' plot(pepito)
-plot.PP <- function(x, ..., mar_var_loss = TRUE, separate=FALSE) {
+plot.PP <- function(x,
+                    ...,
+                    mar_var_loss = TRUE,
+                    separate = FALSE) {
   def.par <- par(no.readonly = TRUE)
-  par(mar=c(3, 3, 3, 1) + 0.5)
-  par(mgp=c(2, 1, 0))
-  if(mar_var_loss & !separate) {
-    layout(matrix(c(1,1,2), 1, 3, byrow = TRUE))
+  par(mar = c(3, 3, 3, 1) + 0.5)
+  par(mgp = c(2, 1, 0))
+  if (mar_var_loss & !separate) {
+    layout(matrix(c(1, 1, 2), 1, 3, byrow = TRUE))
   }
   mar_var <- NULL
-  if(mar_var_loss) {
-    mar_var = var_loss_percentage.PP(x)
+  if (mar_var_loss) {
+    mar_var <- var_loss_percentage.PP(x)
   }
   plot_knots.PP(x = x, mar_var_loss = mar_var)
-  if(mar_var_loss) {
+  if (mar_var_loss) {
     hist(mar_var,
-         xlab = "percentage of lost variance", 
-         main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
-         cex.main=1)
+      xlab = "percentage of lost variance",
+      main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
+      cex.main = 1
+    )
   }
   par(def.par)
 }
 
 
 #' @title Plot the knots and the spatial locations of a PP
-#' @param x an object of class \code{PP}
-#' @param mar_var_loss optional, the var loss computed by var_loss_percentage.PP
+#' @param x an object of class PP, create with `createPP`
+#' @param mar_var_loss optional, the var loss computed by `var_loss_percentage.PP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @examples
-#' observed_locs = cbind(runif(1000), runif(1000))
-#' observed_locs = observed_locs[ceiling(nrow(observed_locs)*runif(3000)),]
-#' vecchia_approx = createVecchia(observed_locs)
-#' pepito = createPP(vecchia_approx, plot=FALSE)
+#' observed_locs <- cbind(runif(1000), runif(1000))
+#' observed_locs <- observed_locs[ceiling(nrow(observed_locs) * runif(3000)), ]
+#' vecchia_approx <- createVecchia(observed_locs)
+#' pepito <- createPP(vecchia_approx, plot = FALSE)
 #' plot_knots.PP(pepito)
-plot_knots.PP = function(x, mar_var_loss = NULL, show_knots = TRUE){
+plot_knots.PP <- function(x,
+                          mar_var_loss = NULL,
+                          show_knots = TRUE) {
   # Graphical parameters
   def.par <- par(no.readonly = TRUE)
   omar <- def.par[["mar"]]
-  par(mgp=c(2, 1, 0))
-  if(omar[2]>=omar[4] & (show_knots | !is.null(mar_var_loss))) {
-    par(mar = omar + c(1, 1, 1, 4*1.5), xpd = TRUE)
+  par(mgp = c(2, 1, 0))
+  if (omar[2] >= omar[4] & (show_knots | !is.null(mar_var_loss))) {
+    par(mar = omar + c(1, 1, 1, 4 * 1.5), xpd = TRUE)
   }
-  
+
   locs <- x$vecchia_locs
   nlocs <- nrow(locs)
   nknots <- nrow(x$knots)
   legendtitle <- NULL
 
-  
+
   ### Colors of locations
-  locs_col = "#CDCDCDCC"
-  if(!is.null(mar_var_loss)) {
+  locs_col <- "#CDCDCDCC"
+  if (!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
     legendtitle <- "\n\n\nLoss of\nmarginal\nvariance\n(%)"
     cols <- mar_var_loss[-seq(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
     cols <- cols[ord]
-    locs <- locs[ord,]
-    cut_var <- cut(cols, breaks = c(0,1,2,5,10,50,100), include.lowest = T)
-    base_colors <- c('#F3D97CCC', '#F5C46FCC', '#EDAB65CC', '#DD8A5BCC', '#C2604FCC', '#A02F42CC')
-    locs_col = base_colors[as.numeric(cut_var)]
+    locs <- locs[ord, ]
+    # Get
+    cut_var <- cut(cols,
+      breaks = c(0, 1, 2, 5, 10, 50, 100),
+      include.lowest = TRUE
+    )
+    base_colors <- get_colors(1:6, alpha = TRUE)
+    locs_col <- base_colors[as.numeric(cut_var)]
   }
-  
+
   #### Plot locations and knots
-  maxlim <- pmax(apply(locs,2, max), apply(x$knots,2, max))
-  minlim <- pmin(apply(locs,2, min), apply(x$knots,2, min))
-  # 
+  maxlim <- pmax(apply(locs, 2, max), apply(x$knots, 2, max))
+  minlim <- pmin(apply(locs, 2, min), apply(x$knots, 2, min))
+  #
   # Plot locations
-  pch = 16
-  if(nlocs>1e6) pch="."
-  title = "Locations of PP"
-  if(show_knots) title = "Knot placement of PP"
-  plot(locs, 
-       cex = 1,
-       col = locs_col, 
-       pch = pch, 
-       xlab = "1st spatial coordinate",
-       ylab = "2nd spatial coordinate",
-       main = title,
-       xlim=c(minlim[1], maxlim[2]),
-       ylim=c(minlim[2], maxlim[2]),
-       cex.main=1
+  pch <- 16
+  if (nlocs > 1e6) {
+    pch <- "."
+  }
+  title <- "Locations of PP"
+  if (show_knots) {
+    title <- "Knot placement of PP"
+  }
+  plot(
+    locs,
+    cex = 1,
+    col = locs_col,
+    pch = pch,
+    xlab = "1st spatial coordinate",
+    ylab = "2nd spatial coordinate",
+    main = title,
+    xlim = c(minlim[1], maxlim[2]),
+    ylim = c(minlim[2], maxlim[2]),
+    cex.main = 1
   )
-  
+
   # ### compute size of legend
-  mylegend <- legend(x="right",
-                     legend="knots",
-                     title="Knots",
-                     plot = FALSE)
-  if(!is.null(mar_var_loss)) {
+  mylegend <- legend(
+    x = "right",
+    legend = "knots",
+    title = "Knots",
+    plot = FALSE
+  )
+  if (!is.null(mar_var_loss)) {
     ### Marginal variance loss scale
-    legend(x="topright",
-           legend=levels(cut_var), 
-           fill=base_colors, 
-           title=legendtitle,
-           inset=c(-1.2*mylegend$rect$w, 0),
-           bty="n")
+    legend(
+      x = "topright",
+      legend = levels(cut_var),
+      fill = base_colors,
+      title = legendtitle,
+      inset = c(-1.2 * mylegend$rect$w, 0),
+      bty = "n"
+    )
   }
   # Plot knots
-  if(show_knots) {
-    points(x$knots, pch = 10, cex=1, col=1)
-    legend(x="topright",
-           legend="knots", 
-           pch =10,
-           col=1,
-           inset=c(-mylegend$rect$w, 0),
-           bty="n")
+  if (show_knots) {
+    points(x$knots,
+      pch = 10,
+      cex = 1,
+      col = 1
+    )
+    legend(
+      x = "topright",
+      legend = "knots",
+      pch = 10,
+      col = 1,
+      inset = c(-mylegend$rect$w, 0),
+      bty = "n"
+    )
   }
-  
+
   #### Restaure margins
-  par(mar=omar, mgp=def.par[["mgp"]])
+  par(mar = omar, mgp = def.par[["mgp"]])
 }
 
 #' Plots range ellipses for nonstationary covariance functions.
-#' @param locs ellipses centers. A matrix with 2 columns, 1 row  for each ellipse
+#' @param locs ellipses centers coordinates. A matrix with 2 columns, 1 row for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
-#' @param main character, main title of the plot. Not used if add is TRUE.
-#' @param add logical, add on existing plot ? cancels main. Default to FALSE
+#' @param add logical, default to FALSE. Add on existing plot ?
 #' @param shrink numeric, shrinks or inflates the ellipses. shrink = 1 gives the
 #' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
-#'
+#' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
+#' 
 #' @returns a plot object
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(20), ncol=2)
-#' log_range <- matrix(rnorm(30), ncol=3)
-#' plot_ellipses(locs, log_range, shrink=0.1)
+#' locs <- matrix(rnorm(20), ncol = 2)
+#' log_range <- matrix(rnorm(30), ncol = 3)
+#' plot_ellipses(locs, log_range, shrink = 0.1)
 #'
-#' locs <- matrix(rnorm(20), ncol=2)
-#' log_range <- matrix(rnorm(10), ncol=1)
-#' plot_ellipses(locs, log_range, shrink=0.1)
-plot_ellipses = function(locs,
-                         log_range,
-                         shrink = .1,
-                         main = "ellipses",
-                         add  = F)
-{
+#' locs <- matrix(rnorm(20), ncol = 2)
+#' log_range <- matrix(rnorm(10), ncol = 1)
+#' plot_ellipses(locs, log_range, shrink = 0.1)
+plot_ellipses <- function(locs,
+                          log_range,
+                          shrink = .1,
+                          add = FALSE,
+                          ...) {
   if (ncol(log_range) == 3) {
-    #to match parametrization in compute sparse chol
-    log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
-                                         sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
-    matrices = lapply(split(log_range, row(log_range)), expmat)
+    # to match parametrization in compute sparse chol
+    log_range <- log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
+      sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
+    matrices <- lapply(split(log_range, row(log_range)), expmat)
   }
   if (ncol(log_range) == 1) {
-    matrices = lapply(log_range, function(x)
+    matrices <- lapply(log_range, function(x) {
       diag(exp(x), 2)
-    )
+    })
   }
   if (!add) {
-    plot(
-      locs,
-      type = "n",
-      xlab = "",
-      ylab = "",
-      main = main
-    )
+    plot(locs, type = "n", ...)
   }
   for (i in seq(nrow(locs)))
   {
     # 2.447747 must be some bivariate confidence interval
     # shrink = 1 gives the package's Mahalanobis distance
-    matrices[[i]] = eigen(matrices[[i]])
-    matrices[[i]] = (matrices[[i]])$vec %*% diag(matrices[[i]]$val^2) %*% t(matrices[[i]]$vec) /
+    matrices[[i]] <- eigen(matrices[[i]])
+    matrices[[i]] <- (matrices[[i]])$vec %*% diag(matrices[[i]]$val^2) %*% t(matrices[[i]]$vec) /
       (2.447747)^2
-    ell = ellipse::ellipse(matrices[[i]]) * shrink
-    ell[, 1] = ell[, 1] + locs[i, 1]
-    ell[, 2] = ell[, 2] + locs[i, 2]
+    ell <- ellipse::ellipse(matrices[[i]]) * shrink
+    ell[, 1] <- ell[, 1] + locs[i, 1]
+    ell[, 2] <- ell[, 2] + locs[i, 2]
     lines(ell)
   }
 }
@@ -206,7 +224,7 @@ plot_ellipses = function(locs,
 #       compute_sparse_chol(
 #         range_beta = range_beta,
 #         NNarray = NNarray, locs = locs,
-#         anisotropic = T,
+#         anisotropic = TRUE,
 #         sphere = F,
 #         PP = NULL, use_PP = F,
 #         range_X = matrix(1, nrow(locs)),
@@ -215,7 +233,7 @@ plot_ellipses = function(locs,
 #         locs_idx = NULL,
 #         num_threads = 10
 #       )[[1]][!is.na(NNarray)],
-#     triangular = T
+#     triangular = TRUE
 #   )
 # sparse_chol_iso =
 #   Matrix::sparseMatrix(
@@ -234,7 +252,7 @@ plot_ellipses = function(locs,
 #         locs_idx = NULL,
 #         num_threads = 10
 #       )[[1]][!is.na(NNarray)],
-#     triangular = T
+#     triangular = TRUE
 #   )
 #
 # log_range =
@@ -265,15 +283,14 @@ plot_ellipses = function(locs,
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
 # plot_ellipses(
-#   locs = locs[1,,drop=F], log_range = log_range[1,,drop=F],
-#   shrink = sqrt(8*nu), add=  T)
+#   locs = locs[1,,drop=FALSE], log_range = log_range[1,,drop=FALSE],
+#   shrink = sqrt(8*nu), add=  TRUE)
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for isotropic")
 # plot_ellipses(
 #   locs = locs[1,,drop=F], log_range = log_range[1,1,drop=F],
 #   shrink = sqrt(8*nu), add=  T)
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
-
 
 
 ## test with GpGp, the empirical rho is always greater than theoretical rho
@@ -291,216 +308,119 @@ plot_ellipses = function(locs,
 #' Title get_colors TODO
 #'
 #' @param x a vector
+#' @param alpha logical, default to TRUE. Add transparency to colors ?
 #'
-#' @returns a vector of colors
+#' @returns a vector of colors of length `length(x)`
 #' @export
 #'
 #' @examples
-#' get_colors(c(1,2,3))
-get_colors = function(x) {
-  colors = rep(1, length(x))
-  colors[!is.na(x)] = heat.colors(100)[round((x[!is.na(x)] - min(x[!is.na(x)])) /
-                                               (max(x[!is.na(x)]) - min(x[!is.na(x)])) * 90) + 1]
-  colors
+#' get_colors(c(1, 2, 3))
+get_colors <- function(x, alpha = FALSE) {
+  colors <- rep(1, length(x))
+  xnoNA <- x[!is.na(x)]
+  col1 <- "#FFFFB2"
+  col2 <- "#B10026"
+  if (alpha) {
+    col1 <- paste0(col1, "CC")
+    col2 <- paste0(col2, "CC")
+  }
+  cols <- colorRampPalette(c(col1, col2))(100)
+  colors[!is.na(x)] <- cols[round((xnoNA - min(xnoNA)) /
+    (max(xnoNA) - min(xnoNA)) * 99) + 1]
+  return(colors)
 }
 
+#' Colors for a categorical variable
+#'
+#' @param n integer, number of colors to get
+#' @param alpha logical, default to TRUE. Add transparency to colors ?
+#'
+#' @returns a vector of colors of length `length(x)`
+#' @export
+#'
+#' @examples
+#' getColorsCat(3)
+getColorsCat <- function(n, alpha = FALSE) {
+  if(n>9){
+    cols <- c("#000000", grDevices::rainbow(n-1))
+  } else {
+    base_colors <- c("#000000", "#E73F74", "#F1CE63", "#77AADD", "#009988", "#9467BD", "#FF9D9A", "#99DDFF", "#AAAA00")
+    cols <- base_colors[seq_len(n)]
+  }
+  if(alpha){
+    cols <- paste0(cols, "CC")
+  }
+  return(cols)
+}
 
 #' Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.
 #'
-#' @param locs spatial locations
-#' @param field interest variable
-#' @param main main title
-#' @param cex shrinks or inflates the points
-#' @param add logical (default to FALSE)
+#' @param locs numeric matrix of spatial locations
+#' @param field numerical vector, interest variable to define color of points
+#' @param add logical, default to FALSE. Add on existing plot ?
+#' @param alpha logical, default to TRUE. Add transparency to colors ?
+#' @param ... additional graphical parameters, sent to `plot` or,
+#' if `add=TRUE`, to `points`
 #'
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(2000), ncol=2)
-#' plot_pointillist_painting(locs=locs, field=locs[,1])
-#' plot_pointillist_painting(locs=locs, field=rnorm(1000))
-plot_pointillist_painting = function(locs,
-                                     field,
-                                     cex = 1,
-                                     main = NULL,
-                                     add = FALSE)
-{
-  if (!add)
-    plot(
-      locs,
-      col = get_colors(field),
-      main = main,
-      pch = 15,
-      cex = cex,
-      xlab  = "",
-      ylab = ""
-    )
-  if (add)
-    points(
-      locs,
-      col = get_colors(field),
-      pch = 15,
-      cex = cex,
-      xlab  = "",
-      ylab = ""
-    )
+#' locs <- matrix(rnorm(2000), ncol = 2)
+#' plot_pointillist_painting(locs = locs, field = rnorm(1000))
+plot_pointillist_painting <- function(locs,
+                                      field,
+                                      add = FALSE,
+                                      alpha = TRUE,
+                                      ...) {
+  if (add) {
+    points(locs, col = get_colors(field, alpha = TRUE), ...)
+  } else {
+    plot(locs, col = get_colors(field, alpha = TRUE), ...)
+  }
 }
 
 #' Plot the scale of colors for a given variable
 #'
-#' @param field interest variable, a vector
+#' @param field numerical vector, interest variable to define color of points
 #' @param scalename vector, default to ""
 #'
 #' @returns a plot
 #' @export
 #'
 #' @examples
-#' pointillist_colorscale(field=c(1,2,3))
-pointillist_colorscale = function(field, scalename = "") {
+#' pointillist_colorscale(field = c(1, 2, 3))
+pointillist_colorscale <- function(field, scalename = "") {
   origmar <- par("mar")
-  par(mar = c(0, 0, 0, 0))
-  plot(
-    0,
-    0,
-    type = "n",
-    xaxt = 'n',
-    yaxt = 'n',
-    xlim = c(-.007, .005),
-    ylim = c(0, 100),
-    frame = FALSE,
-    xlab = "",
-    ylab = ""
-  )
+  origlwd <- par("lwd")
+  par(mar = c(1, 0, 0, 0))
+  par(lwd = 0.5)
+  field <- field[!is.na(field)]
+  if (length(field) == 0) {
+    stop("only NA values in field")
+  }
   barplot(
-    rep(.005, 100),
-    col = (heat.colors(101)),
-    width = rep(1, 100),
+    rep(0.3, 50),
+    col = get_colors(1:50),
+    width = rep(1, 50),
     space = 0,
+    # lwd = 0.1,
     xlab = scalename,
     ylab = "",
     main = "",
-    border = T,
-    horiz = T,
-    add = T,
-    axes = F
+    border = TRUE,
+    ylim = c(0, 50),
+    horiz = TRUE,
+    xlim = c(-0.2, .3),
+    axes = FALSE,
+    mgp = c(0, 0, 0),
   )
-  text(y = 99, -.004, format(signif(max(field)), trim = 4, width = 4))
-  text(y = 75, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) * 3 / 4), trim = 4, width = 4))
-  text(y = 50, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) / 2), trim = 4, width = 4))
-  text(y = 25, -.004, format(signif(min(field) + (
-    max(field) - min(field)
-  ) * 1 / 4), trim = 4, width = 4))
-  text(y = 1, -.004, format(signif(min(field)), trim = 4, width = 4))
-  par(mar = origmar)
+  pos <- seq(0, 1, by = 0.25)
+  values <- stats::quantile(field, probs = pos)
+  text(
+    y = 1 + pos * (50 - 1),
+    x = -0.1,
+    format(signif(values), trim = 4, width = 4)
+  )
+  par(mar = origmar, lwd = origlwd)
 }
-
-
-#' Cumulative sum of an array
-#'
-#' @param x an array of more than 2 dimensions
-#'
-#' @returns an array, the same dimension as x
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' myarray <- array(abs(rnorm(200)), dim = c(10, 10, 2))
-#' array_cumsum(myarray)
-array_cumsum = function(x)
-{
-  res = array(0, dim = dim(x))
-  for (i in seq(dim(x)[1]))
-  {
-    for (j in seq(dim(x)[2]))
-    {
-      res[i, j, ] = cumsum(x[i, j, ])
-    }
-  }
-  res
-}
-
-
-#' Title TODO
-#'
-#' @param x  a 3 dimensional array
-#' @param M a Matrix (TODO)
-#'
-#' @returns an 3 dimensional array, of dimension `(dim(x)[1], dim(x)[2], M@Dim[2])`
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' x <- array(1:12, dim = c(2, 2, 3))
-#' M <- Matrix::Matrix(matrix(1:9, nrow = 3, ncol = 3), sparse = TRUE)
-#' result <- array_multiply_3(x, M)
-array_multiply_3 = function(x, M)
-{
-  res = array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
-  for (i in seq(dim(res)[1]))
-  {
-    for (j in seq(dim(res)[2]))
-    {
-      res[i, j, ] = as.vector(x[i, j, ] %*% M)
-    }
-  }
-  res
-}
-
-#' Title TODO
-#'
-#' @param x an array of 3 dimensions
-#' @param M a sparse matrix ? (TODO)
-#'
-#' @returns a 3 dimansional array of dimensions `(dim(x)[1], dim(M)[2], dim(x)[3])`
-#' @export
-#'
-#' @examples
-#' x <- array(1:24, dim = c(2, 3, 4))
-#' M <- matrix(1:6, nrow = 2, ncol = 3)
-#' #result <- array_multiply_2(x, M)
-array_multiply_2 = function(x, M)
-{
-  # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon
-  res = array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
-  for (i in seq(dim(res)[1]))
-  {
-    for (j in seq(dim(res)[3]))
-    {
-      res[i, , j] = as.vector(M %*% x[i, , j])
-    }
-  }
-  res
-}
-
-#' Multiply a matrix M with each column of a 3 dimensional array.
-#'
-#' @param x an 3 dimensional array
-#' @param M a matrix
-#'
-#' @returns a 3 dimensional array of dimensions `(dim(M)[1], dim(x)[2], dim(x)[3]).`
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' M <- matrix(1:6, nrow = 3, ncol = 2)
-#' x <- array(1:24, dim = c(2, 3, 4))
-#' result <- array_multiply_1(x, M)
-array_multiply_1 = function(x, M)
-{
-  res = array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
-  for (i in seq(dim(res)[2]))
-  {
-    for (j in seq(dim(res)[3]))
-    {
-      res[, i , j] = as.vector(M %*% x[, i, j])
-    }
-  }
-  res
-}
-
-

@@ -1,33 +1,36 @@
-renew_momentum  = function(momentum, kept_momentum = .9){
-  if(kept_momentum <0 | kept_momentum>1)stop("kept_momentum must be between 0 and 1")
-  momentum[] = sqrt(kept_momentum)*momentum[] + sqrt(1-kept_momentum)*rnorm(length(momentum[])) 
+renew_momentum <- function(momentum, kept_momentum = .9) {
+  if (kept_momentum < 0 |
+      kept_momentum > 1)
+    stop("kept_momentum must be between 0 and 1")
+  momentum[] <- sqrt(kept_momentum) * momentum[] + sqrt(1 - kept_momentum) * rnorm(length(momentum[]))
   momentum
 }
 
-update_kernel = function(
-    iter, iter_start, update_kernel_groupsize, 
-    kernel_value, mult
-){
-  idx = (((iter + iter_start-1) %/% update_kernel_groupsize +1)%%length(kernel_value))+1
-  kernel_value [idx] =
-    kernel_value [idx] + 
-    length(kernel_value) * mult/sqrt(10 + iter + iter_start)
-  kernel_value [idx] = max(kernel_value [idx], -8)
-  kernel_value [idx] = min(kernel_value [idx], 4)
+update_kernel <- function(iter,
+                          iter_start,
+                          update_kernel_groupsize,
+                          kernel_value,
+                          mult) {
+  idx <- (((iter + iter_start - 1) %/% update_kernel_groupsize + 1) %% length(kernel_value)) + 1
+  kernel_value[idx] <-
+    kernel_value[idx] +
+    length(kernel_value) * mult / sqrt(10 + iter + iter_start)
+  kernel_value[idx] <- max(kernel_value[idx], -8)
+  kernel_value[idx] <- min(kernel_value[idx], 4)
   kernel_value
 }
 
 #' Title TODO
 #'
-#' @param covariates  TODO
+#' @param covariates  The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
-#' @param hierarchical_model TODO
-#' @param vecchia_approx TODO
+#' @param hierarchical_model a hierarchical model (obtained with `process_hierarchical_model()`)
+#' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param state TODO
 #' @param n_iterations_update TODO
 #' @param num_threads TODO
 #' @param iter_start TODO
-#' @param seed TODO
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns TODO
 #' @export
@@ -227,7 +230,7 @@ for(iter in seq(n_iterations_update)){
         beta0_var =  hierarchical_model$range$beta0_sd^2, 
         state$params$range_log_scale) # normal prior
       + X_PP_crossprod(
-        X = covariates$range_X$X_locs,  vecchia_approx = vecchia_approx, permutate_PP_to_obs = F,
+        X = covariates$range_X$X_locs,  vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE,
         PP = hierarchical_model$range$PP,
         Y = # Jacobian of range field wrt range_beta
           t(
@@ -243,7 +246,7 @@ for(iter in seq(n_iterations_update)){
                 )), 
               right_vector = state$params$field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray, 
-              sauce_determinant_chef = F, 
+              sauce_determinant_chef = FALSE, 
               num_threads = num_threads
             )
           )) %*% range_reparam_mat
@@ -264,7 +267,7 @@ for(iter in seq(n_iterations_update)){
     ###          compressed_sparse_chol = compute_sparse_chol(
     ###            range_beta = range_beta_, vecchia_approx = vecchia_approx, 
     ###            range_X = covariates$range_X, PP = hierarchical_model$range$PP,
-    ###            matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = F, num_threads = 10
+    ###            matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = FALSE, num_threads = 10
     ###          )
     ###        ) 
     ###        field_ = exp(.5 * state$params$field_log_var[1,1]) * as.vector(Matrix::solve(sparse_chol_, state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))))
@@ -305,7 +308,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = T, num_threads = num_threads
+          compute_derivative = TRUE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field = exp(.5 * state$params$field_log_var[1,1]) * as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))))
@@ -318,7 +321,7 @@ for(iter in seq(n_iterations_update)){
           state$params$range_log_scale) # normal prior
         + X_PP_crossprod(
           X = covariates$range_X$X_locs, vecchia_approx = vecchia_approx, 
-          permutate_PP_to_obs = F,
+          permutate_PP_to_obs = FALSE,
           PP = hierarchical_model$range$PP,
           Y = # Jacobian of range field wrt range_beta
             t(
@@ -334,7 +337,7 @@ for(iter in seq(n_iterations_update)){
                   )), 
                 right_vector = new_field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                 NNarray = vecchia_approx$NNarray, 
-                sauce_determinant_chef = F, 
+                sauce_determinant_chef = FALSE, 
                 num_threads = num_threads
               )
             )) %*% range_reparam_mat 
@@ -354,7 +357,7 @@ for(iter in seq(n_iterations_update)){
     ###             compressed_sparse_chol = compute_sparse_chol(
     ###               range_beta = range_beta_, vecchia_approx = vecchia_approx, 
     ###               range_X = covariates$range_X, PP = hierarchical_model$range$PP,
-    ###               matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = F, num_threads = 10
+    ###               matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = FALSE, num_threads = 10
     ###             )
     ###           ) 
     ###           field_ = exp(.5 * state$params$field_log_var[1,1]) * as.vector(Matrix::solve(sparse_chol_, state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))))
@@ -458,7 +461,7 @@ for(iter in seq(n_iterations_update)){
       # normal prior derivative                
       + X_PP_crossprod(
         X = covariates$range_X$X_locs, PP = hierarchical_model$range$PP,
-        permutate_PP_to_obs = F, 
+        permutate_PP_to_obs = FALSE, 
         vecchia_approx = vecchia_approx,
         Y = # Jacobian of range field wrt range_beta
           t(# natural gradient of obs likelihood wrt range field
@@ -467,7 +470,7 @@ for(iter in seq(n_iterations_update)){
               left_vector = as.vector(state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))), # left vector = whitened latent field
               right_vector = state$params$field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray, 
-              sauce_determinant_chef = T, 
+              sauce_determinant_chef = TRUE, 
               num_threads = num_threads  
             )
           ))  
@@ -488,7 +491,7 @@ for(iter in seq(n_iterations_update)){
     ###           compressed_sparse_chol = compute_sparse_chol(
     ###             range_beta = range_beta_, vecchia_approx = vecchia_approx, 
     ###             range_X = covariates$range_X, PP = hierarchical_model$range$PP,
-    ###             matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = F, num_threads = 10
+    ###             matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = FALSE, num_threads = 10
     ###           )
     ###         ) 
     ###         derivative_test[i,j] = 
@@ -531,7 +534,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = T, num_threads = num_threads
+          compute_derivative = TRUE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       
@@ -547,7 +550,7 @@ for(iter in seq(n_iterations_update)){
         # normal prior derivative                
         + X_PP_crossprod(
           X = covariates$range_X$X_locs, PP = hierarchical_model$range$PP,
-          permutate_PP_to_obs = F, 
+          permutate_PP_to_obs = FALSE, 
           vecchia_approx = vecchia_approx,
           Y = # Jacobian of range field wrt range_beta
             t(# natural gradient of obs likelihood wrt range field
@@ -556,7 +559,7 @@ for(iter in seq(n_iterations_update)){
                 left_vector = as.vector(new_sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))), # left vector = whitened latent field
                 right_vector = state$params$field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                 NNarray = vecchia_approx$NNarray, 
-                sauce_determinant_chef = T, 
+                sauce_determinant_chef = TRUE, 
                 num_threads = num_threads  
               )
             )
@@ -578,7 +581,7 @@ for(iter in seq(n_iterations_update)){
     #           compressed_sparse_chol = compute_sparse_chol(
     #             range_beta = range_beta_, vecchia_approx = vecchia_approx, 
     #             range_X = covariates$range_X, PP = hierarchical_model$range$PP,
-    #             matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = F, num_threads = 10
+    #             matern_smoothness = hierarchical_model$matern_smoothness, compute_derivative = FALSE, num_threads = 10
     #           )
     #         ) 
     #         derivative_test[i,j] = 
@@ -680,7 +683,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = F, num_threads = num_threads
+          compute_derivative = FALSE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       
@@ -771,7 +774,7 @@ for(iter in seq(n_iterations_update)){
           vecchia_approx = vecchia_approx, 
           range_X = covariates$range_X, 
           matern_smoothness = hierarchical_model$matern_smoothness, 
-          compute_derivative = F, num_threads = num_threads
+          compute_derivative = FALSE, num_threads = num_threads
         )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field = as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
@@ -848,7 +851,7 @@ for(iter in seq(n_iterations_update)){
         vecchia_approx = vecchia_approx, 
         range_X = covariates$range_X, 
         matern_smoothness = hierarchical_model$matern_smoothness, 
-        compute_derivative = T, num_threads = num_threads
+        compute_derivative = TRUE, num_threads = num_threads
       )
     state$stuff$sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, state$stuff$compressed_chol)
     
@@ -879,7 +882,7 @@ for(iter in seq(n_iterations_update)){
       beta0_var =  hierarchical_model$noise$beta0_sd^2, 
       log_scale = state$params$noise_log_scale) # normal prior
     + X_PP_crossprod(
-      X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
+      X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
       Y = 
         (
           + .5 # determinant part of normal likelihood
@@ -896,7 +899,7 @@ for(iter in seq(n_iterations_update)){
   ####  noise_ = as.vector(exp(X_PP_mult_right(
   ####    X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
   ####    vecchia_approx = vecchia_approx, Y = noise_beta_, 
-  ####    permutate_PP_to_obs = T
+  ####    permutate_PP_to_obs = TRUE
   ####  )))
   ####  U =
   ####    (
@@ -931,7 +934,7 @@ for(iter in seq(n_iterations_update)){
     new_noise_var = as.vector(exp(X_PP_mult_right(
       X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
       vecchia_approx = vecchia_approx, Y = new_noise_beta, 
-      permutate_PP_to_obs = T
+      permutate_PP_to_obs = TRUE
     )))
     # Make a half step for momentum at the end
     dens_grad = (
@@ -941,7 +944,7 @@ for(iter in seq(n_iterations_update)){
         beta0_var =  hierarchical_model$noise$beta0_sd^2, 
         log_scale = state$params$noise_log_scale) # normal prior
       + X_PP_crossprod(
-        X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = T, 
+        X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
         Y = 
           (
             + .5 # determinant part of normal likelihood
@@ -1002,7 +1005,7 @@ for(iter in seq(n_iterations_update)){
       new_noise_var = as.vector(exp(X_PP_mult_right(
         X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
         vecchia_approx = vecchia_approx, Y = new_noise_beta, 
-        permutate_PP_to_obs = T
+        permutate_PP_to_obs = TRUE
       )))
       dens_ratio = (
         -.5* sum(log(new_noise_var)) 
@@ -1067,19 +1070,36 @@ for(iter in seq(n_iterations_update)){
 }
 
 
-run_parallel_version_goret = function(geo_non_stat, n_chains_in_parallel = NULL, n_threads_per_chain = 10, n_iterations = 100, seed = 1){
-  if(is.null(n_chains_in_parallel))n_chains_in_parallel = length(geo_non_stat$states)
-  iter_start = length(geo_non_stat$records$chain_1)
+#' Title
+#'
+#' @param object an object of class `GeoNonStat`
+#' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
+#' @param n_threads_per_chain numeric, number of threads by markov chain, default to 10
+#' @param n_iterations numeric value, number of iterations. Default to 100
+#' @param seed integer value, seed used for reproducibility purposes. Default to 1
+#'
+#' @returns a list
+#' @export
+#'
+#' @examples
+#' # TODO
+run_parallel_version_goret = function(
+    object, 
+    n_chains_in_parallel = NULL, 
+    n_threads_per_chain = 10, 
+    n_iterations = 100, 
+    seed = 1){
+  if(is.null(n_chains_in_parallel))n_chains_in_parallel = length(object$states)
+  iter_start = length(object$records$chain_1)
   cl = parallel::makeCluster(n_chains_in_parallel)
-  parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "geo_non_stat", "n_iterations"), envir = environment())
+  parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "object", "n_iterations"), envir = environment())
   res = parallel::parLapply(
     cl = cl, 
-    X = seq(length(geo_non_stat$states)), function(chain_idx){
-      devtools::load_all()
+    X = seq(length(object$states)), function(chain_idx){
       MessyMessyMcmc(
-        covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
-        hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-        state = geo_non_stat$states[[chain_idx]], 
+        covariates = object$covariates, observed_field = object$observed_field, 
+        hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
+        state = object$states[[chain_idx]], 
         n_iterations_update = n_iterations, 
         num_threads = n_threads_per_chain, 
         iter_start = iter_start, 

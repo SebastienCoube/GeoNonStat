@@ -9,17 +9,18 @@ process_transition_kernels(init = -4, hm)
 \arguments{
 \item{init}{a numeric value}
 
-\item{hm}{a hierarchical model}
+\item{hm}{a hierarchical model (obtained with `process_hierarchical_model()`)}
 }
 \value{
 a list
 }
 \description{
+TODO : revoir la description
 Transition kernel state
 transition kernel variance is given as the log
-can be used in both stationary and nonstationary cases respectively as a random walk Metropolis or MALA step size
-have an ancillary and a sufficient version when applicable
-rangedescription
+can be used in both stationary and nonstationary cases respectively 
+as a random walk Metropolis or MALA step size have an ancillary and 
+a sufficient version when applicable range description
 }
 \examples{
 nobs = 10000
@@ -39,6 +40,6 @@ hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
   matern_smoothness = 1.5,
   observed_field = observed_field,
   covariates = covariates,
-  anisotropic = T) 
+  anisotropic = TRUE) 
 process_transition_kernels(hm = hm)
 }

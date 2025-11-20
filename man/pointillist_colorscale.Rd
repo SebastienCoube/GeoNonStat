@@ -7,7 +7,7 @@
 pointillist_colorscale(field, scalename = "")
 }
 \arguments{
-\item{field}{interest variable, a vector}
+\item{field}{numerical vector, interest variable to define color of points}
 
 \item{scalename}{vector, default to ""}
 }

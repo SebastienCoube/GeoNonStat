@@ -34,9 +34,9 @@ process_hierarchical_model(
 
 \item{observed_field}{a vector of observations.}
 
-\item{covariates}{The list of covariates obtained with process_covariates, contianing X, X_noise, X_range, X_scale}
+\item{covariates}{The list of covariates obtained with `process_covariates`}
 
-\item{anisotropic}{Boolean indicating if anisotropic}
+\item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 }
 \value{
 a list
@@ -61,5 +61,5 @@ observed_locs = observed_locs,
 matern_smoothness = 1.5,
 observed_field = observed_field,
 covariates = covariates,
-anisotropic = T) 
+anisotropic = TRUE) 
 }

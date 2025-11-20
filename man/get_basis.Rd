@@ -4,14 +4,14 @@
 \alias{get_basis}
 \title{TODO : est-ce que cette fonction est utilisee ?}
 \usage{
-get_basis(PP, vecchia_approx, df = T)
+get_basis(PP, vecchia_approx, df = TRUE)
 }
 \arguments{
 \item{PP}{an object of class `PP`}
 
 \item{vecchia_approx}{an object created by `vecchia_approx()`}
 
-\item{df}{boolean}
+\item{df}{logical, default to TRUE. Return result as a data.frame ?}
 }
 \description{
 TODO : est-ce que cette fonction est utilisee ?

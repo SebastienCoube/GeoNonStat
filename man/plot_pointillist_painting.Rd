@@ -4,18 +4,19 @@
 \alias{plot_pointillist_painting}
 \title{Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.}
 \usage{
-plot_pointillist_painting(locs, field, cex = 1, main = NULL, add = FALSE)
+plot_pointillist_painting(locs, field, add = FALSE, alpha = TRUE, ...)
 }
 \arguments{
-\item{locs}{spatial locations}
+\item{locs}{numeric matrix of spatial locations}
 
-\item{field}{interest variable}
+\item{field}{numerical vector, interest variable to define color of points}
 
-\item{cex}{shrinks or inflates the points}
+\item{add}{logical, default to FALSE. Add on existing plot ?}
 
-\item{main}{main title}
+\item{alpha}{logical, default to TRUE. Add transparency to colors ?}
 
-\item{add}{logical (default to FALSE)}
+\item{...}{additional graphical parameters, sent to `plot` or, 
+if `add=TRUE`, to `points`}
 }
 \value{
 a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
@@ -25,6 +26,5 @@ Plots a spatial variable like a pointillist painting using R base's points. Stup
 }
 \examples{
 locs <- matrix(rnorm(2000), ncol=2)
-plot_pointillist_painting(locs=locs, field=locs[,1])
 plot_pointillist_painting(locs=locs, field=rnorm(1000))
 }

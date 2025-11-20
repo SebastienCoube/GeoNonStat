@@ -9,7 +9,7 @@ X_PP_mult_right(
   PP = NULL,
   vecchia_approx,
   Y,
-  permutate_PP_to_obs = F
+  permutate_PP_to_obs = FALSE
 )
 }
 \arguments{
@@ -49,7 +49,7 @@ res3 <- X_PP_mult_right(PP = PP, X = X_by_loc,
                         Y = c(covariate_coefficients, knots_coeffs), 
                         vecchia_approx = vecchia_approx)
 plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, 
-                              \n one covariate for each location")
+                              \n one covariate for each location", pch=15)
 
 # TODO Nun functional example
 

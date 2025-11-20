@@ -22,7 +22,7 @@ createPP(
 \arguments{
 \item{vecchia_approx}{List obtained by `createVecchia()`.}
 
-\item{matern_range}{Numeric (optional). Matern range parameter for the PP. 
+\item{matern_range}{numeric (optional). Matern range parameter for the PP. 
 If `NULL`, a default value is inferred from spatial locations.}
 
 \item{knots}{Either:
@@ -36,7 +36,7 @@ If `NULL`, a default value is inferred from spatial locations.}
 
 \item{object}{an object of class \code{PP}}
 
-\item{...}{unused additional arguments}
+\item{...}{additional arguments (unused)}
 
 \item{x}{an object of class PP, create with `createPP`}
 

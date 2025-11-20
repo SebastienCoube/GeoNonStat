@@ -9,7 +9,7 @@ plot_knots.PP(x, mar_var_loss = NULL, show_knots = TRUE)
 \arguments{
 \item{x}{an object of class \code{PP}}
 
-\item{mar_var_loss}{optional, the var loss computed by var_loss_percentage.PP}
+\item{mar_var_loss}{optional, the var loss computed by `var_loss_percentage.PP`}
 
 \item{show_knots}{logical, default to TRUE. Should the knots be plotted ?}
 }

@@ -14,17 +14,17 @@ process_states(
 )
 }
 \arguments{
-\item{hm}{hierarchical model (from `process_hierarchical_model()`)}
+\item{hm}{a hierarchical model (obtained with `process_hierarchical_model()`)}
 
-\item{covariates}{TODO}
+\item{covariates}{The list of covariates obtained with `process_covariates`}
 
 \item{observed_field}{TODO}
 
 \item{vecchia_approx}{TODO}
 
-\item{init_tk}{TODO}
+\item{init_tk}{numerical value to initialize transition kernels}
 
-\item{seed}{seed used, for reproducipility purposes. Default to 1}
+\item{seed}{numeric value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
 a list
@@ -54,7 +54,7 @@ hm = process_hierarchical_model(vecchia_approx = vecchia_approx,
   matern_smoothness = 1.5,
   observed_field = observed_field,
   covariates = covariates,
-  anisotropic = T) 
+  anisotropic = TRUE) 
 
 process_states(
     hm,
@@ -64,3 +64,4 @@ process_states(
     init_tk = -4
 )
 }
+\keyword{internal}
