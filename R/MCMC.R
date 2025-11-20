@@ -52,7 +52,7 @@ MessyMessyMcmc = function(
 {
 set.seed(seed)
 params_records = list()
-for(iter in seq(n_iterations_update)){
+for(iter in seq_len(n_iterations_update)){
   
   ###########################
   # Regression coefficients #
@@ -106,7 +106,7 @@ for(iter in seq(n_iterations_update)){
                                  }
   )
   
-  for(pass in seq(3)){
+  for(pass in seq_len(3)){
     for(cluster_idx in unique(locs_partition)){
       selected_idx = which(locs_partition==cluster_idx)
       additional_mean_from_field =
@@ -135,8 +135,8 @@ for(iter in seq(n_iterations_update)){
   #################
   
   # ancillary 
-  for(idx_for_field_logvar in seq(4)){
-    for(field_log_var_idx in seq(2)){
+  for(idx_for_field_logvar in seq_len(4)){
+    for(field_log_var_idx in seq_len(2)){
       new_field_log_var = state$params$field_log_var[1,1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
       new_field = state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1,1]))
       current_U =
@@ -167,7 +167,7 @@ for(iter in seq(n_iterations_update)){
     # Sufficient 
     
     fieldT_cholT_chol_field = sum((state$stuff$sparse_chol %*% state$params$field)^2)
-    for(field_log_var_idx in seq(10)){
+    for(field_log_var_idx in seq_len(10)){
       new_field_log_var = state$params$field_log_var[1,1] + .1 * rnorm(1)
       current_U =
         (
@@ -208,7 +208,7 @@ for(iter in seq(n_iterations_update)){
   ##########################
   # Range beta (ancillary) #
   ##########################
-  for(regime in seq(1 + hierarchical_model$anisotropic)){
+  for(regime in seq_len(1 + hierarchical_model$anisotropic)){
     if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(state$ker_var$range_beta_ancillary))
     if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(state$ker_var$range_beta_ancillary[1]),0,0))
     if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(state$ker_var$range_beta_ancillary[2]), 2)))
@@ -296,7 +296,7 @@ for(iter in seq(n_iterations_update)){
     ###    abline(a=0, b=1)
     
     n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
-    for(hmc_step in seq(n_hmc_steps)){
+    for(hmc_step in seq_len(n_hmc_steps)){
       # Make a full step for the position
       q = q + p %*% hmc_stepsize
       new_range_beta = state$params$range_beta
@@ -438,7 +438,7 @@ for(iter in seq(n_iterations_update)){
   ###########################
   # Range beta (sufficient) #
   ###########################
-  for(regime in seq(1 + hierarchical_model$anisotropic)){
+  for(regime in seq_len(1 + hierarchical_model$anisotropic)){
     if(!hierarchical_model$anisotropic)hmc_stepsize =matrix(exp(state$ker_var$range_beta_sufficient))
     if(hierarchical_model$anisotropic & regime ==1)hmc_stepsize = diag(c(exp(state$ker_var$range_beta_sufficient[1]),0,0))
     if(hierarchical_model$anisotropic & regime ==2)hmc_stepsize = diag(c(0, rep(exp(state$ker_var$range_beta_sufficient[2]), 2)))
@@ -522,7 +522,7 @@ for(iter in seq(n_iterations_update)){
     ###     abline(a=0, b=1)
     
     n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
-    for(hmc_step in seq(n_hmc_steps)){
+    for(hmc_step in seq_len(n_hmc_steps)){
       # Make a full step for the position
       q = q + p %*% hmc_stepsize
       new_range_beta = state$params$range_beta      
@@ -668,12 +668,12 @@ for(iter in seq(n_iterations_update)){
   
   if(!is.null(hierarchical_model$range$PP)){
     n_range_log_scale_update = 2
-    for(i in seq(n_range_log_scale_update)){
+    for(i in seq_len(n_range_log_scale_update)){
       # ancillary - sufficient
       q = state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient))
       
       new_range_beta = state$params$range_beta
-      new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
+      new_range_beta[-seq_len(covariates$range_X$n_regressors),] = new_range_beta[-seq_len(covariates$range_X$n_regressors),] %*% 
         diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*% 
         diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
       new_compressed_sparse_chol = 
@@ -732,7 +732,7 @@ for(iter in seq(n_iterations_update)){
           }}}
     }
     # sufficient - sufficient ####
-    for(i in seq(10))
+    for(i in seq_len(10))
     {
       q = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
       if(
@@ -760,11 +760,12 @@ for(iter in seq(n_iterations_update)){
     }
     # ancillary-ancillary ####
     
-    for(i in seq(n_range_log_scale_update)){
+    for(i in seq_len(n_range_log_scale_update)){
       q = state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_ancillary))
       
       new_range_beta = state$params$range_beta
-      new_range_beta[-seq(covariates$range_X$n_regressors),] = new_range_beta[-seq(covariates$range_X$n_regressors),] %*% 
+      new_range_beta[-seq_len(covariates$range_X$n_regressors),] = 
+        new_range_beta[-seq_len(covariates$range_X$n_regressors),] %*% 
         diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
         diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
       new_compressed_sparse_chol = 
@@ -817,7 +818,7 @@ for(iter in seq(n_iterations_update)){
           }}}
     }
     # sufficient - sufficient 
-    for(i in seq(10))
+    for(i in seq_len(10))
     {
       q = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
       if(
@@ -927,7 +928,7 @@ for(iter in seq(n_iterations_update)){
   ####  abline(a=0, b=1)
   
   
-  for(hmc_step in seq(n_hmc_steps)){
+  for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the position
     q = q + exp(state$ker_var$noise_beta_mala) * p
     new_noise_beta = solve(L_minus_one, q)
@@ -996,12 +997,12 @@ for(iter in seq(n_iterations_update)){
   if(!is.null(hierarchical_model$noise$PP))
   {
     # ancillary -- sufficient ####
-    for(i in seq(4))
+    for(i in seq_len(4))
     {
       new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, exp(state$ker_var$noise_log_scale))
       new_noise_beta = state$params$noise_beta
-      new_noise_beta[-seq(covariates$noise_X$n_regressors)] = 
-        new_noise_beta[-seq(covariates$noise_X$n_regressors)] *
+      new_noise_beta[-seq_len(covariates$noise_X$n_regressors)] = 
+        new_noise_beta[-seq_len(covariates$noise_X$n_regressors)] *
         c(exp((new_noise_log_scale - state$params$noise_log_scale)/2))
       new_noise_var = as.vector(exp(X_PP_mult_right(
         X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
@@ -1038,7 +1039,7 @@ for(iter in seq(n_iterations_update)){
     }
     
     # sufficient -- sufficient ####
-    for(i in seq(10))
+    for(i in seq_len(10))
     {
       new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, .1)
       if(
@@ -1094,7 +1095,7 @@ run_parallel_version_goret = function(
   iter_start = length(object$records$chain_1)
   if(n_chains_in_parallel == 1){
     res = lapply(
-      seq(length(object$states)), function(chain_idx){
+      seq_along(object$states), function(chain_idx){
         MessyMessyMcmc(
           covariates = object$covariates, observed_field = object$observed_field, 
           hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 

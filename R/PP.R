@@ -163,7 +163,7 @@ createPP <- function(vecchia_approx,
       ))
     ),
     cbind(
-      nrow(knots) + seq(vecchia_approx$n_locs),
+      nrow(knots) + seq_len(vecchia_approx$n_locs),
       FNN::get.knnx(
         query = vecchia_approx$locs,
         data = knots,
@@ -286,7 +286,7 @@ get_basis <- function(PP, vecchia_approx, df = TRUE) {
     Y = diag(1, PP$n_knots),
     permutate_PP_to_obs = TRUE
   )
-  colnames(res) <- paste("Basis_", seq(ncol(res)), sep = "")
+  colnames(res) <- paste("Basis_", seq_len(ncol(res)), sep = "")
   if (any(res < .001)) {
     res[res < .001] <- 0
   }

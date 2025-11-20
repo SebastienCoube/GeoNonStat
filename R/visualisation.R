@@ -74,7 +74,7 @@ plot_knots.PP <- function(x,
   if (!is.null(mar_var_loss)) {
     # Remove knots from mar_var_loss
     legendtitle <- "\n\n\nLoss of\nmarginal\nvariance\n(%)"
-    cols <- mar_var_loss[-seq(nknots)]
+    cols <- mar_var_loss[-seq_len(nknots)]
     # Reorder to plot worst last
     ord <- order(cols)
     cols <- cols[ord]
@@ -192,7 +192,7 @@ plot_ellipses <- function(locs,
   if (!add) {
     plot(locs, type = "n", ...)
   }
-  for (i in seq(nrow(locs)))
+  for (i in seq_len(nrow(locs)))
   {
     # 2.447747 must be some bivariate confidence interval
     # shrink = 1 gives the package's Mahalanobis distance
@@ -415,7 +415,7 @@ pointillist_colorscale <- function(field, scalename = "") {
     axes = FALSE,
     mgp = c(0, 0, 0),
   )
-  pos <- seq(0, 1, by = 0.25)
+  pos <- seq_len(0, 1, by = 0.25)
   values <- stats::quantile(field, probs = pos)
   text(
     y = 1 + pos * (50 - 1),

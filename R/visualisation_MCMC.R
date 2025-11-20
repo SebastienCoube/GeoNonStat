@@ -9,7 +9,7 @@ AggregateRecordsPerChain = function(records, burn_in = .1, who = "all"){
         if(ncol(record[[1]][[name]])==1)colnames(res[[name]]) = row.names(record[[1]][[name]])
         if(ncol(record[[1]][[name]])>1)colnames(res[[name]]) = c(outer(row.names(record[[1]][[name]]), colnames(record[[1]][[name]]), function(x, y)paste(x, y, sep = "_")))
       }
-      for(iter in seq( max(1, floor(length(record) * burn_in)), length(record))){
+      for(iter in seq(max(1, floor(length(record) * burn_in)), length(record))) {
         res[[name]][iter - floor(length(record) * burn_in),] = record[[iter]][[name]]
       }
     }
@@ -47,19 +47,19 @@ PrintMcmcDiags = function(geo_non_stat, burn_in = .1, min_ESS = 50, max_Gelman_u
 
 
 TracePlots = function(geo_non_stat, burn_in = .1, who = "all", mfrow = c(3,3)){
-  aggregated_records = AggregateRecordsPerChain(geo_non_stat$records, burn_in, who = who)
+  aggregated_records = AggregateRecords(geo_non_stat$records, burn_in, who = who)
   plotted_iters = seq(
     ceiling(length(geo_non_stat$records[[1]])*(burn_in)), 
     length(geo_non_stat$records[[1]])
     )
   for(name in names(aggregated_records[[1]])){
     par(mfrow = mfrow)
-    for(i in seq(ncol(aggregated_records[[1]][[name]]))){
+    for(i in seq_len(ncol(aggregated_records[[1]][[name]]))){
       to_be_plotted = sapply(aggregated_records, function(x)x[[name]][,i])
       plot(0, 0, ylim = c(min(to_be_plotted), max(to_be_plotted)), 
            xlim = c(min(plotted_iters), max(plotted_iters)), 
            type = "n", main  = paste("trace plot of", name, colnames(aggregated_records[[1]][[name]])[i]))
-      for(j in seq(ncol(to_be_plotted))){
+      for(j in seq_len(ncol(to_be_plotted))){
         lines(plotted_iters, to_be_plotted[,j])
       }
     }

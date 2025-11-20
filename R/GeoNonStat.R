@@ -51,23 +51,23 @@ createVecchia <- function(observed_locs,
   # re-ordering spatial locations (random then maxmin on subset)
   max_locs <- min(n_locs, 10000)
   neworder <- order(runif(n_locs))
-  neworder[seq(max_locs)] <- neworder[GpGp::order_maxmin(locs[neworder[seq(max_locs)], ])]
+  neworder[seq_len(max_locs)] <- neworder[GpGp::order_maxmin(locs[neworder[seq_len(max_locs)], ])]
   locs <- locs[neworder, ]
   
   # matching observed locations with reordered, unrepeated locations
   locs_match <- match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
   
-  locs_match_matrix <- Matrix::sparseMatrix(i = locs_match, j = seq(n_obs), x = 1)
+  locs_match_matrix <- Matrix::sparseMatrix(i = locs_match, j = seq_len(n_obs), x = 1)
   
   # doing reversed operation : for a given unrepeated location, tell which observations correspond
-  hctam_scol <- split(seq(n_obs), locs_match)
+  hctam_scol <- split(seq_len(n_obs), locs_match)
   
   # extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray <- t(GpGp::find_ordered_nn(locs, m))
   NNNoNA <- !is.na(NNarray)
   
   sparse_mat <- Matrix::sparseMatrix(
-    x = seq(sum(NNNoNA)),
+    x = seq_len(sum(NNNoNA)),
     i = col(NNarray)[NNNoNA],
     j = NNarray[NNNoNA],
     triangular = TRUE
@@ -124,9 +124,9 @@ createVecchia <- function(observed_locs,
 generate_location_partitions <- function(locs, n, ncores = 1) {
   clust_size <- 10000
   n_clusters <- ceiling(n / clust_size)
-  centers_seq <- round(seq(n_clusters, max(5, 2 * (n_clusters)), length.out = min(10, max(5, 2 * (
-    n_clusters
-  )) - (n_clusters) + 1)))
+  centers_seq <- round(seq(n_clusters, 
+                           max(5, 2 * (n_clusters)), 
+                           length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)))
   
   if (ncores > 1) {
     cl <- parallel::makeCluster(min(ncores, parallel::detectCores(logical = FALSE)))
@@ -431,8 +431,12 @@ process_hierarchical_model <- function(vecchia_approx,
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
   # and as lower bound the minimal distance between two space points
-  alpha_max <- -0.5 * log(8 * matern_smoothness) + log(max(dist(vecchia_approx$locs[seq(min(10000, nrow(vecchia_approx$locs))), ])) / 8)
-  alpha_min <- -0.5 * log(8 * matern_smoothness) + log(median(FNN::get.knn(vecchia_approx$locs, k = 1)$nn.dist) * 3)
+  alpha_min <- alpha_max <- -0.5 * log(8 * matern_smoothness)
+  alpha_max <- alpha_max + 
+    log(
+      max(dist(vecchia_approx$locs[seq_len(min(10000, nrow(vecchia_approx$locs))), ])) / 8)
+  alpha_min <- alpha_min + 
+    log(median(FNN::get.knn(vecchia_approx$locs, k = 1)$nn.dist) * 3)
   # OLS to get residual variance to make a guess for maximum and minimum reasonable values
   # for NNGP and noise variance
   naive_ols <- lm(observed_field ~ as.matrix(covariates$X$X) - 1)
@@ -607,14 +611,14 @@ process_states <- function(hm,
                                nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots, 
                                ncol = 1 + 2 * hm$anisotropic) #random starting values
     row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
-                                     paste("PP", seq(hm$range$PP$n_knots), sep = "_"))
+                                     paste("PP", seq_len(hm$range$PP$n_knots), sep = "_"))
     params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[2]))
-    row.names(params$range_log_scale) = c("range", "aniso")[seq(1 + hm$anisotropic)]
+    row.names(params$range_log_scale) = c("range", "aniso")[seq_len(1 + hm$anisotropic)]
     momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
     momenta$range_log_scale_ancillary = rnorm(length(params$range_log_scale))
   }
   params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
-  colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq(1 + 2 * hm$anisotropic)]
+  colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
     #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
   params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
   
@@ -647,14 +651,14 @@ process_states <- function(hm,
       matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) 
     row.names(params$noise_beta) <- 
       c(colnames(covariates$noise_X$X),
-        paste("PP", seq(hm$noise$PP$n_knots), sep = "_"))
+        paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_"))
     params$noise_log_scale <- hm$noise$log_scale_bounds[1]
   }
   
   if(!is.null(hm$noise$PP)) {
     params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) #random starting values
     row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
-                                     paste("PP", seq(hm$noise$PP$n_knots), sep = "_"))
+                                     paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_"))
     params$noise_log_scale = matrix(runif(1, hm$noise$log_scale_bounds[1], hm$noise$log_scale_bounds[2]))
     row.names(params$noise_log_scale) = " "
   }
@@ -822,7 +826,7 @@ GeoNonStat <- function(vecchia_approx,
   states <-
     # parallel::parLapply(cl =  cl,
     lapply(
-      seq(n_chains), function(chain_number) {
+      seq_len(n_chains), function(chain_number) {
         process_states(
           seed = chain_number + seed,
           hm = hierarchical_model,
@@ -833,7 +837,7 @@ GeoNonStat <- function(vecchia_approx,
         )
       }
     )
-  names(states) <- paste("chain", seq(n_chains), sep = "_")
+  names(states) <- paste("chain", seq_len(n_chains), sep = "_")
   # parallel::stopCluster(cl)
 
   # Chain records setup #######################################################

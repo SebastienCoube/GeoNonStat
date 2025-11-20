@@ -35,7 +35,7 @@ symmat <- function(coords) {
   }
   symmat <- matrix(0, nrow = n, ncol = n)
   diag(symmat) <- coords[1:n]
-  symmat[lower.tri(symmat)] <- coords[-seq(n)]
+  symmat[lower.tri(symmat)] <- coords[-seq_len(n)]
   symmat[upper.tri(symmat)] <- symmat[lower.tri(symmat)]
   return(symmat)
 }
@@ -70,7 +70,7 @@ naive_greedy_coloring <- function(M) {
   incompatibilities <- matrix(0, n_obs + 1, max(degrees))
   cols <- rep(0, n_obs)
   
-  for (i in seq(n_obs))
+  for (i in seq_len(n_obs))
   {
     cols[i] <- match(0, incompatibilities[i, ])
     incompatibilities[idx[[i]], cols[i]] <- 1
@@ -272,11 +272,11 @@ beta_prior_log_dens <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean # Intercept for range
   var_mat[1, 1] <- beta0_var # Intercept for range
-  var_mat[-seq(nrb - n_PP), 1] <- exp(log_scale[1])
+  var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
   if (ncb == 3) {
     if (!length(log_scale) == 2)
       stop("log_scale is supposed to be of length 2")
-    var_mat[-seq(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
+    var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   determinant_part <- -0.5 * log_scale[1] * n_PP
   if (length(log_scale) == 2)
@@ -319,11 +319,11 @@ beta_prior_log_dens_derivative <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean
   var_mat[1, 1] <- beta0_var
-  var_mat[-seq(nrb - n_PP), 1] <- exp(log_scale[1])
+  var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
   if (ncb == 3) {
     if (!length(log_scale) == 2)
       stop("log_scale is supposed to be of length 2")
-    var_mat[-seq(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
+    var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   return(-(beta - mean_mat) / var_mat)
 }
@@ -403,7 +403,7 @@ X_PP_mult_right <- function(X = NULL,
   if (permutate_PP_to_obs) {
     locs_idx <- vecchia_approx$locs_match
   } else {
-    locs_idx <- seq(vecchia_approx$n_locs)
+    locs_idx <- seq_len(vecchia_approx$n_locs)
   }
   res <- matrix(0, length(locs_idx), ncol(Y))
   
@@ -419,7 +419,7 @@ X_PP_mult_right <- function(X = NULL,
     if (xrow_offset > 0)
       Y <- Y[-seq_len(xrow_offset), , drop = FALSE]
     V <- matrix(0, nrow(PP$sparse_chol), ncol(Y))
-    V[seq(nrow(Y)), ] <- Y
+    V[seq_len(nrow(Y)), ] <- Y
     solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
     PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
     # using res[] is important for performance
@@ -519,8 +519,8 @@ X_PP_crossprod <- function(X,
 #' array_cumsum(myarray)
 array_cumsum <- function(x) {
   res <- array(0, dim = dim(x))
-  for (i in seq(dim(x)[1])) {
-    for (j in seq(dim(x)[2])) {
+  for (i in seq_len(dim(x)[1])) {
+    for (j in seq_len(dim(x)[2])) {
       res[i, j, ] <- cumsum(x[i, j, ])
     }
   }
@@ -543,8 +543,8 @@ array_cumsum <- function(x) {
 #' result <- array_multiply_3(x, M)
 array_multiply_3 <- function(x, M) {
   res <- array(0, dim = c(dim(x)[c(1, 2)], M@Dim[2]))
-  for (i in seq(dim(res)[1])) {
-    for (j in seq(dim(res)[2])) {
+  for (i in seq_len(dim(res)[1])) {
+    for (j in seq_len(dim(res)[2])) {
       res[i, j, ] <- as.vector(x[i, j, ] %*% M)
     }
   }
@@ -566,8 +566,8 @@ array_multiply_3 <- function(x, M) {
 array_multiply_2 <- function(x, M) {
   # res = array(0, dim = c(dim(x)[1], dim(M)[1], dim(x)[3])) # TODO ? ça fail sinon
   res <- array(0, dim = c(dim(x)[1], dim(M)[2], dim(x)[3]))
-  for (i in seq(dim(res)[1])) {
-    for (j in seq(dim(res)[3])) {
+  for (i in seq_len(dim(res)[1])) {
+    for (j in seq_len(dim(res)[3])) {
       res[i, , j] <- as.vector(M %*% x[i, , j])
     }
   }
@@ -589,8 +589,8 @@ array_multiply_2 <- function(x, M) {
 #' result <- array_multiply_1(x, M)
 array_multiply_1 <- function(x, M) {
   res <- array(0, dim = c(dim(M)[1], dim(x)[2], dim(x)[3]))
-  for (i in seq(dim(res)[2])) {
-    for (j in seq(dim(res)[3])) {
+  for (i in seq_len(dim(res)[2])) {
+    for (j in seq_len(dim(res)[3])) {
       res[, i, j] <- as.vector(M %*% x[, i, j])
     }
   }
