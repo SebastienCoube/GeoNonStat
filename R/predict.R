@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ExtendVecchia = function(vecchia_approx, new_locs){
   
 }
@@ -17,7 +16,6 @@ Predict = function(geo_non_stat, burn_in = .1,
 
 
 geo_non_stat$covariates$X$
-=======
 # #' Summarize an array TODO
 # #'
 # #' @param samples an array

@@ -75,9 +75,16 @@ mygns = GeoNonStat(
 # on veut arriver à ça... mais en version pas º(00)º : 
 
 # parallel run
+t1 = Sys.time()
 mise_a_jour_mcmc_parallele = run_parallel_version_goret(
   geo_non_stat = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 10, n_iterations = 300, seed = 1)
+  n_threads_per_chain = 10, n_iterations = 20, seed = 1)
+print(Sys.time()-t1)
+t1 = Sys.time()
+mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+  geo_non_stat = geo_non_stat, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 3, n_iterations = 30, seed = 1)
+print(Sys.time()-t1)
 
 # update of the state and the records
 for(chain_idx in seq(length(mygns$states))){
