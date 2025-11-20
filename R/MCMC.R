@@ -1000,8 +1000,9 @@ for(iter in seq(n_iterations_update)){
     {
       new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, exp(state$ker_var$noise_log_scale))
       new_noise_beta = state$params$noise_beta
-      new_noise_beta[-seq(covariates$noise_X$n_regressors)] = new_noise_beta[-seq(covariates$noise_X$n_regressors)] *
-        exp((new_noise_log_scale - state$params$noise_log_scale)/2)
+      new_noise_beta[-seq(covariates$noise_X$n_regressors)] = 
+        new_noise_beta[-seq(covariates$noise_X$n_regressors)] *
+        c(exp((new_noise_log_scale - state$params$noise_log_scale)/2))
       new_noise_var = as.vector(exp(X_PP_mult_right(
         X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
         vecchia_approx = vecchia_approx, Y = new_noise_beta, 
@@ -1089,24 +1090,39 @@ run_parallel_version_goret = function(
     n_threads_per_chain = 10, 
     n_iterations = 100, 
     seed = 1){
-  if(is.null(n_chains_in_parallel))n_chains_in_parallel = length(object$states)
+  if(is.null(n_chains_in_parallel)) n_chains_in_parallel = length(object$states)
   iter_start = length(object$records$chain_1)
-  cl = parallel::makeCluster(n_chains_in_parallel)
-  parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "object", "n_iterations"), envir = environment())
-  res = parallel::parLapply(
-    cl = cl, 
-    X = seq(length(object$states)), function(chain_idx){
-      devtools::load_all()
-      MessyMessyMcmc(
-        covariates = object$covariates, observed_field = object$observed_field, 
-        hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
-        state = object$states[[chain_idx]], 
-        n_iterations_update = n_iterations, 
-        num_threads = n_threads_per_chain, 
-        iter_start = iter_start, 
-        seed = iter_start + seed + chain_idx
+  if(n_chains_in_parallel == 1){
+    res = lapply(
+      seq(length(object$states)), function(chain_idx){
+        MessyMessyMcmc(
+          covariates = object$covariates, observed_field = object$observed_field, 
+          hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
+          state = object$states[[chain_idx]], 
+          n_iterations_update = n_iterations, 
+          num_threads = n_threads_per_chain, 
+          iter_start = iter_start, 
+          seed = iter_start + seed + chain_idx
         )
-    }
-  )
+      }
+    )
+  } else {
+    cl = parallel::makeCluster(n_chains_in_parallel)
+    parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "object", "n_iterations"), envir = environment())
+    res = parallel::parLapply(
+      cl = cl, 
+      X = seq(length(object$states)), function(chain_idx){
+        MessyMessyMcmc(
+          covariates = object$covariates, observed_field = object$observed_field, 
+          hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
+          state = object$states[[chain_idx]], 
+          n_iterations_update = n_iterations, 
+          num_threads = n_threads_per_chain, 
+          iter_start = iter_start, 
+          seed = iter_start + seed + chain_idx
+        )
+      }
+    )
+  }
 }
 

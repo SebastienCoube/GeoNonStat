@@ -1,6 +1,6 @@
 
 set.seed(2)
-nlocs = 15000
+nlocs = 5000
 observed_locs = cbind(runif(nlocs), runif(nlocs))
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
@@ -45,7 +45,7 @@ plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise)
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
 
 
-mygns = GeoNonStat(
+geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   observed_field = fake_data$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
