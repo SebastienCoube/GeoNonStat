@@ -76,20 +76,14 @@ mygns = GeoNonStat(
 
 # parallel run
 mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-<<<<<<< HEAD
   geo_non_stat = geo_non_stat, n_chains_in_parallel = 3, 
   n_threads_per_chain = 10, n_iterations = 300, seed = 1)
-=======
-  object = mygns, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 10, n_iterations = 30, seed = 1)
->>>>>>> ad0a9aed072f4eaa83c93525b226c14a96ca5eb1
 
 # update of the state and the records
 for(chain_idx in seq(length(mygns$states))){
   mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
   mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
 }
-<<<<<<< HEAD
 
 records = geo_non_stat$records
 
@@ -103,5 +97,3 @@ elppd_train = ElppdTrain(geo_non_stat, .2)
 
 
 new_locs = rbind(observed_locs[1,], as.matrix(expand.grid(seq(-.1, 1.1, .01), seq(-.1, 1.1, .01))))
-=======
->>>>>>> ad0a9aed072f4eaa83c93525b226c14a96ca5eb1
