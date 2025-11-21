@@ -109,7 +109,7 @@ createVecchia <- function(observed_locs,
       NNarray = NNarray,
       NNarray_non_NA = NNNoNA,
       # TODO : idem à voir si c'est utile de trainer ça ?
-      sparse_chol_i = sparse_mat@i + 1,
+      sparse_chol_i = sparse_mat@i + 1L,
       sparse_chol_p = sparse_mat@p,
       sparse_chol_x_reorder = sparse_chol_x_reorder,
       locs_partition = locs_partition,

@@ -92,18 +92,20 @@ for(iter in seq_len(n_iterations_update)){
   precision_from_obs = vecchia_approx$locs_match_matrix %*% (1/state$stuff$noise_var)
   mean_from_obs = as.vector(vecchia_approx$locs_match_matrix %*% ((observed_field - state$stuff$lm_fit)/state$stuff$noise_var))
   
-  chol_list = parallel::mclapply(mc.cores = num_threads,
-                                 unique( locs_partition), 
-                                 function(cluster_idx){
-                                   selected_idx = which(locs_partition == cluster_idx)
-                                   posterior_precision_subset = Matrix::crossprod(state$stuff$sparse_chol[,selected_idx])
-                                   posterior_precision_subset = 
-                                     Matrix::Diagonal(length(selected_idx), 1/exp(.5 * state$params$field_log_var[1,1])) %*% 
-                                     posterior_precision_subset %*% Matrix::Diagonal(length(selected_idx), 1/exp(.5 * state$params$field_log_var[1,1]))
-                                   Matrix::diag(posterior_precision_subset) = Matrix::diag(posterior_precision_subset) + as.vector(precision_from_obs[selected_idx])
-                                   posterior_precision_subset = Matrix::expand(Matrix::Cholesky(posterior_precision_subset))
-                                   return(posterior_precision_subset)
-                                 }
+  d <-  1/exp(.5 * state$params$field_log_var[1,1])
+  unique_clusters <- unique(locs_partition)
+  
+  chol_list = parallel::mclapply(
+    mc.cores = num_threads,
+    unique( locs_partition),
+    function(cluster_idx){ #posterior_precision_subset
+      idx = which(locs_partition == cluster_idx)
+      pbs = Matrix::crossprod(state$stuff$sparse_chol[,idx])
+      pbs = Matrix::Diagonal(length(idx), d) %*% pbs %*% Matrix::Diagonal(length(idx), d)
+      Matrix::diag(pbs) <- Matrix::diag(pbs) + as.vector(precision_from_obs[idx])
+      pbs = Matrix::expand(Matrix::Cholesky(pbs))
+      return(pbs)
+    }
   )
   
   for(pass in seq_len(3)){
