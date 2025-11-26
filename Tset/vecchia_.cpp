@@ -34,6 +34,13 @@ void inv_sym22(double det, double a, double d, double b, double res[3]){
   res[2] = -b / det;
 }
 
+void DetInvSym22(double a, double d, double b, double res[4]){
+  res[3] = 1 / (a*d - b*b);
+  res[0] = d  *  res[3];
+  res[1] = a  *  res[3];
+  res[2] = -b * res[3];
+}
+
 
 using namespace Rcpp;
 using namespace arma;
@@ -130,8 +137,7 @@ arma::cube vecchia_(
     arma::mat out(m, 1 + log_range.n_rows * m * compute_derivative);
     // computing covariance 
     double mahala_dist;
-    double det_hybrid_range;
-    double hybrid_range_inv_new[3];
+    double det_inv_hybrid_range[4];
     arma::mat  sigma11(bsize-1, bsize-1);
     arma::vec  sigma12(bsize-1);
     arma::mat hybrid_range_inv(2,2) ;
@@ -144,9 +150,9 @@ arma::cube vecchia_(
           hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub(2, j2))*.5;
           hybrid_range_inv(0,1) = hybrid_range_inv(1,0);
           hybrid_range_inv(1,1) = (rangesub(1, j1) + rangesub(1, j2))*.5;
-          det_hybrid_range = det_sym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1));
+          DetInvSym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1), det_inv_hybrid_range);
           hybrid_range_inv = inv_sympd(hybrid_range_inv);
-          std::cout << hybrid_range_inv(0,0) << hybrid_range_inv(1,1) << hybrid_range_inv(0,1) << "\n";
+          
           mahala_dist = sqrt(
               (locsub(0, j1)-locsub(0, j2)) * (locsub(0, j1)-locsub(0, j2)) * hybrid_range_inv(0,0)
             + (locsub(1, j1)-locsub(1, j2)) * (locsub(1, j1)-locsub(1, j2)) * hybrid_range_inv(1,1)
@@ -156,8 +162,8 @@ arma::cube vecchia_(
             pow(
               (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
                 (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2)), 
-                .25) / //determinants
-                sqrt(det_hybrid_range) * 
+                .25) * //determinants
+                sqrt(det_inv_hybrid_range[3]) * 
                 matern_thingy_(mahala_dist, smoothness);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
@@ -168,7 +174,7 @@ arma::cube vecchia_(
         hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub(2, 0))*.5;
         hybrid_range_inv(0,1) = hybrid_range_inv(1,0);
         hybrid_range_inv(1,1) = (rangesub(1, j1) + rangesub(1, 0))*.5;
-        det_hybrid_range = det_sym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1));
+        DetInvSym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1), det_inv_hybrid_range);
         hybrid_range_inv = inv_sympd(hybrid_range_inv);
         mahala_dist = sqrt(
            (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) * hybrid_range_inv(0,0)
@@ -179,8 +185,8 @@ arma::cube vecchia_(
           pow(
             (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
               (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0)), 
-              .25) / //determinants
-              sqrt(det_hybrid_range) * 
+              .25) * //determinants
+              sqrt(det_inv_hybrid_range[3]) * 
               matern_thingy_(mahala_dist, smoothness);
       }
     }
@@ -251,7 +257,7 @@ arma::cube vecchia_(
               hybrid_range_inv(1,0) = (rangesub((d_idx + 1) * 3 + 2, j1) + rangesub(2, j2))*.5;
               hybrid_range_inv(1,1) = (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, j2))*.5;
               hybrid_range_inv(0,1) = hybrid_range_inv(1,0);
-              det_hybrid_range = det_sym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1));
+              DetInvSym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1), det_inv_hybrid_range);
               hybrid_range_inv = inv_sympd(hybrid_range_inv);
               double mahala_dist = sqrt(
                  ((locsub(0, j1)-locsub(0, j2))) * ((locsub(0, j1)-locsub(0, j2))) * hybrid_range_inv(0,0)
@@ -262,8 +268,8 @@ arma::cube vecchia_(
                 pow(
                   (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
                     (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2)), 
-                    .25) / //determinants
-                    sqrt(det_hybrid_range) * 
+                    .25) * //determinants
+                    sqrt(det_inv_hybrid_range[3]) * 
                     matern_thingy_(mahala_dist, smoothness);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
@@ -272,7 +278,7 @@ arma::cube vecchia_(
             hybrid_range_inv(1,1) = (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5;
             hybrid_range_inv(1,0) = (rangesub((d_idx + 1) * 3 + 2, j1) + rangesub(2, 0))*.5;
             hybrid_range_inv(0,1) = hybrid_range_inv(1,0);
-            det_hybrid_range = det_sym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1));
+            DetInvSym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1), det_inv_hybrid_range);
             hybrid_range_inv = inv_sympd(hybrid_range_inv);
             mahala_dist = sqrt(
                (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) * hybrid_range_inv(0,0)
@@ -283,15 +289,15 @@ arma::cube vecchia_(
               pow(
                 (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
                   (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0)), 
-                  .25) / //determinants
-                  sqrt(det_hybrid_range) * 
+                  .25) * //determinants
+                  sqrt(det_inv_hybrid_range[3]) * 
                   matern_thingy_(mahala_dist, smoothness);
             //filling dcsigma12
             hybrid_range_inv(0,0) = (rangesub(0, j1) + rangesub((d_idx + 1) * 3 + 0, 0))*.5;
             hybrid_range_inv(1,1) = (rangesub(1, j1) + rangesub((d_idx + 1) * 3 + 1, 0))*.5;
             hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub((d_idx + 1) * 3 + 2, 0))*.5;
             hybrid_range_inv(0,1) = hybrid_range_inv(1,0);
-            det_hybrid_range = det_sym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1));
+            DetInvSym22(hybrid_range_inv(0,0), hybrid_range_inv(1,1), hybrid_range_inv(0,1), det_inv_hybrid_range);
             hybrid_range_inv = inv_sympd(hybrid_range_inv);
             mahala_dist = sqrt(
                 ((locsub(0, j1)-locsub(0, 0))) * ((locsub(0, j1)-locsub(0, 0))) * hybrid_range_inv(0,0)
@@ -302,8 +308,8 @@ arma::cube vecchia_(
               pow(
                 (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
                   (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) - rangesub((d_idx + 1) * 3 + 2, 0 )*rangesub((d_idx + 1) * 3 + 2, 0 )), 
-                  .25) / //determinants
-                  sqrt(det_hybrid_range) * 
+                  .25) * //determinants
+                  sqrt(det_inv_hybrid_range[3]) * 
                   matern_thingy_(mahala_dist, smoothness);
             
           }
