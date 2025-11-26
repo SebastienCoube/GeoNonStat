@@ -31,14 +31,14 @@ noise_PP_log_var = -1
 # case with nice non-stationarity and crazy noise. 
 # case with no non-stationarity and crazy noise. 
 coeff_list = createGnsSimulatorParameters(gns_simulator, range_PP_log_var =range_log_scale, noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, field_log_var = field_log_var)
-coeff_list$range_X_coeff[1] = -5
+coeff_list$range_X_coeff[1] = -3.5
 
 
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
 dev.off()
 
 
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 0.5)
+plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 0.5, pch= 15)
 
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field)
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise)
@@ -80,17 +80,36 @@ mise_a_jour_mcmc_parallele = run_parallel_version_goret(
   object = geo_non_stat, n_chains_in_parallel = 3, 
   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
 print(Sys.time()-t1)
-t1 = Sys.time()
-mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-  object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 3, n_iterations = 30, seed = 1)
-print(Sys.time()-t1)
-
 # update of the state and the records
 for(chain_idx in seq(length(mygns$states))){
   mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
   mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
 }
+
+
+t1 = Sys.time()
+mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+  object = geo_non_stat, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 3, n_iterations = 30, seed = 1)
+print(Sys.time()-t1)
+# update of the state and the records
+for(chain_idx in seq(length(mygns$states))){
+  mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
+  mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
+}
+
+
+t1 = Sys.time()
+mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+  object = geo_non_stat, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 5, n_iterations = 30, seed = 1)
+print(Sys.time()-t1)
+# update of the state and the records
+for(chain_idx in seq(length(mygns$states))){
+  mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
+  mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
+}
+
 
 records = geo_non_stat$records
 
