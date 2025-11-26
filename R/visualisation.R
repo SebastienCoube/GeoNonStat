@@ -373,12 +373,21 @@ plot_pointillist_painting <- function(locs,
                                       add = FALSE,
                                       alpha = TRUE,
                                       ...) {
+  args <- list(...)
+  if(is.null(args$pch)) args[["pch"]] <- "."
+  if(is.null(args$cex)) args[["cex"]] <- 2
+  if(is.null(args$xlab)) args[["xlab"]] <- NA
+  if(is.null(args$ylab)) args[["ylab"]] <- NA
+  args$col <- get_colors(field, alpha = TRUE)
   if (add) {
-    points(locs, col = get_colors(field, alpha = TRUE), ...)
+    do.call("points", c(list(x=locs), args))
   } else {
-    plot(locs, col = get_colors(field, alpha = TRUE), ...)
+    do.call("plot", c(list(x=locs), args))
   }
 }
+
+
+
 
 #' Plot the scale of colors for a given variable
 #'
