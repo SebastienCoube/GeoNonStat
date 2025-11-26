@@ -1,0 +1,7 @@
+// TODO : essayer de passer arguments et sorties en références / pointeurs (voir comment R voit ça)
+// TODO : check si indexation ligne / colonne / tranche est bonne
+// TODO : check remplacer pow .5 par sqrt
+// TODO : remplacer pow 2 par * * 
+  // TODO : matern thingy problem avec == et remplacer comparaison sur float par entiers
+// remplacer inv_sympd+ arma::det par implémentation mano ?
+  // dsigma11 débile ???
