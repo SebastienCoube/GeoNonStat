@@ -3,7 +3,6 @@ Rcpp::sourceCpp("Tset/vecchia_.cpp")
 ################################################################
 # checking that obtained vecchia_ factor gives sensible samples #
 ################################################################
-dev.off()
 
 set.seed(100000)
 n = 100000
@@ -191,10 +190,11 @@ for(sm in smoothness){
 
 
 Rcpp::sourceCpp("Tset/vecchia_.cpp")
+Rcpp::sourceCpp("src/vecchia.cpp")
 
 set.seed(1)
 # spatial locations 
-n = 10000
+n = 50000
 locs = cbind(runif(n), runif(n))
 # range parameters 
 log_range = matrix(0, n, 3)
@@ -209,7 +209,7 @@ smoothness = c(0.5, 1.5)
   
 
 
-diff1 = mean(sapply(seq(200), function(i){
+diff1 = mean(sapply(seq(50), function(i){
   t1 = Sys.time()
   t1 = Sys.time()
   tatato = vecchia_(
@@ -218,9 +218,9 @@ diff1 = mean(sapply(seq(200), function(i){
 })) 
 Sys.sleep(15)
 diff2 = mean(
-  sapply(seq(200), function(i){
+  sapply(seq(50), function(i){
   t1 = Sys.time()
-  tatato =  vecchia(
+  tatato = vecchia(
     log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 6, compute_derivative = T, smoothness = 1.5)
   Sys.time()-t1
   }))

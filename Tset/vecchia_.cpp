@@ -1,3 +1,4 @@
+#define ARMA_NO_DEBUG
 #include <RcppArmadillo.h>
 #include <R.h>
 #include <iostream>
@@ -157,11 +158,10 @@ arma::cube vecchia_(
             + 2*( locsub(0, j1)-locsub(0, j2)) * (locsub(1, j1)-locsub(1, j2)) * det_inv_hybrid_range[2]
           );
           sigma11 (j1-1, j2-1) = 
-            pow(
+            sqrt(sqrt(
               (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
-                (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2)), 
-                .25) * //determinants
-                sqrt(det_inv_hybrid_range[3]) * 
+                (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
+                (det_inv_hybrid_range[3])) * 
                 matern_thingy_(mahala_dist, smoothness15);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
@@ -177,11 +177,10 @@ arma::cube vecchia_(
           + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
         );
         sigma12 (j1-1) = 
-          pow(
+          sqrt(sqrt(
             (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
-              (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0)), 
-              .25) * //determinants
-              sqrt(det_inv_hybrid_range[3]) * 
+              (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
+              (det_inv_hybrid_range[3])) * 
               matern_thingy_(mahala_dist, smoothness15);
       }
     }
@@ -197,8 +196,8 @@ arma::cube vecchia_(
           )
           /(rangesub(0, j1)*.5 + rangesub(0, j2)*.5));
           sigma11 (j1-1, j2-1) = 
-          pow(rangesub(0, j1) *    rangesub(0, j2)    , .25)/ 
-          sqrt(rangesub(0, j1)*.5 + rangesub(0, j2)*.5) * 
+          sqrt(sqrt(rangesub(0, j1) *    rangesub(0, j2))/ 
+          (rangesub(0, j1)*.5 + rangesub(0, j2)*.5)) * 
           matern_thingy_(mahala_dist, smoothness15);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
         }
@@ -207,8 +206,8 @@ arma::cube vecchia_(
           ( (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)) )
           /(rangesub(0, j1)*.5 + rangesub(0, 0)*.5));
           sigma12 (j1-1) = 
-          pow(rangesub(0, j1) *    rangesub(0, 0)    , .25  ) / 
-          sqrt(rangesub(0, j1)*.5 + rangesub(0, 0)*.5) * 
+          sqrt(sqrt(rangesub(0, j1) *    rangesub(0, 0)) / 
+          (rangesub(0, j1)*.5 + rangesub(0, 0)*.5)) * 
           matern_thingy_(mahala_dist, smoothness15);
       }
     }
@@ -259,11 +258,10 @@ arma::cube vecchia_(
                 + 2*( locsub(0, j1)-locsub(0, j2)) * (locsub(1, j1)-locsub(1, j2)) * det_inv_hybrid_range[2]
               );
               dsigma11 (j1-1, j2-1) = 
-                pow(
+                sqrt(sqrt(
                   (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
-                    (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2)), 
-                    .25) * //determinants
-                    sqrt(det_inv_hybrid_range[3]) * 
+                    (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
+                    (det_inv_hybrid_range[3])) * 
                     matern_thingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
@@ -279,11 +277,10 @@ arma::cube vecchia_(
               + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
             );
             dpsigma12 (j1-1) = 
-              pow(
+              sqrt(sqrt(
                 (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
-                  (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0)), 
-                  .25) * //determinants
-                  sqrt(det_inv_hybrid_range[3]) * 
+                  (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
+                  (det_inv_hybrid_range[3])) * 
                   matern_thingy_(mahala_dist, smoothness15);
             //filling dcsigma12
             DetInvSym22((rangesub(0, j1) + rangesub((d_idx + 1) * 3 + 0, 0))*.5, 
@@ -296,11 +293,11 @@ arma::cube vecchia_(
               + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
             );
             dcsigma12 (j1-1) = 
-              pow(
+              sqrt(sqrt(
                 (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
-                  (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) - rangesub((d_idx + 1) * 3 + 2, 0 )*rangesub((d_idx + 1) * 3 + 2, 0 )), 
-                  .25) * //determinants
-                  sqrt(det_inv_hybrid_range[3]) * 
+                  (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) - 
+                  rangesub((d_idx + 1) * 3 + 2, 0 )*rangesub((d_idx + 1) * 3 + 2, 0 ))) * //determinants
+                  (det_inv_hybrid_range[3])) * 
                   matern_thingy_(mahala_dist, smoothness15);
             
           }
@@ -315,8 +312,8 @@ arma::cube vecchia_(
                   (locsub(1, j1)-locsub(1, j2)) * (locsub(1, j1)-locsub(1, j2)) )
               /(rangesub(0, j1)*.5*(1 + diff_term) + rangesub(0, j2)*.5));
               dsigma11 (j1-1, j2-1) = 
-              pow(rangesub(0, j1) * (1 + diff_term) * rangesub(0, j2), .25  ) / 
-              sqrt(rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5) * 
+              sqrt(sqrt(rangesub(0, j1) * (1 + diff_term) * rangesub(0, j2)) / 
+              (rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5)) * 
               matern_thingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
@@ -325,8 +322,8 @@ arma::cube vecchia_(
               ( (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)))
               /(rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, 0)*.5));
               dpsigma12 (j1-1) = 
-              pow(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)    , .25  ) / 
-              sqrt(rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5 ) * 
+              sqrt(sqrt(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)) / 
+              (rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5)) * 
               matern_thingy_(mahala_dist, smoothness15);
               
               //filling dcsigma12
@@ -334,8 +331,8 @@ arma::cube vecchia_(
                 ((locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)))
                 /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * (1 + diff_term)));
                 dcsigma12 (j1-1) = 
-                pow(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term), .25  ) / 
-                sqrt(rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5) * 
+                sqrt(sqrt(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term)) / 
+                (rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5)) * 
                 matern_thingy_(mahala_dist, smoothness15);
                 
           }

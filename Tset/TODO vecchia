@@ -5,3 +5,6 @@
   // TODO : matern thingy problem avec == et remplacer comparaison sur float par entiers
 // remplacer inv_sympd+ arma::det par implémentation mano ?
   // dsigma11 débile ???
+  voir expmat
+  
+  // CHECK BOUNDSSSS
