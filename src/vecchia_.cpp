@@ -47,13 +47,14 @@ using namespace Rcpp;
 using namespace arma;
 
 //[[Rcpp::export]]
-arma::cube vecchia_(
+void vecchia_(
     arma::mat log_range,
     arma::mat locs,
     arma::mat NNarray, 
     int num_threads,
     double smoothness,
-    bool compute_derivative){
+    bool compute_derivative, 
+    arma::cube &result){
 #if _OPENMP
   omp_set_num_threads(num_threads);
 #endif
@@ -65,7 +66,7 @@ arma::cube vecchia_(
   // initializing stuff
   int n = locs.n_cols;
   int m = NNarray.n_rows;
-  arma::cube result(m, 1 + log_range.n_rows * m * compute_derivative, n);
+  //arma::cube result(m, 1 + log_range.n_rows * m * compute_derivative, n);
   result(0,0,0) = 1;
   
   // pre-compute expensive matrix exponentials in case of aniso 
@@ -395,10 +396,10 @@ arma::cube vecchia_(
       }
     }
     //# pragma omp critical
-    result.slice(i) = out;
+    result.col(i) = out;
   }
   
-  return(result);
+  //return(result);
 }
 
 //[[Rcpp::depends(RcppArmadillo)]]

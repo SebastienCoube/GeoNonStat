@@ -189,12 +189,12 @@ for(sm in smoothness){
 
 
 
-Rcpp::sourceCpp("Tset/vecchia_.cpp")
+Rcpp::sourceCpp("src/vecchia_.cpp")
 Rcpp::sourceCpp("src/vecchia.cpp")
 
 set.seed(1)
 # spatial locations 
-n = 50000
+n = 150000
 locs = cbind(runif(n), runif(n))
 # range parameters 
 log_range = matrix(0, n, 3)
@@ -202,29 +202,33 @@ log_range[,1] = -8 + 3*locs[,1]
 log_range[,2] = -8 + 3*locs[,2]
 log_range[,3] = -3*locs[,2]
 # vecchia_ approx 
-NNarray = GpGp::find_ordered_nn(locs, 10)
+NNarray = GpGp::find_ordered_nn(locs, 15)
 smoothness = c(0.5, 1.5)
 
 # anisotropic
-  
 
+tatato = array(0, dim = c(n, ncol(NNarray), 3*ncol(NNarray) + 1))
+tatato = array(0, dim = c(ncol(NNarray), 3*ncol(NNarray) + 1, n))
+tatato = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 
-diff1 = mean(sapply(seq(50), function(i){
+diff1 = mean(sapply(seq(20), function(i){
   t1 = Sys.time()
-  t1 = Sys.time()
-  tatato = vecchia_(
-    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 6, compute_derivative = T, smoothness = 1.5)
+  vecchia_(
+    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 10, compute_derivative = T, smoothness = 1.5, tatato)
   Sys.time()-t1
 })) 
-Sys.sleep(15)
+
+
+Sys.sleep(5)
 diff2 = mean(
-  sapply(seq(50), function(i){
+  sapply(seq(20), function(i){
   t1 = Sys.time()
   tatato = vecchia(
-    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 6, compute_derivative = T, smoothness = 1.5)
+    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 5, compute_derivative = T, smoothness = 1.5)
   Sys.time()-t1
   }))
 diff1/diff2
+
 
 
 
