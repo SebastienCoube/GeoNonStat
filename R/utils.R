@@ -394,16 +394,12 @@ X_PP_mult_right <- function(X = NULL,
                             vecchia_approx,
                             Y,
                             permutate_PP_to_obs = FALSE) {
-  if (is.null(X) & is.null(PP))
-    stop("X and PP can't be both NULL")
+  if (is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   # Sanity checks
-  if (!is.matrix(Y))
-    Y <- as.matrix(Y)
+  if (!is.matrix(Y)) Y <- as.matrix(Y)
   expected_rows <- 0
-  if (!is.null(X))
-    expected_rows <- expected_rows + ncol(X)
-  if (!is.null(PP))
-    expected_rows <- expected_rows + nrow(PP$knots)
+  if (!is.null(X)) expected_rows <- expected_rows + ncol(X)
+  if (!is.null(PP)) expected_rows <- expected_rows + nrow(PP$knots)
   if (nrow(Y) != expected_rows) {
     stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
   }
@@ -413,31 +409,43 @@ X_PP_mult_right <- function(X = NULL,
   } else {
     locs_idx <- seq_len(vecchia_approx$n_locs)
   }
-  res <- matrix(0, length(locs_idx), ncol(Y))
   
   # Multiply X and Y
   xrow_offset <- 0
+  res <- NULL
+  
   if (!is.null(X)) {
     xrow_offset <- ncol(X)
     # using res[] is important for performance
-    res[] <- res + X %*% Y[seq_len(xrow_offset), , drop = FALSE]
-  }
+    res <-  X %*% Y[seq_len(xrow_offset), , drop = FALSE]
+  } 
+  
   if (!is.null(PP)) {
     # remove X rows from Y if needed
-    if (xrow_offset > 0)
-      Y <- Y[-seq_len(xrow_offset), , drop = FALSE]
-    V <- matrix(0, nrow(PP$sparse_chol), ncol(Y))
-    V[seq_len(nrow(Y)), ] <- Y
+    idxY_PP <- seq.int(xrow_offset + 1, nrow(Y))
+    m <- length(idxY_PP)
+    k <- nrow(PP$sparse_chol)
+    V <- rbind(Y[idxY_PP, , drop=FALSE], matrix(0, k - m, ncol(Y)))
+    # V <- matrix(0, nrow(PP$sparse_chol), ncol(Y))
+    # V[seq_along(idxY_PP), ] <- Y[idxY_PP, , drop=FALSE]
     solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
     PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
     # using res[] is important for performance
-    res[] <- res + PP_result[locs_idx, , drop = FALSE]
+    if(is.null(res)) {
+      res <- PP_result[locs_idx, , drop = FALSE]
+    } else {
+      res[] <- res[] + PP_result[locs_idx, , drop = FALSE]
+    }
+  }
+
+  if(!is.matrix(res)) {
+    res <- as.matrix(res)
   }
   if (ncol(res) == 3)
     colnames(res) <- c("det", "an", "an")
   if (ncol(res) == 1)
     colnames(res) <- "det"
-  res
+  return(res)
 }
 
 #' @title Do the cross-product of the concatenation of a matrix of covariates and a PP and a matrix
