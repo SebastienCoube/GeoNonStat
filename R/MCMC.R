@@ -48,10 +48,13 @@ MessyMessyMcmc = function(
     num_threads = 1, 
     iter_start,
     seed=123 
-)
-{
+) {
 set.seed(seed)
-params_records = list()
+# Initialization of parameters (empty whith right structure)
+params_records = lapply(seq_len(n_iterations_update), 
+                        function(i) {initStateParams(state$params)}
+                        )
+
 for(iter in seq_len(n_iterations_update)){
   
   ###########################
@@ -877,22 +880,30 @@ run_parallel_version_goret = function(
     seed = 1){
   if(is.null(n_chains_in_parallel)) n_chains_in_parallel = length(object$states)
   iter_start = length(object$records$chain_1)
+  
   if(n_chains_in_parallel == 1){
-    res = lapply(
-      seq_along(object$states), function(chain_idx){
-        MessyMessyMcmc(
-          covariates = object$covariates, 
-          observed_field = object$observed_field, 
-          hierarchical_model = object$hierarchical_model, 
-          vecchia_approx = object$vecchia_approx, 
-          state = object$states[[chain_idx]], 
-          n_iterations_update = n_iterations, 
-          num_threads = n_threads_per_chain, 
-          iter_start = iter_start, 
-          seed = iter_start + seed + chain_idx
-        )
-      }
-    )
+    res <- lapply(seq_along(object$states), function(chain_idx) {
+      list("state" = object$states[[chain_idx]],
+           "params" = lapply(
+             seq_len(n_iterations), 
+             function(i) initStateParams(object$states[[chain_idx]][["params"]])
+           )
+      )
+    })
+    
+    for(chain_idx in seq_along(object$states)){
+      res[[chain_idx]] <- MessyMessyMcmc(
+        covariates = object$covariates, 
+        observed_field = object$observed_field, 
+        hierarchical_model = object$hierarchical_model, 
+        vecchia_approx = object$vecchia_approx, 
+        state = object$states[[chain_idx]], 
+        n_iterations_update = n_iterations, 
+        num_threads = n_threads_per_chain, 
+        iter_start = iter_start, 
+        seed = iter_start + seed + chain_idx
+      )
+    }
   } else {
     cl = parallel::makeCluster(n_chains_in_parallel)
     parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "object", "n_iterations"), envir = environment())
