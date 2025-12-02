@@ -16,6 +16,7 @@
 //[[Rcpp::plugins(openmp)]]
 //[[Rcpp::depends(BH)]]
 //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::export]]
 
 double matern_thingy_(double mahala_dist, bool smoothness15){
   double res;
@@ -45,7 +46,7 @@ void DetInvSym22(double a, double d, double b, double res[4]){
 
 using namespace Rcpp;
 using namespace arma;
-
+//[[Rcpp::depends(RcppArmadillo)]]
 //[[Rcpp::export]]
 void vecchia_(
     arma::mat log_range,
@@ -218,7 +219,7 @@ void vecchia_(
     // computing a vector used everyvhere
     arma::mat salt  = agmis11 * sigma12 ;
     //computing Vecchia approx itself
-    double inverse_cond_sd = 1/sqrt(diag_term- sum(salt % sigma12));
+    double inverse_cond_sd = 1/sqrt(diag_term- arma::dot(salt, sigma12));
     double pow_invcondsd_3  = inverse_cond_sd*inverse_cond_sd*inverse_cond_sd;
     out(0, 0) = inverse_cond_sd ;
     for(int j=1; j<bsize; j++){
@@ -348,7 +349,7 @@ void vecchia_(
         //diagonal coefficient
         out(0, 1 + m*(d_idx)) = 
           //a = 0, see article's annex
-          - arma::sum(salt % dcsigma12) * pow_invcondsd_3; // b
+          - arma::dot(salt, dcsigma12) * pow_invcondsd_3; // b
           //c = 0
           //rest of the coefficients
           the_rest = 
@@ -382,7 +383,7 @@ void vecchia_(
             out(0, 1 + j1+ m*d_idx) = 
               // a = 0
               dpsigma12(j1-1) * salt(j1-1)  * pow_invcondsd_3 // b 
-            - arma::sum(salt_dsigma11 % salt) * pow_invcondsd_3/2 ; // c
+            - arma::dot(salt_dsigma11, salt) * pow_invcondsd_3/2 ; // c
             
             salt_dsigma11_agmis11 =   agmis11 * salt_dsigma11 ; 
             //rest of the coefficients
