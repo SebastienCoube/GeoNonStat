@@ -420,7 +420,7 @@ arma::mat derivative_sandwiches_
 #endif
   int  n = NNarray.n_cols;
   int  m = NNarray.n_rows;
-  int d = (vecchia.n_cols - 1)/vecchia.n_rows;
+  int d = (vecchia.n_slices - 1)/vecchia.n_rows;
   arma::mat res(d,  n);
   
 #pragma omp parallel for
@@ -434,26 +434,26 @@ arma::mat derivative_sandwiches_
       right_vector_sub(col_idx) = right_vector(NNarray_col(col_idx)-1)
       ; 
     }
-    arma::mat vecchia_slice= vecchia.slice(row_idx);
-    arma::rowvec mini_sandwich = right_vector_sub * vecchia_slice * left_vector(row_idx)  ;
-    if(!sauce_determinant_chef){
-# pragma omp critical 
-      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
-        for(int col_idx = 0; col_idx < bsize; col_idx++){
-          res(aniso_idx, NNarray_col(col_idx)-1) += mini_sandwich(1 + col_idx + aniso_idx*m);
-        }
-      }
-    }else{
-# pragma omp critical 
-      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
-        for(int col_idx = 0; col_idx < bsize; col_idx++){
-          res(aniso_idx, NNarray_col(col_idx)-1) += 
-            mini_sandwich(   1 + col_idx + aniso_idx*m) -  
-            vecchia_slice(0, 1 + col_idx + aniso_idx*m)/vecchia_slice(0, 0);
-        }
-      }
-    }
-  }
+    arma::mat vecchia_col= vecchia.col(row_idx);
+    arma::rowvec mini_sandwich = right_vector_sub * vecchia_col * left_vector(row_idx)  ;
+     if(!sauce_determinant_chef){
+ # pragma omp critical 
+       for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
+         for(int col_idx = 0; col_idx < bsize; col_idx++){
+           res(aniso_idx, NNarray_col(col_idx)-1) += mini_sandwich(1 + col_idx + aniso_idx*m);
+         }
+       }
+     }else{
+ # pragma omp critical 
+       for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
+         for(int col_idx = 0; col_idx < bsize; col_idx++){
+           res(aniso_idx, NNarray_col(col_idx)-1) += 
+             mini_sandwich(   1 + col_idx + aniso_idx*m) -  
+             -vecchia_col(0, 1 + col_idx + aniso_idx*m)/vecchia_col(0, 0);
+         }
+       }
+     }
+   }
   return(res);
 }
 
