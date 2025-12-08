@@ -922,5 +922,6 @@ run_parallel_version_goret = function(
       }
     )
   }
+  return(res)
 }
 
