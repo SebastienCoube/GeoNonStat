@@ -82,9 +82,8 @@ for(iter in seq_len(n_iterations_update)){
   # Noise ###############################
   # Noise beta ###############################
   
-  res <- update_noise_beta (state, hierarchical_model, covariates, vecchia_approx, iter, iter_start)
+  res <- update_noise_beta (state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
   state <- res[["state"]]
-  squared_residuals <- res[["squared_residuals"]]
   
   # Noise log scale ###############################
   state <- update_noise_log_scale(state, hierarchical_model, covariates, vecchia_approx, res[["squared_residuals"]], iter, iter_start)

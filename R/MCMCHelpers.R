@@ -645,9 +645,9 @@ update_variance_rangepp <- function(state, hierarchical_model, covariates, vecch
   return(state)
 }
 
-update_noise_beta <- function(state, hierarchical_model, covariates, vecchia_approx, iter, iter_start){
+update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start){
   L_minus_one =  solve(t(chol(
-    solve(covariates$noise_X$crossprod_X)/max(solve(covariates$noise_X$crossprod_X))
+    solve(noise_X$crossprod_X)/max(solve(noise_X$crossprod_X))
   ))) 
   # VEWY IMPOWTANT don't remove or comment
   squared_residuals = as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
@@ -657,12 +657,12 @@ update_noise_beta <- function(state, hierarchical_model, covariates, vecchia_app
   p = state$momenta$noise_beta
   dens_grad = (
     - beta_prior_log_dens_derivative(
-      beta = state$params$noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-      beta0_mean = hierarchical_model$noise$beta0_mean,
-      beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+      beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
+      beta0_mean = noise$beta0_mean,
+      beta0_var =  noise$beta0_sd^2, 
       log_scale = state$params$noise_log_scale) # normal prior
     + X_PP_crossprod(
-      X = covariates$noise_X$X, hierarchical_model$noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
+      X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
       Y = 
         (
           + .5 # determinant part of normal likelihood
@@ -670,29 +670,30 @@ update_noise_beta <- function(state, hierarchical_model, covariates, vecchia_app
         ))
   )
   # Make a half step for momentum at the beginning
-  p = p - exp(state$ker_var$noise_beta_mala) * solve(t(L_minus_one), dens_grad) / 2
+  exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
+  p = p - exp_noise_mala * solve(t(L_minus_one), dens_grad) / 2
   
   n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
   for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the position
-    q = q + exp(state$ker_var$noise_beta_mala) * p
+    q = q + exp_noise_mala * p
     new_noise_beta = solve(L_minus_one, q)
     new_noise_var = as.vector(exp(X_PP_mult_right(
-      X = covariates$noise_X$X, PP = hierarchical_model$noise$PP,
+      X = noise_X$X, PP = noise$PP,
       vecchia_approx = vecchia_approx, Y = new_noise_beta, 
       permutate_PP_to_obs = TRUE
     )))
     # Make a half step for momentum at the end
     dens_grad = (
       - beta_prior_log_dens_derivative(
-        beta = new_noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-        beta0_mean = hierarchical_model$noise$beta0_mean,
-        beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+        beta = new_noise_beta, n_PP = noise$PP$n_knots, 
+        beta0_mean = noise$beta0_mean,
+        beta0_var =  noise$beta0_sd^2, 
         log_scale = state$params$noise_log_scale
       ) # normal prior
       + X_PP_crossprod(
-        X = covariates$noise_X$X, 
-        hierarchical_model$noise$PP, 
+        X = noise_X$X, 
+        noise$PP, 
         vecchia_approx = vecchia_approx, 
         permutate_PP_to_obs = TRUE, 
         Y = (+ .5 # determinant part of normal likelihood
@@ -700,24 +701,26 @@ update_noise_beta <- function(state, hierarchical_model, covariates, vecchia_app
         )
       )
     )
-    p = p - exp(state$ker_var$noise_beta_mala) * solve(t(L_minus_one), dens_grad) / (1 + (hmc_step == n_hmc_steps))
+    p = p - exp_noise_mala * solve(t(L_minus_one), dens_grad) / (1 + (hmc_step == n_hmc_steps))
   }
   
   # Evaluate potential and kinetic energies at start and end of trajectory
   current_U = (
     - beta_prior_log_dens(
-      beta = state$params$noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-      beta0_mean = hierarchical_model$noise$beta0_mean,
-      beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+      beta = state$params$noise_beta, 
+      n_PP = noise$PP$n_knots, 
+      beta0_mean = noise$beta0_mean,
+      beta0_var =  noise$beta0_sd^2, 
       log_scale = state$params$noise_log_scale) # normal prior 
     +.5* sum(log(state$stuff$noise_var)) # det
     +.5*sum(squared_residuals/state$stuff$noise_var) # observations
   )
   current_K = sum (state$momenta$noise_beta ^2) / 2
   proposed_U = (
-    - beta_prior_log_dens(beta = new_noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-                          beta0_mean = hierarchical_model$noise$beta0_mean,
-                          beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+    - beta_prior_log_dens(beta = new_noise_beta, 
+                          n_PP = noise$PP$n_knots, 
+                          beta0_mean = noise$beta0_mean,
+                          beta0_var =  noise$beta0_sd^2, 
                           log_scale = state$params$noise_log_scale) # normal prior        
     +.5* sum(log(new_noise_var)) # det
     +.5*sum(squared_residuals/new_noise_var) # observations
