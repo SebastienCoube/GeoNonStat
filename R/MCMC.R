@@ -86,7 +86,7 @@ for(iter in seq_len(n_iterations_update)){
   state <- res[["state"]]
   
   # Noise log scale ###############################
-  state <- update_noise_log_scale(state, hierarchical_model, covariates, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
+  state <- update_noise_log_scale(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
   
   # Storing the samples ###############################
   params_records[[iter]] = state$params

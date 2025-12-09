@@ -740,19 +740,19 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   return(list("state" = state, "squared_residuals" = squared_residuals))
 }
 
-update_noise_log_scale <- function(state, hierarchical_model, covariates, vecchia_approx, squared_residuals, iter, iter_start){
+update_noise_log_scale <- function(state, noise, noise_X, vecchia_approx, squared_residuals, iter, iter_start){
   # ancillary -- sufficient ####
   for(i in seq_len(4)) {
     new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, exp(state$ker_var$noise_log_scale))
     new_noise_beta = state$params$noise_beta
-    new_noise_beta[-seq_len(covariates$noise_X$n_regressors)] = 
-      new_noise_beta[-seq_len(covariates$noise_X$n_regressors)] *
+    new_noise_beta[-seq_len(noise_X$n_regressors)] = 
+      new_noise_beta[-seq_len(noise_X$n_regressors)] *
       c(exp((new_noise_log_scale - state$params$noise_log_scale)/2))
     new_noise_var = as.vector(
       exp(
         X_PP_mult_right(
-          X = covariates$noise_X$X, 
-          PP = hierarchical_model$noise$PP,
+          X = noise_X$X, 
+          PP = noise$PP,
           vecchia_approx = vecchia_approx, 
           Y = new_noise_beta, 
           permutate_PP_to_obs = TRUE
@@ -768,8 +768,8 @@ update_noise_log_scale <- function(state, hierarchical_model, covariates, vecchi
     if(!is.nan(dens_ratio)) {
       if(dens_ratio > log(runif(1))) {
         if(
-          (new_noise_log_scale > hierarchical_model$noise$log_scale_bounds[1])&
-          (new_noise_log_scale < hierarchical_model$noise$log_scale_bounds[2])
+          (new_noise_log_scale > noise$log_scale_bounds[1])&
+          (new_noise_log_scale < noise$log_scale_bounds[2])
         ) {
           state$params$noise_log_scale[] = new_noise_log_scale
           state$params$noise_beta = new_noise_beta 
@@ -788,22 +788,20 @@ update_noise_log_scale <- function(state, hierarchical_model, covariates, vecchi
   # sufficient -- sufficient ####
   for(i in seq_len(10)) {
     new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, .1)
-    if(
-      ((
-        + beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-                              beta0_mean = hierarchical_model$noise$beta0_mean,
-                              beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+    if(new_noise_log_scale > noise$log_scale_bounds[1]
+      && new_noise_log_scale < noise$log_scale_bounds[2]) {
+      if(
+        + beta_prior_log_dens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
+                              beta0_mean = noise$beta0_mean,
+                              beta0_var =  noise$beta0_sd^2, 
                               log_scale = new_noise_log_scale) - 
-        beta_prior_log_dens(beta = state$params$noise_beta, n_PP = hierarchical_model$noise$PP$n_knots, 
-                            beta0_mean = hierarchical_model$noise$beta0_mean,
-                            beta0_var =  hierarchical_model$noise$beta0_sd^2, 
+        beta_prior_log_dens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
+                            beta0_mean = noise$beta0_mean,
+                            beta0_var =  noise$beta0_sd^2, 
                             log_scale = state$params$noise_log_scale)
-      ) > log(runif(1)))
-      &(new_noise_log_scale > hierarchical_model$noise$log_scale_bounds[1])
-      &(new_noise_log_scale < hierarchical_model$noise$log_scale_bounds[2])
-    )
-    {
+       > log(runif(1))) {
       state$params$noise_log_scale[] = new_noise_log_scale
+      }
     }
   }
   return(state)
