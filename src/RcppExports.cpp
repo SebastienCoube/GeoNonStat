@@ -43,6 +43,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// matern_thingy_
+double matern_thingy_(double mahala_dist, bool smoothness15);
+RcppExport SEXP _GeoNonStat_matern_thingy_(SEXP mahala_distSEXP, SEXP smoothness15SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type mahala_dist(mahala_distSEXP);
+    Rcpp::traits::input_parameter< bool >::type smoothness15(smoothness15SEXP);
+    rcpp_result_gen = Rcpp::wrap(matern_thingy_(mahala_dist, smoothness15));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecchia_
 void vecchia_(arma::mat log_range, arma::mat locs, arma::mat NNarray, int num_threads, double smoothness, bool compute_derivative, arma::cube& result);
 RcppExport SEXP _GeoNonStat_vecchia_(SEXP log_rangeSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP smoothnessSEXP, SEXP compute_derivativeSEXP, SEXP resultSEXP) {
@@ -79,6 +91,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_GeoNonStat_vecchia", (DL_FUNC) &_GeoNonStat_vecchia, 6},
     {"_GeoNonStat_derivative_sandwiches", (DL_FUNC) &_GeoNonStat_derivative_sandwiches, 6},
+    {"_GeoNonStat_matern_thingy_", (DL_FUNC) &_GeoNonStat_matern_thingy_, 2},
     {"_GeoNonStat_vecchia_", (DL_FUNC) &_GeoNonStat_vecchia_, 7},
     {"_GeoNonStat_derivative_sandwiches_", (DL_FUNC) &_GeoNonStat_derivative_sandwiches_, 6},
     {NULL, NULL, 0}
