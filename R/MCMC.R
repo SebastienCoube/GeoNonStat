@@ -59,7 +59,7 @@ for(iter in seq_len(n_iterations_update)){
   
   # Regression coefficients ###############################
   # Regression coefficients #################################
-  res <- update_beta(state$params, state$stuff, covariates, vecchia_approx, observed_field)
+  res <- update_beta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
   state$params <- res[["params"]]
   state$stuff <- res[["stuff"]]
   
@@ -67,16 +67,15 @@ for(iter in seq_len(n_iterations_update)){
   state$params <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
   
   # Field log var ###############################
-  state <- update_field_log_var(state, hierarchical_model, vecchia_approx, iter, iter_start)
+  state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
   
   # Range beta ###############################
   
-  res <- update_range_beta(state, hierarchical_model, covariates, iter, iter_start, num_threads)
+  res <- update_range_beta(state, hierarchical_model, covariates$range_X, iter, iter_start, num_threads)
   state <- res[["state"]]
-  p <- res[["p"]]
   
   # Variance of the  range PP ###############################
-  state <- update_variance_rangepp(state, hierarchical_model, covariates, vecchia_approx, p, iter, iter_start, num_threads)
+  state <- update_variance_rangepp(state, hierarchical_model, covariates$range_X, vecchia_approx, res[["p"]], iter, iter_start, num_threads)
   
   
   # Noise ###############################
