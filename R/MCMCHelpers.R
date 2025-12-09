@@ -1,3 +1,24 @@
+renew_momentum <- function(momentum, kept_momentum = .9) {
+  if (!inBounds(c(0,1), kept_momentum, includeBounds = TRUE))
+    stop("kept_momentum must be between 0 and 1")
+  momentum[] <- sqrt(kept_momentum) * momentum[] + sqrt(1 - kept_momentum) * rnorm(length(momentum[]))
+  momentum
+}
+
+update_kernel <- function(iter,
+                          iter_start,
+                          update_kernel_groupsize,
+                          kernel_value,
+                          mult) {
+  idx <- (((iter + iter_start - 1) %/% update_kernel_groupsize + 1) %% length(kernel_value)) + 1
+  kernel_value[idx] <-
+    kernel_value[idx] +
+    length(kernel_value) * mult / sqrt(10 + iter + iter_start)
+  kernel_value[idx] <- max(kernel_value[idx], -8)
+  kernel_value[idx] <- min(kernel_value[idx], 4)
+  kernel_value
+}
+
 #' Title
 #'
 #' @param nlocs numeric, number of locations
@@ -497,10 +518,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
       mult = -.25
     )
     
-    if (
-      (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
-      (all(q > hierarchical_model$range$log_scale_bounds[1] ))
-    ){
+    if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))){
       if(!is.nan(current_U-proposed_U+current_K-proposed_K)){
         if(log(runif(1)) < (current_U-proposed_U+current_K-proposed_K))
         {
@@ -523,9 +541,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
   for(i in seq_len(10))
   {
     q = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
-    if(
-      (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
-      (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
+    if(all(inBounds(hierarchical_model$range$log_scale_bounds, q)) &
       (
         -sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
         +sum((state$params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
@@ -541,8 +557,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
           log_scale = state$params$range_log_scale) 
         > log(runif(1))
       )
-    )
-    {
+    ) {
       state$params$range_log_scale[] = q
     }
   }
@@ -584,11 +599,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
       mult = -.25
     )
     
-    if (
-      (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
-      (all(q > hierarchical_model$range$log_scale_bounds[1] ))
-    )
-    {
+    if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))){
       if(!is.nan(current_U-proposed_U)){
         if(log(runif(1)) < (current_U-proposed_U)){
           state$ker_var$range_log_scale_ancillary = update_kernel(
@@ -609,11 +620,8 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
   for(i in seq_len(10))
   {
     q = state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, .1)
-    if(
-      (all(q < hierarchical_model$range$log_scale_bounds[2] )) &
-      (all(q > hierarchical_model$range$log_scale_bounds[1] )) &
-      (
-        -sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
+    if(all(inBounds(hierarchical_model$range$log_scale_bounds, q)) &
+      ( -sum((q - hierarchical_model$range$log_scale_bounds[1])^2)
         +sum((state$params$range_log_scale - hierarchical_model$range$log_scale_bounds[1])^2)
         
         + beta_prior_log_dens(
@@ -768,10 +776,7 @@ update_noise_log_scale <- function(state, noise, noise_X, vecchia_approx, square
     )
     if(!is.nan(dens_ratio)) {
       if(dens_ratio > log(runif(1))) {
-        if(
-          (new_noise_log_scale > noise$log_scale_bounds[1])&
-          (new_noise_log_scale < noise$log_scale_bounds[2])
-        ) {
+        if(inBounds(noise$log_scale_bounds, new_noise_log_scale)) {
           state$params$noise_log_scale[] = new_noise_log_scale
           state$params$noise_beta = new_noise_beta 
           state$stuff$noise_var = new_noise_var
@@ -789,8 +794,7 @@ update_noise_log_scale <- function(state, noise, noise_X, vecchia_approx, square
   # sufficient -- sufficient ####
   for(i in seq_len(10)) {
     new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, .1)
-    if(new_noise_log_scale > noise$log_scale_bounds[1]
-      && new_noise_log_scale < noise$log_scale_bounds[2]) {
+    if(inBounds(noise$log_scale_bounds, new_noise_log_scale)) {
       if(
         + beta_prior_log_dens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
                               beta0_mean = noise$beta0_mean,

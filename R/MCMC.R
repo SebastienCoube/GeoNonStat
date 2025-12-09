@@ -1,25 +1,3 @@
-renew_momentum <- function(momentum, kept_momentum = .9) {
-  if (kept_momentum < 0 |
-      kept_momentum > 1)
-    stop("kept_momentum must be between 0 and 1")
-  momentum[] <- sqrt(kept_momentum) * momentum[] + sqrt(1 - kept_momentum) * rnorm(length(momentum[]))
-  momentum
-}
-
-update_kernel <- function(iter,
-                          iter_start,
-                          update_kernel_groupsize,
-                          kernel_value,
-                          mult) {
-  idx <- (((iter + iter_start - 1) %/% update_kernel_groupsize + 1) %% length(kernel_value)) + 1
-  kernel_value[idx] <-
-    kernel_value[idx] +
-    length(kernel_value) * mult / sqrt(10 + iter + iter_start)
-  kernel_value[idx] <- max(kernel_value[idx], -8)
-  kernel_value[idx] <- min(kernel_value[idx], 4)
-  kernel_value
-}
-
 #' Title TODO
 #'
 #' @param covariates  The list of covariates obtained with `process_covariates`
