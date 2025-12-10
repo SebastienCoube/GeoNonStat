@@ -115,7 +115,7 @@ update_latent_field <- function(params, stuff, vecchia_approx, observed_field, i
           ))
     }
   }
-  return(params)
+  return(params$field)
 }
 
 update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start){

@@ -42,7 +42,7 @@ for(iter in seq_len(n_iterations_update)){
   state$stuff <- res[["stuff"]]
   
   # Latent field ###############################
-  state$params <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
+  state$params$field <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
   
   # Field log var ###############################
   state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
