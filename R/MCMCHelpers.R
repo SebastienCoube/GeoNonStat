@@ -33,11 +33,12 @@ update_kernel <- function(iter,
 #' # TODO
 initStateParams <- function(stateParams){
   lapply(stateParams, function(x){
-    if(is.matrix(x)){
-      return(matrix(NA_real_, nrow = nrow(x), ncol = ncol(x)))
-    } else if(is.numeric(x)) {
-      return(rep(NA_real_, length(x)))
-    }
+      # return(matrix(NA_real_, nrow = nrow(x), ncol = ncol(x)))
+      tmp <- rep(NA_real_, length(x))
+      if(is.matrix(x)){
+        dim(tmp) <- dim(x)
+      }
+      return(tmp)
   })
 }
 
