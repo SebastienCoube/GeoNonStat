@@ -424,7 +424,7 @@ pointillist_colorscale <- function(field, scalename = "") {
     axes = FALSE,
     mgp = c(0, 0, 0),
   )
-  pos <- seq_len(0, 1, by = 0.25)
+  pos <- seq(0, 1, by = 0.25)
   values <- stats::quantile(field, probs = pos)
   text(
     y = 1 + pos * (50 - 1),
