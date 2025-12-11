@@ -83,7 +83,8 @@ for(iter in seq_len(n_iterations_update)){
 #' @param n_iterations numeric value, number of iterations. Default to 100
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
-#' @returns a list
+#' @returns a GeoNonStat object, with updated state (last state by chain) 
+#' and records (params records for all iterations, by chain)
 #' @export
 #'
 #' @examples
@@ -137,6 +138,11 @@ run_parallel_version_goret = function(
       }
     )
   }
-  return(res)
+  
+  # Returning object processed, with for each chain : last state  and records for all iterations
+  new_object <- object
+  new_object$states <- lapply(res, function(x) x[["state"]])
+  new_object$records <- lapply(res, function(x) x[["params_records"]])
+  return(new_object)
 }
 
