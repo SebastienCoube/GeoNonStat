@@ -251,7 +251,7 @@ createGnsSimulatorParameters <- function(gns_simulator,
   } else {
     res$range_X_coeff[1, 1] <- 
       -0.5 * log(8 * gns_simulator$matern_smoothness) + 
-        log(max(dist(gns_simulator$vecchia_approx$locs[seq(10000), ])) / 20)
+        log(max(dist(gns_simulator$vecchia_approx$locs[seq(min(nrow(gns_simulator$vecchia_approx$locs), 10000)), ])) / 20)
     if (verbose)
       message(
         paste(
@@ -395,16 +395,15 @@ createGnsSimulatorParameters <- function(gns_simulator,
 simulateGnsData <- function(gns_simulator,
                             gns_params,
                             num_threads = 5) {
-  log_range_field <- X_PP_mult_right(
-    X = gns_simulator$covariates$range_X$X_locs,
-    PP = gns_simulator$range_PP,
-    vecchia_approx = gns_simulator$vecchia_approx,
-    Y = rbind(
-      gns_params$range_X_coeff,
-      gns_params$range_PP_coeff
-    ),
-    permutate_PP_to_obs = FALSE
-  )
+  log_range_field <- compute_log_range(
+      range_beta = rbind(
+        gns_params$range_X_coeff,
+        gns_params$range_PP_coeff
+      ),
+      vecchia_approx = gns_simulator$vecchia_approx,
+      range_X = gns_simulator$covariates$range_X,
+      PP = gns_simulator$range_PP
+    )
   
   
   log_noise_field <- X_PP_mult_right(
@@ -417,21 +416,19 @@ simulateGnsData <- function(gns_simulator,
     ),
     permutate_PP_to_obs = TRUE
   )
-  
+  compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), vecchia_approx$n_locs,  1 ))
+  vecchia_(
+    log_range = t(log_range_field), 
+    locs = gns_simulator$vecchia_approx$t_locs, 
+    NNarray = gns_simulator$vecchia_approx$NNarray, 
+    smoothness = gns_simulator$matern_smoothness,
+    compute_derivative = FALSE,
+    num_threads = max(7, parallel::detectCores()-1), 
+    result = compressed_chol
+  )
   sparse_chol <- decompress_chol(
     vecchia_approx = gns_simulator$vecchia_approx,
-    compute_sparse_chol(
-      range_beta = rbind(
-        gns_params$range_X_coeff,
-        gns_params$range_PP_coeff
-      ),
-      vecchia_approx = gns_simulator$vecchia_approx,
-      range_X = gns_simulator$covariates$range_X,
-      PP = gns_simulator$range_PP,
-      matern_smoothness = gns_simulator$matern_smoothness,
-      compute_derivative = FALSE,
-      num_threads = num_threads
-    )
+    compressed_sparse_chol = compressed_chol
   )
   
   latent_field <- as.vector(

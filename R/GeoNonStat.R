@@ -503,7 +503,7 @@ process_hierarchical_model <- function(vecchia_approx,
 #'   anisotropic = TRUE
 #' )
 #' process_transition_kernels(hm = hm)
-process_transition_kernels <- function(init = -4, hm) {
+process_transition_kernels <- function(init, hm) {
   return(
     list(
       range_log_scale_sufficient = rep(init, 1 + hm$anisotropic),
@@ -571,7 +571,7 @@ process_states <- function(hm,
                            covariates,
                            observed_field,
                            vecchia_approx,
-                           init_tk = -4,
+                           init_tk,
                            seed = 1) {
   set.seed(seed)
   # initializing sub-lisits in the state
@@ -612,12 +612,12 @@ process_states <- function(hm,
                                ncol = 1 + 2 * hm$anisotropic) #random starting values
     row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
                                      paste("PP", seq_len(hm$range$PP$n_knots), sep = "_"))
-    params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[2]))
+    params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1]))
     row.names(params$range_log_scale) = c("range", "aniso")[seq_len(1 + hm$anisotropic)]
     momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
     momenta$range_log_scale_ancillary = rnorm(length(params$range_log_scale))
   }
-  params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
+  #params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
   colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
     #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
   params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
@@ -626,15 +626,21 @@ process_states <- function(hm,
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   # cholesky factors of precision matrices
-  stuff$compressed_chol <- compute_sparse_chol(
-    range_beta = params$range_beta,
-    vecchia_approx = vecchia_approx,
-    range_X = covariates$range_X,
-    PP = hm$range$PP,
-    matern_smoothness = hm$matern_smoothness,
-    compute_derivative = TRUE,
-    num_threads = min(5, max(parallel::detectCores() - 1, 1))
+  stuff$compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), vecchia_approx$n_locs,  1 + 3*nrow(vecchia_approx$NNarray)))
+  vecchia_(
+    log_range = t(compute_log_range(
+      range_beta = params$range_beta,
+      vecchia_approx = vecchia_approx,
+      range_X = covariates$range_X,
+      PP = hm$range$PP)), 
+      num_threads = min(5, max(parallel::detectCores() - 1, 1)),
+      locs = vecchia_approx$t_locs,
+      NNarray = vecchia_approx$NNarray,
+      compute_derivative = TRUE,
+      smoothness = hm$matern_smoothness, 
+    result = stuff$compressed_chol
   )
+  
   stuff$sparse_chol <- decompress_chol(vecchia_approx, stuff$compressed_chol)
   # plot_pointillist_painting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
   
@@ -833,7 +839,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -3
+          init_tk = -4
         )
       }
     )
