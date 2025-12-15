@@ -53,9 +53,9 @@ for(iter in seq_len(n_iterations_update)){
   state <- res[["state"]]
   
   # Variance of the  range PP ###############################
-  #state <- update_variance_rangepp(
-  # state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
-  # vecchia_approx = vecchia_approx, iter = iter, iter_start = iter_start, num_threads = num_threads)
+  state <- update_variance_rangepp(
+   state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
+   vecchia_approx = vecchia_approx, iter = iter, iter_start = iter_start, num_threads = num_threads)
   
   
   # Noise ###############################

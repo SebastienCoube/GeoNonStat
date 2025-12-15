@@ -126,7 +126,7 @@ decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
     new("dtCMatrix",
       i = vecchia_approx$sparse_chol_i-1L,
       p = vecchia_approx$sparse_chol_p,
-      x = compressed_sparse_chol[, 1, ][vecchia_approx$sparse_chol_x_reorder],
+      x = compressed_sparse_chol[, ,1][vecchia_approx$sparse_chol_x_reorder],
       Dim = c(n, n),
       uplo = "L",
       diag = "N")
@@ -183,15 +183,46 @@ decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
 #'   PP = PP,
 #'   matern_smoothness = 1.5, compute_derivative = TRUE
 #' )
-compute_sparse_chol <- function(range_beta,
+# compute_sparse_chol <- function(range_beta,
+#                                 vecchia_approx,
+#                                 range_X,
+#                                 PP = NULL,
+#                                 matern_smoothness = 1.5,
+#                                 compute_derivative = TRUE,
+#                                 num_threads = 1) {
+#   if (!matern_smoothness %in% c(.5, 1.5))
+#     stop("matern_smoothness must be equal to 0.5 or 1.5")
+#   if (ncol(range_beta) == 3) {
+#     Y <- range_beta %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
+#   } else if (ncol(range_beta) == 1) {
+#     Y <- range_beta * 2
+#   } else {
+#     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
+#   }
+#   
+#   log_range <- as.matrix(
+#     X_PP_mult_right(
+#       vecchia_approx = vecchia_approx,
+#       X = range_X$X_locs,
+#       PP = PP,
+#       Y = Y,
+#       permutate_PP_to_obs = FALSE
+#     )
+#   )
+#   res <- vecchia(
+#     num_threads = num_threads,
+#     log_range = t(log_range),
+#     locs = vecchia_approx$t_locs,
+#     NNarray = vecchia_approx$NNarray,
+#     compute_derivative = compute_derivative,
+#     smoothness = matern_smoothness
+#   )
+#   return(res)
+# }
+compute_log_range <- function(range_beta,
                                 vecchia_approx,
                                 range_X,
-                                PP = NULL,
-                                matern_smoothness = 1.5,
-                                compute_derivative = TRUE,
-                                num_threads = 1) {
-  if (!matern_smoothness %in% c(.5, 1.5))
-    stop("matern_smoothness must be equal to 0.5 or 1.5")
+                                PP = NULL) {
   if (ncol(range_beta) == 3) {
     Y <- range_beta %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
   } else if (ncol(range_beta) == 1) {
@@ -209,15 +240,7 @@ compute_sparse_chol <- function(range_beta,
       permutate_PP_to_obs = FALSE
     )
   )
-  res <- vecchia(
-    num_threads = num_threads,
-    log_range = t(log_range),
-    locs = vecchia_approx$t_locs,
-    NNarray = vecchia_approx$NNarray,
-    compute_derivative = compute_derivative,
-    smoothness = matern_smoothness
-  )
-  return(res)
+  return(log_range)
 }
 
 
@@ -314,8 +337,9 @@ beta_prior_log_dens <- function(beta,
     var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   determinant_part <- -0.5 * log_scale[1] * n_PP
-  if (length(log_scale) == 2)
+  if (length(log_scale) == 2){
     determinant_part <- determinant_part - 2 * 0.5 * log_scale[2] * n_PP
+  }
   quadratic_part <- -0.5 * sum((beta - mean_mat)^2 / var_mat)
   return(quadratic_part + determinant_part)
 }

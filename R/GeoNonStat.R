@@ -358,10 +358,10 @@ process_PP_prior <- function(PP = NULL,
       paste(
         "The log - marginal variance (log_scale) bounds for the PP who describes the",
         parameter_name,
-        "parameters were automatically set to (-6, 0)"
+        "parameters were automatically set to (-6, -1)"
       )
     )
-    log_scale_bounds <- c(-6, 0)
+    log_scale_bounds <- c(-6, -1)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2)
     stop(
@@ -511,11 +511,8 @@ process_transition_kernels <- function(init, hm) {
       range_beta_sufficient = rep(init, 1 + hm$anisotropic),
       range_beta_ancillary = rep(init, 1 + hm$anisotropic),
       range_log_scale_estimate = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic),
-      scale_beta_sufficient = init,
-      scale_beta_ancillary = init,
-      scale_log_scale_sufficient = init,
-      scale_log_scale_ancillary = init,
       field_log_var_ancillary = init,
+      field_log_var_sufficient = init,
       noise_beta_mala = init,
       noise_log_scale = init
     )
@@ -839,7 +836,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -4
+          init_tk = -5
         )
       }
     )
