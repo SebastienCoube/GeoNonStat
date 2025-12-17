@@ -358,10 +358,10 @@ process_PP_prior <- function(PP = NULL,
       paste(
         "The log - marginal variance (log_scale) bounds for the PP who describes the",
         parameter_name,
-        "parameters were automatically set to (-6, -1)"
+        "parameters were automatically set to (-6, 3)"
       )
     )
-    log_scale_bounds <- c(-6, -1)
+    log_scale_bounds <- c(-6, 3)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2)
     stop(

@@ -19,7 +19,8 @@ tatato = array(0, dim = c(ncol(NNarray), n, 1 + ncol(NNarray)))
 log_range = matrix(0, n, 1)
 log_range[,1] = -8 + 3*locs[,1]
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = 1.5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, 
+  compute_derivative = T, smoothness = 1.5, tatato)
 GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # nominally anisotropic, with smoothness = 1.5
@@ -261,7 +262,7 @@ for(range_col_idx in seq(3)){
   print(((
     v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato_[,,1])[!is.na(NNarray)]) %*% v_right -
       v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato [,,1])[!is.na(NNarray)]) %*% v_right 
-    - sum(log(tatato_[1,,1])) + sum(log(tatato[1,,1]))
+    + sum(log(tatato_[1,,1])) - sum(log(tatato[1,,1]))
   )*100000)[1,1])
   print("finite diff sandwich with determinant sauce")
   print(tatata[range_col_idx, range_row_idx])
@@ -271,10 +272,79 @@ for(range_col_idx in seq(3)){
   ttt = derivative_sandwiches_(vecchia = tatato, left_vector = 0*v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
   print(ttt[range_col_idx, range_row_idx])
   print("determinant only, finite diff")
-  print(sum(log(tatato_[1,,1]) - log(tatato[1,,1]))*100000)
+  print(sum(+log(tatato_[1,,1]) - log(tatato[1,,1]))*100000)
   print("=========================")
 }
 
 
+########################
+# speed test
 
+
+
+
+
+Rcpp::sourceCpp("src/vecchia_.cpp")
+
+# spatial locations 
+n = 50000
+locs = cbind(runif(n), runif(n))
+# range parameters 
+log_range = matrix(0, n, 3)
+log_range[,1] = -8 + 3*locs[,1]
+log_range[,2] = -8 + 3*locs[,2]
+log_range[,3] = -3*locs[,2]
+# vecchia approx 
+NNarray = GpGp::find_ordered_nn(locs, 10)
+smoothness = c(0.5, 1.5)
+# computing Vecchia 
+
+tatato = array(0, dim = c(ncol(NNarray), n,  1 + 3*ncol(NNarray)))
+
+
+
+timediff1 = mean(sapply(seq(50), function(x){
+  t1 = Sys.time()
+vecchia_(
+  log_range = t(log_range), locs = t(locs), 
+  NNarray = t(NNarray), num_threads = 1, compute_derivative = T, 
+  smoothness = 1.5, tatato)
+  Sys.time()-t1
+}))
+
+timediff5 = mean(sapply(seq(50), function(x){
+  t1 = Sys.time()
+vecchia_(
+  log_range = t(log_range), locs = t(locs), 
+  NNarray = t(NNarray), num_threads = 5, compute_derivative = T, 
+  smoothness = 1.5, tatato)
+  Sys.time()-t1
+}))
+
+timediff8 = mean(sapply(seq(50), function(x){
+  t1 = Sys.time()
+vecchia_(
+  log_range = t(log_range), locs = t(locs), 
+  NNarray = t(NNarray), num_threads = 8, compute_derivative = T, 
+  smoothness = 1.5, tatato)
+  Sys.time()-t1
+}))
+
+timediff10 = mean(sapply(seq(50), function(x){
+  t1 = Sys.time()
+vecchia_(
+  log_range = t(log_range), locs = t(locs), 
+  NNarray = t(NNarray), num_threads = 10, compute_derivative = T, 
+  smoothness = 1.5, tatato)
+  Sys.time()-t1
+}))
+
+timediff20 = mean(sapply(seq(50), function(x){
+  t1 = Sys.time()
+vecchia_(
+  log_range = t(log_range), locs = t(locs), 
+  NNarray = t(NNarray), num_threads = 20, compute_derivative = T, 
+  smoothness = 1.5, tatato)
+  Sys.time()-t1
+}))
 

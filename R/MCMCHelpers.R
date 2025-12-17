@@ -296,7 +296,7 @@ update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_sta
   p[] = p[] - (dens_grad) %*%hmc_stepsize/ 2
   n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
   for(hmc_step in seq_len(n_hmc_steps)){
-    # Make a full step for the position
+    # Make a full step for the positio
     q = q + p %*% hmc_stepsize
     new_range_beta = state$params$range_beta
     new_range_beta[] = solve(L_minus_one, (q))
@@ -732,8 +732,7 @@ UpdateVarPPSuff = function(hm4params, beta4params, current_range_log_scale){
   return(current_range_log_scale)
 }
   
-  
-SuffU = function(sparse_chol, field, field_log_var){
+PotSuffRangeLogScale = function(sparse_chol, field, field_log_var){
   return(
     (
       + .5* sum((sparse_chol %*%field)^2)/exp(field_log_var[1,1])
@@ -741,16 +740,17 @@ SuffU = function(sparse_chol, field, field_log_var){
     )
   )
 }
-AnciU = function(field, lm_residuals, noise_var, vecchia_approx){
-  + .5 * sum((lm_residuals -field[vecchia_approx$locs_match])^2/noise_var)
+PotAnciRangeLogScale = function(field, lm_residuals, noise_var, vecchia_approx){
+  return(+ .5 * sum((lm_residuals -field[vecchia_approx$locs_match])^2/noise_var))
 }
+
   
 update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_approx, iter, iter_start, num_threads){
   new_compressed_sparse_chol = state$stuff$compressed_chol[,,1,drop = F]
-  n_range_log_scale_update = 1
+  n_range_log_scale_update = 2
   # ancillary - sufficient ####
   for(i in seq_len(n_range_log_scale_update)){
-    q = state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient[1]))
+    q = state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient))
     
     if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))){
       new_range_beta = state$params$range_beta
@@ -772,23 +772,23 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
       )
       new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     
-    current_U =  SuffU(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
-    proposed_U = SuffU(sparse_chol = new_sparse_chol,         field = state$params$field, field_log_var = state$params$field_log_var)
+    current_U =  PotSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
+    proposed_U = PotSuffRangeLogScale(sparse_chol = new_sparse_chol,         field = state$params$field, field_log_var = state$params$field_log_var)
     
-    state$ker_var$range_log_scale_sufficient[1] = update_kernel(
+    state$ker_var$range_log_scale_sufficient = update_kernel(
       iter = iter, iter_start = iter_start, 
-      update_kernel_groupsize = 1, 
-      kernel_value = state$ker_var$range_log_scale_sufficient[1], 
-      mult = -.5
+      update_kernel_groupsize = 2, 
+      kernel_value = state$ker_var$range_log_scale_sufficient, 
+      mult = -.25
     )
       if(!is.nan(current_U-proposed_U)){
         if(log(runif(1)) < (current_U-proposed_U))
         {
           
-          state$ker_var$range_log_scale_sufficient[1] = update_kernel(
+          state$ker_var$range_log_scale_sufficient = update_kernel(
             iter = iter, iter_start = iter_start, 
-            update_kernel_groupsize = 1, 
-            kernel_value = state$ker_var$range_log_scale_sufficient[1], 
+            update_kernel_groupsize = 2, 
+            kernel_value = state$ker_var$range_log_scale_sufficient, 
             mult = 1
           )
           
@@ -828,12 +828,12 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
     new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     new_field = as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
     
-    current_U = AnciU(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
-    proposed_U = AnciU(field = new_field,         lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
+    current_U = PotAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
+    proposed_U = PotAnciRangeLogScale(field = new_field,         lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
     state$ker_var$range_log_scale_ancillary = update_kernel(
       iter = iter, iter_start = iter_start, 
       update_kernel_groupsize = 2, kernel_value = state$ker_var$range_log_scale_ancillary, 
-      mult = -.5
+      mult = -.25
     )
     
     if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))){
@@ -941,7 +941,7 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   )
   proposed_K = sum(p^2) / 2
   
-  state$ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, kernel_value = state$ker_var$noise_beta_mala, mult = -.7)
+  state$ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, kernel_value = state$ker_var$noise_beta_mala, mult = -.8)
   if(!is.nan(current_U-proposed_U+current_K- proposed_K)) {
     if (log(runif(1)) < current_U-proposed_U+current_K- proposed_K) {
       state$ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, update_kernel_groupsize = 1, kernel_value = state$ker_var$noise_beta_mala, mult = 1)
