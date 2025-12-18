@@ -1,42 +1,102 @@
-summarize = function(v){
-  if(is.matrix(v))return(apply(v,2,summarize))
-  return(signif(c("mean" = mean(v), "sd" = sd(v), 
-           "q 2.5%" = unname(quantile(v, .025)), "median" = unname(quantile(v, .5)), "q 97.5%" = unname(quantile(v, .975))
-           ), 3))
+reduceRecords <- function(records, burn_in = 0, keep="all") {
+  # Reduce paramaters
+  namesparam <- names(records[[1]][[1]])
+  keep <- switch(keep,
+                "all" = setdiff(namesparam, "field"),
+                "all_even_the_field" = namesparam,
+                keep)
+  records <- lapply(records, function(x) 
+    lapply(x, function(y) y[keep]))
+  
+  # Reduce iterations
+  n_iter <- length(records[[1]])
+  start_iter <- max(0, floor(n_iter * burn_in))
+  if(n_iter - start_iter <= 0)
+    stop("Not enough iterations, reduce burn_in if necessary")
+  if(!all(lengths(records) == n_iter)) 
+    stop("Something is wrong with your object, ",
+         "all the MCMC chains should have the same number of iterations")
+  keep_iters <- (start_iter+1):n_iter
+  
+  return(
+    lapply(records, function(x) {
+      return(x[keep_iters])
+      }
+    )
+  )
 }
 
-AggregateRecordsPerChain = function(records, burn_in = .1, who = "all"){
-  if(identical(who, "all")) who = setdiff(names(records[[1]][[1]]), "field")
-  if(identical(who, "all_even_the_field")) who = names(records[[1]][[1]])
-  res = lapply(records, function(record){
-    res = list()
-    for(name in who){
-      res[[name]] = matrix(0, ceiling(length(record)*(1-burn_in)), length(record[[1]][[name]]))
-      if(!is.null( row.names(record[[1]][[name]]))){
-        if(ncol(record[[1]][[name]])==1)colnames(res[[name]]) = row.names(record[[1]][[name]])
-        if(ncol(record[[1]][[name]])>1)colnames(res[[name]]) = c(outer(row.names(record[[1]][[name]]), colnames(record[[1]][[name]]), function(x, y)paste(x, y, sep = "_")))
-      }
-      for(iter in seq(max(1, floor(length(record) * burn_in)), length(record))) {
-        res[[name]][iter - floor(length(record) * burn_in),] = record[[iter]][[name]]
-      }
+transposeList <- function(list) {
+  lapply(seq_along(list[[1]]),
+         function(i) lapply(list, `[[`, i))
+}
+
+AggregateRecordsPerChain = function(chain){
+  res = lapply(chain, function(param){
+    # Numeric case
+    if(!is.matrix(param[[1]])) {
+      param <- lapply(param, function(x) {
+        dim(x) <- c(length(x), 1)
+        return(x)
+      })
     }
-    res
+    
+    if(ncol(param[[1]]) == 1) {
+      bindres <- do.call(rbind, lapply(param, as.numeric))
+      colnames(bindres) <- rownames(param[[1]])
+    } else {
+      bindres <- do.call(
+        rbind,
+        lapply(param, function(m) {
+          v <- as.vector(m)
+          names(v) <- paste(
+            rep(rownames(m), times = ncol(m)),
+            rep(colnames(m), each = nrow(m)),
+            sep = "_"
+          )
+          v
+        })
+      )
+    }
+    return(bindres)
   })
-}
-
-AggregateRecords = function(records, burn_in = .1, who = "all"){
-  aggregated_records = AggregateRecordsPerChain(records = records, burn_in = burn_in, who = who)
-  res=  list()
-  for(name in names(aggregated_records[[1]]))res[[name]] = do.call(rbind, lapply(aggregated_records, function(x)x[[name]]))
   return(res)
 }
 
+summarize = function(v){
+  if(is.matrix(v)) return(apply(v,2,summarize))
+  return(signif(c("mean" = mean(v), "sd" = sd(v), 
+                  "q 2.5%" = unname(quantile(v, .025)), 
+                  "median" = unname(quantile(v, .5)), 
+                  "q 97.5%" = unname(quantile(v, .975))
+  ), 3))
+}
 
-Estimate = function(geo_non_stat, burn_in = .1, who = "all_even_the_field"){
-  res = AggregateRecords(geo_non_stat, burn_in, who)
-  res=  lapply(res, summarize)
+summarizevect = function(v, quant){
+  vstat <- c(mean(v),
+             sd(v),
+            quantile(v, quant, names=FALSE))
+  return(signif(vstat, 3))
+}
+
+summarizemat = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)){
+  matstat <- apply(mat,2,summarizevect, quant)
+  rownames(matstat) <- c("mean", "sd", names(quant))
+  return(matstat)
+}
+
+
+Estimate <- function(object, burn_in = .1, keep = "all_even_the_field"){
+  res <- reduceRecords(object$records, burn_in = burn_in, keep=keep)
+  res <- lapply(res, transposeList)
+  namesparams <- names(res)
+  res <- lapply(res, AggregateRecordsPerChain)
+  res <- do.call(Map, c(list(rbind), res))
+  names(res) <- namesparams
+  res <-  lapply(res, summarizemat)
   return(res)
 }
+
 
 
 Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_field){
