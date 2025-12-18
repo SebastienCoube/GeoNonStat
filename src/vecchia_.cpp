@@ -44,9 +44,10 @@ void DetInvSym22(double a, double d, double b, double res[4]){
 }
 
 
-using namespace Rcpp;
 using namespace arma;
 //[[Rcpp::depends(RcppArmadillo)]]
+using namespace Rcpp;
+//' @export
 //[[Rcpp::export]]
 void vecchia_(
     arma::mat log_range,
@@ -84,7 +85,7 @@ void vecchia_(
   if(log_range.n_rows == 3){
     // loop over every observation  
     
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<n; i++){
       arma::mat lograngemat(2,2);
       arma::mat rangemat(2,2);
@@ -124,9 +125,10 @@ void vecchia_(
   }
   
   // Computing Vecchia approx
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
   for(int i=1; i<n; i++){
     // Fill subsets of locations, range, and pre-compute expensive matrix exponentials
+    arma::mat out(m, 1 + log_range.n_rows * m * compute_derivative);
     int bsize = std::min(i+1,m);
     arma::mat locsub(2, bsize);
     arma::mat rangesub(exprange_nrow, bsize);
@@ -138,7 +140,6 @@ void vecchia_(
       rangesub.col(j) = exprange.col(idx - 1); 
     }
     // initialize recipient for result
-    arma::mat out(m, 1 + log_range.n_rows * m * compute_derivative);
     // computing covariance 
     double mahala_dist;
     double det_inv_hybrid_range[4];
@@ -448,8 +449,8 @@ arma::mat derivative_sandwiches_
        for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
          for(int col_idx = 0; col_idx < bsize; col_idx++){
            res(aniso_idx, NNarray_col(col_idx)-1) += 
-             mini_sandwich(   1 + col_idx + aniso_idx*m) -  
-             -vecchia_col(0, 1 + col_idx + aniso_idx*m)/vecchia_col(0, 0);
+             mini_sandwich(   1 + col_idx + aniso_idx*m) - 
+             vecchia_col(0, 1 + col_idx + aniso_idx*m)/vecchia_col(0, 0);
          }
        }
      }

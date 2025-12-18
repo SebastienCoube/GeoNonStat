@@ -251,7 +251,9 @@ process_covariates <- function(X,
       "automatically added."
     )
   }
-  
+  #number of explanatory variables
+  res$n_regressors <- ncol(res$X)
+  #combining X with PP basis functions
   X_ <- res$X
   if (!is.null(PP)) {
     X_ <- cbind(
@@ -264,12 +266,6 @@ process_covariates <- function(X,
       )
     )
   }
-  # pre- computing XTX
-  crossprod_X <- as.matrix(crossprod(X_)) + diag(1, ncol(X_), ncol(X_))
-  res$crossprod_X <- crossprod_X
-  res$chol_crossprod_X <- chol(crossprod_X)
-  res$n_regressors <- ncol(res$X)
-
   # identifying  which X do not vary within location
   res$which_locs <- c()
   duplicated_locs <- duplicated(vecchia_approx$observed_locs)
@@ -309,13 +305,22 @@ process_covariates <- function(X,
       )
     )
   }
-  res$crossprod_X_locs <- crossprod(X_locs_) + diag(1e-10, ncol(X_locs_), ncol(X_locs_))
-  res$chol_crossprod_X_locs <- chol(res$crossprod_X_locs)
-
-  res$X_locs_ <- X_locs_
+  
+  # conditioning matrix for HMC
+  if(!one_obs_per_locs) {
+    crossprod_X = crossprod(X_)
+    res$L = t(chol(
+      solve(crossprod_X)/max(solve(crossprod_X))
+    ))
+    res$L_minus_one = solve(res$L)
+  }
   if (one_obs_per_locs) {
     res$X <- NULL
-    res$chol_crossprod_X <- NULL
+    crossprod_X = crossprod(X_locs_)
+    res$L = t(chol(
+      solve(crossprod_X)/max(solve(crossprod_X))
+    ))
+    res$L_minus_one = solve(res$L)
   }
   return(res)
 }
@@ -358,10 +363,10 @@ process_PP_prior <- function(PP = NULL,
       paste(
         "The log - marginal variance (log_scale) bounds for the PP who describes the",
         parameter_name,
-        "parameters were automatically set to (-6, 3)"
+        "parameters were automatically set to (-6, 0)"
       )
     )
-    log_scale_bounds <- c(-6, 3)
+    log_scale_bounds <- c(-6, 0)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2)
     stop(
@@ -506,11 +511,10 @@ process_hierarchical_model <- function(vecchia_approx,
 process_transition_kernels <- function(init, hm) {
   return(
     list(
-      range_log_scale_sufficient = rep(init, 1 + hm$anisotropic),
-      range_log_scale_ancillary = rep(init, 1 + hm$anisotropic),
-      range_beta_sufficient = rep(init, 1 + hm$anisotropic),
-      range_beta_ancillary = rep(init, 1 + hm$anisotropic),
-      range_log_scale_estimate = rep(hm$range$log_scale_bounds[1], 1 + hm$anisotropic),
+      range_log_scale_sufficient = init,
+      range_log_scale_ancillary =  init,
+      range_beta_sufficient =      init,
+      range_beta_ancillary =       init,
       field_log_var_ancillary = init,
       field_log_var_sufficient = init,
       noise_beta_mala = init,
@@ -611,8 +615,6 @@ process_states <- function(hm,
                                      paste("PP", seq_len(hm$range$PP$n_knots), sep = "_"))
     params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1]))
     row.names(params$range_log_scale) = c("range", "aniso")[seq_len(1 + hm$anisotropic)]
-    momenta$range_log_scale_sufficient = rnorm(length(params$range_log_scale))
-    momenta$range_log_scale_ancillary = rnorm(length(params$range_log_scale))
   }
   #params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
   colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
