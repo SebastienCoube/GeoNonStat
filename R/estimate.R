@@ -114,13 +114,20 @@ aggregateRecordsChain = function(chain){
 #'
 #' @examples
 #' # TODO
-aggregateRecords <- function(object, burn_in=0.1, keep="all"){
+aggregateRecords <- function(object, burn_in=0.1, keep="all", keep_separate_chains =FALSE){
   res <- filterRecords(object$records, burn_in = burn_in, keep=keep)
   namesparams <- names(res[[1]][[1]])
   res <- lapply(res, transposeList)
   res <- lapply(res, aggregateRecordsChain)
-  res <- do.call(Map, c(list(rbind), res))
-  names(res) <- namesparams
+  if(keep_separate_chains) {
+    res <- lapply(res, function(x) {
+      names(x) <- namesparams
+      return(x)
+      })
+  } else {
+    res <- do.call(Map, c(list(rbind), res))
+    names(res) <- namesparams
+  }
   return(res)
 }
 
