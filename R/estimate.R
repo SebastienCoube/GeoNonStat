@@ -66,7 +66,7 @@ transposeList <- function(list) {
 #'
 #' @examples
 #' # TODO
-aggregateRecordsPerChain = function(chain){
+aggregateRecordsChain = function(chain){
   res = lapply(chain, function(param){
     # Numeric case
     if(!is.matrix(param[[1]])) {
@@ -118,7 +118,7 @@ aggregateRecords <- function(object, burn_in=0.1, keep="all"){
   res <- filterRecords(object$records, burn_in = burn_in, keep=keep)
   namesparams <- names(res[[1]][[1]])
   res <- lapply(res, transposeList)
-  res <- lapply(res, AggregateRecordsPerChain)
+  res <- lapply(res, aggregateRecordsChain)
   res <- do.call(Map, c(list(rbind), res))
   names(res) <- namesparams
   return(res)
@@ -185,7 +185,7 @@ Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_fie
 }
 
 ElppdTrain = function(object, burn_in = .1){
-  aggregated_records = AggregateRecords(object, burn_in, keep = c("beta", "noise_beta", "field"))
+  aggregated_records = aggregateRecords(object, burn_in, keep = c("beta", "noise_beta", "field"))
   noise_var = 
     apply(aggregated_records$noise_beta, 1, function(x)
         as.vector(exp(X_PP_mult_right(
