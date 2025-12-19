@@ -22,19 +22,23 @@ PrintMcmcDiags = function(object, burn_in = .1, min_ESS = 50, max_Gelman_upper =
   return(list("diags"=res, "which.worst"=which.worst))
 }
 
-TracePlots = function(geo_non_stat, burn_in = .1, who = "all", mfrow = c(3,3)){
-  aggregated_records = AggregateRecords(geo_non_stat$records, burn_in, who = who)
-  plotted_iters = seq(
-    ceiling(length(geo_non_stat$records[[1]])*(burn_in)), 
-    length(geo_non_stat$records[[1]])
-  )
-  for(name in names(aggregated_records[[1]])){
-    par(mfrow = mfrow)
-    for(i in seq_len(ncol(aggregated_records[[1]][[name]]))){
-      to_be_plotted = sapply(aggregated_records, function(x)x[[name]][,i])
-      plot(0, 0, ylim = c(min(to_be_plotted), max(to_be_plotted)), 
-           xlim = c(min(plotted_iters), max(plotted_iters)), 
-           type = "n", main  = paste("trace plot of", name, colnames(aggregated_records[[1]][[name]])[i]))
+TracePlots = function(object, burn_in = .1, keep = "all", mfrow = c(3,2)){
+  par(mfrow = mfrow)
+  n_iters <- length(object$records[[1]])
+  records = aggregateRecords(object, burn_in, keep = keep, keep_separate_chains = TRUE)
+  records <- transposeList(records)
+  plotted_iters = seq(max(0, floor(n_iters * burn_in))+1,n_iters)
+  xlim <- c(min(plotted_iters), max(plotted_iters))
+  nbchains <- length()
+  for(c in seq_len(ncol(records))){
+     for(name in names(records)[[1]]){
+       to_be_plotted
+      to_be_plotted = records[[c]][[name]]
+      plot(0, 0, 
+           ylim = c(min(to_be_plotted), max(to_be_plotted)), 
+           xlim = xlim, 
+           type = "n", 
+           main  = paste("trace plot of", name, colnames(records[[name]])))
       for(j in seq_len(ncol(to_be_plotted))){
         lines(plotted_iters, to_be_plotted[,j])
       }
