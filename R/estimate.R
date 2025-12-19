@@ -52,8 +52,11 @@ filterRecords <- function(records, burn_in = 0, keep="all") {
 #' C  <- list("R1" = "c1", "R2"="c2", "R3" = "c3")
 #' transposeList(list("A" = A, "B" = B, "C" = C))
 transposeList <- function(list) {
-  lapply(seq_along(list[[1]]),
+  nameslist <- names(list[[1]])
+  tl <- lapply(seq_along(list[[1]]),
          function(i) lapply(list, `[[`, i))
+  names(tl) <- nameslist
+  return(tl)
 }
 
 #' Aggregate records of a GeoNonStat object, for 1 chain
