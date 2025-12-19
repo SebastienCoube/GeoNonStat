@@ -877,7 +877,7 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
   p = p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
   
-  n_hmc_steps = 10
+  n_hmc_steps = 20
   for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the position
     q = q + exp_noise_mala * p

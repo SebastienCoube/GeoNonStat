@@ -24,8 +24,8 @@ gns_simulator = createGnsSimulator(
 
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
-range_log_scale = c(-3, 0)
-noise_intercept = 1
+range_log_scale = c(-1, -1)
+noise_intercept = 0
 noise_PP_log_var = 0
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -69,7 +69,7 @@ range_X = covariates$range_X
 samples = MessyMessyMcmc(
  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
- state = state, n_iterations_update = 800, num_threads = 8, iter_start = 1, seed = 1
+ state = state, n_iterations_update = 300, num_threads = 8, iter_start = 1, seed = 1
 )
 
 params = samples$state$params
