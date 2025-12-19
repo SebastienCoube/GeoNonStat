@@ -1,21 +1,25 @@
-PrintMcmcDiags = function(geo_non_stat, burn_in = .1, min_ESS = 50, max_Gelman_upper = 1.05){
-  aggregated_records = AggregateRecordsPerChain(geo_non_stat$records, burn_in)
-  ess = lapply(aggregated_records, function(x)lapply(x, function(x)coda::effectiveSize(x)))
+PrintMcmcDiags = function(object, burn_in = .1, min_ESS = 50, max_Gelman_upper = 1.05){
+  records <- aggregateRecords(object, burn_in = burn_in, keep="all", keep_separate_chains = TRUE)
+  ess = lapply(records, function(x)lapply(x, function(x)coda::effectiveSize(x)))
   ess = lapply(ess, unlist)
   ess = Reduce("+", ess)
   ess = signif(ess, 2)
   
-  aggregated_records_ = lapply(aggregated_records, function(x)do.call("cbind", x))
-  aggregated_records_ = lapply(aggregated_records_, coda::as.mcmc)
-  aggregated_records_ = coda::as.mcmc.list(aggregated_records_)
-  gelman_diags = t(coda::gelman.diag(aggregated_records_, multivariate = F)[[1]])
+  records = lapply(records, function(x) do.call("cbind", x))
+  records = lapply(records, coda::as.mcmc)
+  records = coda::as.mcmc.list(records)
+  gelman_diags = t(coda::gelman.diag(records, multivariate = F)[[1]])
   gelman_diags = signif(gelman_diags, 2)
   res = t(rbind(ess, gelman_diags)) 
   worst = c(min(res[,1]), max(res[,2]), max(res[,3])) 
-  res = rbind("which.worst" = c(row.names(res)[which.min(res[,1])], row.names(res)[which.max(res[,2])], row.names(res)[which.max(res[,3])]), res)
+  which.worst = matrix(
+    c(row.names(res)[c(which.min(res[,1]), which.max(res[,2]), which.max(res[,3]))]),
+    nrow=1)
   res = rbind("worst" = worst, res)
-  colnames(res) = c("ess", "Point est. Gelman", "Upper C.I. Gelman")
+  colnames(res)  <- colnames(which.worst) <- c("ess", "Point est. Gelman", "Upper C.I. Gelman")
+  print(which.worst)
   print(res)
+  return(list("diags"=res, "which.worst"=which.worst))
 }
 
 TracePlots = function(geo_non_stat, burn_in = .1, who = "all", mfrow = c(3,3)){
