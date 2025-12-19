@@ -1,4 +1,18 @@
-reduceRecords <- function(records, burn_in = 0, keep="all") {
+#' Filter records of a GeoNonStat object
+#'
+#' @param records a list containing records from a `GeoNonStat` object.
+#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
+#' first records that should be removed If burn_in = 0.1 : the first 10% of 
+#' records will be removed from the result.
+#' @param keep character vector. What params should be kept. Can also be 
+#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all 
+#' parameters, event the `field.`
+#'
+#' @returns a filtered list or records
+#'
+#' @examples
+#' # TODO
+filterRecords <- function(records, burn_in = 0, keep="all") {
   # Reduce paramaters
   namesparam <- names(records[[1]][[1]])
   keep <- switch(keep,
@@ -26,12 +40,33 @@ reduceRecords <- function(records, burn_in = 0, keep="all") {
   )
 }
 
+#' Transpose a list
+#'
+#' @param list a list containing sublists (all having the same structure).
+#'
+#' @returns a list, transposed
+#'
+#' @examples
+#' A  <- list("R1" = "a1", "R2"="a2", "R3" = "a3")
+#' B  <- list("R1" = "b1", "R2"="b2", "R3" = "b3")
+#' C  <- list("R1" = "c1", "R2"="c2", "R3" = "c3")
+#' transposeList(list("A" = A, "B" = B, "C" = C))
 transposeList <- function(list) {
   lapply(seq_along(list[[1]]),
          function(i) lapply(list, `[[`, i))
 }
 
-AggregateRecordsPerChain = function(chain){
+#' Aggregate records of a GeoNonStat object, for 1 chain
+#'
+#' @param chain a list of records containing for each iteration, 
+#' a list of parameters
+#'
+#' @returns a list containing matrices of parameters, 
+#' aggregated over the iterations. 
+#'
+#' @examples
+#' # TODO
+aggregateRecordsPerChain = function(chain){
   res = lapply(chain, function(param){
     # Numeric case
     if(!is.matrix(param[[1]])) {
@@ -63,40 +98,77 @@ AggregateRecordsPerChain = function(chain){
   return(res)
 }
 
-summarize = function(v){
-  if(is.matrix(v)) return(apply(v,2,summarize))
-  return(signif(c("mean" = mean(v), "sd" = sd(v), 
-                  "q 2.5%" = unname(quantile(v, .025)), 
-                  "median" = unname(quantile(v, .5)), 
-                  "q 97.5%" = unname(quantile(v, .975))
-  ), 3))
+
+#' Aggregate records of a GeoNonStat object, for 1 chain
+#'
+#' @param object a GeoNonStat object containing records
+#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
+#' first records that should be removed If burn_in = 0.1 : the first 10% of 
+#' records will be removed from the result.
+#' @param keep character vector. What params should be kept. Can also be 
+#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all 
+#' parameters, event the `field.`
+#' 
+#' @returns a list containing matrices of parameters, 
+#' aggregated over the iterations. 
+#'
+#' @examples
+#' # TODO
+aggregateRecords <- function(object, burn_in=0.1, keep="all"){
+  res <- filterRecords(object$records, burn_in = burn_in, keep=keep)
+  namesparams <- names(res[[1]][[1]])
+  res <- lapply(res, transposeList)
+  res <- lapply(res, AggregateRecordsPerChain)
+  res <- do.call(Map, c(list(rbind), res))
+  names(res) <- namesparams
+  return(res)
 }
+
 
 summarizevect = function(v, quant){
   vstat <- c(mean(v),
              sd(v),
-            quantile(v, quant, names=FALSE))
+             quantile(v, quant, names=FALSE))
   return(signif(vstat, 3))
 }
 
-summarizemat = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)){
-  matstat <- apply(mat,2,summarizevect, quant)
+#' Summarize a matrix by column
+#'
+#' @param mat a matrix
+#' @param quant named numerical vector. What quantiles to give
+#'
+#' @returns a matrix
+#'
+#' @examples
+#' tt <- matrix(rnorm(200), ncol=20)
+#' summarizeRecords(tt)
+summarizeRecords = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)){
+  matstat <- apply(mat,2,Summarizevect, quant)
   rownames(matstat) <- c("mean", "sd", names(quant))
   return(matstat)
 }
 
 
-Estimate <- function(object, burn_in = .1, keep = "all_even_the_field"){
-  res <- reduceRecords(object$records, burn_in = burn_in, keep=keep)
-  res <- lapply(res, transposeList)
-  namesparams <- names(res)
-  res <- lapply(res, AggregateRecordsPerChain)
-  res <- do.call(Map, c(list(rbind), res))
-  names(res) <- namesparams
-  res <-  lapply(res, summarizemat)
+#' estimate the records of a GeoNonStat object. 
+#'
+#' @param object a GeoNonStat object containing records
+#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
+#' first records that should be removed If burn_in = 0.1 : the first 10% of 
+#' records will be removed from the result.
+#' @param keep character vector. What params should be kept. Can also be 
+#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all 
+#' parameters, event the `field.`
+#'
+#' @returns a list of parameters.
+#' @export
+#'
+#' @examples
+#' #TODO
+estimate <- function(object, burn_in = .1, keep = "all"){
+  res <- AggregateRecords(object, burn_in = burn_in, keep="all")
+  res <- sapply(res, SummarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
   return(res)
 }
-
 
 
 Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_field){
@@ -112,21 +184,21 @@ Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_fie
   return(list("elppd_per_obs" = elppd_per_obs, "mean_elppd" = mean(elppd_per_obs)))
 }
 
-ElppdTrain = function(geo_non_stat, burn_in = .1){
-  aggregated_records = AggregateRecords(geo_non_stat, burn_in, who = c("beta", "noise_beta", "field"))
+ElppdTrain = function(object, burn_in = .1){
+  aggregated_records = AggregateRecords(object, burn_in, keep = c("beta", "noise_beta", "field"))
   noise_var = 
     apply(aggregated_records$noise_beta, 1, function(x)
         as.vector(exp(X_PP_mult_right(
-        X = geo_non_stat$covariates$noise_X$X, PP = geo_non_stat$hierarchical_model$noise$PP,
-        vecchia_approx = geo_non_stat$vecchia_approx, Y = x, 
+        X = object$covariates$noise_X$X, PP = object$hierarchical_model$noise$PP,
+        vecchia_approx = object$vecchia_approx, Y = x, 
         permutate_PP_to_obs = T
       )))
       )
   # Gaussian log-dens of the observations
   return(Elppd(
-    geo_non_stat$covariates$X$X, 
+    object$covariates$X$X, 
     beta_samples = aggregated_records$beta, 
-    field_samples = aggregated_records$field[,geo_non_stat$vecchia_approx$locs_match], 
+    field_samples = aggregated_records$field[,object$vecchia_approx$locs_match], 
     noise_var_samples = noise_var, 
-    observed_field = geo_non_stat$observed_field))
+    observed_field = object$observed_field))
 }
