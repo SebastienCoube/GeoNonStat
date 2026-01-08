@@ -8,6 +8,7 @@ Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
 Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process. blablabla. TODO. Add some sentences. (Description should be a paragraph).
 License: GPL-3
 Encoding: UTF-8
+LazyData: true
 Imports: 
     Rcpp (>= 1.0.7), 
     abind, 
@@ -32,3 +33,5 @@ Packaged: 2024-05-11 10:46:56 UTC; scs
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Depends: 
+    R (>= 3.5)

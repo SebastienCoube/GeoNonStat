@@ -116,7 +116,7 @@ aggregateRecordsChain = function(chain){
 #' aggregated over the iterations. 
 #'
 #' @examples
-#' # TODO
+#' aggregateRecords(processedGnsDemo)
 aggregateRecords <- function(object, burn_in=0.1, keep="all", keep_separate_chains =FALSE){
   res <- filterRecords(object$records, burn_in = burn_in, keep=keep)
   namesparams <- names(res[[1]][[1]])
@@ -153,7 +153,7 @@ summarizevect = function(v, quant){
 #' tt <- matrix(rnorm(200), ncol=20)
 #' summarizeRecords(tt)
 summarizeRecords = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)){
-  matstat <- apply(mat,2,Summarizevect, quant)
+  matstat <- apply(mat,2,summarizevect, quant)
   rownames(matstat) <- c("mean", "sd", names(quant))
   return(matstat)
 }
@@ -173,10 +173,10 @@ summarizeRecords = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5
 #' @export
 #'
 #' @examples
-#' #TODO
+#' estimate(processedGnsDemo)
 estimate <- function(object, burn_in = .1, keep = "all"){
-  res <- AggregateRecords(object, burn_in = burn_in, keep="all")
-  res <- sapply(res, SummarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
+  res <- aggregateRecords(object, burn_in = burn_in, keep="all")
+  res <- sapply(res, summarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
   return(res)
 }
 
