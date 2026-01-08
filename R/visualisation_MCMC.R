@@ -50,7 +50,7 @@ traceOneParam = function(name, param, start, end, nrow, ncol, xlim, color_lines)
   }
 }
 
-split_intervals <- function(total_size, starts, nmax =  16) {
+splitIntervals <- function(total_size, starts, nmax =  16) {
   intervals <- list()
   ends <- c(starts[-1] - 1, total_size)
   for (i in seq_along(starts)) {
@@ -119,7 +119,7 @@ tracePlots = function(object, burn_in = .1, keep = "all"){
     if(length(intercepts)>0) 
       starts <- intercepts
     
-    columns <- split_intervals(n, starts, nmax = 16)
+    columns <- splitIntervals(n, starts, nmax = 16)
     cat("Plot", name)
     if(length(columns)>1) cat(" (on", length(columns), "plots)")
     cat("\n")
