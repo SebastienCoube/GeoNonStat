@@ -76,7 +76,7 @@ createVecchia <- function(observed_locs,
   sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][match(sparse_mat@x, seq_len(sum(NNNoNA)))]
   
   # Partitioning locations using parallel kmeans for field update
-  locs_partition <- generate_location_partitions(locs, n_locs, ncores = ncores)
+  locs_partition <- generateLocationPartitions(locs, n_locs, ncores = ncores)
   
   markov_mat <- Matrix::crossprod(sparse_mat)
   markov_mat@x[] <- 1
@@ -121,7 +121,7 @@ createVecchia <- function(observed_locs,
 
 #' Partition spatial locations using parallel k-means
 #' @noRd
-generate_location_partitions <- function(locs, n, ncores = 1) {
+generateLocationPartitions <- function(locs, n, ncores = 1) {
   clust_size <- 10000
   n_clusters <- ceiling(n / clust_size)
   centers_seq <- round(seq(n_clusters, 
@@ -157,7 +157,7 @@ generate_location_partitions <- function(locs, n, ncores = 1) {
   return(locs_partition)
 }
 
-#' process_covariates : pre-processes covariates by adding an intercept,
+#' processCovariates : pre-processes covariates by adding an intercept,
 #' creating useful indices, and pre-computing useful matrices and vectors
 #'
 #' @param X a data.frame with as many rows as vecchia_approx$observed_locs
@@ -168,7 +168,6 @@ generate_location_partitions <- function(locs, n, ncores = 1) {
 #' (should be TRUE to range_X and scale_X)
 #'
 #' @returns a list
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -184,29 +183,29 @@ generate_location_partitions <- function(locs, n, ncores = 1) {
 #'
 #' # Good cases ######################
 #' # no PP, an X
-#' res <- process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
+#' res <- processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 #' # no PP, no X
-#' res <- process_covariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
+#' res <- processCovariates(X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 #' # PP and X
-#' res <- process_covariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALSE)
+#' res <- processCovariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALSE)
 #' # one obs of x per loc
 #' X <- as.data.frame(cbind(observed_locs, observed_locs[, 1]^2 + observed_locs[, 2]^2))
-#' res <- process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
+#' res <- processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #'
 #' # Errors ##########################
 #' # one obs of x per loc
 #' # X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' # res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
+#' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' # bad X number of rows
 #' # X = X[-1,]
-#' # res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
+#' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' # bad X format
 #' # X = (cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' # res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
+#' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #' # not independent covariates
 #' # X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
-#' # res = process_covariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
-process_covariates <- function(X,
+#' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
+processCovariates <- function(X,
                                vecchia_approx,
                                PP = NULL,
                                one_obs_per_locs = FALSE) {
@@ -331,12 +330,11 @@ process_covariates <- function(X,
 #' @param log_scale_bounds a numeric vector of size 2 indicating the lower and upper PP log-variance bounds
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
 #'
-#' @export
 #' @examples
 #' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
 #' myPP <- createPP(vecchia_approx)
-#' PPPP <- process_PP_prior(myPP, c(1, 2), "example")
-process_PP_prior <- function(PP = NULL,
+#' PPPP <- processPPPprior(myPP, c(1, 2), "example")
+processPPPprior <- function(PP = NULL,
                              log_scale_bounds = NULL,
                              parameter_name) {
   if (is.null(PP) && is.null(log_scale_bounds)) {
@@ -391,9 +389,8 @@ process_PP_prior <- function(PP = NULL,
 #' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations.
-#' @param covariates The list of covariates obtained with `process_covariates`
+#' @param covariates The list of covariates obtained with `processCovariates`
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
-#' @export
 #'
 #' @returns a list
 #' @examples
@@ -404,9 +401,9 @@ process_PP_prior <- function(PP = NULL,
 #' PP <- createPP(vecchia_approx)
 #' X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 #' covariates <- list()
-#' covariates$X <- process_covariates(X, vecchia_approx = vecchia_approx)
+#' covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx)
 #'
-#' hm1 <- process_hierarchical_model(
+#' hm1 <- processHierarchicalModel(
 #'   vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
 #'   range_PP = NULL,
@@ -416,7 +413,7 @@ process_PP_prior <- function(PP = NULL,
 #'   covariates = covariates,
 #'   anisotropic = TRUE
 #' )
-process_hierarchical_model <- function(vecchia_approx,
+processHierarchicalModel <- function(vecchia_approx,
                                        noise_PP = NULL,
                                        noise_log_scale_bounds = NULL,
                                        range_PP = NULL,
@@ -430,8 +427,8 @@ process_hierarchical_model <- function(vecchia_approx,
     stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   }
   # Processing PP priors
-  noise_log_scale_bounds <- process_PP_prior(noise_PP, noise_log_scale_bounds, "noise")
-  range_log_scale_bounds <- process_PP_prior(range_PP, range_log_scale_bounds, "range")
+  noise_log_scale_bounds <- processPPPprior(noise_PP, noise_log_scale_bounds, "noise")
+  range_log_scale_bounds <- processPPPprior(range_PP, range_log_scale_bounds, "range")
   
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
@@ -476,9 +473,8 @@ process_hierarchical_model <- function(vecchia_approx,
 #' Initialize transition kernels
 #'
 #' @param init a numeric value
-#' @param hm a hierarchical model (obtained with `process_hierarchical_model()`)
+#' @param hm a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @returns a list
-#' @export
 #' @description
 #' TODO : revoir la description
 #' Transition kernel state
@@ -494,11 +490,11 @@ process_hierarchical_model <- function(vecchia_approx,
 #' PP <- createPP(vecchia_approx)
 #' X <- as.data.frame(cbind(rnorm(nobs), runif(nobs)))
 #' covariates <- list()
-#' covariates$X <- process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
-#' covariates$X_range <- process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = TRUE)
-#' covariates$X_noise <- process_covariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
+#' covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
+#' covariates$X_range <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = TRUE)
+#' covariates$X_noise <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
 #'
-#' hm <- process_hierarchical_model(
+#' hm <- processHierarchicalModel(
 #'   vecchia_approx = vecchia_approx,
 #'   noise_PP = PP,
 #'   observed_locs = observed_locs,
@@ -507,8 +503,8 @@ process_hierarchical_model <- function(vecchia_approx,
 #'   covariates = covariates,
 #'   anisotropic = TRUE
 #' )
-#' process_transition_kernels(hm = hm)
-process_transition_kernels <- function(init, hm) {
+#' processTransitionKernels(hm = hm)
+processTransitionKernels <- function(init, hm) {
   return(
     list(
       range_log_scale_sufficient = init,
@@ -525,8 +521,8 @@ process_transition_kernels <- function(init, hm) {
 
 #' Title
 #'
-#' @param hm a hierarchical model (obtained with `process_hierarchical_model()`)
-#' @param covariates The list of covariates obtained with `process_covariates`
+#' @param hm a hierarchical model (obtained with `processHierarchicalModel()`)
+#' @param covariates The list of covariates obtained with `processCovariates`
 #' @param observed_field TODO
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param init_tk numerical value to initialize transition kernels
@@ -546,11 +542,11 @@ process_transition_kernels <- function(init, hm) {
 #' PP <- createPP(vecchia_approx)
 #'
 #' covariates <- list(
-#'   X = process_covariates(X = X, vecchia_approx),
-#'   noise_X = process_covariates(X = X, vecchia_approx, PP),
-#'   range_X = process_covariates(X = X, vecchia_approx)
+#'   X = processCovariates(X = X, vecchia_approx),
+#'   noise_X = processCovariates(X = X, vecchia_approx, PP),
+#'   range_X = processCovariates(X = X, vecchia_approx)
 #' )
-#' hm <- process_hierarchical_model(
+#' hm <- processHierarchicalModel(
 #'   vecchia_approx = vecchia_approx,
 #'   noise_PP = PP, noise_log_scale_bounds = NULL,
 #'   range_PP = PP, range_log_scale_bounds = NULL,
@@ -561,14 +557,14 @@ process_transition_kernels <- function(init, hm) {
 #'   anisotropic = TRUE
 #' )
 #'
-#' process_states(
+#' processStates(
 #'   hm,
 #'   covariates,
 #'   observed_field,
 #'   vecchia_approx,
 #'   init_tk = -4
 #' )
-process_states <- function(hm,
+processStates <- function(hm,
                            covariates,
                            observed_field,
                            vecchia_approx,
@@ -579,7 +575,7 @@ process_states <- function(hm,
   # Actual parameters
   params <- list()
   # Metropolis proposal distribution width for MCMC
-  ker_var <- process_transition_kernels(init_tk, hm)
+  ker_var <- processTransitionKernels(init_tk, hm)
   # Momenta for HMC
   momenta <- list()
   # Useful stuff pre-computed from the parameters
@@ -788,21 +784,21 @@ GeoNonStat <- function(vecchia_approx,
   # covariates #########################################################
   covariates <- list()
   # fixed effects for response
-  covariates$X <- process_covariates(
+  covariates$X <- processCovariates(
     X = X,
     vecchia_approx = vecchia_approx,
     PP = NULL,
     one_obs_per_locs = FALSE
   )
   # fixed effects and PP for range
-  covariates$range_X <- process_covariates(
+  covariates$range_X <- processCovariates(
     X = range_X,
     vecchia_approx = vecchia_approx,
     PP = range_PP,
     one_obs_per_locs = TRUE
   )
   # fixed effects and PP for noise
-  covariates$noise_X <- process_covariates(
+  covariates$noise_X <- processCovariates(
     X = noise_X,
     vecchia_approx = vecchia_approx,
     PP = noise_PP,
@@ -810,7 +806,7 @@ GeoNonStat <- function(vecchia_approx,
   )
   
   # Info about hierarchical model ##############################################################
-  hierarchical_model <- process_hierarchical_model(
+  hierarchical_model <- processHierarchicalModel(
     vecchia_approx = vecchia_approx,
     noise_PP = noise_PP,
     noise_log_scale_bounds = noise_log_scale_bounds,
@@ -832,7 +828,7 @@ GeoNonStat <- function(vecchia_approx,
     # parallel::parLapply(cl =  cl,
     lapply(
       seq_len(n_chains), function(chain_number) {
-        process_states(
+        processStates(
           seed = chain_number + seed,
           hm = hierarchical_model,
           covariates = covariates,
