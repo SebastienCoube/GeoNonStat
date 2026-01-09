@@ -35,6 +35,7 @@ params_records = lapply(seq_len(n_iterations_update),
 
 for(iter in seq_len(n_iterations_update)){
   
+  if(iter/10 == iter %/% 10)cat("iter = ", iter)
   # Regression coefficients ###############################
   # Regression coefficients #################################
   res <- update_beta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
@@ -47,8 +48,8 @@ for(iter in seq_len(n_iterations_update)){
   # Field log var ###############################
   state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
   
+  if(iter + iter_start > 100){
   # Range beta ###############################
-  
   res <- update_range_beta(state, hierarchical_model, range_X =  covariates$range_X, iter, iter_start, num_threads)
   state <- res[["state"]]
   
@@ -57,7 +58,7 @@ for(iter in seq_len(n_iterations_update)){
     state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
     vecchia_approx = vecchia_approx, iter = iter, 
     iter_start = iter_start, num_threads = num_threads)
-  
+  }
   
   # Noise ###############################
   # Noise beta ###############################

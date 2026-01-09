@@ -91,7 +91,7 @@ update_latent_field <- function(params, stuff, vecchia_approx, observed_field, i
     }
   )
   
-  for(pass in seq_len(3)){
+  for(pass in seq_len(1)){
     for(cluster_idx in unique(locs_partition)){
       selected_idx = which(locs_partition==cluster_idx)
       additional_mean_from_field =
@@ -118,9 +118,9 @@ update_latent_field <- function(params, stuff, vecchia_approx, observed_field, i
 }
 
 update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start){
-  for(iii in seq(10)){
+  for(iii in seq(1)){
  # ancillary 
-    for(field_log_var_idx in seq_len(10)){
+    for(field_log_var_idx in seq_len(3)){
       new_field_log_var = state$params$field_log_var[1,1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
       new_field = state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1,1]))
       current_U =
@@ -289,7 +289,7 @@ update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_sta
   #     abline(a=0, b=1)
   
   p[] = p[] - (dens_grad) %*%hmc_stepsize/ 2
-  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
+  n_hmc_steps = 3
   for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the positio
     q = q + p %*% hmc_stepsize
@@ -543,7 +543,7 @@ update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_sta
   
   
   
-  n_hmc_steps = min(5, ceiling(sqrt(iter + iter_start)/3))
+  n_hmc_steps = 3
   for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the position
     q = q + p %*% hmc_stepsize
@@ -702,7 +702,7 @@ update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_sta
 
 
 UpdateVarPPSuff = function(hm4params, beta4params, current_range_log_scale){
-  for(i in seq_len(20))
+  for(i in seq_len(10))
   {
     q = current_range_log_scale + rnorm(length(current_range_log_scale), 0, .05)
     if(all(inBounds(hm4params$log_scale_bounds, q)) &
@@ -877,7 +877,7 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
   p = p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
   
-  n_hmc_steps = 20
+  n_hmc_steps = 10
   for(hmc_step in seq_len(n_hmc_steps)){
     # Make a full step for the position
     q = q + exp_noise_mala * p

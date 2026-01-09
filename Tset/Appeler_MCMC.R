@@ -25,7 +25,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = 0
+noise_intercept = 1
 noise_PP_log_var = 0
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -42,6 +42,7 @@ plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 1, p
 
 plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field, cex= 1, pch= 15)
 
+plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise, cex= 1, pch= 15)
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
@@ -69,7 +70,7 @@ range_X = covariates$range_X
 samples = MessyMessyMcmc(
  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
- state = state, n_iterations_update = 300, num_threads = 8, iter_start = 1, seed = 1
+ state = state, n_iterations_update = 400, num_threads = 8, iter_start = 1, seed = 1
 )
 
 params = samples$state$params
@@ -89,17 +90,21 @@ plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_
      plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
      abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
    }}
+ 
  range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter-1),])
  plot(range_log_scale_samples[,1], main = "range log scale")
  abline(h = range_log_scale[1])
  plot(range_log_scale_samples[,2], main = "aniso log scale")
  abline(h = range_log_scale[2])
  
- noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter/5, iter-1)])
+ noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter-1)])
  plot(noise_log_scale_samples, main = "noise log scale")
  abline(h = noise_PP_log_var)
  
- field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/5, iter-1)])
+ plot(c(noise_PP_log_var, sapply(params_records, function(x)x$noise_beta[1])[seq(iter-1)]), main = "noise intercept")
+ 
+ 
+ field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter-1)])
  plot(field_log_var_samples, main = "field log var")
  abline(h = field_log_var)
  
