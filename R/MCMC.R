@@ -50,7 +50,7 @@ for(iter in seq_len(n_iterations_update)){
   
   if(iter + iter_start > 100){
   # Range beta ###############################
-  res <- update_range_beta(state, hierarchical_model, range_X =  covariates$range_X, iter, iter_start, num_threads)
+  res <- update_range_beta(state, hierarchical_model, range_X =  covariates$range_X, iter, iter_start, num_threads, vecchia_approx)
   state <- res[["state"]]
   
   # Variance of the  range PP ###############################

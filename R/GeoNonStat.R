@@ -168,7 +168,6 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' (should be TRUE to range_X and scale_X)
 #'
 #' @returns a list
-#'
 #' @examples
 #' \dontrun{
 #' # TODO
@@ -834,7 +833,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -5
+          init_tk = -4
         )
       }
     )

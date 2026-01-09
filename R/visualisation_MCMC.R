@@ -1,3 +1,29 @@
+
+
+#  #' MCMC diagnostics 
+#  #'
+#  #' @param object 
+#  #' @param burn_in 
+#  #' @param min_ESS 
+#  #' @param max_Gelman_upper 
+#  #' @description
+#  #' The MCMC chain(s) must explore properly the posterior distribution in order to be able to compute sensible estimates. 
+#  #' The catch is that the samples are correlated with each other, because we have a Markov chain. How to know when the exploration is done properly ? We use two classical methods from the literature. 
+#  #' 
+#  #' The first is the so-called Effective Sample Size (ESS). 
+#  #' The ESS adjusts the number of iterations by the auto-correlation function: the higher the auto-correlation, the lower the ESS. 
+#  #' Think of this number as the number of samples from the posterior distribution you would like to compute estimates and histograms from. 
+#  #' The higher the ESS, the better the estimates will be. 
+#  #' https://www.rdocumentation.org/packages/sns/versions/1.2.2/topics/ess
+#  #' https://mc-stan.org/docs/2_18/reference-manual/effective-sample-size-section.html
+#  #' 
+#  #' The second is the Gelman-Rubin diagnostic. It is some kind of ANOVA between two parallel chains. 
+#  #' If all the chains are exploring the same posterior distribution, their samples are difficult to tell apart.
+#  #' On the other hand, if each chain is stuck in its own place and has not reached the posterior distribution, then their samples are very easy to tell apart. 
+#  #' Note that Gelman-Rubin diagnostics can be "tricked" by chains whose starting points are not well separated, which is the case in our implementation, and give values close to 1 even if the chains have not converged yet. 
+#  #' As a consequence, wait for a couple hundred iterations before paying attention to the Gelman-Rubin diagnostics. 
+#  #' The closer to 1, the better. 
+#  #' 
 printMcmcDiags = function(object, burn_in = .1, min_ESS = 50, max_Gelman_upper = 1.05){
   records <- aggregateRecords(object, burn_in = burn_in, keep="all", keep_separate_chains = TRUE)
   ess = lapply(records, function(x)lapply(x, function(x)coda::effectiveSize(x)))

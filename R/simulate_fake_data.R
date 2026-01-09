@@ -102,21 +102,21 @@ createGnsSimulator <- function(vecchia_approx,
                                range_PP = NULL,
                                anisotropic = FALSE) {
   covariates <- list()
-  covariates$X <- process_covariates(
+  covariates$X <- processCovariates(
     X = X,
     vecchia_approx = vecchia_approx,
     PP = NULL,
     one_obs_per_locs = FALSE
   )
   # fixed effects and PP for range
-  covariates$range_X <- process_covariates(
+  covariates$range_X <- processCovariates(
     X = range_X,
     vecchia_approx = vecchia_approx,
     PP = range_PP,
     one_obs_per_locs = TRUE
   )
   # fixed effects and PP for noise
-  covariates$noise_X <- process_covariates(
+  covariates$noise_X <- processCovariates(
     X = noise_X,
     vecchia_approx = vecchia_approx,
     PP = noise_PP,

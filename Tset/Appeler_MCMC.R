@@ -54,119 +54,65 @@ geo_non_stat = GeoNonStat(
   range_PP = PP_range
 )
 
+mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+  object = geo_non_stat, n_chains_in_parallel = 3, 
+  n_threads_per_chain = 6, n_iterations = 400, seed = 1)
 
-# #Run MCMC chain for 40 iterations
-list2env(geo_non_stat, environment())
-state = geo_non_stat$states$chain_1
-#state$params$range_log_scale[1] = 0
-#state$params$range_log_scale[2] = -3
-num_threads = 10
-n_iterations_update = 40
-iter_start = 1
-iter = 1
-seed=  1
-range_X = covariates$range_X
+tracePlots(mise_a_jour_mcmc_parallele, burn_in = .1, keep = "range_beta")
+tracePlots(mise_a_jour_mcmc_parallele, burn_in = .1, keep = "noise_log_scale")
+tracePlots(mise_a_jour_mcmc_parallele, burn_in = .1, keep = "range_log_scale")
+tracePlots(mise_a_jour_mcmc_parallele, burn_in = .1, keep = "field_log_var")
 
-samples = MessyMessyMcmc(
- covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
- hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
- state = state, n_iterations_update = 400, num_threads = 8, iter_start = 1, seed = 1
-)
-
-params = samples$state$params
-params_records = samples$params_records
-iter = length(samples$params_records)
-
-
-plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
-
- par(mar = rep(2, 4))
- par(mfrow = c(3,3))
- for(i in seq(nrow(params$range_beta))){
-   for(j in seq(ncol(params$range_beta))){
-     plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
-     abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
-   }}
+# # #Run MCMC chain for 40 iterations
+# list2env(geo_non_stat, environment())
+# state = geo_non_stat$states$chain_1
+# #state$params$range_log_scale[1] = 0
+# #state$params$range_log_scale[2] = -3
+# num_threads = 10
+# n_iterations_update = 40
+# iter_start = 1
+# iter = 1
+# seed=  1
+# range_X = covariates$range_X
+# 
+# samples = MessyMessyMcmc(
+#  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
+#  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
+#  state = state, n_iterations_update = 400, num_threads = 8, iter_start = 1, seed = 1
+# )
+# 
+# params = samples$state$params
+# params_records = samples$params_records
+# iter = length(samples$params_records)
+# 
+# 
+# plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
+# plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
+# plot_pointillist_painting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
+# plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
+# 
+#  par(mar = rep(2, 4))
+#  par(mfrow = c(3,3))
+#  for(i in seq(nrow(params$range_beta))){
+#    for(j in seq(ncol(params$range_beta))){
+#      plot(c(rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j], sapply(params_records, function(x)x$range_beta[i,j])[seq(iter)]), ylab = "", main  = paste(row.names(params$range_beta)[i], c("range", "aniso 1", "aniso 2")[j]))
+#      abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
+#    }}
+#  
+#  range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter-1),])
+#  plot(range_log_scale_samples[,1], main = "range log scale")
+#  abline(h = range_log_scale[1])
+#  plot(range_log_scale_samples[,2], main = "aniso log scale")
+#  abline(h = range_log_scale[2])
+#  
+#  noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter-1)])
+#  plot(noise_log_scale_samples, main = "noise log scale")
+#  abline(h = noise_PP_log_var)
+#  
+#  plot(c(noise_PP_log_var, sapply(params_records, function(x)x$noise_beta[1])[seq(iter-1)]), main = "noise intercept")
+#  
+#  
+#  field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter-1)])
+#  plot(field_log_var_samples, main = "field log var")
+#  abline(h = field_log_var)
  
- range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter-1),])
- plot(range_log_scale_samples[,1], main = "range log scale")
- abline(h = range_log_scale[1])
- plot(range_log_scale_samples[,2], main = "aniso log scale")
- abline(h = range_log_scale[2])
- 
- noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter-1)])
- plot(noise_log_scale_samples, main = "noise log scale")
- abline(h = noise_PP_log_var)
- 
- plot(c(noise_PP_log_var, sapply(params_records, function(x)x$noise_beta[1])[seq(iter-1)]), main = "noise intercept")
- 
- 
- field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter-1)])
- plot(field_log_var_samples, main = "field log var")
- abline(h = field_log_var)
- 
- 
-# # # Current i.e. last  state of the MCMC chain
-# # samples$state
-# # # e.g. current utils 
-# # samples$state$stuff
-# # # e.g. current model parameters 
-# # samples$state$params
-# # # History of the samples
-# # samples$params_records[[1]]$beta
-# 
-# # on veut arriver à ça... mais en version pas º(00)º : 
-# 
-# # parallel run
-# t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-#   object = geo_non_stat, n_chains_in_parallel = 3, 
-#   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
-# print(Sys.time()-t1)
-# # update of the state and the records
-# for(chain_idx in seq(length(mygns$states))){
-#   mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
-#   mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
-# }
-# 
-# 
-# t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-#   object = geo_non_stat, n_chains_in_parallel = 3, 
-#   n_threads_per_chain = 3, n_iterations = 30, seed = 1)
-# print(Sys.time()-t1)
-# # update of the state and the records
-# for(chain_idx in seq(length(mygns$states))){
-#   mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
-#   mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
-# }
-# 
-# 
-# t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
-#   object = geo_non_stat, n_chains_in_parallel = 3, 
-#   n_threads_per_chain = 5, n_iterations = 30, seed = 1)
-# print(Sys.time()-t1)
-# # update of the state and the records
-# for(chain_idx in seq(length(mygns$states))){
-#   mygns$states[[chain_idx]] = mise_a_jour_mcmc_parallele[[chain_idx]][[1]]
-#   mygns$records[[chain_idx]] = c(mygns$records[[chain_idx]], mise_a_jour_mcmc_parallele[[chain_idx]][[2]])
-# }
-# 
-# 
-# records = geo_non_stat$records
-# 
-# PrintMcmcDiags(geo_non_stat,burn_in = .2)
-# TracePlots(geo_non_stat, .2)
-# #TracePlots(geo_non_stat, .3, who = c("range_beta", "range_log_scale"))
-# 
-# estimation = Estimate(geo_non_stat, .2)
-# 
-# elppd_train = ElppdTrain(geo_non_stat, .2)
-# 
-# 
-# new_locs = rbind(observed_locs[1,], as.matrix(expand.grid(seq(-.1, 1.1, .01), seq(-.1, 1.1, .01))))
-# 

@@ -21,7 +21,6 @@ update_kernel <- function(iter,
 #'
 #' @param nlocs numeric, number of locations
 #' @param nvars numeric, number of explicatives variables
-#' @param nppr numeric, number of PP in PP range
 #' @param nppn numeric, number of PP in PP noise
 #'
 #' @returns a list
@@ -181,7 +180,7 @@ update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start)
   return(state)
 }
 
-update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_start, num_threads){
+update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_start, num_threads, vecchia_approx){
   
   range_reparam_mat = matrix(1)
   if(hierarchical_model$anisotropic){
