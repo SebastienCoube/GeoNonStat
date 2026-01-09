@@ -27,7 +27,7 @@ plot.PP <- function(x,
   }
   mar_var <- NULL
   if (mar_var_loss) {
-    mar_var <- var_loss_percentage.PP(x)
+    mar_var <- varLossPercentage.PP(x)
   }
   plot_knots.PP(x = x, mar_var_loss = mar_var)
   if (mar_var_loss) {
@@ -43,7 +43,7 @@ plot.PP <- function(x,
 
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class PP, create with `createPP`
-#' @param mar_var_loss optional, the var loss computed by `var_loss_percentage.PP`
+#' @param mar_var_loss optional, the var loss computed by `varLossPercentage.PP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @examples
@@ -84,7 +84,7 @@ plot_knots.PP <- function(x,
       breaks = c(0, 1, 2, 5, 10, 50, 100),
       include.lowest = TRUE
     )
-    base_colors <- get_colors(1:6, alpha = TRUE)
+    base_colors <- getColors(1:6, alpha = TRUE)
     locs_col <- base_colors[as.numeric(cut_var)]
   }
 
@@ -168,12 +168,12 @@ plot_knots.PP <- function(x,
 #' @examples
 #' locs <- matrix(rnorm(20), ncol = 2)
 #' log_range <- matrix(rnorm(30), ncol = 3)
-#' plot_ellipses(locs, log_range, shrink = 0.1)
+#' plotEllipses(locs, log_range, shrink = 0.1)
 #'
 #' locs <- matrix(rnorm(20), ncol = 2)
 #' log_range <- matrix(rnorm(10), ncol = 1)
-#' plot_ellipses(locs, log_range, shrink = 0.1)
-plot_ellipses <- function(locs,
+#' plotEllipses(locs, log_range, shrink = 0.1)
+plotEllipses <- function(locs,
                           log_range,
                           shrink = .1,
                           add = FALSE,
@@ -282,12 +282,12 @@ plot_ellipses <- function(locs,
 #
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
-# plot_ellipses(
+# plotEllipses(
 #   locs = locs[1,,drop=FALSE], log_range = log_range[1,,drop=FALSE],
 #   shrink = sqrt(8*nu), add=  TRUE)
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for isotropic")
-# plot_ellipses(
+# plotEllipses(
 #   locs = locs[1,,drop=F], log_range = log_range[1,1,drop=F],
 #   shrink = sqrt(8*nu), add=  T)
 # legend("topleft", legend = c("cor > .1", "cor < .1"), fill = c(1,2))
@@ -305,7 +305,7 @@ plot_ellipses <- function(locs,
 # print(paste("theorhetical rho = ", round(ra * sqrt(8*nu), 3)))
 
 
-#' Title get_colors TODO
+#' Title getColors TODO
 #'
 #' @param x a vector
 #' @param alpha logical, default to TRUE. Add transparency to colors ?
@@ -314,8 +314,8 @@ plot_ellipses <- function(locs,
 #' @export
 #'
 #' @examples
-#' get_colors(c(1, 2, 3))
-get_colors <- function(x, alpha = FALSE) {
+#' getColors(c(1, 2, 3))
+getColors <- function(x, alpha = FALSE) {
   colors <- rep(1, length(x))
   xnoNA <- x[!is.na(x)]
   col1 <- "#FFFFB2"
@@ -372,21 +372,38 @@ plot_pointillist_painting <- function(locs,
                                       field,
                                       add = FALSE,
                                       alpha = TRUE,
+                                      legend = TRUE,
                                       ...) {
   args <- list(...)
   if(is.null(args$pch)) args[["pch"]] <- "."
-  if(is.null(args$cex)) args[["cex"]] <- 2
+  if(is.null(args$cex)) args[["cex"]] <- 4
   if(is.null(args$xlab)) args[["xlab"]] <- NA
   if(is.null(args$ylab)) args[["ylab"]] <- NA
-  args$col <- get_colors(field, alpha = TRUE)
+  args$col <- getColors(field, alpha = TRUE)
+  
+  # ---- gestion de la mise en page ----
+  if (legend && !add) {
+    oldpar <- par(no.readonly = TRUE)
+    on.exit(par(oldpar))
+    
+    layout(
+      matrix(c(1, 2), nrow = 1),
+      widths = c(6, 1)
+    )
+  }
+  
   if (add) {
     do.call("points", c(list(x=locs), args))
   } else {
+    par(mar=c(2, 2, 2, 0))
     do.call("plot", c(list(x=locs), args))
   }
+  
+  # ---- légende ----
+  if (legend && !add) {
+    pointillistColorscale(field)
+  }
 }
-
-
 
 
 #' Plot the scale of colors for a given variable
@@ -398,8 +415,8 @@ plot_pointillist_painting <- function(locs,
 #' @export
 #'
 #' @examples
-#' pointillist_colorscale(field = c(1, 2, 3))
-pointillist_colorscale <- function(field, scalename = "") {
+#' pointillistColorscale(field = c(1, 2, 3))
+pointillistColorscale <- function(field, scalename = "") {
   origmar <- par("mar")
   origlwd <- par("lwd")
   par(mar = c(1, 0, 0, 0))
@@ -410,17 +427,17 @@ pointillist_colorscale <- function(field, scalename = "") {
   }
   barplot(
     rep(0.3, 50),
-    col = get_colors(1:50),
+    col = getColors(1:50),
     width = rep(1, 50),
     space = 0,
     # lwd = 0.1,
     xlab = scalename,
     ylab = "",
     main = "",
-    border = TRUE,
+    border = FALSE,
     ylim = c(0, 50),
     horiz = TRUE,
-    xlim = c(-0.2, .3),
+    xlim = c(-0.2, 0.1),
     axes = FALSE,
     mgp = c(0, 0, 0),
   )
@@ -428,8 +445,11 @@ pointillist_colorscale <- function(field, scalename = "") {
   values <- stats::quantile(field, probs = pos)
   text(
     y = 1 + pos * (50 - 1),
-    x = -0.1,
-    format(signif(values), trim = 4, width = 4)
+    x = -0.01,
+    adj = c(0.95, 1),
+    # format(signif(values), digits=4),
+    round(values, 4),
+    cex=0.8
   )
   par(mar = origmar, lwd = origlwd)
 }

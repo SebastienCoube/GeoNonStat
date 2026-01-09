@@ -204,7 +204,7 @@ createPP <- function(vecchia_approx,
     plot(res, mar_var_loss = TRUE)
   } else {
     # Just to print the diagnostic of var loss
-    varloss <- var_loss_percentage.PP(res)
+    varloss <- varLossPercentage.PP(res)
   }
   
   return(res)
@@ -233,7 +233,7 @@ summary.PP <- function(object, ...) {
     "matern range =",
     object$matern_range
   )
-  var_loss_percentage.PP(object)
+  varLossPercentage.PP(object)
   return(invisible(NULL))
 }
 
@@ -244,8 +244,8 @@ summary.PP <- function(object, ...) {
 #' @examples
 #' vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores = 1)
 #' pepito <- createPP(vecchia, plot = FALSE)
-#' var_loss_percentage.PP(pepito)
-var_loss_percentage.PP <- function(x) {
+#' varLossPercentage.PP(pepito)
+varLossPercentage.PP <- function(x) {
   if (is.null(x$knots | is.null(x$sparse_chol))) {
     stop("x must contains 'knots' and 'sparse_chol'")
   }
