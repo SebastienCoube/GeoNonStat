@@ -67,7 +67,7 @@ iter = 1
 seed=  1
 range_X = covariates$range_X
 
-samples = MessyMessyMcmc(
+samples = runGeoNonStatMcmc(
  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
  state = state, n_iterations_update = 400, num_threads = 8, iter_start = 1, seed = 1
@@ -122,7 +122,7 @@ plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_
 # 
 # # parallel run
 # t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+# mise_a_jour_mcmc_parallele = runParallelGeoNonStatMcmc(
 #   object = geo_non_stat, n_chains_in_parallel = 3, 
 #   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
 # print(Sys.time()-t1)
@@ -134,7 +134,7 @@ plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_
 # 
 # 
 # t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+# mise_a_jour_mcmc_parallele = runParallelGeoNonStatMcmc(
 #   object = geo_non_stat, n_chains_in_parallel = 3, 
 #   n_threads_per_chain = 3, n_iterations = 30, seed = 1)
 # print(Sys.time()-t1)
@@ -146,7 +146,7 @@ plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_
 # 
 # 
 # t1 = Sys.time()
-# mise_a_jour_mcmc_parallele = run_parallel_version_goret(
+# mise_a_jour_mcmc_parallele = runParallelGeoNonStatMcmc(
 #   object = geo_non_stat, n_chains_in_parallel = 3, 
 #   n_threads_per_chain = 5, n_iterations = 30, seed = 1)
 # print(Sys.time()-t1)

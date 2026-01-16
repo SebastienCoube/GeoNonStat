@@ -4,6 +4,8 @@
 #' @docType package
 #' @name GeoNonStat
 #'
+#' @import future
+#' @import future.apply
 #' @import Rcpp
 #' @importFrom abind abind
 #' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol

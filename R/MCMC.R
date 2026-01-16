@@ -1,4 +1,4 @@
-#' Title TODO
+#' Run the MCMC on one chain of a `GeoNonStat` object
 #'
 #' @param covariates  The list of covariates obtained with `process_covariates`
 #' @param observed_field TODO
@@ -10,13 +10,28 @@
 #' @param iter_start TODO
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
-#' @returns TODO
+#' @returns a list containaing last state and records of parameters for each 
+#' MCMC iteration
 #' @export
-#'
+#' 
 #' @examples
-#' #TODO
-#' #TODO
-MessyMessyMcmc = function(
+#' chain_id <- 1
+#' seed <- 1
+#' iter_start <- length(gnsDemo$records$chain_1)
+#' processedChain <- 
+#'     runGeoNonStatMcmc(
+#'         covariates = gnsDemo$covariates, 
+#'         observed_field = gnsDemo$observed_field, 
+#'         hierarchical_model = gnsDemo$hierarchical_model, 
+#'         vecchia_approx = gnsDemo$vecchia_approx, 
+#'         state = gnsDemo$states[[chain_id]], 
+#'         n_iterations_update = 20, 
+#'         num_threads = 1, 
+#'         iter_start = iter_start, 
+#'         seed = iter_start + seed + chain_id
+#'         )
+#' names(processedChain)
+runGeoNonStatMcmc = function(
     covariates,
     observed_field,
     hierarchical_model,
@@ -27,56 +42,56 @@ MessyMessyMcmc = function(
     iter_start,
     seed=123 
 ) {
-set.seed(seed)
-# Initialization of parameters (empty whith right structure)
-params_records = lapply(seq_len(n_iterations_update), 
-                        function(i) {initStateParams(state$params)}
-                        )
-
-for(iter in seq_len(n_iterations_update)){
+  set.seed(seed)
+  # Initialization of parameters (empty whith right structure)
+  params_records = lapply(seq_len(n_iterations_update), 
+                          function(i) {initStateParams(state$params)}
+  )
   
-  if(iter/10 == iter %/% 10)cat("iter = ", iter)
-  # Regression coefficients ###############################
-  # Regression coefficients #################################
-  res <- update_beta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
-  state$params <- res[["params"]]
-  state$stuff <- res[["stuff"]]
-  
-  # Latent field ###############################
-  state$params$field <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
-  
-  # Field log var ###############################
-  state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-  
-  if(iter + iter_start > 100){
-  # Range beta ###############################
-  res <- update_range_beta(state, hierarchical_model, range_X =  covariates$range_X, iter, iter_start, num_threads)
-  state <- res[["state"]]
-  
-  # Variance of the  range PP ###############################
-  state <- update_variance_rangepp(
-    state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
-    vecchia_approx = vecchia_approx, iter = iter, 
-    iter_start = iter_start, num_threads = num_threads)
+  for(iter in seq_len(n_iterations_update)){
+    
+    if(iter/10 == iter %/% 10)cat("iter = ", iter)
+    # Regression coefficients ###############################
+    # Regression coefficients #################################
+    res <- update_beta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
+    state$params <- res[["params"]]
+    state$stuff <- res[["stuff"]]
+    
+    # Latent field ###############################
+    state$params$field <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
+    
+    # Field log var ###############################
+    state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    
+    if(iter + iter_start > 100){
+      # Range beta ###############################
+      res <- update_range_beta(state, hierarchical_model, range_X =  covariates$range_X, iter, iter_start, num_threads)
+      state <- res[["state"]]
+      
+      # Variance of the  range PP ###############################
+      state <- update_variance_rangepp(
+        state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
+        vecchia_approx = vecchia_approx, iter = iter, 
+        iter_start = iter_start, num_threads = num_threads)
+    }
+    
+    # Noise ###############################
+    # Noise beta ###############################
+    
+    res <- update_noise_beta (state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
+    state <- res[["state"]]
+    
+    # Noise log scale ###############################
+    state <- update_noise_log_scale(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
+    
+    # Storing the samples ###############################
+    params_records[[iter]] = state$params
   }
-  
-  # Noise ###############################
-  # Noise beta ###############################
-  
-  res <- update_noise_beta (state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
-  state <- res[["state"]]
-  
-  # Noise log scale ###############################
-  state <- update_noise_log_scale(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
-  
-  # Storing the samples ###############################
-  params_records[[iter]] = state$params
-}
   return(list("state" = state, "params_records" = params_records))
 }
 
 
-#' Title
+#' Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 #'
 #' @param object an object of class `GeoNonStat`
 #' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
@@ -89,8 +104,9 @@ for(iter in seq_len(n_iterations_update)){
 #' @export
 #'
 #' @examples
-#' # TODO
-run_parallel_version_goret = function(
+#' nthreads <- parallel::detectCores() -1
+#' processedGns <- runParallelGeoNonStatMcmc(gnsDemo, n_threads_per_chain = nthreads, n_iterations = 15)
+runParallelGeoNonStatMcmc = function(
     object, 
     n_chains_in_parallel = NULL, 
     n_threads_per_chain = 10, 
@@ -99,44 +115,57 @@ run_parallel_version_goret = function(
   if(is.null(n_chains_in_parallel)) n_chains_in_parallel = length(object$states)
   iter_start = length(object$records$chain_1)
   if(n_chains_in_parallel == 1){
-    res <- lapply(seq_along(object$states), function(chain_idx) {
-      list("state" = object$states[[chain_idx]],
-           "params" = lapply(
-             seq_len(n_iterations), 
-             function(i) initStateParams(object$states[[chain_idx]][["params"]])
-           )
-      )
-    })
+    future::plan(future::sequential)
+    print(plan())
+    res = future.apply::future_lapply(
+      X = seq_along(object$states), 
+      FUN=function(chain_idx) {
+        runGeoNonStatMcmc(state = object$states[[chain_idx]],
+                          seed = iter_start + seed + chain_idx, 
+                          covariates = object$covariates, 
+                          observed_field = object$observed_field, 
+                          hierarchical_model = object$hierarchical_model, 
+                          vecchia_approx = object$vecchia_approx, 
+                          n_iterations_update = n_iterations, 
+                          num_threads = n_threads_per_chain, 
+                          iter_start = iter_start)
+      },
+      future.seed=TRUE
+    )
+  } else {
+    if(parallelly::supportsMulticore()) {
+      future::plan(future::multicore, workers=n_chains_in_parallel)
+    } else {
+      future::plan(future::multisession, workers=n_chains_in_parallel)
+    }
+    print(plan())
+    chains <- seq_along(object$states)
     
-    for(chain_idx in seq_along(object$states)){
-      res[[chain_idx]] <- MessyMessyMcmc(
-        covariates = object$covariates, 
-        observed_field = object$observed_field, 
-        hierarchical_model = object$hierarchical_model, 
-        vecchia_approx = object$vecchia_approx, 
-        state = object$states[[chain_idx]], 
-        n_iterations_update = n_iterations, 
-        num_threads = n_threads_per_chain, 
-        iter_start = iter_start, 
-        seed = iter_start + seed + chain_idx
+    covariates_local <- object$covariates
+    observed_field_local <- object$observed_field
+    hierarchical_model_local <- object$hierarchical_model
+    vecchia_approx_local <- object$vecchia_approx
+    states_local <- object$states
+    
+    tmpfun <- function(chain, ...) {
+      runGeoNonStatMcmc(
+        state = states_local[[chain]],
+        seed = iter_start + seed + chain, 
+        ...
       )
     }
-  } else {
-    cl = parallel::makeCluster(n_chains_in_parallel)
-    parallel::clusterExport(cl = cl, varlist = c("iter_start", "seed", "object", "n_iterations"), envir = environment())
-    res = parallel::parLapply(
-      cl = cl, 
-      X = seq(length(object$states)), function(chain_idx){
-        MessyMessyMcmc(
-          covariates = object$covariates, observed_field = object$observed_field, 
-          hierarchical_model = object$hierarchical_model, vecchia_approx = object$vecchia_approx, 
-          state = object$states[[chain_idx]], 
-          n_iterations_update = n_iterations, 
-          num_threads = n_threads_per_chain, 
-          iter_start = iter_start, 
-          seed = iter_start + seed + chain_idx
-        )
-      }
+      
+    res <- future.apply::future_lapply(
+      chains,
+      FUN = tmpfun,
+      covariates = covariates_local,
+      observed_field = observed_field_local,
+      hierarchical_model = hierarchical_model_local,
+      vecchia_approx = vecchia_approx_local,
+      iter_start = iter_start,
+      n_iterations_update = n_iterations,
+      num_threads = n_threads_per_chain,
+      future.seed = TRUE
     )
   }
   

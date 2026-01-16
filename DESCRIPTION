@@ -22,11 +22,13 @@ Imports:
     methods,
     scales,
     coda,
-    FNN
+    FNN,
+    future,
+    future.apply
 LinkingTo: 
     Rcpp, 
     RcppArmadillo
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 SystemRequirements: C++
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs
