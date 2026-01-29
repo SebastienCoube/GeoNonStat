@@ -1,11 +1,11 @@
-renew_momentum <- function(momentum, kept_momentum = .9) {
+renewMomentum <- function(momentum, kept_momentum = .9) {
   if (!inBounds(c(0,1), kept_momentum, includeBounds = TRUE))
     stop("kept_momentum must be between 0 and 1")
   momentum[] <- sqrt(kept_momentum) * momentum[] + sqrt(1 - kept_momentum) * rnorm(length(momentum[]))
   momentum
 }
 
-update_kernel <- function(iter,
+updateKernel <- function(iter,
                           iter_start,
                           kernel_value,
                           mult) {
@@ -40,7 +40,7 @@ initStateParams <- function(stateParams){
   })
 }
 
-update_beta <- function(params, stuff, X, vecchia_approx, observed_field){
+updateBeta <- function(params, stuff, X, vecchia_approx, observed_field){
   # centered parametrization of latent field
   beta_covmat = solve(crossprod(X$X/stuff$noise_var, X$X))
   if(all(!is.infinite(beta_covmat) & !is.nan(beta_covmat))) {
@@ -68,7 +68,7 @@ update_beta <- function(params, stuff, X, vecchia_approx, observed_field){
 }
 
 
-update_latent_field <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads){
+updateLatentField <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads){
   cluster_idx = 1
   chosen_locs_partition_idx = 1 + iter%%ncol(vecchia_approx$locs_partition)
   locs_partition = vecchia_approx$locs_partition[,chosen_locs_partition_idx]
@@ -117,7 +117,7 @@ update_latent_field <- function(params, stuff, vecchia_approx, observed_field, i
   return(params$field)
 }
 
-update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start){
+updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start){
   for(iii in seq(1)){
  # ancillary 
     for(field_log_var_idx in seq_len(3)){
@@ -138,10 +138,10 @@ update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start)
                                 beta0_var =  scale$beta0_sd^2) # normal prior
           + .5 * sum((state$stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/state$stuff$noise_var) # observation ll
         )
-      state$ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start, 
+      state$ker_var$field_log_var_ancillary = updateKernel(iter_start = iter_start, 
                                                             kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25)
       if(current_U - proposed_U > log(runif(1))){
-        state$ker_var$field_log_var_ancillary = update_kernel(iter_start = iter_start,  
+        state$ker_var$field_log_var_ancillary = updateKernel(iter_start = iter_start,  
                                                               kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1)
         state$params$field_log_var[1,1] = new_field_log_var
         state$params$field = new_field
@@ -169,10 +169,10 @@ update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start)
           + .5 * fieldT_cholT_chol_field/exp(new_field_log_var)  # observation ll
           +  vecchia_approx$n_locs * (.5 * new_field_log_var)  # observation ll
         )
-      state$ker_var$field_log_var_sufficient = update_kernel(iter_start = iter_start,  
+      state$ker_var$field_log_var_sufficient = updateKernel(iter_start = iter_start,  
                                                             kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = -.25)
       if(current_U - proposed_U > log(runif(1))){
-      state$ker_var$field_log_var_sufficient = update_kernel(iter_start = iter_start, 
+      state$ker_var$field_log_var_sufficient = updateKernel(iter_start = iter_start, 
                                                             kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = 1)
         state$params$field_log_var[1,1] = new_field_log_var
       }
@@ -181,7 +181,7 @@ update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start)
   return(state)
 }
 
-update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X, iter, iter_start, num_threads){
+updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, iter, iter_start, num_threads){
   
   range_reparam_mat = matrix(1)
   if(hierarchical_model$anisotropic){
@@ -200,7 +200,7 @@ update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X
   q[] = range_X$L_minus_one %*% (state$params$range_beta)
   # initializing momentum
   state$momenta$range_beta_ancillary = 
-    renew_momentum(
+    renewMomentum(
       state$momenta$range_beta_ancillary, 
       kept_momentum = .9)
   p = state$momenta$range_beta_ancillary
@@ -422,7 +422,7 @@ update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X
   # current_U-proposed_U
   # current_K- proposed_K
   
-  state$ker_var$range_beta_ancillary[1] = update_kernel(
+  state$ker_var$range_beta_ancillary[1] = updateKernel(
     iter = iter, iter_start = iter_start, 
     kernel_value = state$ker_var$range_beta_ancillary[1], mult = -.8
   )
@@ -431,7 +431,7 @@ update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X
   {
     if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K)
     {
-      state$ker_var$range_beta_ancillary[1] = update_kernel(
+      state$ker_var$range_beta_ancillary[1] = updateKernel(
         iter = iter, iter_start = iter_start, 
         kernel_value = state$ker_var$range_beta_ancillary[1], mult = 1
       )
@@ -449,7 +449,7 @@ update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X
   q[] = range_X$L_minus_one %*% (state$params$range_beta)
   # initializing momentum
   state$momenta$range_beta_sufficient = 
-    renew_momentum(
+    renewMomentum(
       state$momenta$range_beta_sufficient, 
       kept_momentum = .9)
   p = state$momenta$range_beta_sufficient
@@ -680,14 +680,14 @@ update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X
   
   # current_U - proposed_U
   # current_K - proposed_K
-  state$ker_var$range_beta_sufficient[1] = update_kernel(
+  state$ker_var$range_beta_sufficient[1] = updateKernel(
     iter = iter, iter_start = iter_start,  
     kernel_value = state$ker_var$range_beta_sufficient[1], mult = -.8
   )
   
   if(!is.nan(current_U-proposed_U+current_K- proposed_K)) {
     if (log(runif(1)) < current_U-proposed_U + current_K- proposed_K) {
-      state$ker_var$range_beta_sufficient[1] = update_kernel(
+      state$ker_var$range_beta_sufficient[1] = updateKernel(
         iter = iter, iter_start = iter_start, 
         kernel_value = state$ker_var$range_beta_sufficient[1], mult = 1
       )
@@ -740,7 +740,7 @@ PotAnciRangeLogScale = function(field, lm_residuals, noise_var, vecchia_approx){
 }
 
   
-update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_approx, iter, iter_start, num_threads){
+updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_approx, iter, iter_start, num_threads){
   new_compressed_sparse_chol = state$stuff$compressed_chol[,,1,drop = F]
   n_range_log_scale_update = 2
   # ancillary - sufficient ####
@@ -770,7 +770,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
     current_U =  PotSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
     proposed_U = PotSuffRangeLogScale(sparse_chol = new_sparse_chol,         field = state$params$field, field_log_var = state$params$field_log_var)
     
-    state$ker_var$range_log_scale_sufficient = update_kernel(
+    state$ker_var$range_log_scale_sufficient = updateKernel(
       iter = iter, iter_start = iter_start, 
       kernel_value = state$ker_var$range_log_scale_sufficient, 
       mult = -.25
@@ -779,7 +779,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
         if(log(runif(1)) < (current_U-proposed_U))
         {
           
-          state$ker_var$range_log_scale_sufficient = update_kernel(
+          state$ker_var$range_log_scale_sufficient = updateKernel(
             iter = iter, iter_start = iter_start, 
             kernel_value = state$ker_var$range_log_scale_sufficient, 
             mult = 1
@@ -824,7 +824,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
     
     current_U = PotAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
     proposed_U = PotAnciRangeLogScale(field = new_field,         lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
-    state$ker_var$range_log_scale_ancillary = update_kernel(
+    state$ker_var$range_log_scale_ancillary = updateKernel(
       iter = iter, iter_start = iter_start, 
       kernel_value = state$ker_var$range_log_scale_ancillary, 
       mult = -.25
@@ -832,7 +832,7 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
     
       if(!is.nan(current_U-proposed_U)){
         if(log(runif(1)) < (current_U-proposed_U)){
-          state$ker_var$range_log_scale_ancillary = update_kernel(
+          state$ker_var$range_log_scale_ancillary = updateKernel(
             iter = iter, iter_start = iter_start,
             kernel_value = state$ker_var$range_log_scale_ancillary, 
             mult = 1
@@ -852,12 +852,12 @@ update_variance_rangepp <- function(state, hierarchical_model, range_X, vecchia_
   return(state)
 }
 
-update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start){
+updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start){
   # VEWY IMPOWTANT don't remove or comment
   squared_residuals = as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
   # HMC update
   q = noise_X$L_minus_one %*% state$params$noise_beta
-  state$momenta$noise_beta = renew_momentum(state$momenta$noise_beta)
+  state$momenta$noise_beta = renewMomentum(state$momenta$noise_beta)
   p = state$momenta$noise_beta
   dens_grad = (
     - beta_prior_log_dens_derivative(
@@ -931,10 +931,10 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   )
   proposed_K = sum(p^2) / 2
   
-  state$ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = -.8)
+  state$ker_var$noise_beta_mala = updateKernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = -.8)
   if(!is.nan(current_U-proposed_U+current_K- proposed_K)) {
     if (log(runif(1)) < current_U-proposed_U+current_K- proposed_K) {
-      state$ker_var$noise_beta_mala = update_kernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = 1)
+      state$ker_var$noise_beta_mala = updateKernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = 1)
       state$momenta$noise_beta = p
       state$params$noise_beta[] = new_noise_beta
       state$stuff$noise_var = new_noise_var
@@ -944,7 +944,7 @@ update_noise_beta <- function(state, noise, noise_X, vecchia_approx, iter, iter_
   return(list("state" = state, "squared_residuals" = squared_residuals))
 }
 
-update_noise_log_scale <- function(state, noise, noise_X, vecchia_approx, squared_residuals, iter, iter_start){
+updateNoiseLogScale <- function(state, noise, noise_X, vecchia_approx, squared_residuals, iter, iter_start){
   # ancillary -- sufficient ####
   for(i in seq_len(4)) {
     new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, exp(state$ker_var$noise_log_scale))
@@ -975,13 +975,13 @@ update_noise_log_scale <- function(state, noise, noise_X, vecchia_approx, square
           state$params$noise_log_scale[] = new_noise_log_scale
           state$params$noise_beta = new_noise_beta 
           state$stuff$noise_var = new_noise_var
-          state$ker_var$noise_log_scale = update_kernel(
+          state$ker_var$noise_log_scale = updateKernel(
             iter = iter, iter_start = iter_start, 
             kernel_value = state$ker_var$noise_log_scale, mult = 1)
         }
       }
     }
-    state$ker_var$noise_log_scale = update_kernel(
+    state$ker_var$noise_log_scale = updateKernel(
       iter = iter, iter_start = iter_start, 
       kernel_value = state$ker_var$noise_log_scale, mult = -.25)
   }

@@ -53,23 +53,23 @@ runGeoNonStatMcmc = function(
     if(iter/10 == iter %/% 10)cat("iter = ", iter, "\n")
     # Regression coefficients ###############################
     # Regression coefficients #################################
-    res <- update_beta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
+    res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res[["params"]]
     state$stuff <- res[["stuff"]]
     
     # Latent field ###############################
-    state$params$field <- update_latent_field(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
+    state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
     
     # Field log var ###############################
-    state <- update_field_log_var(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    state <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
     
     if(iter + iter_start > 100){
       # Range beta ###############################
-      res <- update_range_beta(state, hierarchical_model, vecchia_approx, range_X =  covariates$range_X, iter, iter_start, num_threads)
+      res <- updateRangeBeta(state, hierarchical_model, vecchia_approx, range_X =  covariates$range_X, iter, iter_start, num_threads)
       state <- res[["state"]]
       
       # Variance of the  range PP ###############################
-      state <- update_variance_rangepp(
+      state <- updateVarianceRangepp(
         state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
         vecchia_approx = vecchia_approx, iter = iter, 
         iter_start = iter_start, num_threads = num_threads)
@@ -78,11 +78,11 @@ runGeoNonStatMcmc = function(
     # Noise ###############################
     # Noise beta ###############################
     
-    res <- update_noise_beta(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
+    res <- updateNoiseBeta(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
     state <- res[["state"]]
     
     # Noise log scale ###############################
-    state <- update_noise_log_scale(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
+    state <- updateNoiseLogScale(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, res[["squared_residuals"]], iter, iter_start)
     
     # Storing the samples ###############################
     params_records[[iter]] = state$params
