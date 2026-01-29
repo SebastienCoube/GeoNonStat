@@ -553,6 +553,9 @@ X_PP_crossprod <- function(X,
     if (nrow(X) != nrow(PP$vecchia_locs)) {
       stop("X should have the same number of rows as locations in vecchia")
     }
+    if (is.null(vecchia_approx)) {
+      stop("PP provided, vecchia_approx should be provided too")
+    }
     if (vecchia_approx$n_locs != nrow(PP$vecchia_locs)) {
       stop("vecchia_approx should have the same number of locations as the locations of PP")
     }

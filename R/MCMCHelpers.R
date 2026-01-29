@@ -181,7 +181,7 @@ update_field_log_var <- function(state, scale, vecchia_approx, iter, iter_start)
   return(state)
 }
 
-update_range_beta <- function(state, hierarchical_model, range_X, iter, iter_start, num_threads){
+update_range_beta <- function(state, hierarchical_model, vecchia_approx, range_X, iter, iter_start, num_threads){
   
   range_reparam_mat = matrix(1)
   if(hierarchical_model$anisotropic){
