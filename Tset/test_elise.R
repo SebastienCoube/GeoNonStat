@@ -51,6 +51,7 @@ gnsDemo = GeoNonStat(
   range_PP = PP_range
 )
 
+future::plan(future::multisession, workers=3)
 set.seed(123)
 processedGnsDemo = runParallelGeoNonStatMcmc(
   object = gnsDemo, n_chains_in_parallel = 1,

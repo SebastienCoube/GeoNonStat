@@ -136,9 +136,9 @@ PP = createPP(vecchia_approx, plot=FALSE)
 X = matrix(rnorm(500), 1000)
 Y = matrix(rnorm(30*nrow(X)), nrow(X))
 
-test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
+test_that("xPPCrossprod Simple crossprod if no PP, vecchia unused", {
   expect_error(
-    res1 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
+    res1 <- xPPCrossprod(X = X, PP = NULL, Y = Y, vecchia_approx = vecchia_approx),
     NA
   )
   expect_true(is(res1, "matrix"))
@@ -147,15 +147,15 @@ test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
   
   # Simple corssprod, vecchia unused. 
   expect_error(
-    res2 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
+    res2 <- xPPCrossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
     NA
   )
   expect_identical(res1,res2)
 })
 
-test_that("X_PP_crossprod with PP", {
+test_that("xPPCrossprod with PP", {
   expect_error(
-    res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx),
+    res2 <- xPPCrossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx),
     NA
   )
   expect_true(is(res2, "matrix"))
@@ -168,9 +168,9 @@ test_that("X_PP_crossprod with PP", {
   #              tolerance = 1e-5)
 })
 
-test_that("X_PP_crossprod with PP and permute obs", {
+test_that("xPPCrossprod with PP and permute obs", {
   expect_error(
-    res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
+    res3 <- xPPCrossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
     NA
   )
   expect_true(is(res3, "matrix"))
@@ -183,16 +183,16 @@ test_that("X_PP_crossprod with PP and permute obs", {
   #              tolerance = 1e-5)
 })
 
-# res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
-test_that("X_PP_mult_right with PP and permute obs", {
+# res1 <- xPPMultRight(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+test_that("xPPMultRight with PP and permute obs", {
   set.seed(123)
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     "Y should have"
   )
   # No PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = NULL, Y = matrix(c(0.5, 1, 1.1, 0.2), nrow = 1), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = X, PP = NULL, Y = matrix(c(0.5, 1, 1.1, 0.2), nrow = 1), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "matrix"))
@@ -201,7 +201,7 @@ test_that("X_PP_mult_right with PP and permute obs", {
   
   # No X
   expect_error(
-    resmr <- X_PP_mult_right(X = NULL, PP = PP, Y = matrix(rnorm(200), nrow = 100), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = NULL, PP = PP, Y = matrix(rnorm(200), nrow = 100), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "Matrix"))
@@ -211,7 +211,7 @@ test_that("X_PP_mult_right with PP and permute obs", {
   
   # X and PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(202), nrow = 101), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = X, PP = PP, Y =  matrix(rnorm(202), nrow = 101), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "Matrix"))

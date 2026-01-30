@@ -129,7 +129,7 @@ hist(mycov - mycov_aniso)
 
 
 
-## X_PP_mult_right #########################################################
+## xPPMultRight #########################################################
 locs = cbind(runif(1000), runif(1000))
 locs = rbind(locs, locs)
 vecchia_approx = createVecchia(locs, 12, ncores=1)
@@ -139,23 +139,23 @@ knots_coeffs = rnorm(PP$n_knots)
 X = cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
 
 # multiplying X alone
-res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+res1 <- xPPMultRight(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
 plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
-res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+res1 <- xPPMultRight(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
 plot_pointillist_painting(locs, res1, main = "covariates only, \n one covariate for each observation")
 
 # multiplying PP alone
-res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
+res2 <- xPPMultRight(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 plot_pointillist_painting(vecchia_approx$locs, res2, main = "PP only")
 
 # multiplying PP and matrix of covariate, one obs for each location
 X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-res3 <- X_PP_mult_right(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
+res3 <- xPPMultRight(PP = PP, X = X_by_loc, Y = c(covariate_coefficients, knots_coeffs), vecchia_approx = vecchia_approx)
 plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates, \n one covariate for each location")
 
 # multiplying PP and matrix of covariates with an index
 X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-res4 <- X_PP_mult_right(X = X_by_obs, PP = PP, 
+res4 <- xPPMultRight(X = X_by_obs, PP = PP, 
                       Y = c(covariate_coefficients, knots_coeffs), 
                       vecchia_approx = vecchia_approx
                       )
@@ -163,7 +163,7 @@ plot_pointillist_painting(vecchia_approx$observed_locs, res4, main = "PP + covar
 
 # multiplying 
 X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-res5 <- X_PP_mult_right(X = NULL, PP = PP, 
+res5 <- xPPMultRight(X = NULL, PP = PP, 
                       Y = diag(1, PP$n_knots), 
                       vecchia_approx = vecchia_approx,
                       permutate_PP_to_obs = T

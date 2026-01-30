@@ -50,7 +50,7 @@ test_that("naive_greedy_coloring produce expected results", {
                "M must be symmetric")
 })
 
-test_that("decompress_chol produce expected results", {
+test_that("decompressChol produce expected results", {
 # TODO  
 })
 
@@ -146,13 +146,13 @@ test_that("compute_sparse_chol produce expected output", {
 })
 
 
-## beta_prior_log_dens ##################################
-test_that("beta_prior_log_dens produce expected output", {
+## betaPriorLogDens ##################################
+test_that("betaPriorLogDens produce expected output", {
   set.seed(123)
   beta1 <- matrix(rnorm(100), 100, ncol=1)
   beta3 <- matrix(rnorm(300), 100, ncol=3)
   expect_error(
-    tmp <- beta_prior_log_dens(
+    tmp <- betaPriorLogDens(
       beta = beta3, 
       n_PP = 120, 
       beta0_mean = -5,
@@ -161,7 +161,7 @@ test_that("beta_prior_log_dens produce expected output", {
     ),
     "n_PP can't be greater than")
   expect_error(
-    tmp <- beta_prior_log_dens(
+    tmp <- betaPriorLogDens(
       beta = beta3, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -171,7 +171,7 @@ test_that("beta_prior_log_dens produce expected output", {
     "log_scale is supposed to be of length 2")
   
   expect_error(
-    tmp <- beta_prior_log_dens(
+    tmp <- betaPriorLogDens(
       beta = beta3, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -183,7 +183,7 @@ test_that("beta_prior_log_dens produce expected output", {
   # expect_equal(tmp, -2697.276)
   
   expect_error(
-    tmp <- beta_prior_log_dens(
+    tmp <- betaPriorLogDens(
       beta = beta1, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -195,13 +195,13 @@ test_that("beta_prior_log_dens produce expected output", {
   # expect_equal(tmp, -1020.22585)
 })
 
-## beta_prior_log_dens_derivative ##################################
-test_that("beta_prior_log_dens_derivative produce expected output", {
+## betaPriorLogDensDerivative ##################################
+test_that("betaPriorLogDensDerivative produce expected output", {
   set.seed(123)
   beta1 <- matrix(rnorm(100), 100, ncol=1)
   beta3 <- matrix(rnorm(300), 100, ncol=3)
   expect_error(
-    tmp <- beta_prior_log_dens_derivative(
+    tmp <- betaPriorLogDensDerivative(
       beta = beta3, 
       n_PP = 120, 
       beta0_mean = -5,
@@ -210,7 +210,7 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
     ),
     "n_PP can't be greater than")
   expect_error(
-    tmp <- beta_prior_log_dens_derivative(
+    tmp <- betaPriorLogDensDerivative(
       beta = beta3, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -220,7 +220,7 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
     "log_scale is supposed to be of length 2")
   
   expect_error(
-    tmp <- beta_prior_log_dens_derivative(
+    tmp <- betaPriorLogDensDerivative(
       beta = beta3, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -233,7 +233,7 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
   # expect_equal(mean(tmp), 1.00837737)
   
   expect_error(
-    tmp <- beta_prior_log_dens_derivative(
+    tmp <- betaPriorLogDensDerivative(
       beta = beta1, 
       n_PP = 90, 
       beta0_mean = -5,
@@ -246,7 +246,7 @@ test_that("beta_prior_log_dens_derivative produce expected output", {
   # expect_equal(mean(tmp), -2.9948913)
 })
 
-test_that("getting correct values using beta_prior_log_dens and beta_prior_log_dens_derivative", {
+test_that("getting correct values using betaPriorLogDens and betaPriorLogDensDerivative", {
   set.seed(123)
   beta = matrix(rnorm(300), 100)
   res <-matrix(0, 100, 3)
@@ -255,21 +255,21 @@ test_that("getting correct values using beta_prior_log_dens and beta_prior_log_d
       beta1 = beta 
       beta1[i,j] = beta1[i,j]+ .0001
       res[i,j] <- (
-        beta_prior_log_dens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
-          beta_prior_log_dens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
-      )*10000 / beta_prior_log_dens_derivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
+        betaPriorLogDens(beta1, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2)) -
+          betaPriorLogDens(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))
+      )*10000 / betaPriorLogDensDerivative(beta, n_PP = 90, beta0_mean = -4, beta0_var = 2, log_scale = c(0, 2))[i,j]
    }
   }
   expect_equal(mean(res), 1.00004157)
   expect_equal(var(c(res)), 3.722309e-07, tolerance = 1e-7)
 })
 
-## X_PP_crossprod ##################################
-test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
+## xPPCrossprod ##################################
+test_that("xPPCrossprod Simple crossprod if no PP, vecchia unused", {
   X = matrix(rnorm(100), 50)
   Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
-    res1 <- X_PP_crossprod(X = X, 
+    res1 <- xPPCrossprod(X = X, 
                            PP = NULL, 
                            Y = Y, 
                            vecchia_approx = vecchia_approx),
@@ -282,19 +282,19 @@ test_that("X_PP_crossprod Simple crossprod if no PP, vecchia unused", {
   
   # Simple corssprod, vecchia unused. 
   expect_error(
-    res2 <- X_PP_crossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
+    res2 <- xPPCrossprod(X = X, PP = NULL, Y = Y, vecchia_approx = NULL),
     NA
   )
   expect_identical(res1,res2)
 })
 
-test_that("X_PP_crossprod with PP", {
+test_that("xPPCrossprod with PP", {
   set.seed(123)
   X = matrix(rnorm(100), 50)
   Y = matrix(rnorm(30*nrow(X)), nrow(X))
   PP <- list("locs"=matrix(rnorm(100),50))
   expect_error(
-    res2 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = NULL),
+    res2 <- xPPCrossprod(X = X, PP = PP, Y = Y, vecchia_approx = NULL),
     NA
   )
   expect_true(is(res2, "matrix"))
@@ -307,12 +307,12 @@ test_that("X_PP_crossprod with PP", {
   #              tolerance = 1e-5)
 })
 
-test_that("X_PP_crossprod with PP and permute obs", {
+test_that("xPPCrossprod with PP and permute obs", {
   set.seed(123)
   X = matrix(rnorm(100), 50)
   Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
-    res3 <- X_PP_crossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
+    res3 <- xPPCrossprod(X = X, PP = PP, Y = Y, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE),
     NA
   )
   expect_true(is(res3, "matrix"))
@@ -325,13 +325,13 @@ test_that("X_PP_crossprod with PP and permute obs", {
   #              tolerance = 1e-5)
 })
 
-## X_PP_mult_right ##################################
-test_that("X_PP_mult_right with PP and permute obs", {
+## xPPMultRight ##################################
+test_that("xPPMultRight with PP and permute obs", {
   set.seed(123)
   X = matrix(rnorm(100), 50)
   Y = matrix(rnorm(30*nrow(X)), nrow(X))
   expect_error(
-    resmr <- X_PP_mult_right(X = X, 
+    resmr <- xPPMultRight(X = X, 
                              PP = PP, 
                              Y = Y, 
                              vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
@@ -339,7 +339,7 @@ test_that("X_PP_mult_right with PP and permute obs", {
   )
   # No PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, 
+    resmr <- xPPMultRight(X = X, 
                              PP = NULL, 
                              Y = matrix(rep(c(0.5, 1, 1.1, 0.2),2), nrow = 2), 
                              vecchia_approx = vecchia_approx, 
@@ -352,7 +352,7 @@ test_that("X_PP_mult_right with PP and permute obs", {
   
   # No X
   expect_error(
-    resmr <- X_PP_mult_right(X = NULL, PP = PP, Y = matrix(rnorm(250), nrow = 25), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = NULL, PP = PP, Y = matrix(rnorm(250), nrow = 25), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "matrix"))
@@ -361,7 +361,7 @@ test_that("X_PP_mult_right with PP and permute obs", {
   
   # X and PP
   expect_error(
-    resmr <- X_PP_mult_right(X = X, PP = PP, Y =  matrix(rnorm(270), nrow = 27), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
+    resmr <- xPPMultRight(X = X, PP = PP, Y =  matrix(rnorm(270), nrow = 27), vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE),
     NA
   )
   expect_true(is(resmr, "matrix"))

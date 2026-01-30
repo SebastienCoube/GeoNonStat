@@ -38,11 +38,11 @@ fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_li
 dev.off()
 
 
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, cex= 1, pch= 15)
 
-plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$observed_field, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed_field, cex= 1, pch= 15)
 
-plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$noise, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$noise, cex= 1, pch= 15)
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
@@ -78,10 +78,10 @@ params_records = samples$params_records
 iter = length(samples$params_records)
 
 
-plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
-plot_pointillist_painting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
+plotPointillistPainting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
+plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
+plotPointillistPainting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
 
  par(mar = rep(2, 4))
  par(mfrow = c(3,3))
