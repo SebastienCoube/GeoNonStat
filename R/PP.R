@@ -278,7 +278,7 @@ varLossPP <- function(x) {
 #' @param PP an object of class `PP`
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param df logical, default to TRUE. Return result as a data.frame ?
-get_basis <- function(PP, vecchia_approx, df = TRUE) {
+getBasis <- function(PP, vecchia_approx, df = TRUE) {
   res <- xPPMultRight(
     X = NULL,
     PP = PP,

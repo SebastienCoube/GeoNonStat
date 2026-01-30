@@ -243,7 +243,7 @@ for(range_col_idx in seq(3)){
   v_right = rnorm(n)
   
   t1 = Sys.time()
-  tatata = derivative_sandwiches_(vecchia = tatato, left_vector = v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 1, sauce_determinant_chef = F)
+  tatata = derivativeSandwiches_(vecchia = tatato, left_vector = v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 1, sauce_determinant_chef = F)
   print(paste("computing derivative sandwich took", Sys.time()-t1, "s"))
   
   print("analytical sandwich")
@@ -256,7 +256,7 @@ for(range_col_idx in seq(3)){
   
   
   t1 = Sys.time()
-  tatata = derivative_sandwiches_(vecchia = tatato, left_vector = v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
+  tatata = derivativeSandwiches_(vecchia = tatato, left_vector = v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
   print(paste("computing derivative sandwich with determinant sauce  took", Sys.time()-t1, "s"))
   print("analytical sandwich")
   print(((
@@ -269,7 +269,7 @@ for(range_col_idx in seq(3)){
   print("=========================")
   
   print("determinant only, analytical")
-  ttt = derivative_sandwiches_(vecchia = tatato, left_vector = 0*v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
+  ttt = derivativeSandwiches_(vecchia = tatato, left_vector = 0*v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
   print(ttt[range_col_idx, range_row_idx])
   print("determinant only, finite diff")
   print(sum(+log(tatato_[1,,1]) - log(tatato[1,,1]))*100000)

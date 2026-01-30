@@ -18,7 +18,7 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 //[[Rcpp::export]]
 
-double matern_thingy_(double mahala_dist, bool smoothness15){
+double maternThingy_(double mahala_dist, bool smoothness15){
   double res;
   if (smoothness15){res = (exp(- mahala_dist) * (1 + mahala_dist));}
   else{res = (exp(- mahala_dist));}
@@ -165,7 +165,7 @@ void vecchia_(
               (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
                 (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
                 (det_inv_hybrid_range[3])) * 
-                matern_thingy_(mahala_dist, smoothness15);
+                maternThingy_(mahala_dist, smoothness15);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
         }
@@ -184,7 +184,7 @@ void vecchia_(
             (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
               (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
               (det_inv_hybrid_range[3])) * 
-              matern_thingy_(mahala_dist, smoothness15);
+              maternThingy_(mahala_dist, smoothness15);
       }
     }
     // isotropic case
@@ -201,7 +201,7 @@ void vecchia_(
           sigma11 (j1-1, j2-1) = 
           sqrt(sqrt(rangesub(0, j1) *    rangesub(0, j2))/ 
           (rangesub(0, j1)*.5 + rangesub(0, j2)*.5)) * 
-          matern_thingy_(mahala_dist, smoothness15);
+          maternThingy_(mahala_dist, smoothness15);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
         }
         sigma11 (j1-1, j1-1) = diag_term;
@@ -211,7 +211,7 @@ void vecchia_(
           sigma12 (j1-1) = 
           sqrt(sqrt(rangesub(0, j1) *    rangesub(0, 0)) / 
           (rangesub(0, j1)*.5 + rangesub(0, 0)*.5)) * 
-          matern_thingy_(mahala_dist, smoothness15);
+          maternThingy_(mahala_dist, smoothness15);
       }
     }
     
@@ -265,7 +265,7 @@ void vecchia_(
                   (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
                     (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
                     (det_inv_hybrid_range[3])) * 
-                    matern_thingy_(mahala_dist, smoothness15);
+                    maternThingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
@@ -284,7 +284,7 @@ void vecchia_(
                 (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
                   (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
                   (det_inv_hybrid_range[3])) * 
-                  matern_thingy_(mahala_dist, smoothness15);
+                  maternThingy_(mahala_dist, smoothness15);
             //filling dcsigma12
             DetInvSym22((rangesub(0, j1) + rangesub((d_idx + 1) * 3 + 0, 0))*.5, 
                         (rangesub(1, j1) + rangesub((d_idx + 1) * 3 + 1, 0))*.5, 
@@ -301,7 +301,7 @@ void vecchia_(
                   (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) - 
                   rangesub((d_idx + 1) * 3 + 2, 0 )*rangesub((d_idx + 1) * 3 + 2, 0 ))) * //determinants
                   (det_inv_hybrid_range[3])) * 
-                  matern_thingy_(mahala_dist, smoothness15);
+                  maternThingy_(mahala_dist, smoothness15);
             
           }
         }
@@ -317,7 +317,7 @@ void vecchia_(
               dsigma11 (j1-1, j2-1) = 
               sqrt(sqrt(rangesub(0, j1) * (1 + diff_term) * rangesub(0, j2)) / 
               (rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5)) * 
-              matern_thingy_(mahala_dist, smoothness15);
+              maternThingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
@@ -327,7 +327,7 @@ void vecchia_(
               dpsigma12 (j1-1) = 
               sqrt(sqrt(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)) / 
               (rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5)) * 
-              matern_thingy_(mahala_dist, smoothness15);
+              maternThingy_(mahala_dist, smoothness15);
               
               //filling dcsigma12
               mahala_dist = sqrt( 
@@ -336,7 +336,7 @@ void vecchia_(
                 dcsigma12 (j1-1) = 
                 sqrt(sqrt(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term)) / 
                 (rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5)) * 
-                matern_thingy_(mahala_dist, smoothness15);
+                maternThingy_(mahala_dist, smoothness15);
                 
           }
         }
@@ -406,7 +406,7 @@ void vecchia_(
 
 //[[Rcpp::depends(RcppArmadillo)]]
 //[[Rcpp::export]]
-arma::mat derivative_sandwiches_
+arma::mat derivativeSandwiches_
 (
     arma::cube vecchia, 
     arma::vec left_vector, 

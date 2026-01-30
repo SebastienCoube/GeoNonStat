@@ -218,7 +218,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       Y = # Jacobian of range field wrt range_beta
         t(
           # natural gradient of obs likelihood wrt range field
-          derivative_sandwiches_(
+          derivativeSandwiches_(
             vecchia = state$stuff$compressed_chol, 
             left_vector = as.vector(
               Matrix::solve(
@@ -324,7 +324,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
         Y = # Jacobian of range field wrt range_beta
           t(
             # natural gradient of obs likelihood wrt range field
-            derivative_sandwiches_(
+            derivativeSandwiches_(
               vecchia = new_compressed_sparse_chol, 
               left_vector = as.vector(
                 Matrix::solve(
@@ -469,7 +469,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       vecchia_approx = vecchia_approx,
       Y = # Jacobian of range field wrt range_beta
         t(# natural gradient of obs likelihood wrt range field
-          derivative_sandwiches_(
+          derivativeSandwiches_(
             vecchia = state$stuff$compressed_chol, # derivative of the (unscaled) NNGP factor
             left_vector = as.vector(state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))), # left vector = whitened latent field
             right_vector = state$params$field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
@@ -579,7 +579,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
         vecchia_approx = vecchia_approx,
         Y = # Jacobian of range field wrt range_beta
           t(# natural gradient of obs likelihood wrt range field
-            derivative_sandwiches_(
+            derivativeSandwiches_(
               vecchia = new_compressed_sparse_chol, # derivative of the (unscaled) NNGP factor
               left_vector = as.vector(new_sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))), # left vector = whitened latent field
               right_vector = state$params$field/exp(.5 * state$params$field_log_var[1,1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
