@@ -198,7 +198,7 @@ ElppdTrain = function(object, burn_in = .1){
   aggregated_records = aggregateRecords(object, burn_in, keep = c("beta", "noise_beta", "field"))
   noise_var = 
     apply(aggregated_records$noise_beta, 1, function(x)
-        as.vector(exp(X_PP_mult_right(
+        as.vector(exp(xPPMultRight(
         X = object$covariates$noise_X$X, PP = object$hierarchical_model$noise$PP,
         vecchia_approx = object$vecchia_approx, Y = x, 
         permutate_PP_to_obs = T

@@ -119,8 +119,8 @@
 #     PP_$idx = c(PP$idx, nrow(PP$unique_reordered_locs)+locs_match)
 #     #### testing PP
 #     ## seed_vector =  rnorm(PP_$n_PP + nrow(PP_$unique_reordered_locs))
-#     ## plot_pointillist_painting(PP_$unique_reordered_locs[PP_$idx,], X_PP_mult_right(PP = PP_, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
-#     ## plot_pointillist_painting(PP$unique_reordered_locs[PP$idx,], X_PP_mult_right(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
+#     ## plotPointillistPainting(PP_$unique_reordered_locs[PP_$idx,], xPPMultRight(PP = PP_, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
+#     ## plotPointillistPainting(PP$unique_reordered_locs[PP$idx,], xPPMultRight(PP = PP, use_PP = T, Y = seed_vector[seq(PP$n_PP)]), cex = .3)
 #   }
 #
 #   # burn in
@@ -164,7 +164,7 @@
 #         )
 #       res$log_range[,,i_predict] =
 #         (
-#           X_PP_mult_right(
+#           xPPMultRight(
 #             X = X_range,
 #             PP = PP_, use_PP = hierarchical_model$range_PP,
 #             locs_idx = c(vecchia_approx$hctam_scol_1, vecchia_approx$n_obs+hctam_scol_1),
@@ -397,7 +397,7 @@
 #         # looping over saved observations
 #         for(i_predict in seq(n_samples))
 #         {
-#           sres[,,i_predict] = X_PP_mult_right(
+#           sres[,,i_predict] = xPPMultRight(
 #             X = as.matrix(rbind(mcmc_nngp_list$data$covariates$noise_X$X, X_noise_pred)),
 #             PP = PP_,
 #             locs_idx = seq(nrow(rbind(mcmc_nngp_list$data$covariates$noise_X$X, X_noise_pred))),

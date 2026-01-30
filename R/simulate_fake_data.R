@@ -395,7 +395,7 @@ createGnsSimulatorParameters <- function(gns_simulator,
 simulateGnsData <- function(gns_simulator,
                             gns_params,
                             num_threads = 5) {
-  log_range_field <- compute_log_range(
+  log_range_field <- computeLogRange(
       range_beta = rbind(
         gns_params$range_X_coeff,
         gns_params$range_PP_coeff
@@ -406,7 +406,7 @@ simulateGnsData <- function(gns_simulator,
     )
   
   
-  log_noise_field <- X_PP_mult_right(
+  log_noise_field <- xPPMultRight(
     X = gns_simulator$covariates$noise_X$X,
     PP = gns_simulator$noise_PP,
     vecchia_approx = gns_simulator$vecchia_approx,
@@ -426,7 +426,7 @@ simulateGnsData <- function(gns_simulator,
     num_threads = max(7, parallel::detectCores()-1), 
     result = compressed_chol
   )
-  sparse_chol <- decompress_chol(
+  sparse_chol <- decompressChol(
     vecchia_approx = gns_simulator$vecchia_approx,
     compressed_sparse_chol = compressed_chol
   )

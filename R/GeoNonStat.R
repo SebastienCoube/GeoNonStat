@@ -84,7 +84,7 @@ createVecchia <- function(observed_locs,
     M <- Matrix::sparseMatrix(i = seq_along(x),
                               j = x,
                               x = 1)
-    return(naive_greedy_coloring(Matrix::t(M) %*% markov_mat %*% M))
+    return(naiveGreedyColoring(Matrix::t(M) %*% markov_mat %*% M))
   })
   
   for (i in seq_len(ncol(locs_partition))) {
@@ -257,7 +257,7 @@ processCovariates <- function(X,
   if (!is.null(PP)) {
     X_ <- cbind(
       res$X,
-      X_PP_mult_right(
+      xPPMultRight(
         PP = PP,
         vecchia_approx = vecchia_approx,
         permutate_PP_to_obs = TRUE,
@@ -296,7 +296,7 @@ processCovariates <- function(X,
   if (!is.null(PP)) {
     X_locs_ <- cbind(
       X_locs_,
-      X_PP_mult_right(
+      xPPMultRight(
         PP = PP,
         vecchia_approx = vecchia_approx,
         permutate_PP_to_obs = FALSE,
@@ -623,7 +623,7 @@ processStates <- function(hm,
   # cholesky factors of precision matrices
   stuff$compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), vecchia_approx$n_locs,  1 + 3*nrow(vecchia_approx$NNarray)))
   vecchia_(
-    log_range = t(compute_log_range(
+    log_range = t(computeLogRange(
       range_beta = params$range_beta,
       vecchia_approx = vecchia_approx,
       range_X = covariates$range_X,
@@ -636,8 +636,8 @@ processStates <- function(hm,
     result = stuff$compressed_chol
   )
   
-  stuff$sparse_chol <- decompress_chol(vecchia_approx, stuff$compressed_chol)
-  # plot_pointillist_painting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
+  stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
+  # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
   
   # Noise variance  and stuff depending on it ##################################
   # parameter format and value
@@ -669,7 +669,7 @@ processStates <- function(hm,
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  stuff$noise_var = as.vector(exp(X_PP_mult_right(
+  stuff$noise_var = as.vector(exp(xPPMultRight(
     X = covariates$noise_X$X, PP = hm$noise$PP,
     vecchia_approx = vecchia_approx, Y = params$noise_beta, 
     permutate_PP_to_obs = T

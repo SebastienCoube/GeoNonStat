@@ -12,10 +12,10 @@
 #' @export
 #' @examples
 #' locs <- cbind(runif(5000), runif(5000))
-#' knots <- generate_knots_from_kmeans(100, locs)
+#' knots <- knotsFromKmeans(100, locs)
 #' plot(locs, col = "grey", pch = 16, cex = 0.5)
 #' points(knots, col = "red", pch = 19)
-generate_knots_from_kmeans <- function(knots_number, locs) {
+knotsFromKmeans <- function(knots_number, locs) {
   n_sample <- min(nrow(locs), 50000)
   if (knots_number > n_sample) {
     stop("50000 knots numer maximum allowed")
@@ -132,7 +132,7 @@ createPP <- function(vecchia_approx,
     message(paste("number of knots set to", knots))
   }
   if (!is.matrix(knots)) {
-    knots <- generate_knots_from_kmeans(knots, vecchia_approx$locs)
+    knots <- knotsFromKmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
   }
   
@@ -204,7 +204,7 @@ createPP <- function(vecchia_approx,
     plot(res, mar_var_loss = TRUE)
   } else {
     # Just to print the diagnostic of var loss
-    varloss <- varLossPercentage.PP(res)
+    varloss <- varLossPP(res)
   }
   
   return(res)
@@ -233,7 +233,7 @@ summary.PP <- function(object, ...) {
     "matern range =",
     object$matern_range
   )
-  varLossPercentage.PP(object)
+  varLossPP(object)
   return(invisible(NULL))
 }
 
@@ -244,8 +244,8 @@ summary.PP <- function(object, ...) {
 #' @examples
 #' vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores = 1)
 #' pepito <- createPP(vecchia, plot = FALSE)
-#' varLossPercentage.PP(pepito)
-varLossPercentage.PP <- function(x) {
+#' varLossPP(pepito)
+varLossPP <- function(x) {
   if (is.null(x$knots | is.null(x$sparse_chol))) {
     stop("x must contains 'knots' and 'sparse_chol'")
   }
@@ -279,7 +279,7 @@ varLossPercentage.PP <- function(x) {
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param df logical, default to TRUE. Return result as a data.frame ?
 get_basis <- function(PP, vecchia_approx, df = TRUE) {
-  res <- X_PP_mult_right(
+  res <- xPPMultRight(
     X = NULL,
     PP = PP,
     vecchia_approx = vecchia_approx,

@@ -27,9 +27,9 @@ plot.PP <- function(x,
   }
   mar_var <- NULL
   if (mar_var_loss) {
-    mar_var <- varLossPercentage.PP(x)
+    mar_var <- varLossPP(x)
   }
-  plot_knots.PP(x = x, mar_var_loss = mar_var)
+  plotKnotsPP(x = x, mar_var_loss = mar_var)
   if (mar_var_loss) {
     hist(mar_var,
       xlab = "percentage of lost variance",
@@ -43,7 +43,7 @@ plot.PP <- function(x,
 
 #' @title Plot the knots and the spatial locations of a PP
 #' @param x an object of class PP, create with `createPP`
-#' @param mar_var_loss optional, the var loss computed by `varLossPercentage.PP`
+#' @param mar_var_loss optional, the var loss computed by `varLossPP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @examples
@@ -51,10 +51,10 @@ plot.PP <- function(x,
 #' observed_locs <- observed_locs[ceiling(nrow(observed_locs) * runif(3000)), ]
 #' vecchia_approx <- createVecchia(observed_locs)
 #' pepito <- createPP(vecchia_approx, plot = FALSE)
-#' plot_knots.PP(pepito)
-plot_knots.PP <- function(x,
-                          mar_var_loss = NULL,
-                          show_knots = TRUE) {
+#' plotKnotsPP(pepito)
+plotKnotsPP <- function(x,
+                        mar_var_loss = NULL,
+                        show_knots = TRUE) {
   # Graphical parameters
   def.par <- par(no.readonly = TRUE)
   omar <- def.par[["mar"]]
@@ -257,7 +257,7 @@ plotEllipses <- function(locs,
 #
 # log_range =
 #   (
-#     X_PP_mult_right(
+#     xPPMultRight(
 #       X = matrix(1, nrow(locs)),
 #       PP = 0, use_PP = F,
 #       locs_idx = NULL,
@@ -274,11 +274,11 @@ plotEllipses <- function(locs,
 # cor_aniso = Matrix::tcrossprod(Matrix::solve(sparse_chol_aniso))[,1]
 # w_iso = as.vector(Matrix::solve(sparse_chol_iso, z))
 # cor_iso = Matrix::tcrossprod(Matrix::solve(sparse_chol_iso))[,1]
-# plot_pointillist_painting(locs, log_range[,1])
-# plot_pointillist_painting(locs, w_aniso)
-# plot_pointillist_painting(locs, w_iso)
-# plot_pointillist_painting(locs, cor_aniso)
-# plot_pointillist_painting(locs, cor_iso)
+# plotPointillistPainting(locs, log_range[,1])
+# plotPointillistPainting(locs, w_aniso)
+# plotPointillistPainting(locs, w_iso)
+# plotPointillistPainting(locs, cor_aniso)
+# plotPointillistPainting(locs, cor_iso)
 #
 # plot(locs, pch = 16, col = 1+(cor_iso < .1), cex=  .5, main  = "cor = .1 ellipse for anisotropic")
 # plot(locs, pch = 16, col = 1+(cor_aniso < .1), cex=  .5)
@@ -367,8 +367,8 @@ getColorsCat <- function(n, alpha = FALSE) {
 #'
 #' @examples
 #' locs <- matrix(rnorm(2000), ncol = 2)
-#' plot_pointillist_painting(locs = locs, field = rnorm(1000))
-plot_pointillist_painting <- function(locs,
+#' plotPointillistPainting(locs = locs, field = rnorm(1000))
+plotPointillistPainting <- function(locs,
                                       field,
                                       add = FALSE,
                                       alpha = TRUE,

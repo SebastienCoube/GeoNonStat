@@ -80,11 +80,11 @@ symmat <- function(coords) {
 #' i <- c(rep(1, n), 2:n) # 1re ligne + 1re colonne sauf la 1re case
 #' j <- c(1:n, rep(1, n - 1))
 #' M <- Matrix::sparseMatrix(i = i, j = j, x = 1, dims = c(n, n))
-#' naive_greedy_coloring(M)
+#' naiveGreedyColoring(M)
 #' M[2, 3] <- 1
 #' M[3, 2] <- 1
-#' naive_greedy_coloring(M)
-naive_greedy_coloring <- function(M) {
+#' naiveGreedyColoring(M)
+naiveGreedyColoring <- function(M) {
   # number of nodes
   if (!Matrix::isSymmetric(M, checkDN = FALSE)) {
     stop("M must be symmetric")
@@ -114,7 +114,7 @@ naive_greedy_coloring <- function(M) {
 #' @returns a sparse triangular matrix
 #' @export
 #' @keywords internal
-decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
+decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
   # Matrix::sparseMatrix(
   #   i = vecchia_approx$sparse_chol_i,
   #   p = vecchia_approx$sparse_chol_p,
@@ -201,7 +201,7 @@ decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
 #   }
 #   
 #   log_range <- as.matrix(
-#     X_PP_mult_right(
+#     xPPMultRight(
 #       vecchia_approx = vecchia_approx,
 #       X = range_X$X_locs,
 #       PP = PP,
@@ -219,7 +219,7 @@ decompress_chol <- function(vecchia_approx, compressed_sparse_chol) {
 #   )
 #   return(res)
 # }
-compute_log_range <- function(range_beta,
+computeLogRange <- function(range_beta,
                                 vecchia_approx,
                                 range_X,
                                 PP = NULL) {
@@ -232,7 +232,7 @@ compute_log_range <- function(range_beta,
   }
   
   log_range <- as.matrix(
-    X_PP_mult_right(
+    xPPMultRight(
       vecchia_approx = vecchia_approx,
       X = range_X$X_locs,
       PP = PP,
@@ -308,14 +308,14 @@ compute_log_range <- function(range_beta,
 #' @keywords internal
 #'
 #' @examples
-#' beta_prior_log_dens(
+#' betaPriorLogDens(
 #'   beta = matrix(rnorm(300), 100, ncol = 3),
 #'   n_PP = 90,
 #'   beta0_mean = -5,
 #'   beta0_var = 2,
 #'   log_scale = c(-3, -2)
 #' )
-beta_prior_log_dens <- function(beta,
+betaPriorLogDens <- function(beta,
                                 n_PP,
                                 beta0_mean,
                                 beta0_var,
@@ -356,14 +356,14 @@ beta_prior_log_dens <- function(beta,
 #' @export
 #' @keywords internal
 #' @examples
-#' beta_prior_log_dens_derivative(
+#' betaPriorLogDensDerivative(
 #'   beta = matrix(rnorm(300), 100, 3),
 #'   n_PP = 90,
 #'   beta0_mean = -5,
 #'   beta0_var = 2,
 #'   log_scale = c(-3, -2)
 #' )
-beta_prior_log_dens_derivative <- function(beta,
+betaPriorLogDensDerivative <- function(beta,
                                            n_PP,
                                            beta0_mean,
                                            beta0_var,
@@ -413,35 +413,35 @@ beta_prior_log_dens_derivative <- function(beta,
 #' X <- cbind(1, vecchia_approx$locs, rnorm(nrow(vecchia_approx$locs)))
 #'
 #' # multiplying X alone
-#' res1 <- X_PP_mult_right(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
+#' res1 <- xPPMultRight(X = X, Y = covariate_coefficients, vecchia_approx = vecchia_approx)
 #' # multiplying PP alone
-#' res2 <- X_PP_mult_right(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
+#' res2 <- xPPMultRight(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 #' # multiplying PP and matrix of covariate, one obs for each location
 #' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-#' res3 <- X_PP_mult_right(PP = PP, X = X_by_loc,
+#' res3 <- xPPMultRight(PP = PP, X = X_by_loc,
 #'                         Y = c(covariate_coefficients, knots_coeffs),
 #'                         vecchia_approx = vecchia_approx)
-#' plot_pointillist_painting(vecchia_approx$locs, res3, main = "PP + covariates,
+#' plotPointillistPainting(vecchia_approx$locs, res3, main = "PP + covariates,
 #'                               \n one covariate for each location", pch=15)
 #'
 #' # TODO Nun functional example
 #' # # multiplying PP and matrix of covariates with an index
 #' # X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-#' # res4 <- X_PP_mult_right(X = X_by_obs, PP = PP,
+#' # res4 <- xPPMultRight(X = X_by_obs, PP = PP,
 #' #                        Y = c(covariate_coefficients, knots_coeffs),
 #' #                        vecchia_approx = vecchia_approx)
-#' # plot_pointillist_painting(vecchia_approx$observed_locs,
+#' # plotPointillistPainting(vecchia_approx$observed_locs,
 #' #                           res4,
 #' #                           main = "PP + covariates,\n  one covariate for each observation")
 #'
 #' # multiplying
 #' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-#' res5 <- X_PP_mult_right(X = NULL, PP = PP,
+#' res5 <- xPPMultRight(X = NULL, PP = PP,
 #'                        Y = diag(1, PP$n_knots),
 #'                        vecchia_approx = vecchia_approx,
 #'                        permutate_PP_to_obs = TRUE
 #'                        )
-X_PP_mult_right <- function(X = NULL,
+xPPMultRight <- function(X = NULL,
                             PP = NULL,
                             vecchia_approx,
                             Y,
@@ -522,23 +522,23 @@ X_PP_mult_right <- function(X = NULL,
 #' Y <- matrix(rnorm(30 * nrow(X)), nrow(X))
 #'
 #' # just surrogate of crossprod
-#' res1 <- X_PP_crossprod(X = X, Y = Y)
+#' res1 <- xPPCrossprod(X = X, Y = Y)
 #' identical(crossprod(X, Y), res1)
 #'
 #' # crossprod + PP with observations of X on the locs
-#' res2 <- X_PP_crossprod(
+#' res2 <- xPPCrossprod(
 #'   X = X, PP = PP, Y = Y,
 #'   vecchia_approx = vecchia_approx,
 #'   permutate_PP_to_obs = FALSE
 #' )
 #'
 #' # crossprod + PP with observations of X on the obs
-#' res3 <- X_PP_crossprod(
+#' res3 <- xPPCrossprod(
 #'   X = X, PP = PP, Y = Y,
 #'   vecchia_approx = vecchia_approx,
 #'   permutate_PP_to_obs = TRUE
 #' )
-X_PP_crossprod <- function(X,
+xPPCrossprod <- function(X,
                            PP = NULL,
                            Y,
                            vecchia_approx = NULL,

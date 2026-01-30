@@ -125,7 +125,7 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start){
       new_field = state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1,1]))
       current_U =
         (
-          - beta_prior_log_dens(beta = as.matrix(state$params$field_log_var[1,1]), n_PP = 0,log_scale = 0,
+          - betaPriorLogDens(beta = as.matrix(state$params$field_log_var[1,1]), n_PP = 0,log_scale = 0,
                                 beta0_mean = scale$beta0_mean, 
                                 beta0_var =  scale$beta0_sd^2) # normal prior
           + .5 * sum((state$stuff$lm_residuals -  state$params$field[vecchia_approx$locs_match])^2/state$stuff$noise_var) # observation ll
@@ -133,7 +133,7 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start){
       
       proposed_U =
         (
-          - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+          - betaPriorLogDens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
                                 beta0_mean = scale$beta0_mean, 
                                 beta0_var =  scale$beta0_sd^2) # normal prior
           + .5 * sum((state$stuff$lm_residuals -  new_field[vecchia_approx$locs_match])^2/state$stuff$noise_var) # observation ll
@@ -154,7 +154,7 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start){
       new_field_log_var = state$params$field_log_var[1,1] + rnorm(1) * exp(state$ker_var$field_log_var_sufficient)
       current_U =
         (
-          - beta_prior_log_dens(beta = as.matrix(state$params$field_log_var[1,1]), n_PP = 0,log_scale = 0,
+          - betaPriorLogDens(beta = as.matrix(state$params$field_log_var[1,1]), n_PP = 0,log_scale = 0,
                                 beta0_mean = scale$beta0_mean, 
                                 beta0_var =  scale$beta0_sd^2) # normal prior
           + .5 * fieldT_cholT_chol_field/exp(state$params$field_log_var[1,1])  # observation ll
@@ -163,7 +163,7 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start){
       
       proposed_U =
         (
-          - beta_prior_log_dens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
+          - betaPriorLogDens(beta = as.matrix(new_field_log_var), n_PP = 0,log_scale = 0,
                                 beta0_mean = scale$beta0_mean, 
                                 beta0_var =  scale$beta0_sd^2) # normal prior
           + .5 * fieldT_cholT_chol_field/exp(new_field_log_var)  # observation ll
@@ -207,12 +207,12 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   # Make a half step for momentum at the beginning
   dens_grad = 0*q
   dens_grad[] =  crossprod(range_X$L, (  
-    -beta_prior_log_dens_derivative(
+    -betaPriorLogDensDerivative(
       beta = state$params$range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
       beta0_mean = hierarchical_model$range$beta0_mean,
       beta0_var =  hierarchical_model$range$beta0_sd^2, 
       state$params$range_log_scale) # normal prior
-    + X_PP_crossprod(
+    + xPPCrossprod(
       X = range_X$X_locs,  vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE,
       PP = hierarchical_model$range$PP,
       Y = # Jacobian of range field wrt range_beta
@@ -248,7 +248,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   #        range_beta_ = 0*state$params$range_beta
   #        range_beta_[] = range_X$L %*% q_
   #        vecchia_(
-  #          log_range = t(compute_log_range(
+  #          log_range = t(computeLogRange(
   #            range_beta = range_beta_, 
   #            PP = hierarchical_model$range$PP,
   #            vecchia_approx = vecchia_approx, 
@@ -259,7 +259,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   #          compute_derivative = F, num_threads = num_threads, 
   #          result = gradient_test_chol
   #        )
-  #        sparse_chol_ = decompress_chol(
+  #        sparse_chol_ = decompressChol(
   #          vecchia_approx = vecchia_approx, 
   #          compressed_sparse_chol = gradient_test_chol
   #        ) 
@@ -267,12 +267,12 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   #        
   #     derivative_test[i,j] = 
   #        (1/ 0.0000001)*(
-  #          beta_prior_log_dens(beta = state$params$range_beta, 
+  #          betaPriorLogDens(beta = state$params$range_beta, 
   #                              n_PP = hierarchical_model$range$PP$n_knots, 
   #                              beta0_mean = hierarchical_model$range$beta0_mean, 
   #                              beta0_var =  hierarchical_model$range$beta0_sd^2, 
   #                              state$params$range_log_scale)
-  #          - beta_prior_log_dens(beta = range_beta_, 
+  #          - betaPriorLogDens(beta = range_beta_, 
   #                                n_PP = hierarchical_model$range$PP$n_knots, 
   #                                beta0_mean = hierarchical_model$range$beta0_mean, 
   #                                beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -295,7 +295,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     q = q + p %*% hmc_stepsize
     new_range_beta = state$params$range_beta
     new_range_beta[] = range_X$L %*% q
-    log_range = compute_log_range(
+    log_range = computeLogRange(
       range_beta = new_range_beta, 
       PP = hierarchical_model$range$PP,
       vecchia_approx = vecchia_approx, 
@@ -307,17 +307,17 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       smoothness = hierarchical_model$matern_smoothness, 
       compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
     )
-    new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    new_sparse_chol = decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     new_field = exp(.5 * state$params$field_log_var[1,1]) * 
       as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var[1,1]))))
     # Make a half step for momentum at the end.
     dens_grad[] =   crossprod(range_X$L, (  
-      -beta_prior_log_dens_derivative(
+      -betaPriorLogDensDerivative(
         beta = new_range_beta, n_PP = hierarchical_model$range$PP$n_knots, 
         beta0_mean = hierarchical_model$range$beta0_mean,
         beta0_var =  hierarchical_model$range$beta0_sd^2, 
         state$params$range_log_scale) # normal prior
-      + X_PP_crossprod(
+      + xPPCrossprod(
         X = range_X$X_locs, vecchia_approx = vecchia_approx, 
         permutate_PP_to_obs = FALSE,
         PP = hierarchical_model$range$PP,
@@ -353,7 +353,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     #        range_beta_ = 0*state$params$range_beta
     #        range_beta_[] = range_X$L %*% q_
     #        vecchia_(
-    #          log_range = t(compute_log_range(
+    #          log_range = t(computeLogRange(
     #            range_beta = range_beta_, 
     #            PP = hierarchical_model$range$PP,
     #            vecchia_approx = vecchia_approx, 
@@ -364,7 +364,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     #          compute_derivative = TRUE, num_threads = num_threads, 
     #          result = gradient_test_chol
     #        )
-    #        sparse_chol_ = decompress_chol(
+    #        sparse_chol_ = decompressChol(
     #          vecchia_approx = vecchia_approx, 
     #          compressed_sparse_chol = gradient_test_chol
     #        ) 
@@ -372,12 +372,12 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     #        
     #     derivative_test[i,j] = 
     #        (1/ 0.0000001)*(
-    #          beta_prior_log_dens(beta = new_range_beta, 
+    #          betaPriorLogDens(beta = new_range_beta, 
     #                              n_PP = hierarchical_model$range$PP$n_knots, 
     #                              beta0_mean = hierarchical_model$range$beta0_mean, 
     #                              beta0_var =  hierarchical_model$range$beta0_sd^2, 
     #                              state$params$range_log_scale)
-    #          - beta_prior_log_dens(beta = range_beta_, 
+    #          - betaPriorLogDens(beta = range_beta_, 
     #                                n_PP = hierarchical_model$range$PP$n_knots, 
     #                                beta0_mean = hierarchical_model$range$beta0_mean, 
     #                                beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -402,7 +402,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   
   current_U =
     (
-      - beta_prior_log_dens(beta = state$params$range_beta, 
+      - betaPriorLogDens(beta = state$params$range_beta, 
                             n_PP = hierarchical_model$range$PP$n_knots, 
                             beta0_mean = hierarchical_model$range$beta0_mean, 
                             beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -411,7 +411,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     )
   proposed_U =
     (
-      - beta_prior_log_dens(beta = new_range_beta, 
+      - betaPriorLogDens(beta = new_range_beta, 
                             n_PP = hierarchical_model$range$PP$n_knots, 
                             beta0_mean = hierarchical_model$range$beta0_mean, 
                             beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -456,14 +456,14 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   # Make a half step for momentum at the beginning
   dens_grad = 0*q
   dens_grad[] =  crossprod(range_X$L, (
-    - beta_prior_log_dens_derivative(
+    - betaPriorLogDensDerivative(
       beta = state$params$range_beta, 
       n_PP = hierarchical_model$range$PP$n_knots, 
       beta0_mean = hierarchical_model$range$beta0_mean, 
       beta0_var =  hierarchical_model$range$beta0_sd^2, 
       log_scale = state$params$range_log_scale) # normal prior
     # normal prior derivative                
-    + X_PP_crossprod(
+    + xPPCrossprod(
       X = range_X$X_locs, PP = hierarchical_model$range$PP,
       permutate_PP_to_obs = FALSE, 
       vecchia_approx = vecchia_approx,
@@ -495,7 +495,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   #     range_beta_ = 0*state$params$range_beta
   #     range_beta_[] = range_X$L %*% q_
   #     vecchia_(
-  #     log_range = t(compute_log_range(
+  #     log_range = t(computeLogRange(
   #       range_beta = range_beta_, 
   #       PP = hierarchical_model$range$PP,
   #       vecchia_approx = vecchia_approx, 
@@ -506,18 +506,18 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   #     compute_derivative = F, num_threads = num_threads, 
   #     result = gradient_test_chol
   #   )
-  #   sparse_chol_ = decompress_chol(
+  #   sparse_chol_ = decompressChol(
   #     vecchia_approx = vecchia_approx, 
   #     compressed_sparse_chol = gradient_test_chol
   #   ) 
   #     derivative_test[i,j] = 
   #       1000000*(
-  #         beta_prior_log_dens(beta = state$params$range_beta, 
+  #         betaPriorLogDens(beta = state$params$range_beta, 
   #                               n_PP = hierarchical_model$range$PP$n_knots, 
   #                               beta0_mean = hierarchical_model$range$beta0_mean, 
   #                               beta0_var =  hierarchical_model$range$beta0_sd^2, 
   #                               state$params$range_log_scale) - 
-  #          beta_prior_log_dens(beta = range_beta_, 
+  #          betaPriorLogDens(beta = range_beta_, 
   #                               n_PP = hierarchical_model$range$PP$n_knots, 
   #                               beta0_mean = hierarchical_model$range$beta0_mean, 
   #                               beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -549,7 +549,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     q = q + p %*% hmc_stepsize
     new_range_beta = state$params$range_beta      
     new_range_beta[] = range_X$L %*% q
-    log_range = compute_log_range(
+    log_range = computeLogRange(
       range_beta = new_range_beta, 
       PP = hierarchical_model$range$PP,
       vecchia_approx = vecchia_approx, 
@@ -561,19 +561,19 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       smoothness = hierarchical_model$matern_smoothness, 
       compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
     )
-    new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    new_sparse_chol = decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     
     # Make a half step for momentum at the end.
     dens_grad = 0*q
     dens_grad[] = crossprod(range_X$L, (
-      - beta_prior_log_dens_derivative(
+      - betaPriorLogDensDerivative(
         beta = new_range_beta, 
         n_PP = hierarchical_model$range$PP$n_knots, 
         beta0_mean = hierarchical_model$range$beta0_mean, 
         beta0_var =  hierarchical_model$range$beta0_sd^2, 
         log_scale = state$params$range_log_scale) # normal prior
       # normal prior derivative                
-      + X_PP_crossprod(
+      + xPPCrossprod(
         X = range_X$X_locs, PP = hierarchical_model$range$PP,
         permutate_PP_to_obs = FALSE, 
         vecchia_approx = vecchia_approx,
@@ -604,7 +604,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     ##     range_beta_ = 0*state$params$range_beta
     ##     range_beta_[] = range_X$L %*% q_
     ##     vecchia_(
-    ##       log_range = t(compute_log_range(
+    ##       log_range = t(computeLogRange(
     ##         range_beta = range_beta_, 
     ##         PP = hierarchical_model$range$PP,
     ##         vecchia_approx = vecchia_approx, 
@@ -615,18 +615,18 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     ##       compute_derivative = F, num_threads = num_threads, 
     ##       result = gradient_test_chol
     ##     )
-    ##     sparse_chol_ = decompress_chol(
+    ##     sparse_chol_ = decompressChol(
     ##       vecchia_approx = vecchia_approx, 
     ##       compressed_sparse_chol = gradient_test_chol
     ##     ) 
     ##     derivative_test[i,j] = 
     ##       1000000*(
-    ##         beta_prior_log_dens(beta = new_range_beta, 
+    ##         betaPriorLogDens(beta = new_range_beta, 
     ##                             n_PP = hierarchical_model$range$PP$n_knots, 
     ##                             beta0_mean = hierarchical_model$range$beta0_mean, 
     ##                             beta0_var =  hierarchical_model$range$beta0_sd^2, 
     ##                             state$params$range_log_scale) - 
-    ##           beta_prior_log_dens(beta = range_beta_, 
+    ##           betaPriorLogDens(beta = range_beta_, 
     ##                               n_PP = hierarchical_model$range$PP$n_knots, 
     ##                               beta0_mean = hierarchical_model$range$beta0_mean, 
     ##                               beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -658,7 +658,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
   current_K = sum (state$momenta$range_beta_sufficient ^2) / 2
   proposed_K = sum(p^2) / 2
   current_U = (
-    - beta_prior_log_dens(beta = state$params$range_beta, 
+    - betaPriorLogDens(beta = state$params$range_beta, 
                           n_PP = hierarchical_model$range$PP$n_knots, 
                           beta0_mean = hierarchical_model$range$beta0_mean, 
                           beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -668,7 +668,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     - sum(log(Matrix::diag(state$stuff$sparse_chol)))
   )
   proposed_U = (
-    - beta_prior_log_dens(beta = new_range_beta, 
+    - betaPriorLogDens(beta = new_range_beta, 
                           n_PP = hierarchical_model$range$PP$n_knots, 
                           beta0_mean = hierarchical_model$range$beta0_mean, 
                           beta0_var =  hierarchical_model$range$beta0_sd^2, 
@@ -707,12 +707,12 @@ UpdateVarPPSuff = function(hm4params, beta4params, current_range_log_scale){
     q = current_range_log_scale + rnorm(length(current_range_log_scale), 0, .05)
     if(all(inBounds(hm4params$log_scale_bounds, q)) &
        ( 
-         + beta_prior_log_dens(
+         + betaPriorLogDens(
            beta = beta4params, n_PP = hm4params$PP$n_knots, 
            beta0_mean = hm4params$beta0_mean,
            beta0_var =  hm4params$beta0_sd^2, 
            log_scale = q)
-         - beta_prior_log_dens(
+         - betaPriorLogDens(
            beta = beta4params, n_PP = hm4params$PP$n_knots, 
            beta0_mean = hm4params$beta0_mean,
            beta0_var =  hm4params$beta0_sd^2, 
@@ -753,7 +753,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
         new_range_beta[-seq_len(range_X$n_regressors),] %*% 
         diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
         diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
-      log_range = compute_log_range(
+      log_range = computeLogRange(
         range_beta = new_range_beta, 
         PP = hierarchical_model$range$PP,
         vecchia_approx = vecchia_approx, 
@@ -765,7 +765,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
         smoothness = hierarchical_model$matern_smoothness, 
         compute_derivative = FALSE, num_threads = num_threads, result = new_compressed_sparse_chol
       )
-      new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+      new_sparse_chol = decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     
     current_U =  PotSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
     proposed_U = PotSuffRangeLogScale(sparse_chol = new_sparse_chol,         field = state$params$field, field_log_var = state$params$field_log_var)
@@ -807,7 +807,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       new_range_beta[-seq_len(range_X$n_regressors),] %*% 
       diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
       diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
-    log_range = compute_log_range(
+    log_range = computeLogRange(
       range_beta = new_range_beta, 
       PP = hierarchical_model$range$PP,
       vecchia_approx = vecchia_approx, 
@@ -819,7 +819,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       smoothness = hierarchical_model$matern_smoothness, 
       compute_derivative = FALSE, num_threads = num_threads, result = new_compressed_sparse_chol
     )
-    new_sparse_chol = decompress_chol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    new_sparse_chol = decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
     new_field = as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
     
     current_U = PotAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
@@ -860,12 +860,12 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
   state$momenta$noise_beta = renewMomentum(state$momenta$noise_beta)
   p = state$momenta$noise_beta
   dens_grad = (
-    - beta_prior_log_dens_derivative(
+    - betaPriorLogDensDerivative(
       beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
       beta0_mean = noise$beta0_mean,
       beta0_var =  noise$beta0_sd^2, 
       log_scale = state$params$noise_log_scale) # normal prior
-    + X_PP_crossprod(
+    + xPPCrossprod(
       X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE, 
       Y = 
         (
@@ -882,20 +882,20 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
     # Make a full step for the position
     q = q + exp_noise_mala * p
     new_noise_beta = noise_X$L %*% q
-    new_noise_var = as.vector(exp(X_PP_mult_right(
+    new_noise_var = as.vector(exp(xPPMultRight(
       X = noise_X$X, PP = noise$PP,
       vecchia_approx = vecchia_approx, Y = new_noise_beta, 
       permutate_PP_to_obs = TRUE
     )))
     # Make a half step for momentum at the end
     dens_grad = (
-      - beta_prior_log_dens_derivative(
+      - betaPriorLogDensDerivative(
         beta = new_noise_beta, n_PP = noise$PP$n_knots, 
         beta0_mean = noise$beta0_mean,
         beta0_var =  noise$beta0_sd^2, 
         log_scale = state$params$noise_log_scale
       ) # normal prior
-      + X_PP_crossprod(
+      + xPPCrossprod(
         X = noise_X$X, 
         noise$PP, 
         vecchia_approx = vecchia_approx, 
@@ -910,7 +910,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
   
   # Evaluate potential and kinetic energies at start and end of trajectory
   current_U = (
-    - beta_prior_log_dens(
+    - betaPriorLogDens(
       beta = state$params$noise_beta, 
       n_PP = noise$PP$n_knots, 
       beta0_mean = noise$beta0_mean,
@@ -921,7 +921,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
   )
   current_K = sum (state$momenta$noise_beta ^2) / 2
   proposed_U = (
-    - beta_prior_log_dens(beta = new_noise_beta, 
+    - betaPriorLogDens(beta = new_noise_beta, 
                           n_PP = noise$PP$n_knots, 
                           beta0_mean = noise$beta0_mean,
                           beta0_var =  noise$beta0_sd^2, 
@@ -954,7 +954,7 @@ updateNoiseLogScale <- function(state, noise, noise_X, vecchia_approx, squared_r
       c(exp((new_noise_log_scale - state$params$noise_log_scale)/2))
     new_noise_var = as.vector(
       exp(
-        X_PP_mult_right(
+        xPPMultRight(
           X = noise_X$X, 
           PP = noise$PP,
           vecchia_approx = vecchia_approx, 
@@ -991,11 +991,11 @@ updateNoiseLogScale <- function(state, noise, noise_X, vecchia_approx, squared_r
     new_noise_log_scale = state$params$noise_log_scale + rnorm(1, 0, .1)
     if(inBounds(noise$log_scale_bounds, new_noise_log_scale)) {
       if(
-        + beta_prior_log_dens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
+        + betaPriorLogDens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
                               beta0_mean = noise$beta0_mean,
                               beta0_var =  noise$beta0_sd^2, 
                               log_scale = new_noise_log_scale) - 
-        beta_prior_log_dens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
+        betaPriorLogDens(beta = state$params$noise_beta, n_PP = noise$PP$n_knots, 
                             beta0_mean = noise$beta0_mean,
                             beta0_var =  noise$beta0_sd^2, 
                             log_scale = state$params$noise_log_scale)
