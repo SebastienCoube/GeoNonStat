@@ -381,8 +381,8 @@ betaPriorLogDensDerivative <- function(beta,
 #' res3 <- xPPMultRight(PP = PP, X = X_by_loc,
 #'                         Y = c(covariate_coefficients, knots_coeffs),
 #'                         vecchia_approx = vecchia_approx)
-#' plotPointillistPainting(vecchia_approx$locs, res3, main = "PP + covariates,
-#'                               \n one covariate for each location", pch=15)
+#' plotPointillistPainting(vecchia_approx$locs, res3, 
+#'                         main = "PP + covariates,\n one covariate for each location", pch=15)
 #'
 #' # TODO Nun functional example
 #' # # multiplying PP and matrix of covariates with an index

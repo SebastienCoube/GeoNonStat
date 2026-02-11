@@ -397,7 +397,7 @@ plotPointillistPainting <- function(locs,
   if (add) {
     do.call("points", c(list(x=locs), args))
   } else {
-    par(mar=c(2, 2, 2, 0))
+    par(mar=c(2, 2, 4, 0))
     do.call("plot", c(list(x=locs), args))
   }
   
@@ -421,7 +421,7 @@ plotPointillistPainting <- function(locs,
 pointillistColorscale <- function(field, scalename = "") {
   origmar <- par("mar")
   origlwd <- par("lwd")
-  par(mar = c(1, 0, 0, 0))
+  par(mar = c(2,0, 4, 0))
   par(lwd = 0.5)
   field <- field[!is.na(field)]
   if (length(field) == 0) {
@@ -450,7 +450,7 @@ pointillistColorscale <- function(field, scalename = "") {
     x = -0.01,
     adj = c(0.95, 1),
     # format(signif(values), digits=4),
-    round(values, 4),
+    round(values, 3),
     cex=0.8
   )
   par(mar = origmar, lwd = origlwd)
