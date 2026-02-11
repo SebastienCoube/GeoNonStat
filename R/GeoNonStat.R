@@ -24,6 +24,7 @@
 #'   \item{\code{locs_partition}}{locs_partition}
 #' }
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' set.seed(100)
@@ -168,6 +169,8 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' (should be TRUE to range_X and scale_X)
 #'
 #' @returns a list
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' \dontrun{
@@ -329,6 +332,8 @@ processCovariates <- function(X,
 #' @param PP a PP object, as given by create_PP
 #' @param log_scale_bounds a numeric vector of size 2 indicating the lower and upper PP log-variance bounds
 #' @param parameter_name a character string indicating the number of the parameter, used for prints
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
@@ -393,6 +398,9 @@ processPPPprior <- function(PP = NULL,
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #'
 #' @returns a list
+#' @export
+#' @keywords internal
+#' 
 #' @examples
 #' nobs <- 10000
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
@@ -482,6 +490,9 @@ processHierarchicalModel <- function(vecchia_approx,
 #' can be used in both stationary and nonstationary cases respectively
 #' as a random walk Metropolis or MALA step size have an ancillary and
 #' a sufficient version when applicable range description
+#' @export
+#' @keywords internal
+#' 
 #' @examples
 #' nobs <- 10000
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
@@ -621,7 +632,9 @@ processStates <- function(hm,
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   # cholesky factors of precision matrices
-  stuff$compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), vecchia_approx$n_locs,  1 + 3*nrow(vecchia_approx$NNarray)))
+  stuff$compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), 
+                                            vecchia_approx$n_locs,  
+                                            1 + (1 + 2*hm$anisotropic)*nrow(vecchia_approx$NNarray)))
   vecchia_(
     log_range = t(computeLogRange(
       range_beta = params$range_beta,
@@ -728,19 +741,32 @@ processStates <- function(hm,
 #' observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
 #' observed_field <- rnorm(nobs)
 #' vecchia_approx <- createVecchia(observed_locs, ncores = 1)
-#' myPP <- createPP(
+#' noise_PP <- createPP(
 #'   vecchia_approx = vecchia_approx,
 #'   matern_range = .1,
-#'   knots = 600
+#'   knots = 50,
+#'   plot=FALSE
 #' )
-#' noise_PP <- myPP
 #' noise_log_scale_bounds <- c(-8, 3)
 #'
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
 #' range_X <- as.data.frame(observed_locs)
 #' noise_X <- X
 #'
-#'
+#' myobj <- GeoNonStat(
+#'   vecchia_approx = vecchia_approx,
+#'   observed_field = observed_field, # spatial locations
+#'   X = X, # Response variable
+#'   matern_smoothness = 1.5, # Matern smoothness
+#'   anisotropic = FALSE,
+#'   n_chains = 3,
+#'   noise_X = X, 
+#'   noise_PP = noise_PP, 
+#'   noise_log_scale_bounds = noise_log_scale_bounds,
+#'   range_X = range_X,
+#'   range_PP = NULL,
+#'   seed = 1
+#' )
 #' myobj <- GeoNonStat(
 #'   vecchia_approx = vecchia_approx,
 #'   observed_field = observed_field, # spatial locations
@@ -748,8 +774,10 @@ processStates <- function(hm,
 #'   # Covariates per observation
 #'   matern_smoothness = 1.5, # Matern smoothness
 #'   anisotropic = FALSE,
-#'   n_chains = 5,
-#'   noise_X = noise_X, noise_PP = noise_PP, noise_log_scale_bounds = NULL,
+#'   n_chains = 3,
+#'   noise_X = noise_X, 
+#'   noise_PP = noise_PP, 
+#'   noise_log_scale_bounds = noise_log_scale_bounds,
 #'   range_X = range_X,
 #'   seed = 1
 #' )
@@ -897,7 +925,7 @@ print.GeoNonStat <- function(x, ...) {
 #' summary of a part of a GeoNonStat object
 #'
 #' @param partobject object to summarize
-detailed_summary <- function(partobject) {
+detailedSummary <- function(partobject) {
   sumdata <- summary(partobject)
   return(
     cbind(
