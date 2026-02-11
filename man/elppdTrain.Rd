@@ -7,11 +7,11 @@
 elppdTrain(object, burn_in = 0.1)
 }
 \arguments{
+\item{object}{a GeoNonStat object}
+
 \item{burn_in}{numeric, value, between 0 and 1. Gives the percentage of 
 first records that should be removed If burn_in = 0.1 : the first 10% of 
 records will be removed from the result.}
-
-\item{objecta}{GeoNonStat object}
 }
 \value{
 a list

@@ -20,11 +20,14 @@ Imports:
     ellipse, 
     BH,
     methods,
-    scales,
     coda,
     FNN,
+    utils,
+    graphics,
+    methods,
     future,
-    future.apply
+    future.apply,
+    parallelly
 LinkingTo: 
     Rcpp, 
     RcppArmadillo

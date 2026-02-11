@@ -214,7 +214,7 @@ elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_fie
 
 #' Compute the log-dens of the observations
 #'
-#' @param objecta GeoNonStat object 
+#' @param object a GeoNonStat object 
 #' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
 #' first records that should be removed If burn_in = 0.1 : the first 10% of 
 #' records will be removed from the result.

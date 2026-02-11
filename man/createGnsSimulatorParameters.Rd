@@ -59,7 +59,7 @@ gns_simulator = createGnsSimulator(
  X = X,
  noise_X = X, noise_PP = PP_noise,
  range_X = NULL,range_PP = PP_range,
- anisotropic = T
+ anisotropic = TRUE
 )
 gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
 }

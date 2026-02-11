@@ -2,25 +2,20 @@
 % Please edit documentation in R/MCMCHelpers.R
 \name{initStateParams}
 \alias{initStateParams}
-\title{Title}
+\title{Initiate a NA vector of matrix of the same size as the param given}
 \usage{
 initStateParams(stateParams)
 }
 \arguments{
-\item{nlocs}{numeric, number of locations}
-
-\item{nvars}{numeric, number of explicatives variables}
-
-\item{nppr}{numeric, number of PP in PP range}
-
-\item{nppn}{numeric, number of PP in PP noise}
+\item{stateParams}{a list of vector or a matrix}
 }
 \value{
-a list
+a list of vector or a matrix
 }
 \description{
-Title
+Initiate a NA vector of matrix of the same size as the param given
 }
 \examples{
-# TODO
+initStateParams(list(rnorm(20),
+                matrix(rnorm(20), ncol=4)))
 }

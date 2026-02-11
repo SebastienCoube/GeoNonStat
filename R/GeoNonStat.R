@@ -916,9 +916,9 @@ GeoNonStat <- function(vecchia_approx,
 #' @method print GeoNonStat
 print.GeoNonStat <- function(x, ...) {
   cat("Object of class 'GeoNonStat'\n")
-  print(paste(length(x$data$observed_field), "observed fields"))
-  print(paste(nrow(x$data$observed_locs), "observed locations"))
-  print(paste("Currently", length(x$states$params$beta), "states"))
+  print(paste(length(x$observed_field), "observed fields"))
+  print(paste(nrow(x$vecchia_approx$observed_locs), "observed locations"))
+  print(paste("Currently", length(x$records[[1]]), "state(s) including starting point"))
 }
 
 

@@ -95,7 +95,7 @@ runGeoNonStatMcmc = function(
 #'
 #' @param object an object of class `GeoNonStat`
 #' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
-#' @param n_threads_per_chain numeric, number of threads by markov chain, default to 10
+#' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
 #' @param n_iterations numeric value, number of iterations. Default to 100
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
@@ -104,20 +104,23 @@ runGeoNonStatMcmc = function(
 #' @export
 #'
 #' @examples
-#' nthreads <- parallel::detectCores() -1
-#' processedGns <- runParallelGeoNonStatMcmc(gnsDemo, n_threads_per_chain = nthreads, n_iterations = 15)
+#' processedGns <- runParallelGeoNonStatMcmc(
+#'      gnsDemo, 
+#'      n_chains_in_parallel = 1,
+#'      n_threads_per_chain = 1, # example in sequential
+#'      n_iterations = 15)
 runParallelGeoNonStatMcmc = function(
     object, 
     n_chains_in_parallel = NULL, 
-    n_threads_per_chain = 10, 
+    n_threads_per_chain = 5, 
     n_iterations = 100, 
     seed = 1){
   if(is.null(n_chains_in_parallel)) n_chains_in_parallel = length(object$states)
   iter_start = length(object$records$chain_1)
   
-  # TODO : ça n'est pas recommandé par la communauté ici. 
+  # TODO : ça n'est pas recommandé par la communauté ici. 
   # Il faut laisser l'utilisateur choisir. 
-  # On peut mettre le code ci-dessous dans les exemples
+  # On peut mettre le code ci-dessous dans les exemples
   # Et afficher le plan utiliser pour info. 
   if(n_chains_in_parallel == 1){
     future::plan(future::sequential)
@@ -128,7 +131,7 @@ runParallelGeoNonStatMcmc = function(
       future::plan(future::multisession, workers=n_chains_in_parallel)
     }
   }
-  usedPlan <-capture.output({print(future::plan())})[1]
+  usedPlan <- utils::capture.output({print(future::plan())})[1]
   cat("-------- The parallelism on chains is", usedPlan,"--------\n")
   cat("You can change it by using:\n")
   cat("       # For no parallelisation\n")

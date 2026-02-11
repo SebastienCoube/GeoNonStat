@@ -47,7 +47,6 @@ void DetInvSym22(double a, double d, double b, double res[4]){
 using namespace arma;
 //[[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
-//' @export
 //[[Rcpp::export]]
 void vecchia_(
     arma::mat log_range,

@@ -22,6 +22,8 @@ plotPointillistPainting(
 
 \item{alpha}{logical, default to TRUE. Add transparency to colors ?}
 
+\item{legend}{logical, default to TRUE. Add legend ?}
+
 \item{...}{additional graphical parameters, sent to `plot` or,
 if `add=TRUE`, to `points`}
 }

@@ -17,18 +17,16 @@ updateKernel <- function(iter,
   kernel_value
 }
 
-#' Title
+#' Initiate a NA vector of matrix of the same size as the param given
 #'
-#' @param nlocs numeric, number of locations
-#' @param nvars numeric, number of explicatives variables
-#' @param nppr numeric, number of PP in PP range
-#' @param nppn numeric, number of PP in PP noise
+#' @param stateParams a list of vector or a matrix
 #'
-#' @returns a list
+#' @returns a list of vector or a matrix
 #' @export
 #'
 #' @examples
-#' # TODO
+#' initStateParams(list(rnorm(20),
+#'                 matrix(rnorm(20), ncol=4)))
 initStateParams <- function(stateParams){
   lapply(stateParams, function(x){
     # return(matrix(NA_real_, nrow = nrow(x), ncol = ncol(x)))
@@ -795,18 +793,29 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
   
   # sufficient - sufficient ####
   
-  state$params$range_log_scale = UpdateVarPPSuff(hm4params = hierarchical_model$range, beta4param = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+  state$params$range_log_scale = UpdateVarPPSuff(
+    hm4params = hierarchical_model$range, 
+    beta4params = state$params$range_beta, 
+    current_range_log_scale = state$params$range_log_scale)
   
   # ancillary-ancillary ####
   for(i in seq_len(n_range_log_scale_update)){
-    q = state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_ancillary))
+    q = state$params$range_log_scale + 
+      rnorm(1 + hierarchical_model$anisotropic, 
+            0, 
+            exp(state$ker_var$range_log_scale_ancillary))
     
     if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))){
     new_range_beta = state$params$range_beta
     new_range_beta[-seq_len(range_X$n_regressors),] = 
       new_range_beta[-seq_len(range_X$n_regressors),] %*% 
-      diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic) %*%
-      diag(exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 1 + 2*hierarchical_model$anisotropic)
+      diag(
+        exp(-.5 * state$params$range_log_scale[
+          c(1, rep(2, 2*hierarchical_model$anisotropic))]), 
+          1 + 2*hierarchical_model$anisotropic) %*%
+      diag(
+        exp(.5 * q[c(1, rep(2, 2*hierarchical_model$anisotropic))]), 
+        1 + 2*hierarchical_model$anisotropic)
     log_range = computeLogRange(
       range_beta = new_range_beta, 
       PP = hierarchical_model$range$PP,

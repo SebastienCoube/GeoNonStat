@@ -41,7 +41,7 @@ traceOneParam = function(name, param, start, end, nrow, ncol, xlim, color_lines)
   for(col in seq(start, end)) { 
     namecol <- colnames(param[[1]])[col]
     to_be_plotted <- do.call("cbind", lapply(param, function(x) x[,col]))
-    matplot(to_be_plotted, 
+    graphics::matplot(to_be_plotted, 
             type="l", 
             lty = 1,
             lwd=2,

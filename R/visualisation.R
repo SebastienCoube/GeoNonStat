@@ -361,6 +361,7 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' @param field numerical vector, interest variable to define color of points
 #' @param add logical, default to FALSE. Add on existing plot ?
 #' @param alpha logical, default to TRUE. Add transparency to colors ?
+#' @param legend logical, default to TRUE. Add legend ?
 #' @param ... additional graphical parameters, sent to `plot` or,
 #' if `add=TRUE`, to `points`
 #'
@@ -415,6 +416,7 @@ plotPointillistPainting <- function(locs,
 #'
 #' @returns a plot
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' pointillistColorscale(field = c(1, 2, 3))

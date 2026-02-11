@@ -6,6 +6,9 @@
 #'
 #' @import future
 #' @import future.apply
+#' @importFrom parallelly supportsMulticore
+#' @importFrom methods new
+#' @importFrom utils capture.output
 #' @import Rcpp
 #' @importFrom abind abind
 #' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol
@@ -21,6 +24,6 @@
 #' @importFrom FNN get.knn
 #' @importFrom coda effectiveSize
 #' @importFrom stats dist dnorm kmeans lm median model.matrix quantile sd var vcov
-#' @importFrom graphics plot abline barplot hist layout legend lines par points text
+#' @importFrom graphics plot abline barplot hist layout legend lines par points text matplot
 #' @useDynLib GeoNonStat, .registration = TRUE
 "_PACKAGE"

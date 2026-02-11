@@ -142,10 +142,6 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param range_X covariates for range, treated using process_covariates
 #' @param PP predictive process obtained through `createPP()`
-#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
-#' either 0.5 (aka ``exponential kernel'') or 1.5
-#' @param compute_derivative logical, indicates if derivatives of Vecchia factors are to be computed
-#' @param num_threads integer, number of treads to use. Default to 1.
 #'
 #' @returns a list
 #' @export

@@ -7,7 +7,7 @@
 runParallelGeoNonStatMcmc(
   object,
   n_chains_in_parallel = NULL,
-  n_threads_per_chain = 10,
+  n_threads_per_chain = 5,
   n_iterations = 100,
   seed = 1
 )
@@ -17,7 +17,7 @@ runParallelGeoNonStatMcmc(
 
 \item{n_chains_in_parallel}{numeric, number of chains in parallel, default to NULL}
 
-\item{n_threads_per_chain}{numeric, number of threads by markov chain, default to 10}
+\item{n_threads_per_chain}{numeric, number of threads by markov chain, default to 5}
 
 \item{n_iterations}{numeric value, number of iterations. Default to 100}
 
@@ -31,6 +31,9 @@ and records (params records for all iterations, by chain)
 Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 }
 \examples{
-nthreads <- parallel::detectCores() -1
-processedGns <- runParallelGeoNonStatMcmc(gnsDemo, n_threads_per_chain = nthreads, n_iterations = 15)
+processedGns <- runParallelGeoNonStatMcmc(
+     gnsDemo, 
+     n_chains_in_parallel = 1,
+     n_threads_per_chain = 1, # example in sequential
+     n_iterations = 15)
 }

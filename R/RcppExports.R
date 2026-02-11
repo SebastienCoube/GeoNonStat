@@ -13,7 +13,6 @@ maternThingy_ <- function(mahala_dist, smoothness15) {
     .Call(`_GeoNonStat_maternThingy_`, mahala_dist, smoothness15)
 }
 
-#' @export
 vecchia_ <- function(log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result) {
     invisible(.Call(`_GeoNonStat_vecchia_`, log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result))
 }

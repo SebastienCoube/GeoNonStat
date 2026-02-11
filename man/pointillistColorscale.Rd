@@ -20,3 +20,4 @@ Plot the scale of colors for a given variable
 \examples{
 pointillistColorscale(field = c(1, 2, 3))
 }
+\keyword{internal}

@@ -17,13 +17,6 @@ The last coefficients are multiplied with the spatial basis functions of PP}
 \item{range_X}{covariates for range, treated using process_covariates}
 
 \item{PP}{predictive process obtained through `createPP()`}
-
-\item{matern_smoothness}{numerical value, a Matérn smoothness parameter, 
-either 0.5 (aka ``exponential kernel'') or 1.5}
-
-\item{compute_derivative}{logical, indicates if derivatives of Vecchia factors are to be computed}
-
-\item{num_threads}{integer, number of treads to use. Default to 1.}
 }
 \value{
 a list
