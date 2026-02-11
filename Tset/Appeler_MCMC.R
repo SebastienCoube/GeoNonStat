@@ -163,9 +163,9 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_fi
 # TracePlots(geo_non_stat, .2)
 # #TracePlots(geo_non_stat, .3, who = c("range_beta", "range_log_scale"))
 # 
-# estimation = Estimate(geo_non_stat, .2)
+# estimation = estimate(geo_non_stat, .2)
 # 
-# elppd_train = ElppdTrain(geo_non_stat, .2)
+# elppd_train = elppdTrain(geo_non_stat, .2)
 # 
 # 
 # new_locs = rbind(observed_locs[1,], as.matrix(expand.grid(seq(-.1, 1.1, .01), seq(-.1, 1.1, .01))))
