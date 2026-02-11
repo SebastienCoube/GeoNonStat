@@ -856,7 +856,10 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
         }}}
   }
   # sufficient - sufficient ####
-  state$params$range_log_scale = UpdateVarPPSuff(hm4params = hierarchical_model$range, beta4param = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+  state$params$range_log_scale = 
+    UpdateVarPPSuff(hm4params = hierarchical_model$range, 
+                    beta4params = state$params$range_beta, 
+                    current_range_log_scale = state$params$range_log_scale)
   # return ####
   return(state)
 }

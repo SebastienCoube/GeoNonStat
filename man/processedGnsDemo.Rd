@@ -5,16 +5,31 @@
 \alias{processedGnsDemo}
 \title{GeoNonStat demo data}
 \format{
-#TODO
+a GeoNonStat object with 3000 observed locations and field. 
+15 iterations of MCMC have run on this object.
 }
 \usage{
-gnsDemo
+processedGnsDemo
 }
 \value{
 A \code{\link{GeoNonStat}} with processed MCMC.
 }
 \description{
 A S3 GeoNonStat object TODO
+}
+\details{
+The data have been generated with the following code :
+
+\preformatted{
+  set.seed(123)
+  processedGnsDemo = runParallelGeoNonStatMcmc(
+    object = gnsDemo, 
+    n_chains_in_parallel = 1,
+    n_threads_per_chain = 1, 
+    n_iterations = 15, 
+    seed = 1
+  )
+}
 }
 \examples{
 processedGnsDemo

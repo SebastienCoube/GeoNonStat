@@ -9,6 +9,7 @@ Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process. blabl
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Imports: 
     Rcpp (>= 1.0.7), 
     abind, 

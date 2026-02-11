@@ -45,7 +45,12 @@ observed_locs = cbind(runif(nlocs), runif(nlocs))
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
 # fixed effects
-X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+X = data.frame(
+  V1 = observed_locs[,1], 
+  V2 = rnorm(nrow(observed_locs)), 
+  V3 = rnorm(nrow(observed_locs)), 
+  V4 = rnorm(nrow(observed_locs))
+)
 
 # X_range = as.data.frame(observed_locs)
 

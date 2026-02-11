@@ -70,9 +70,13 @@ runGeoNonStatMcmc = function(
       
       # Variance of the  range PP ###############################
       state <- updateVarianceRangepp(
-        state = state, hierarchical_model = hierarchical_model, range_X = covariates$range_X, 
-        vecchia_approx = vecchia_approx, iter = iter, 
-        iter_start = iter_start, num_threads = num_threads)
+        state = state, 
+        hierarchical_model = hierarchical_model, 
+        range_X = covariates$range_X, 
+        vecchia_approx = vecchia_approx, 
+        iter = iter, 
+        iter_start = iter_start, 
+        num_threads = num_threads)
     }
     
     # Noise ###############################

@@ -4,12 +4,10 @@
 \alias{processTransitionKernels}
 \title{Initialize transition kernels}
 \usage{
-processTransitionKernels(init = -4, hm)
+processTransitionKernels(init = -4)
 }
 \arguments{
 \item{init}{a numeric value, default to -4}
-
-\item{hm}{a hierarchical model (obtained with `processHierarchicalModel()`)}
 }
 \value{
 a list
@@ -23,26 +21,6 @@ as a random walk Metropolis or MALA step size have an ancillary and
 a sufficient version when applicable range description
 }
 \examples{
-nobs <- 10000
-observed_locs <- cbind(runif(nobs), runif(nobs))
-observed_field <- rnorm(nobs)
-vecchia_approx <- createVecchia(observed_locs, ncores = 1)
-PP <- createPP(vecchia_approx)
-X <- as.data.frame(cbind(rnorm(nobs), runif(nobs)))
-covariates <- list()
-covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
-covariates$X_range <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = TRUE)
-covariates$X_noise <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
-
-hm <- processHierarchicalModel(
-  vecchia_approx = vecchia_approx,
-  noise_PP = PP,
-  observed_locs = observed_locs,
-  matern_smoothness = 1.5,
-  observed_field = observed_field,
-  covariates = covariates,
-  anisotropic = TRUE
-)
-processTransitionKernels(hm = hm)
+processTransitionKernels()
 }
 \keyword{internal}

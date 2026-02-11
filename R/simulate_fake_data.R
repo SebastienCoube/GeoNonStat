@@ -24,9 +24,11 @@
 #' vecchia_approx = createVecchia(observed_locs, m = 6)
 #' 
 #' # fixed effects
-#' X = as.data.frame(
-#'   cbind(observed_locs[,1], rnorm(nrow(observed_locs)), 
-#'   rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
+#' X = data.frame(
+#'   V1 = observed_locs[,1], 
+#'   V2 = rnorm(nrow(observed_locs)), 
+#'   V3 = rnorm(nrow(observed_locs)), 
+#'   V4 = rnorm(nrow(observed_locs))
 #' )
 #' 
 #' PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
@@ -103,7 +105,12 @@ createGnsSimulator <- function(vecchia_approx,
 #' vecchia_approx = createVecchia(observed_locs, m = 6)
 #' 
 #' # fixed effects
-#' X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+#' X = data.frame(
+#'   V1 = observed_locs[,1], 
+#'   V2 = rnorm(nrow(observed_locs)), 
+#'   V3 = rnorm(nrow(observed_locs)), 
+#'   V4 = rnorm(nrow(observed_locs))
+#' )
 #' 
 #' # X_range = as.data.frame(observed_locs)
 #' 
@@ -324,7 +331,12 @@ createGnsSimulatorParameters <- function(gns_simulator,
 #' vecchia_approx = createVecchia(observed_locs, m = 6)
 #' 
 #' # fixed effects
-#' X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+#' X = data.frame(
+#'   V1 = observed_locs[,1], 
+#'   V2 = rnorm(nrow(observed_locs)), 
+#'   V3 = rnorm(nrow(observed_locs)), 
+#'   V4 = rnorm(nrow(observed_locs))
+#' )
 #' 
 #' PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
 #' PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)

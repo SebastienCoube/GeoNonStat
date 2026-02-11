@@ -209,9 +209,9 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' # X = as.data.frame(cbind(observed_locs, observed_locs, observed_locs[,1]^2+ observed_locs[,2]^2))
 #' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 processCovariates <- function(X,
-                               vecchia_approx,
-                               PP = NULL,
-                               one_obs_per_locs = FALSE) {
+                              vecchia_approx,
+                              PP = NULL,
+                              one_obs_per_locs = FALSE) {
   covariate_name <- as.list(match.call())$X
   if (is.null(X))
     covariate_name <- X
@@ -481,7 +481,6 @@ processHierarchicalModel <- function(vecchia_approx,
 #' Initialize transition kernels
 #'
 #' @param init a numeric value, default to -4
-#' @param hm a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @returns a list
 #' @description
 #' TODO : revoir la description
@@ -494,28 +493,8 @@ processHierarchicalModel <- function(vecchia_approx,
 #' @keywords internal
 #' 
 #' @examples
-#' nobs <- 10000
-#' observed_locs <- cbind(runif(nobs), runif(nobs))
-#' observed_field <- rnorm(nobs)
-#' vecchia_approx <- createVecchia(observed_locs, ncores = 1)
-#' PP <- createPP(vecchia_approx)
-#' X <- as.data.frame(cbind(rnorm(nobs), runif(nobs)))
-#' covariates <- list()
-#' covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
-#' covariates$X_range <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = TRUE)
-#' covariates$X_noise <- processCovariates(X, vecchia_approx = vecchia_approx, one_obs_per_locs = FALSE)
-#'
-#' hm <- processHierarchicalModel(
-#'   vecchia_approx = vecchia_approx,
-#'   noise_PP = PP,
-#'   observed_locs = observed_locs,
-#'   matern_smoothness = 1.5,
-#'   observed_field = observed_field,
-#'   covariates = covariates,
-#'   anisotropic = TRUE
-#' )
-#' processTransitionKernels(hm = hm)
-processTransitionKernels <- function(init=-4, hm) {
+#' processTransitionKernels()
+processTransitionKernels <- function(init=-4) {
   return(
     list(
       range_log_scale_sufficient = init,
@@ -586,7 +565,7 @@ processStates <- function(hm,
   # Actual parameters
   params <- list()
   # Metropolis proposal distribution width for MCMC
-  ker_var <- processTransitionKernels(init_tk, hm)
+  ker_var <- processTransitionKernels(init_tk)
   # Momenta for HMC
   momenta <- list()
   # Useful stuff pre-computed from the parameters
