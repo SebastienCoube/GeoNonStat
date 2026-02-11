@@ -11,12 +11,12 @@ createGnsSimulatorParameters(
   noise_intercept = NULL,
   noise_PP_log_var = NULL,
   field_log_var = NULL,
-  flap_the_gums = TRUE,
+  verbose = TRUE,
   seed = 1
 )
 }
 \arguments{
-\item{gns_simulator}{TODO}
+\item{gns_simulator}{an object created by `createGnsSimulator`}
 
 \item{range_intercept}{TODO}
 
@@ -28,17 +28,38 @@ createGnsSimulatorParameters(
 
 \item{field_log_var}{TODO}
 
-\item{flap_the_gums}{TODO}
+\item{verbose}{logical, default to TRUE. Active verbose mode ?}
 
-\item{seed}{TODO}
+\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
-TODO
+a list
 }
 \description{
 From a GeoNonStatSimulator object, creates regression coefficients at the right format
 }
 \examples{
-# TODO
-#TODO
+set.seed(2)
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))
+vecchia_approx = createVecchia(observed_locs, m = 6)
+
+# fixed effects
+X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+
+# X_range = as.data.frame(observed_locs)
+
+PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
+PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
+
+
+# full monty
+gns_simulator = createGnsSimulator(
+ vecchia_approx = vecchia_approx,
+ X = X,
+ noise_X = X, noise_PP = PP_noise,
+ range_X = NULL,range_PP = PP_range,
+ anisotropic = T
+)
+gns_simulator_parameters = createGnsSimulatorParameters(gns_simulator)
 }

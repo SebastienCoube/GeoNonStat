@@ -7,7 +7,7 @@
 expmat(coords, eps = 1e-04)
 }
 \arguments{
-\item{coords}{a numeric vector, of length such as 
+\item{coords}{a numeric vector, of length such as
 `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer}
 
 \item{eps}{a numeric value, default to .0001}
@@ -19,6 +19,6 @@ a square matrix
 Exponential of a square matrix, adding a small numeric value on the diagonal
 }
 \examples{
-expmat(c(1,2,3,4,5,6))
+expmat(c(1, 2, 3, 4, 5, 6))
 }
 \keyword{internal}

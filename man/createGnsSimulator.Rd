@@ -16,28 +16,53 @@ createGnsSimulator(
 )
 }
 \arguments{
-\item{vecchia_approx}{TODO}
+\item{vecchia_approx}{an object created by `vecchia_approx()`}
 
-\item{X}{TODO}
+\item{X}{a data.frame of covariates explaining the interest variable 
+through fixed linear effects}
 
-\item{matern_smoothness}{TODO}
+\item{matern_smoothness}{numerical value, a Matérn smoothness parameter, 
+either 0.5 (aka ``exponential kernel'') or 1.5}
 
-\item{noise_X}{TODO}
+\item{noise_X}{a data.frame of covariates explaining the Gaussian noise 
+variance through fixed linear effects}
 
-\item{noise_PP}{TODO}
+\item{noise_PP}{either an object of class PP used to model the field of 
+log-noise parameters, or NULL in which case the model is stationary}
 
-\item{range_X}{TODO}
+\item{range_X}{a data.frame of covariates explaining the Gaussian process 
+range through fixed linear effects}
 
 \item{range_PP}{TODO}
 
 \item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 }
 \value{
-TODO
+a list
 }
 \description{
 Ingredients needed to simulate observations from GeoNonStat model
 }
 \examples{
-#TODO
+set.seed(2)
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))
+vecchia_approx = createVecchia(observed_locs, m = 6)
+
+# fixed effects
+X = as.data.frame(
+  cbind(observed_locs[,1], rnorm(nrow(observed_locs)), 
+  rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)))
+)
+
+PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
+PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
+
+gns_simulator = createGnsSimulator(
+ vecchia_approx = vecchia_approx,
+ X = X,
+ noise_X = X, noise_PP = PP_noise,
+ range_X = NULL,range_PP = PP_range,
+ anisotropic = TRUE
+)
 }

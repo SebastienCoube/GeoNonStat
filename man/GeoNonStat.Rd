@@ -29,31 +29,38 @@ GeoNonStat(
 \method{summary}{GeoNonStat}(object, ...)
 }
 \arguments{
-\item{vecchia_approx}{an object created by the `vecchia_approx()` function}
+\item{vecchia_approx}{an object created by `vecchia_approx()`}
 
 \item{observed_field}{a vector of observations of the interest variable}
 
-\item{X}{a data.frame of covariates explaining the interest variable through fixed linear effects}
+\item{X}{a data.frame of covariates explaining the interest variable 
+through fixed linear effects}
 
-\item{matern_smoothness}{Matern smoothness, either 0.5 or 1.5}
+\item{matern_smoothness}{numerical value, a Matérn smoothness parameter, 
+either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 
 \item{n_chains}{number of MCMC chains}
 
-\item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
+\item{range_X}{a data.frame of covariates explaining the Gaussian process 
+range through fixed linear effects}
 
 \item{range_PP}{TODO}
 
 \item{range_log_scale_bounds}{TODO}
 
-\item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
+\item{noise_X}{a data.frame of covariates explaining the Gaussian noise 
+variance through fixed linear effects}
 
-\item{noise_PP}{TODO}
+\item{noise_PP}{either an object of class PP used to model the field of 
+log-noise parameters, or NULL in which case the model is stationary}
 
-\item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}
+\item{noise_log_scale_bounds}{either a vector containing two numeric values 
+bounding Uniform prior for the log-marginal variance of the noise's PP, 
+or NULL in which case the bounds are set automatically}
 
-\item{seed}{a seed from which to generate the GeoNonStat object.}
+\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
 \item{x}{an object of class \code{GeoNonStat}}
 
@@ -69,33 +76,49 @@ This package provides functions for hierarchical nonstationary nearest neighbor 
 }
 \examples{
 set.seed(100)
-nobs = 10000
-observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
-observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs, ncores=1)
-myPP = createPP(
+nobs <- 10000
+observed_locs <- cbind(runif(5000), runif(5000))
+observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
+observed_field <- rnorm(nobs)
+vecchia_approx <- createVecchia(observed_locs, ncores = 1)
+noise_PP <- createPP(
   vecchia_approx = vecchia_approx,
   matern_range = .1,
-  knots = 600
+  knots = 50,
+  plot=FALSE
 )
-noise_PP = myPP
-noise_log_scale_bounds = c(-8, 3)
+noise_log_scale_bounds <- c(-8, 3)
 
-X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
-range_X = as.data.frame(observed_locs)
-noise_X = X
+X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+range_X <- as.data.frame(observed_locs)
+noise_X <- X
 
-
-myobj = GeoNonStat(
+myobj <- GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = observed_field,  #spatial locations
-  X = X, # Response variable 
+  observed_field = observed_field, # spatial locations
+  X = X, # Response variable
+  matern_smoothness = 1.5, # Matern smoothness
+  anisotropic = FALSE,
+  n_chains = 3,
+  noise_X = X, 
+  noise_PP = noise_PP, 
+  noise_log_scale_bounds = noise_log_scale_bounds,
+  range_X = range_X,
+  range_PP = NULL,
+  seed = 1
+)
+myobj <- GeoNonStat(
+  vecchia_approx = vecchia_approx,
+  observed_field = observed_field, # spatial locations
+  X = X, # Response variable
   # Covariates per observation
-  matern_smoothness = 1.5, #Matern smoothness
-  anisotropic = FALSE, 
-  n_chains = 5,
-  noise_X =  noise_X , noise_PP = noise_PP , noise_log_scale_bounds = NULL,
-  range_X =  range_X ,
+  matern_smoothness = 1.5, # Matern smoothness
+  anisotropic = FALSE,
+  n_chains = 3,
+  noise_X = noise_X, 
+  noise_PP = noise_PP, 
+  noise_log_scale_bounds = noise_log_scale_bounds,
+  range_X = range_X,
   seed = 1
 )
 summary(myobj)

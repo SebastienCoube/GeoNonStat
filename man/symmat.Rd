@@ -7,7 +7,7 @@
 symmat(coords)
 }
 \arguments{
-\item{coords}{a numeric vector, of length such as 
+\item{coords}{a numeric vector, of length such as
 `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer}
 }
 \value{
@@ -17,6 +17,6 @@ a matrix
 Create symetric matrix from coordinates
 }
 \examples{
-symmat(c(1,2,3,4,5,6))
+symmat(c(1, 2, 3, 4, 5, 6))
 }
 \keyword{internal}

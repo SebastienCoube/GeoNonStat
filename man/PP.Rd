@@ -20,9 +20,9 @@ createPP(
 \method{plot}{PP}(x, ..., mar_var_loss = TRUE, separate = FALSE)
 }
 \arguments{
-\item{vecchia_approx}{List obtained by `createVecchia()`.}
+\item{vecchia_approx}{an object created by `vecchia_approx()`}
 
-\item{matern_range}{numeric (optional). Matern range parameter for the PP. 
+\item{matern_range}{numeric (optional). Matern range parameter for the PP.
 If `NULL`, a default value is inferred from spatial locations.}
 
 \item{knots}{Either:
@@ -30,7 +30,7 @@ If `NULL`, a default value is inferred from spatial locations.}
 * a positive integer (number of knots, determined via k-means), or
 * `NULL` (default) - in which case a default number and placement of knots is used.}
 
-\item{seed}{Integer, random seed for reproducibility.}
+\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
 \item{plot}{Logical, whether to produce diagnostic plots (default `TRUE`).}
 
@@ -48,50 +48,66 @@ If `NULL`, a default value is inferred from spatial locations.}
 An object of class `PP`.
 }
 \description{
-Creates an object of class `PP`, a low-rank predictive process used as a prior 
+Creates an object of class `PP`, a low-rank predictive process used as a prior
 to describe spatial variations of covariance parameters.
 }
 \examples{
-vecchia_approx = createVecchia(cbind(runif(10000), runif(10000)), 10, ncores=1)
-# automatic 
-pepito = createPP(vecchia_approx)
+vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10, ncores = 1)
+# automatic
+pepito <- createPP(vecchia_approx)
 \dontrun{
 # choosing manually Matern range, too small wrt number of knots
-pepito = createPP(vecchia_approx, matern_range = .1)
+pepito <- createPP(vecchia_approx, matern_range = .1)
 # choosing manually Matern range, way too small wrt number of knots
-pepito = createPP(vecchia_approx, matern_range = .01)
+pepito <- createPP(vecchia_approx, matern_range = .01)
 # choosing manually number of knots in order to adjust to Matern range
-pepito = createPP(vecchia_approx, knots = 1000, matern_range = .1)
+pepito <- createPP(vecchia_approx, knots = 1000, matern_range = .1)
 # choosing manually number of knots, but picking too few for default Matern range
-pepito = createPP(vecchia_approx, knots = 20)
+pepito <- createPP(vecchia_approx, knots = 20)
 # choosing manually Matern range in order to adjust to the number of knots
-pepito = createPP(vecchia_approx, knots = 20, matern_range = .5)
+pepito <- createPP(vecchia_approx, knots = 20, matern_range = .5)
 # inputing an user-specified grid of knots
-pepito = createPP(vecchia_approx, 
-                  knots = as.matrix(
-                            expand.grid(seq(-.05, 1.05, .05), 
-                                        seq(-.05, 1.05, .05))))
+pepito <- createPP(vecchia_approx,
+  knots = as.matrix(
+    expand.grid(
+      seq(-.05, 1.05, .05),
+      seq(-.05, 1.05, .05)
+    )
+  )
+)
 # inputing an user-specified grid of knots in order to adjust to small Matern range
-pepito = createPP(vecchia_approx, 
-                  knots = as.matrix(
-                            expand.grid(seq(-.05, 1.05, .05), 
-                                        seq(-.05, 1.05, .05))), 
-                  matern_range = .1)
-pepito = createPP(vecchia_approx, 
-                  knots = as.matrix(
-                            expand.grid(seq(-.05, 1.05, .05), 
-                            seq(-.05, 1.05, .05))), 
-                 matern_range = .05)
-pepito = createPP(vecchia_approx, 
-                  knots = as.matrix(
-                    expand.grid(seq(-.05, 1.05, .025), 
-                                seq(-.05, 1.05, .025))), 
-                  matern_range = .05)
+pepito <- createPP(vecchia_approx,
+  knots = as.matrix(
+    expand.grid(
+      seq(-.05, 1.05, .05),
+      seq(-.05, 1.05, .05)
+    )
+  ),
+  matern_range = .1
+)
+pepito <- createPP(vecchia_approx,
+  knots = as.matrix(
+    expand.grid(
+      seq(-.05, 1.05, .05),
+      seq(-.05, 1.05, .05)
+    )
+  ),
+  matern_range = .05
+)
+pepito <- createPP(vecchia_approx,
+  knots = as.matrix(
+    expand.grid(
+      seq(-.05, 1.05, .025),
+      seq(-.05, 1.05, .025)
+    )
+  ),
+  matern_range = .05
+)
 }
-vecchia_approx = createVecchia(cbind(runif(100), runif(100)), 10, ncores=1)
-pepito = createPP(vecchia_approx, plot=FALSE)
+vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
+pepito <- createPP(vecchia_approx, plot = FALSE)
 summary(pepito)
-vecchia_approx = createVecchia(observed_locs  = cbind(runif(10000), runif(10000)), 10)
-pepito = createPP(vecchia_approx, plot=FALSE)
+vecchia_approx <- createVecchia(observed_locs = cbind(runif(10000), runif(10000)), 10)
+pepito <- createPP(vecchia_approx, plot = FALSE)
 plot(pepito)
 }

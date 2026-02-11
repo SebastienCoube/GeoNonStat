@@ -4,23 +4,43 @@
 \alias{simulateGnsData}
 \title{simulates fake data}
 \usage{
-simulateGnsData(gns_simulator, gns_simulator_parameters, num_threads = 5)
+simulateGnsData(gns_simulator, gns_params, num_threads = 5)
 }
 \arguments{
-\item{gns_simulator}{TODO}
+\item{gns_simulator}{an object created by `createGnsSimulator()`}
 
-\item{gns_simulator_parameters}{TODO}
+\item{gns_params}{an object created by `createGnsSimulatorParameters()`}
 
-\item{num_threads}{TODO}
+\item{num_threads}{integer, number of treads to use. Default to 1.}
 }
 \value{
-TODO
+a list
 }
 \description{
-From a GeoNonStatSimulator object and 
+From a GeoNonStatSimulator object and
 regression coefficients at the right format,
 simulates fake data
 }
 \examples{
-# TODO
+set.seed(2)
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))
+vecchia_approx = createVecchia(observed_locs, m = 6)
+
+# fixed effects
+X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
+
+PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
+PP_noise = createPP(vecchia_approx, knots = 500, matern_range = .06)
+
+# full monty
+gns_simulator = createGnsSimulator(
+ vecchia_approx = vecchia_approx,
+ X = X,
+ noise_X = X, noise_PP = PP_noise,
+ range_X = NULL,range_PP = PP_range,
+ anisotropic = T
+)
+gns_params = createGnsSimulatorParameters(gns_simulator)
+gns_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = gns_params)
 }
