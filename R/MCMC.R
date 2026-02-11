@@ -1,6 +1,6 @@
 #' Run the MCMC on one chain of a `GeoNonStat` object
 #'
-#' @param covariates  The list of covariates obtained with `process_covariates`
+#' @param covariates  The list of covariates obtained with `processCovariates`
 #' @param observed_field TODO
 #' @param hierarchical_model a hierarchical model (obtained with `process_hierarchical_model()`)
 #' @param vecchia_approx an object created by `vecchia_approx()`

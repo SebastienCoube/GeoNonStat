@@ -480,7 +480,7 @@ processHierarchicalModel <- function(vecchia_approx,
 
 #' Initialize transition kernels
 #'
-#' @param init a numeric value
+#' @param init a numeric value, default to -4
 #' @param hm a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @returns a list
 #' @description
@@ -515,7 +515,7 @@ processHierarchicalModel <- function(vecchia_approx,
 #'   anisotropic = TRUE
 #' )
 #' processTransitionKernels(hm = hm)
-processTransitionKernels <- function(init, hm) {
+processTransitionKernels <- function(init=-4, hm) {
   return(
     list(
       range_log_scale_sufficient = init,
@@ -956,9 +956,9 @@ detailedSummary <- function(partobject) {
 #' @method summary GeoNonStat
 summary.GeoNonStat <- function(object, ...) {
   cat("### data ###")
-  detailed_summary(object$data)
+  detailedSummary(object$data)
   cat("### hierarchical_model ###")
-  detailed_summary(object$hierarchical_model)
+  detailedSummary(object$hierarchical_model)
   cat(
     "### vecchia_approx ###",
     summary(object$vecchia_approx),

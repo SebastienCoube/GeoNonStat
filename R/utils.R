@@ -1,4 +1,4 @@
-#' IS a numeric include in an interval ?
+#' Is a numeric include in an interval ?
 #'
 #' @param bounds Numeric of length 2, bounds of the interval.
 #' @param x a numeric value to test (or a vector)
@@ -155,70 +155,30 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 #' locs <- cbind(runif(1000), runif(1000))
 #' vecchia_approx <- createVecchia(locs)
 #' X <- data.frame(rnorm(nrow(locs)))
-#' range_X <- process_covariates(X, vecchia_approx)
+#' range_X <- processCovariates(X, vecchia_approx)
 #' range_beta <- matrix(c(1, -2))
 #' PP <- suppressMessages(createPP(vecchia_approx, plot = FALSE))
-#' compute_sparse_chol(
+#' lr <- computeLogRange(
 #'   range_beta = range_beta,
 #'   vecchia_approx = vecchia_approx,
 #'   range_X = range_X,
-#'   PP = NULL,
-#'   matern_smoothness = 1.5,
-#'   compute_derivative = FALSE
+#'   PP = NULL
 #' )
 #' # test with a PP
 #' range_beta <- matrix(rnorm(ncol(range_X$X_locs) + PP$n_knots), ncol = 1)
-#' compute_sparse_chol(
+#' lr_with_PP <- computeLogRange(
 #'   range_beta = range_beta,
 #'   vecchia_approx = vecchia_approx,
-#'   range_X = range_X, PP = PP,
-#'   matern_smoothness = 1.5,
-#'   compute_derivative = TRUE
+#'   range_X = range_X, 
+#'   PP = PP
 #' )
 #' range_beta <- matrix(rnorm(3 * (2 + PP$n_knots)), ncol = 3)
-#' compute_sparse_chol(
+#' lr_range3col <- computeLogRange(
 #'   range_beta = range_beta,
 #'   vecchia_approx = vecchia_approx,
 #'   range_X = range_X,
-#'   PP = PP,
-#'   matern_smoothness = 1.5, compute_derivative = TRUE
+#'   PP = PP
 #' )
-# compute_sparse_chol <- function(range_beta,
-#                                 vecchia_approx,
-#                                 range_X,
-#                                 PP = NULL,
-#                                 matern_smoothness = 1.5,
-#                                 compute_derivative = TRUE,
-#                                 num_threads = 1) {
-#   if (!matern_smoothness %in% c(.5, 1.5))
-#     stop("matern_smoothness must be equal to 0.5 or 1.5")
-#   if (ncol(range_beta) == 3) {
-#     Y <- range_beta %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
-#   } else if (ncol(range_beta) == 1) {
-#     Y <- range_beta * 2
-#   } else {
-#     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
-#   }
-#   
-#   log_range <- as.matrix(
-#     xPPMultRight(
-#       vecchia_approx = vecchia_approx,
-#       X = range_X$X_locs,
-#       PP = PP,
-#       Y = Y,
-#       permutate_PP_to_obs = FALSE
-#     )
-#   )
-#   res <- vecchia(
-#     num_threads = num_threads,
-#     log_range = t(log_range),
-#     locs = vecchia_approx$t_locs,
-#     NNarray = vecchia_approx$NNarray,
-#     compute_derivative = compute_derivative,
-#     smoothness = matern_smoothness
-#   )
-#   return(res)
-# }
 computeLogRange <- function(range_beta,
                                 vecchia_approx,
                                 range_X,

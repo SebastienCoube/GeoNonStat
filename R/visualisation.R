@@ -46,6 +46,8 @@ plot.PP <- function(x,
 #' @param mar_var_loss optional, the var loss computed by `varLossPP`
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
+#' @keywords internal
+#' 
 #' @examples
 #' observed_locs <- cbind(runif(1000), runif(1000))
 #' observed_locs <- observed_locs[ceiling(nrow(observed_locs) * runif(3000)), ]

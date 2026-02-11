@@ -9,16 +9,21 @@
 #' parameters, event the `field.`
 #'
 #' @returns a filtered list or records
+#' @export
+#' @keywords internal
 #'
 #' @examples
-#' # TODO
+#' redCords <- filterRecords(processedGnsDemo$records, burn_in = 0.2)
 filterRecords <- function(records, burn_in = 0, keep="all") {
   # Reduce paramaters
   namesparam <- names(records[[1]][[1]])
-  keep <- switch(keep,
-                "all" = setdiff(namesparam, "field"),
-                "all_even_the_field" = namesparam,
-                keep)
+  if(length(keep)==1 && keep == "all_even_the_field") keep <- namesparam
+  if(length(keep)==1 && keep == "all") keep <- setdiff(namesparam, "field")
+  if(any(sapply(keep, function(x) !(x %in% namesparam)))) {
+    stop("Try to keep a parameter that doesn't exists. Acceptable values for",
+         "`keep` are 'all', 'all_even_the_field' or a character vector with ",
+         "parameters to keep")
+  }
   records <- lapply(records, function(x) 
     lapply(x, function(y) y[keep]))
   
@@ -45,6 +50,8 @@ filterRecords <- function(records, burn_in = 0, keep="all") {
 #' @param list a list containing sublists (all having the same structure).
 #'
 #' @returns a list, transposed
+#' @export
+#' @keywords internal
 #'
 #' @examples
 #' A  <- list("R1" = "a1", "R2"="a2", "R3" = "a3")
@@ -63,12 +70,14 @@ transposeList <- function(list) {
 #'
 #' @param chain a list of records containing for each iteration, 
 #' a list of parameters
-#'
 #' @returns a list containing matrices of parameters, 
 #' aggregated over the iterations. 
+#' @export
+#' @keywords internal
 #'
 #' @examples
-#' # TODO
+#' tmp <- transposeList(processedGnsDemo$records[[1]])
+#' agg <- aggregateRecordsChain(tmp)
 aggregateRecordsChain = function(chain){
   res = lapply(chain, function(param){
     # Numeric case
@@ -114,9 +123,11 @@ aggregateRecordsChain = function(chain){
 #' 
 #' @returns a list containing matrices of parameters, 
 #' aggregated over the iterations. 
+#' @export
+#' @keywords internal
 #'
 #' @examples
-#' aggregateRecords(processedGnsDemo)
+#' GeoNonStat:::aggregateRecords(processedGnsDemo)
 aggregateRecords <- function(object, burn_in=0.1, keep="all", keep_separate_chains =FALSE){
   res <- filterRecords(object$records, burn_in = burn_in, keep=keep)
   namesparams <- names(res[[1]][[1]])
@@ -134,32 +145,30 @@ aggregateRecords <- function(object, burn_in=0.1, keep="all", keep_separate_chai
   return(res)
 }
 
-
-summarizevect = function(v, quant){
-  vstat <- c(mean(v),
-             sd(v),
-             quantile(v, quant, names=FALSE))
-  return(signif(vstat, 3))
-}
-
 #' Summarize a matrix by column
 #'
-#' @param mat a matrix
+#' @param mat a numeric matrix
 #' @param quant named numerical vector. What quantiles to give
 #'
 #' @returns a matrix
+#' @export
 #'
 #' @examples
 #' tt <- matrix(rnorm(200), ncol=20)
 #' summarizeRecords(tt)
 summarizeRecords = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)){
-  matstat <- apply(mat,2,summarizevect, quant)
+  matstat <- apply(mat,2,FUN = function(v) {
+    vstat <- c(mean(v),
+               sd(v),
+               quantile(v, quant, names=FALSE))
+    return(signif(vstat, 3))
+  })
   rownames(matstat) <- c("mean", "sd", names(quant))
   return(matstat)
 }
 
 
-#' estimate the records of a GeoNonStat object. 
+#' Estimate the records of a GeoNonStat object. 
 #'
 #' @param object a GeoNonStat object containing records
 #' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
@@ -169,7 +178,7 @@ summarizeRecords = function(mat, quant=c("q 2.5%" = .025, "median" = .5, "q 97.5
 #' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all 
 #' parameters, event the `field.`
 #'
-#' @returns a list of parameters.
+#' @returns a list of numerical summary by parameters.
 #' @export
 #'
 #' @examples
@@ -181,7 +190,16 @@ estimate <- function(object, burn_in = .1, keep = "all"){
 }
 
 
-Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_field){
+#' Title
+#'
+#' @param X a matrix of samples
+#' @param beta_samples a matrix of beta
+#' @param field_samples a matrix of field
+#' @param noise_var_samples a matrix of variance noise
+#' @param observed_field a matrix, the observed field
+#'
+#' @returns a list
+elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_field){
   elppd_per_obs = (
     - log((sqrt(2)*pi)) # 1/sqrt(2 pi) passed to the log
     -.5*  log(noise_var_samples) # variance penalty of Gaussian density
@@ -194,7 +212,19 @@ Elppd = function(X, beta_samples, field_samples, noise_var_samples, observed_fie
   return(list("elppd_per_obs" = elppd_per_obs, "mean_elppd" = mean(elppd_per_obs)))
 }
 
-ElppdTrain = function(object, burn_in = .1){
+#' Compute the log-dens of the observations
+#'
+#' @param objecta GeoNonStat object 
+#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of 
+#' first records that should be removed If burn_in = 0.1 : the first 10% of 
+#' records will be removed from the result.
+#'
+#' @returns a list
+#' @export
+#'
+#' @examples
+#' lppd <- elppdTrain(processedGnsDemo)
+elppdTrain = function(object, burn_in = .1){
   aggregated_records = aggregateRecords(object, burn_in, keep = c("beta", "noise_beta", "field"))
   noise_var = 
     apply(aggregated_records$noise_beta, 1, function(x)
@@ -205,7 +235,7 @@ ElppdTrain = function(object, burn_in = .1){
       )))
       )
   # Gaussian log-dens of the observations
-  return(Elppd(
+  return(elppd(
     object$covariates$X$X, 
     beta_samples = aggregated_records$beta, 
     field_samples = aggregated_records$field[,object$vecchia_approx$locs_match], 
