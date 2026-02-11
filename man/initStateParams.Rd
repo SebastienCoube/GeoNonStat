@@ -16,6 +16,8 @@ a list of vector or a matrix
 Initiate a NA vector of matrix of the same size as the param given
 }
 \examples{
-initStateParams(list(rnorm(20),
-                matrix(rnorm(20), ncol=4)))
+initStateParams(list(
+  rnorm(20),
+  matrix(rnorm(20), ncol = 4)
+))
 }

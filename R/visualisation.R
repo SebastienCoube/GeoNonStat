@@ -47,7 +47,7 @@ plot.PP <- function(x,
 #' @param show_knots logical, default to TRUE. Should the knots be plotted ?
 #' @export
 #' @keywords internal
-#' 
+#'
 #' @examples
 #' observed_locs <- cbind(runif(1000), runif(1000))
 #' observed_locs <- observed_locs[ceiling(nrow(observed_locs) * runif(3000)), ]
@@ -163,7 +163,7 @@ plotKnotsPP <- function(x,
 #' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
 #' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
-#' 
+#'
 #' @returns a plot object
 #' @export
 #'
@@ -176,10 +176,10 @@ plotKnotsPP <- function(x,
 #' log_range <- matrix(rnorm(10), ncol = 1)
 #' plotEllipses(locs, log_range, shrink = 0.1)
 plotEllipses <- function(locs,
-                          log_range,
-                          shrink = .1,
-                          add = FALSE,
-                          ...) {
+                         log_range,
+                         shrink = .1,
+                         add = FALSE,
+                         ...) {
   if (ncol(log_range) == 3) {
     # to match parametrization in compute sparse chol
     log_range <- log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
@@ -343,13 +343,13 @@ getColors <- function(x, alpha = FALSE) {
 #' @examples
 #' getColorsCat(3)
 getColorsCat <- function(n, alpha = FALSE) {
-  if(n>9){
-    cols <- c("#000000", grDevices::rainbow(n-1))
+  if (n > 9) {
+    cols <- c("#000000", grDevices::rainbow(n - 1))
   } else {
     base_colors <- c("#000000", "#E73F74", "#F1CE63", "#77AADD", "#009988", "#9467BD", "#FF9D9A", "#99DDFF", "#AAAA00")
     cols <- base_colors[seq_len(n)]
   }
-  if(alpha){
+  if (alpha) {
     cols <- paste0(cols, "CC")
   }
   return(cols)
@@ -372,36 +372,36 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' locs <- matrix(rnorm(2000), ncol = 2)
 #' plotPointillistPainting(locs = locs, field = rnorm(1000))
 plotPointillistPainting <- function(locs,
-                                      field,
-                                      add = FALSE,
-                                      alpha = TRUE,
-                                      legend = TRUE,
-                                      ...) {
+                                    field,
+                                    add = FALSE,
+                                    alpha = TRUE,
+                                    legend = TRUE,
+                                    ...) {
   args <- list(...)
-  if(is.null(args$pch)) args[["pch"]] <- "."
-  if(is.null(args$cex)) args[["cex"]] <- 4
-  if(is.null(args$xlab)) args[["xlab"]] <- NA
-  if(is.null(args$ylab)) args[["ylab"]] <- NA
+  if (is.null(args$pch)) args[["pch"]] <- "."
+  if (is.null(args$cex)) args[["cex"]] <- 4
+  if (is.null(args$xlab)) args[["xlab"]] <- NA
+  if (is.null(args$ylab)) args[["ylab"]] <- NA
   args$col <- getColors(field, alpha = TRUE)
-  
+
   # ---- gestion de la mise en page ----
   if (legend && !add) {
     oldpar <- par(no.readonly = TRUE)
     on.exit(par(oldpar))
-    
+
     layout(
       matrix(c(1, 2), nrow = 1),
       widths = c(6, 1)
     )
   }
-  
+
   if (add) {
-    do.call("points", c(list(x=locs), args))
+    do.call("points", c(list(x = locs), args))
   } else {
-    par(mar=c(2, 2, 4, 0))
-    do.call("plot", c(list(x=locs), args))
+    par(mar = c(2, 2, 4, 0))
+    do.call("plot", c(list(x = locs), args))
   }
-  
+
   # ---- légende ----
   if (legend && !add) {
     pointillistColorscale(field)
@@ -423,7 +423,7 @@ plotPointillistPainting <- function(locs,
 pointillistColorscale <- function(field, scalename = "") {
   origmar <- par("mar")
   origlwd <- par("lwd")
-  par(mar = c(2,0, 4, 0))
+  par(mar = c(2, 0, 4, 0))
   par(lwd = 0.5)
   field <- field[!is.na(field)]
   if (length(field) == 0) {
@@ -453,7 +453,7 @@ pointillistColorscale <- function(field, scalename = "") {
     adj = c(0.95, 1),
     # format(signif(values), digits=4),
     round(values, 3),
-    cex=0.8
+    cex = 0.8
   )
   par(mar = origmar, lwd = origlwd)
 }

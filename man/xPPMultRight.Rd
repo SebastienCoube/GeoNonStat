@@ -44,12 +44,15 @@ res1 <- xPPMultRight(X = X, Y = covariate_coefficients, vecchia_approx = vecchia
 # multiplying PP alone
 res2 <- xPPMultRight(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 # multiplying PP and matrix of covariate, one obs for each location
-X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-res3 <- xPPMultRight(PP = PP, X = X_by_loc,
-                        Y = c(covariate_coefficients, knots_coeffs),
-                        vecchia_approx = vecchia_approx)
-plotPointillistPainting(vecchia_approx$locs, res3, 
-                        main = "PP + covariates,\n one covariate for each location", pch=15)
+X_by_loc <- cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
+res3 <- xPPMultRight(
+  PP = PP, X = X_by_loc,
+  Y = c(covariate_coefficients, knots_coeffs),
+  vecchia_approx = vecchia_approx
+)
+plotPointillistPainting(vecchia_approx$locs, res3,
+  main = "PP + covariates,\n one covariate for each location", pch = 15
+)
 
 # TODO Nun functional example
 # # multiplying PP and matrix of covariates with an index
@@ -62,11 +65,12 @@ plotPointillistPainting(vecchia_approx$locs, res3,
 #                           main = "PP + covariates,\n  one covariate for each observation")
 
 # multiplying
-X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-res5 <- xPPMultRight(X = NULL, PP = PP,
-                       Y = diag(1, PP$n_knots),
-                       vecchia_approx = vecchia_approx,
-                       permutate_PP_to_obs = TRUE
-                       )
+X_by_obs <- cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+res5 <- xPPMultRight(
+  X = NULL, PP = PP,
+  Y = diag(1, PP$n_knots),
+  vecchia_approx = vecchia_approx,
+  permutate_PP_to_obs = TRUE
+)
 }
 \keyword{internal}

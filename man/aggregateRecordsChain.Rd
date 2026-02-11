@@ -7,11 +7,11 @@
 aggregateRecordsChain(chain)
 }
 \arguments{
-\item{chain}{a list of records containing for each iteration, 
+\item{chain}{a list of records containing for each iteration,
 a list of parameters}
 }
 \value{
-a list containing matrices of parameters, 
+a list containing matrices of parameters,
 aggregated over the iterations.
 }
 \description{

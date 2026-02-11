@@ -5,7 +5,7 @@
 \alias{processedGnsDemo}
 \title{GeoNonStat demo data}
 \format{
-a GeoNonStat object with 3000 observed locations and field. 
+a GeoNonStat object with 3000 observed locations and field.
 15 iterations of MCMC have run on this object.
 }
 \usage{
@@ -23,10 +23,10 @@ The data have been generated with the following code :
 \preformatted{
   set.seed(123)
   processedGnsDemo = runParallelGeoNonStatMcmc(
-    object = gnsDemo, 
+    object = gnsDemo,
     n_chains_in_parallel = 1,
-    n_threads_per_chain = 1, 
-    n_iterations = 15, 
+    n_threads_per_chain = 1,
+    n_iterations = 15,
     seed = 1
   )
 }

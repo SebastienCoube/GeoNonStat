@@ -21,6 +21,6 @@ a matrix
 Summarize a matrix by column
 }
 \examples{
-tt <- matrix(rnorm(200), ncol=20)
+tt <- matrix(rnorm(200), ncol = 20)
 summarizeRecords(tt)
 }

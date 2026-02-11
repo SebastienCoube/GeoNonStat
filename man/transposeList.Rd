@@ -16,9 +16,9 @@ a list, transposed
 Transpose a list
 }
 \examples{
-A  <- list("R1" = "a1", "R2"="a2", "R3" = "a3")
-B  <- list("R1" = "b1", "R2"="b2", "R3" = "b3")
-C  <- list("R1" = "c1", "R2"="c2", "R3" = "c3")
+A <- list("R1" = "a1", "R2" = "a2", "R3" = "a3")
+B <- list("R1" = "b1", "R2" = "b2", "R3" = "b3")
+C <- list("R1" = "c1", "R2" = "c2", "R3" = "c3")
 transposeList(list("A" = A, "B" = B, "C" = C))
 }
 \keyword{internal}

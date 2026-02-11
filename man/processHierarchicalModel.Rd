@@ -30,7 +30,7 @@ processHierarchicalModel(
 
 \item{observed_locs}{TODO}
 
-\item{matern_smoothness}{numerical value, a Matérn smoothness parameter, 
+\item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{observed_field}{a vector of observations.}

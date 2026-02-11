@@ -33,31 +33,31 @@ GeoNonStat(
 
 \item{observed_field}{a vector of observations of the interest variable}
 
-\item{X}{a data.frame of covariates explaining the interest variable 
+\item{X}{a data.frame of covariates explaining the interest variable
 through fixed linear effects}
 
-\item{matern_smoothness}{numerical value, a Matérn smoothness parameter, 
+\item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 
 \item{n_chains}{number of MCMC chains}
 
-\item{range_X}{a data.frame of covariates explaining the Gaussian process 
+\item{range_X}{a data.frame of covariates explaining the Gaussian process
 range through fixed linear effects}
 
 \item{range_PP}{TODO}
 
 \item{range_log_scale_bounds}{TODO}
 
-\item{noise_X}{a data.frame of covariates explaining the Gaussian noise 
+\item{noise_X}{a data.frame of covariates explaining the Gaussian noise
 variance through fixed linear effects}
 
-\item{noise_PP}{either an object of class PP used to model the field of 
+\item{noise_PP}{either an object of class PP used to model the field of
 log-noise parameters, or NULL in which case the model is stationary}
 
-\item{noise_log_scale_bounds}{either a vector containing two numeric values 
-bounding Uniform prior for the log-marginal variance of the noise's PP, 
+\item{noise_log_scale_bounds}{either a vector containing two numeric values
+bounding Uniform prior for the log-marginal variance of the noise's PP,
 or NULL in which case the bounds are set automatically}
 
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
@@ -85,7 +85,7 @@ noise_PP <- createPP(
   vecchia_approx = vecchia_approx,
   matern_range = .1,
   knots = 50,
-  plot=FALSE
+  plot = FALSE
 )
 noise_log_scale_bounds <- c(-8, 3)
 
@@ -100,8 +100,8 @@ myobj <- GeoNonStat(
   matern_smoothness = 1.5, # Matern smoothness
   anisotropic = FALSE,
   n_chains = 3,
-  noise_X = X, 
-  noise_PP = noise_PP, 
+  noise_X = X,
+  noise_PP = noise_PP,
   noise_log_scale_bounds = noise_log_scale_bounds,
   range_X = range_X,
   range_PP = NULL,
@@ -115,8 +115,8 @@ myobj <- GeoNonStat(
   matern_smoothness = 1.5, # Matern smoothness
   anisotropic = FALSE,
   n_chains = 3,
-  noise_X = noise_X, 
-  noise_PP = noise_PP, 
+  noise_X = noise_X,
+  noise_PP = noise_PP,
   noise_log_scale_bounds = noise_log_scale_bounds,
   range_X = range_X,
   seed = 1

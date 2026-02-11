@@ -24,7 +24,7 @@ runParallelGeoNonStatMcmc(
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
-a GeoNonStat object, with updated state (last state by chain) 
+a GeoNonStat object, with updated state (last state by chain)
 and records (params records for all iterations, by chain)
 }
 \description{
@@ -32,8 +32,9 @@ Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 }
 \examples{
 processedGns <- runParallelGeoNonStatMcmc(
-     gnsDemo, 
-     n_chains_in_parallel = 1,
-     n_threads_per_chain = 1, # example in sequential
-     n_iterations = 15)
+  gnsDemo,
+  n_chains_in_parallel = 1,
+  n_threads_per_chain = 1, # example in sequential
+  n_iterations = 15
+)
 }

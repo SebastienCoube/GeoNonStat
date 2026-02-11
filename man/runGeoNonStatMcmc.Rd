@@ -36,7 +36,7 @@ runGeoNonStatMcmc(
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
-a list containaing last state and records of parameters for each 
+a list containaing last state and records of parameters for each
 MCMC iteration
 }
 \description{
@@ -46,17 +46,17 @@ Run the MCMC on one chain of a `GeoNonStat` object
 chain_id <- 1
 seed <- 1
 iter_start <- length(gnsDemo$records$chain_1)
-processedChain <- 
-    runGeoNonStatMcmc(
-        covariates = gnsDemo$covariates, 
-        observed_field = gnsDemo$observed_field, 
-        hierarchical_model = gnsDemo$hierarchical_model, 
-        vecchia_approx = gnsDemo$vecchia_approx, 
-        state = gnsDemo$states[[chain_id]], 
-        n_iterations_update = 20, 
-        num_threads = 1, 
-        iter_start = iter_start, 
-        seed = iter_start + seed + chain_id
-        )
+processedChain <-
+  runGeoNonStatMcmc(
+    covariates = gnsDemo$covariates,
+    observed_field = gnsDemo$observed_field,
+    hierarchical_model = gnsDemo$hierarchical_model,
+    vecchia_approx = gnsDemo$vecchia_approx,
+    state = gnsDemo$states[[chain_id]],
+    n_iterations_update = 20,
+    num_threads = 1,
+    iter_start = iter_start,
+    seed = iter_start + seed + chain_id
+  )
 names(processedChain)
 }

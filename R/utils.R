@@ -10,17 +10,19 @@
 #' @examples
 #' inBounds(c(0, 12), 0, includeBounds = FALSE)
 #' inBounds(c(0, 12), 12, includeBounds = TRUE)
-inBounds <- function(bounds, x, includeBounds = FALSE){
-  if(length(bounds) != 2 || !is.numeric(bounds)) stop("bounds should be a numeric of length 2")
-  if(length(includeBounds) == 1) includeBounds <- rep(includeBounds, 2)
-  if(length(includeBounds) != 2 || !is.logical(includeBounds)) stop("includeBounds should be a logical of length 1 or 2")
-  includeBounds <- 1*includeBounds +1
+inBounds <- function(bounds, x, includeBounds = FALSE) {
+  if (length(bounds) != 2 || !is.numeric(bounds)) stop("bounds should be a numeric of length 2")
+  if (length(includeBounds) == 1) includeBounds <- rep(includeBounds, 2)
+  if (length(includeBounds) != 2 || !is.logical(includeBounds)) stop("includeBounds should be a logical of length 1 or 2")
+  includeBounds <- 1 * includeBounds + 1
   res1 <- switch(includeBounds[1],
-                 (x > bounds[1]),
-                 (x >= bounds[1]))
+    (x > bounds[1]),
+    (x >= bounds[1])
+  )
   res2 <- switch(includeBounds[2],
-                 (x < bounds[2]),
-                 (x <= bounds[2]))
+    (x < bounds[2]),
+    (x <= bounds[2])
+  )
   res <- (res1 & res2)
   return(res)
 }
@@ -97,7 +99,7 @@ naiveGreedyColoring <- function(M) {
   # creating a color * node matrix of incompatibilities
   incompatibilities <- matrix(0, n_obs + 1, max(degrees))
   cols <- rep(0, n_obs)
-  
+
   for (i in seq_len(n_obs))
   {
     cols[i] <- match(0, incompatibilities[i, ])
@@ -124,12 +126,13 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
   n <- length(vecchia_approx$sparse_chol_p) - 1L
   return(
     new("dtCMatrix",
-      i = vecchia_approx$sparse_chol_i-1L,
+      i = vecchia_approx$sparse_chol_i - 1L,
       p = vecchia_approx$sparse_chol_p,
-      x = compressed_sparse_chol[, ,1][vecchia_approx$sparse_chol_x_reorder],
+      x = compressed_sparse_chol[, , 1][vecchia_approx$sparse_chol_x_reorder],
       Dim = c(n, n),
       uplo = "L",
-      diag = "N")
+      diag = "N"
+    )
   )
 }
 
@@ -165,7 +168,7 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 #' lr_with_PP <- computeLogRange(
 #'   range_beta = range_beta,
 #'   vecchia_approx = vecchia_approx,
-#'   range_X = range_X, 
+#'   range_X = range_X,
 #'   PP = PP
 #' )
 #' range_beta <- matrix(rnorm(3 * (2 + PP$n_knots)), ncol = 3)
@@ -176,9 +179,9 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 #'   PP = PP
 #' )
 computeLogRange <- function(range_beta,
-                                vecchia_approx,
-                                range_X,
-                                PP = NULL) {
+                            vecchia_approx,
+                            range_X,
+                            PP = NULL) {
   if (ncol(range_beta) == 3) {
     Y <- range_beta %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
   } else if (ncol(range_beta) == 1) {
@@ -186,7 +189,7 @@ computeLogRange <- function(range_beta,
   } else {
     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }
-  
+
   log_range <- as.matrix(
     xPPMultRight(
       vecchia_approx = vecchia_approx,
@@ -272,28 +275,29 @@ computeLogRange <- function(range_beta,
 #'   log_scale = c(-3, -2)
 #' )
 betaPriorLogDens <- function(beta,
-                                n_PP,
-                                beta0_mean,
-                                beta0_var,
-                                log_scale) {
+                             n_PP,
+                             beta0_mean,
+                             beta0_var,
+                             log_scale) {
   nrb <- nrow(beta)
   ncb <- ncol(beta)
   if (is.null(n_PP)) n_PP <- 0
   if (!ncb %in% c(1, 3)) stop("beta is expected to have 1 or 3 columns")
   if (n_PP > nrb + 2) stop("n_PP can't be greater than nrow(beta) + 2")
-  
+
   mean_mat <- matrix(0, nrb, ncb)
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean # Intercept for range
   var_mat[1, 1] <- beta0_var # Intercept for range
   var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
   if (ncb == 3) {
-    if (!length(log_scale) == 2)
+    if (!length(log_scale) == 2) {
       stop("log_scale is supposed to be of length 2")
+    }
     var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   determinant_part <- -0.5 * log_scale[1] * n_PP
-  if (length(log_scale) == 2){
+  if (length(log_scale) == 2) {
     determinant_part <- determinant_part - 2 * 0.5 * log_scale[2] * n_PP
   }
   quadratic_part <- -0.5 * sum((beta - mean_mat)^2 / var_mat)
@@ -320,14 +324,15 @@ betaPriorLogDens <- function(beta,
 #'   log_scale = c(-3, -2)
 #' )
 betaPriorLogDensDerivative <- function(beta,
-                                           n_PP,
-                                           beta0_mean,
-                                           beta0_var,
-                                           log_scale) {
+                                       n_PP,
+                                       beta0_mean,
+                                       beta0_var,
+                                       log_scale) {
   nrb <- nrow(beta)
   ncb <- ncol(beta)
-  if (!ncb %in% c(1, 3))
+  if (!ncb %in% c(1, 3)) {
     stop("beta is expected to have 1 or 3 columns")
+  }
   if (n_PP > nrb + 2) {
     stop("n_PP can't be greater than nrow(beta) + 2")
   }
@@ -337,8 +342,9 @@ betaPriorLogDensDerivative <- function(beta,
   var_mat[1, 1] <- beta0_var
   var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
   if (ncb == 3) {
-    if (!length(log_scale) == 2)
+    if (!length(log_scale) == 2) {
       stop("log_scale is supposed to be of length 2")
+    }
     var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   return(-(beta - mean_mat) / var_mat)
@@ -373,12 +379,15 @@ betaPriorLogDensDerivative <- function(beta,
 #' # multiplying PP alone
 #' res2 <- xPPMultRight(PP = PP, Y = knots_coeffs, vecchia_approx = vecchia_approx)
 #' # multiplying PP and matrix of covariate, one obs for each location
-#' X_by_loc = cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
-#' res3 <- xPPMultRight(PP = PP, X = X_by_loc,
-#'                         Y = c(covariate_coefficients, knots_coeffs),
-#'                         vecchia_approx = vecchia_approx)
-#' plotPointillistPainting(vecchia_approx$locs, res3, 
-#'                         main = "PP + covariates,\n one covariate for each location", pch=15)
+#' X_by_loc <- cbind(1, vecchia_approx$locs, rnorm(vecchia_approx$n_locs))
+#' res3 <- xPPMultRight(
+#'   PP = PP, X = X_by_loc,
+#'   Y = c(covariate_coefficients, knots_coeffs),
+#'   vecchia_approx = vecchia_approx
+#' )
+#' plotPointillistPainting(vecchia_approx$locs, res3,
+#'   main = "PP + covariates,\n one covariate for each location", pch = 15
+#' )
 #'
 #' # TODO Nun functional example
 #' # # multiplying PP and matrix of covariates with an index
@@ -391,17 +400,18 @@ betaPriorLogDensDerivative <- function(beta,
 #' #                           main = "PP + covariates,\n  one covariate for each observation")
 #'
 #' # multiplying
-#' X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-#' res5 <- xPPMultRight(X = NULL, PP = PP,
-#'                        Y = diag(1, PP$n_knots),
-#'                        vecchia_approx = vecchia_approx,
-#'                        permutate_PP_to_obs = TRUE
-#'                        )
+#' X_by_obs <- cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
+#' res5 <- xPPMultRight(
+#'   X = NULL, PP = PP,
+#'   Y = diag(1, PP$n_knots),
+#'   vecchia_approx = vecchia_approx,
+#'   permutate_PP_to_obs = TRUE
+#' )
 xPPMultRight <- function(X = NULL,
-                            PP = NULL,
-                            vecchia_approx,
-                            Y,
-                            permutate_PP_to_obs = FALSE) {
+                         PP = NULL,
+                         vecchia_approx,
+                         Y,
+                         permutate_PP_to_obs = FALSE) {
   if (is.null(X) & is.null(PP)) stop("X and PP can't be both NULL")
   # Sanity checks
   if (!is.matrix(Y)) Y <- as.matrix(Y)
@@ -411,48 +421,50 @@ xPPMultRight <- function(X = NULL,
   if (nrow(Y) != expected_rows) {
     stop("Y should have ", expected_rows, " rows it has ", nrow(Y))
   }
-  
+
   if (permutate_PP_to_obs) {
     locs_idx <- vecchia_approx$locs_match
   } else {
     locs_idx <- seq_len(vecchia_approx$n_locs)
   }
-  
+
   # Multiply X and Y
   xrow_offset <- 0
   res <- NULL
-  
+
   if (!is.null(X)) {
     xrow_offset <- ncol(X)
     # using res[] is important for performance
-    res <-  X %*% Y[seq_len(xrow_offset), , drop = FALSE]
-  } 
-  
+    res <- X %*% Y[seq_len(xrow_offset), , drop = FALSE]
+  }
+
   if (!is.null(PP)) {
     # remove X rows from Y if needed
     idxY_PP <- seq.int(xrow_offset + 1, nrow(Y))
     m <- length(idxY_PP)
     k <- nrow(PP$sparse_chol)
-    V <- rbind(Y[idxY_PP, , drop=FALSE], matrix(0, k - m, ncol(Y)))
+    V <- rbind(Y[idxY_PP, , drop = FALSE], matrix(0, k - m, ncol(Y)))
     # V <- matrix(0, nrow(PP$sparse_chol), ncol(Y))
     # V[seq_along(idxY_PP), ] <- Y[idxY_PP, , drop=FALSE]
     solved <- Matrix::solve(PP$sparse_chol, V, triangular = TRUE)
     PP_result <- solved[-seq_len(nrow(PP$knots)), , drop = FALSE]
     # using res[] is important for performance
-    if(is.null(res)) {
+    if (is.null(res)) {
       res <- PP_result[locs_idx, , drop = FALSE]
     } else {
       res[] <- res[] + PP_result[locs_idx, , drop = FALSE]
     }
   }
 
-  if(!is.matrix(res)) {
+  if (!is.matrix(res)) {
     res <- as.matrix(res)
   }
-  if (ncol(res) == 3)
+  if (ncol(res) == 3) {
     colnames(res) <- c("det", "an", "an")
-  if (ncol(res) == 1)
+  }
+  if (ncol(res) == 1) {
     colnames(res) <- "det"
+  }
   return(res)
 }
 
@@ -495,10 +507,10 @@ xPPMultRight <- function(X = NULL,
 #'   permutate_PP_to_obs = TRUE
 #' )
 xPPCrossprod <- function(X,
-                           PP = NULL,
-                           Y,
-                           vecchia_approx = NULL,
-                           permutate_PP_to_obs = FALSE) {
+                         PP = NULL,
+                         Y,
+                         vecchia_approx = NULL,
+                         permutate_PP_to_obs = FALSE) {
   if (nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
   }
@@ -516,22 +528,21 @@ xPPCrossprod <- function(X,
       stop("vecchia_approx should have the same number of locations as the locations of PP")
     }
   }
-  if (!is.matrix(Y))
+  if (!is.matrix(Y)) {
     Y <- as.matrix(Y)
+  }
   res <- crossprod(x = X, y = Y)
   if (!is.null(PP)) {
-    if (permutate_PP_to_obs)
+    if (permutate_PP_to_obs) {
       Y <- vecchia_approx$locs_match_matrix %*% Y
+    }
     res <-
       rbind(res, Matrix::solve(Matrix::t(PP$sparse_chol), rbind(matrix(
         0, nrow(PP$knots), ncol(Y)
       ), Y))[1:PP$n_knots, , drop = FALSE])
   }
-  if (!is.matrix(res))
+  if (!is.matrix(res)) {
     res <- as.matrix(res)
+  }
   return(res)
 }
-
-
-
-

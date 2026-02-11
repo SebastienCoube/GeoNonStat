@@ -42,7 +42,7 @@ range_beta <- matrix(rnorm(ncol(range_X$X_locs) + PP$n_knots), ncol = 1)
 lr_with_PP <- computeLogRange(
   range_beta = range_beta,
   vecchia_approx = vecchia_approx,
-  range_X = range_X, 
+  range_X = range_X,
   PP = PP
 )
 range_beta <- matrix(rnorm(3 * (2 + PP$n_knots)), ncol = 3)

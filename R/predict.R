@@ -1,8 +1,8 @@
 # ExtendVecchia = function(vecchia_approx, new_locs){
 # }
-# 
-# Predict = function(geo_non_stat, burn_in = .1, 
-#                    new_locs, 
+#
+# Predict = function(geo_non_stat, burn_in = .1,
+#                    new_locs,
 #                    new_X = NULL,
 #                    new_noise_X = NULL,
 #                    new_range_X = NULL

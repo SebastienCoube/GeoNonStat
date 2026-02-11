@@ -37,61 +37,65 @@ createVecchia <- function(observed_locs,
   # message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
-  if (!is.matrix(observed_locs))
+  if (!is.matrix(observed_locs)) {
     stop("observed_locs should be a matrix")
-  if (ncol(observed_locs) != 2)
+  }
+  if (ncol(observed_locs) != 2) {
     stop("observed_locs should have 2 columns")
-  
+  }
+
   # remove duplicates
   locs <- unique(observed_locs)
-  
+
   # storing numbers
   n_locs <- nrow(locs)
   n_obs <- nrow(observed_locs)
-  
+
   # re-ordering spatial locations (random then maxmin on subset)
   max_locs <- min(n_locs, 10000)
   neworder <- order(runif(n_locs))
   neworder[seq_len(max_locs)] <- neworder[GpGp::order_maxmin(locs[neworder[seq_len(max_locs)], ])]
   locs <- locs[neworder, ]
-  
+
   # matching observed locations with reordered, unrepeated locations
   locs_match <- match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  
+
   locs_match_matrix <- Matrix::sparseMatrix(i = locs_match, j = seq_len(n_obs), x = 1)
-  
+
   # doing reversed operation : for a given unrepeated location, tell which observations correspond
   hctam_scol <- split(seq_len(n_obs), locs_match)
-  
+
   # extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray <- t(GpGp::find_ordered_nn(locs, m))
   NNNoNA <- !is.na(NNarray)
-  
+
   sparse_mat <- Matrix::sparseMatrix(
     x = seq_len(sum(NNNoNA)),
     i = col(NNarray)[NNNoNA],
     j = NNarray[NNNoNA],
     triangular = TRUE
   )
-  
+
   sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][match(sparse_mat@x, seq_len(sum(NNNoNA)))]
-  
+
   # Partitioning locations using parallel kmeans for field update
   locs_partition <- generateLocationPartitions(locs, n_locs, ncores = ncores)
-  
+
   markov_mat <- Matrix::crossprod(sparse_mat)
   markov_mat@x[] <- 1
   locs_partition_coloring <- lapply(split(locs_partition, col(locs_partition)), function(x) {
-    M <- Matrix::sparseMatrix(i = seq_along(x),
-                              j = x,
-                              x = 1)
+    M <- Matrix::sparseMatrix(
+      i = seq_along(x),
+      j = x,
+      x = 1
+    )
     return(naiveGreedyColoring(Matrix::t(M) %*% markov_mat %*% M))
   })
-  
+
   for (i in seq_len(ncol(locs_partition))) {
     locs_partition[, i] <- locs_partition_coloring[[i]][locs_partition[, i]]
   }
-  
+
   return(
     list(
       n_locs = n_locs,
@@ -103,8 +107,9 @@ createVecchia <- function(observed_locs,
       locs_match = locs_match,
       locs_match_matrix = locs_match_matrix,
       hctam_scol = hctam_scol,
-      hctam_scol_1 = sapply(hctam_scol, function(x)
-        x[1]),
+      hctam_scol_1 = sapply(hctam_scol, function(x) {
+        x[1]
+      }),
       obs_per_loc = unlist(sapply(hctam_scol, length)),
       # count how many observations correspond to one location
       NNarray = NNarray,
@@ -125,16 +130,17 @@ createVecchia <- function(observed_locs,
 generateLocationPartitions <- function(locs, n, ncores = 1) {
   clust_size <- 10000
   n_clusters <- ceiling(n / clust_size)
-  centers_seq <- round(seq(n_clusters, 
-                           max(5, 2 * (n_clusters)), 
-                           length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)))
-  
+  centers_seq <- round(seq(n_clusters,
+    max(5, 2 * (n_clusters)),
+    length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)
+  ))
+
   if (ncores > 1) {
     cl <- parallel::makeCluster(min(ncores, parallel::detectCores(logical = FALSE)))
     on.exit(parallel::stopCluster(cl))
-    
+
     parallel::clusterExport(cl, varlist = c("locs", "n"), envir = environment())
-    
+
     locs_partition <- parallel::parSapply(cl, centers_seq, function(k) {
       kmeans(
         locs,
@@ -153,7 +159,7 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
       )$cluster
     })
   }
-  
+
   colnames(locs_partition) <- paste0(centers_seq, "_clust")
   return(locs_partition)
 }
@@ -213,10 +219,11 @@ processCovariates <- function(X,
                               PP = NULL,
                               one_obs_per_locs = FALSE) {
   covariate_name <- as.list(match.call())$X
-  if (is.null(X))
+  if (is.null(X)) {
     covariate_name <- X
+  }
   res <- list()
-  
+
   # covariates in the observed field #
   if (!is.null(X)) {
     if (!is.data.frame(X)) {
@@ -230,13 +237,13 @@ processCovariates <- function(X,
         )
       )
     }
-    
+
     # creating model matrix
     # extracting a model matrix and storing the original argument
     res$arg <- X
-    res$X <- model.matrix( ~ ., X)
+    res$X <- model.matrix(~., X)
   }
-  
+
   # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
   if (is.null(X)) {
     res$arg <- "No covariates were provided"
@@ -244,7 +251,7 @@ processCovariates <- function(X,
   }
   colnames(res$X)[1] <- "(Intercept)"
   res$X <- as(res$X, "sparseMatrix")
-  
+
   if (det(as.matrix(crossprod(res$X))) < 1e-10) {
     stop(
       covariate_name,
@@ -253,9 +260,9 @@ processCovariates <- function(X,
       "automatically added."
     )
   }
-  #number of explanatory variables
+  # number of explanatory variables
   res$n_regressors <- ncol(res$X)
-  #combining X with PP basis functions
+  # combining X with PP basis functions
   X_ <- res$X
   if (!is.null(PP)) {
     X_ <- cbind(
@@ -289,7 +296,7 @@ processCovariates <- function(X,
   }
 
   res$X_locs <- matrix(
-    res$X[vecchia_approx$hctam_scol_1, res$which_locs], 
+    res$X[vecchia_approx$hctam_scol_1, res$which_locs],
     ncol = length(res$which_locs)
   )
   res$X_locs <- as(res$X_locs, "sparseMatrix")
@@ -307,22 +314,22 @@ processCovariates <- function(X,
       )
     )
   }
-  
+
   # conditioning matrix for HMC
-  if(!one_obs_per_locs) {
-    crossprod_X = crossprod(X_)
-    res$L = t(chol(
-      solve(crossprod_X)/max(solve(crossprod_X))
+  if (!one_obs_per_locs) {
+    crossprod_X <- crossprod(X_)
+    res$L <- t(chol(
+      solve(crossprod_X) / max(solve(crossprod_X))
     ))
-    res$L_minus_one = solve(res$L)
+    res$L_minus_one <- solve(res$L)
   }
   if (one_obs_per_locs) {
     res$X <- NULL
-    crossprod_X = crossprod(X_locs_)
-    res$L = t(chol(
-      solve(crossprod_X)/max(solve(crossprod_X))
+    crossprod_X <- crossprod(X_locs_)
+    res$L <- t(chol(
+      solve(crossprod_X) / max(solve(crossprod_X))
     ))
-    res$L_minus_one = solve(res$L)
+    res$L_minus_one <- solve(res$L)
   }
   return(res)
 }
@@ -340,8 +347,8 @@ processCovariates <- function(X,
 #' myPP <- createPP(vecchia_approx)
 #' PPPP <- processPPPprior(myPP, c(1, 2), "example")
 processPPPprior <- function(PP = NULL,
-                             log_scale_bounds = NULL,
-                             parameter_name) {
+                            log_scale_bounds = NULL,
+                            parameter_name) {
   if (is.null(PP) && is.null(log_scale_bounds)) {
     return(log_scale_bounds)
   }
@@ -371,7 +378,7 @@ processPPPprior <- function(PP = NULL,
     )
     log_scale_bounds <- c(-6, 3)
   }
-  if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2)
+  if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2) {
     stop(
       paste(
         "The log - marginal variance (log_scale) bounds for the PP who describes the",
@@ -379,6 +386,7 @@ processPPPprior <- function(PP = NULL,
         "parameters must be a numeric vector of length 2"
       )
     )
+  }
   log_scale_bounds <- sort(log_scale_bounds)
   return(log_scale_bounds)
 }
@@ -391,7 +399,7 @@ processPPPprior <- function(PP = NULL,
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
 #' @param observed_locs TODO
-#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
+#' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations.
 #' @param covariates The list of covariates obtained with `processCovariates`
@@ -400,7 +408,7 @@ processPPPprior <- function(PP = NULL,
 #' @returns a list
 #' @export
 #' @keywords internal
-#' 
+#'
 #' @examples
 #' nobs <- 10000
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
@@ -422,30 +430,31 @@ processPPPprior <- function(PP = NULL,
 #'   anisotropic = TRUE
 #' )
 processHierarchicalModel <- function(vecchia_approx,
-                                       noise_PP = NULL,
-                                       noise_log_scale_bounds = NULL,
-                                       range_PP = NULL,
-                                       range_log_scale_bounds = NULL,
-                                       observed_locs,
-                                       matern_smoothness,
-                                       observed_field,
-                                       covariates,
-                                       anisotropic) {
+                                     noise_PP = NULL,
+                                     noise_log_scale_bounds = NULL,
+                                     range_PP = NULL,
+                                     range_log_scale_bounds = NULL,
+                                     observed_locs,
+                                     matern_smoothness,
+                                     observed_field,
+                                     covariates,
+                                     anisotropic) {
   if (!matern_smoothness %in% c(1.5, .5)) {
     stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   }
   # Processing PP priors
   noise_log_scale_bounds <- processPPPprior(noise_PP, noise_log_scale_bounds, "noise")
   range_log_scale_bounds <- processPPPprior(range_PP, range_log_scale_bounds, "range")
-  
+
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
   # and as lower bound the minimal distance between two space points
   alpha_min <- alpha_max <- -0.5 * log(8 * matern_smoothness)
-  alpha_max <- alpha_max + 
+  alpha_max <- alpha_max +
     log(
-      max(dist(vecchia_approx$locs[seq_len(min(10000, nrow(vecchia_approx$locs))), ])) / 8)
-  alpha_min <- alpha_min + 
+      max(dist(vecchia_approx$locs[seq_len(min(10000, nrow(vecchia_approx$locs))), ])) / 8
+    )
+  alpha_min <- alpha_min +
     log(median(FNN::get.knn(vecchia_approx$locs, k = 1)$nn.dist) * 3)
   # OLS to get residual variance to make a guess for maximum and minimum reasonable values
   # for NNGP and noise variance
@@ -491,16 +500,16 @@ processHierarchicalModel <- function(vecchia_approx,
 #' a sufficient version when applicable range description
 #' @export
 #' @keywords internal
-#' 
+#'
 #' @examples
 #' processTransitionKernels()
-processTransitionKernels <- function(init=-4) {
+processTransitionKernels <- function(init = -4) {
   return(
     list(
       range_log_scale_sufficient = init,
-      range_log_scale_ancillary =  init,
-      range_beta_sufficient =      init,
-      range_beta_ancillary =       init,
+      range_log_scale_ancillary = init,
+      range_beta_sufficient = init,
+      range_beta_ancillary = init,
       field_log_var_ancillary = init,
       field_log_var_sufficient = init,
       noise_beta_mala = init,
@@ -555,11 +564,11 @@ processTransitionKernels <- function(init=-4) {
 #'   init_tk = -4
 #' )
 processStates <- function(hm,
-                           covariates,
-                           observed_field,
-                           vecchia_approx,
-                           init_tk,
-                           seed = 1) {
+                          covariates,
+                          observed_field,
+                          vecchia_approx,
+                          init_tk,
+                          seed = 1) {
   set.seed(seed)
   # initializing sub-lisits in the state
   # Actual parameters
@@ -570,8 +579,8 @@ processStates <- function(hm,
   momenta <- list()
   # Useful stuff pre-computed from the parameters
   stuff <- list()
-  
-  
+
+
   # Linear regression coefficients  ############################################
   # starting points for regression coeffs
   perturb <- t(chol(vcov(hm$naive_ols))) %*%
@@ -592,89 +601,100 @@ processStates <- function(hm,
     ) # random starting values
     row.names(params$range_beta) <- colnames(covariates$range_X$X_locs)
   }
-  
-  if(!is.null(hm$range$PP)) {
-    params$range_beta = matrix(data =  0, 
-                               nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots, 
-                               ncol = 1 + 2 * hm$anisotropic) #random starting values
-    row.names(params$range_beta) = c(colnames(covariates$range_X$X_locs), 
-                                     paste("PP", seq_len(hm$range$PP$n_knots), sep = "_"))
-    params$range_log_scale = matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1]))
-    row.names(params$range_log_scale) = c("range", "aniso")[seq_len(1 + hm$anisotropic)]
+
+  if (!is.null(hm$range$PP)) {
+    params$range_beta <- matrix(
+      data = 0,
+      nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots,
+      ncol = 1 + 2 * hm$anisotropic
+    ) # random starting values
+    row.names(params$range_beta) <- c(
+      colnames(covariates$range_X$X_locs),
+      paste("PP", seq_len(hm$range$PP$n_knots), sep = "_")
+    )
+    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1]))
+    row.names(params$range_log_scale) <- c("range", "aniso")[seq_len(1 + hm$anisotropic)]
   }
-  #params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
-  colnames(params$range_beta) = c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
-    #row.names(params$range_beta) = c(colnames(covariates$range_X$X))
-  params$range_beta[1,1] = hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
-  
+  # params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
+  colnames(params$range_beta) <- c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
+  # row.names(params$range_beta) = c(colnames(covariates$range_X$X))
+  params$range_beta[1, 1] <- hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
+
   # momenta
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   # cholesky factors of precision matrices
-  stuff$compressed_chol <- array(0, dim = c(nrow(vecchia_approx$NNarray), 
-                                            vecchia_approx$n_locs,  
-                                            1 + (1 + 2*hm$anisotropic)*nrow(vecchia_approx$NNarray)))
+  stuff$compressed_chol <- array(0, dim = c(
+    nrow(vecchia_approx$NNarray),
+    vecchia_approx$n_locs,
+    1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
+  ))
   vecchia_(
     log_range = t(computeLogRange(
       range_beta = params$range_beta,
       vecchia_approx = vecchia_approx,
       range_X = covariates$range_X,
-      PP = hm$range$PP)), 
-      num_threads = min(5, max(parallel::detectCores() - 1, 1)),
-      locs = vecchia_approx$t_locs,
-      NNarray = vecchia_approx$NNarray,
-      compute_derivative = TRUE,
-      smoothness = hm$matern_smoothness, 
+      PP = hm$range$PP
+    )),
+    num_threads = min(5, max(parallel::detectCores() - 1, 1)),
+    locs = vecchia_approx$t_locs,
+    NNarray = vecchia_approx$NNarray,
+    compute_derivative = TRUE,
+    smoothness = hm$matern_smoothness,
     result = stuff$compressed_chol
   )
-  
+
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
-  
+
   # Noise variance  and stuff depending on it ##################################
   # parameter format and value
   if (is.null(hm$noise$PP)) {
     # random starting values
-    params$noise_beta <- 
-      matrix(rep(0, ncol(covariates$noise_X$X)), ncol = 1) 
+    params$noise_beta <-
+      matrix(rep(0, ncol(covariates$noise_X$X)), ncol = 1)
     row.names(params$noise_beta) <- colnames(covariates$noise_X$X)
   } else {
     # random starting values
-    params$noise_beta <- 
-      matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) 
-    row.names(params$noise_beta) <- 
-      c(colnames(covariates$noise_X$X),
-        paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_"))
+    params$noise_beta <-
+      matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1)
+    row.names(params$noise_beta) <-
+      c(
+        colnames(covariates$noise_X$X),
+        paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_")
+      )
     params$noise_log_scale <- hm$noise$log_scale_bounds[1]
   }
-  
-  if(!is.null(hm$noise$PP)) {
-    params$noise_beta = matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) #random starting values
-    row.names(params$noise_beta) = c(colnames(covariates$noise_X$X), 
-                                     paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_"))
-    params$noise_log_scale = matrix(runif(1, hm$noise$log_scale_bounds[1], hm$noise$log_scale_bounds[2]))
-    row.names(params$noise_log_scale) = " "
+
+  if (!is.null(hm$noise$PP)) {
+    params$noise_beta <- matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) # random starting values
+    row.names(params$noise_beta) <- c(
+      colnames(covariates$noise_X$X),
+      paste("PP", seq_len(hm$noise$PP$n_knots), sep = "_")
+    )
+    params$noise_log_scale <- matrix(runif(1, hm$noise$log_scale_bounds[1], hm$noise$log_scale_bounds[2]))
+    row.names(params$noise_log_scale) <- " "
   }
-  params$noise_beta[1] = hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
-  params$noise_beta[-1] = rnorm(length(params$noise_beta[-1]), 0, .2)
-  
+  params$noise_beta[1] <- hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
+  params$noise_beta[-1] <- rnorm(length(params$noise_beta[-1]), 0, .2)
+
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  stuff$noise_var = as.vector(exp(xPPMultRight(
+  stuff$noise_var <- as.vector(exp(xPPMultRight(
     X = covariates$noise_X$X, PP = hm$noise$PP,
-    vecchia_approx = vecchia_approx, Y = params$noise_beta, 
+    vecchia_approx = vecchia_approx, Y = params$noise_beta,
     permutate_PP_to_obs = T
   )))
-  
+
   # Marginal variance of the NNGP and stuff depending on it ####################
-  params$field_log_var = matrix(hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1))
-  row.names(params$field_log_var) = " "
-  
+  params$field_log_var <- matrix(hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1))
+  row.names(params$field_log_var) <- " "
+
   # Latent field ###############################################################
-  params$field = c(exp(.5 * params$field_log_var)) * 
-    as.vector(Matrix::solve(stuff$sparse_chol,rnorm(vecchia_approx$n_locs)))
-  
+  params$field <- c(exp(.5 * params$field_log_var)) *
+    as.vector(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+
   return(list(
     "params" = params,
     # parameters of interest to the model
@@ -691,22 +711,22 @@ processStates <- function(hm,
 #'
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param observed_field a vector of observations of the interest variable
-#' @param X a data.frame of covariates explaining the interest variable 
+#' @param X a data.frame of covariates explaining the interest variable
 #' through fixed linear effects
-#' @param matern_smoothness numerical value, a Matérn smoothness parameter, 
+#' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
-#' @param range_X a data.frame of covariates explaining the Gaussian process 
+#' @param range_X a data.frame of covariates explaining the Gaussian process
 #' range through fixed linear effects
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
-#' @param noise_X a data.frame of covariates explaining the Gaussian noise 
+#' @param noise_X a data.frame of covariates explaining the Gaussian noise
 #' variance through fixed linear effects
-#' @param noise_PP either an object of class PP used to model the field of 
+#' @param noise_PP either an object of class PP used to model the field of
 #' log-noise parameters, or NULL in which case the model is stationary
-#' @param noise_log_scale_bounds either a vector containing two numeric values 
-#' bounding Uniform prior for the log-marginal variance of the noise's PP, 
+#' @param noise_log_scale_bounds either a vector containing two numeric values
+#' bounding Uniform prior for the log-marginal variance of the noise's PP,
 #' or NULL in which case the bounds are set automatically
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
@@ -724,7 +744,7 @@ processStates <- function(hm,
 #'   vecchia_approx = vecchia_approx,
 #'   matern_range = .1,
 #'   knots = 50,
-#'   plot=FALSE
+#'   plot = FALSE
 #' )
 #' noise_log_scale_bounds <- c(-8, 3)
 #'
@@ -739,8 +759,8 @@ processStates <- function(hm,
 #'   matern_smoothness = 1.5, # Matern smoothness
 #'   anisotropic = FALSE,
 #'   n_chains = 3,
-#'   noise_X = X, 
-#'   noise_PP = noise_PP, 
+#'   noise_X = X,
+#'   noise_PP = noise_PP,
 #'   noise_log_scale_bounds = noise_log_scale_bounds,
 #'   range_X = range_X,
 #'   range_PP = NULL,
@@ -754,8 +774,8 @@ processStates <- function(hm,
 #'   matern_smoothness = 1.5, # Matern smoothness
 #'   anisotropic = FALSE,
 #'   n_chains = 3,
-#'   noise_X = noise_X, 
-#'   noise_PP = noise_PP, 
+#'   noise_X = noise_X,
+#'   noise_PP = noise_PP,
 #'   noise_log_scale_bounds = noise_log_scale_bounds,
 #'   range_X = range_X,
 #'   seed = 1
@@ -785,9 +805,9 @@ GeoNonStat <- function(vecchia_approx,
   set.seed(seed)
   # cleansing RAM
   gc()
-  
+
   # Sanity checks #####################################################################
-  
+
   # covariates #########################################################
   covariates <- list()
   # fixed effects for response
@@ -811,7 +831,7 @@ GeoNonStat <- function(vecchia_approx,
     PP = noise_PP,
     one_obs_per_locs = FALSE
   )
-  
+
   # Info about hierarchical model ##############################################################
   hierarchical_model <- processHierarchicalModel(
     vecchia_approx = vecchia_approx,
@@ -825,8 +845,8 @@ GeoNonStat <- function(vecchia_approx,
     covariates = covariates,
     anisotropic = anisotropic
   )
-  
-  
+
+
   # Chain states #################################################################
   # cl = parallel::makeCluster(min(parallel::detectCores()-1, n_chains))
   # parallel::clusterExport(cl, c("hierarchical_model", "covariates",
@@ -850,20 +870,20 @@ GeoNonStat <- function(vecchia_approx,
 
   # Chain records setup #######################################################
   # records is a list that stocks the recorded parameters of the model,
-  # including covariance parameters, the value of the sampled field, etc. 
+  # including covariance parameters, the value of the sampled field, etc.
   # In terms of RAM, those are the biggest bit !
   records <- lapply(
-    states, 
+    states,
     function(x) list(x$params)
   )
-  # iteration is a 2-colums matrix that records the iteration at the end of 
+  # iteration is a 2-colums matrix that records the iteration at the end of
   # each chains join and the associated CPU time
   checkpoints <- matrix(
-    c(0, as.numeric(Sys.time() - t_begin, unit = "mins")), 
+    c(0, as.numeric(Sys.time() - t_begin, unit = "mins")),
     ncol = 2
   )
   colnames(checkpoints) <- c("iteration", "time")
-  
+
   # Result ####################################################################
   res <- structure(
     list(
@@ -908,14 +928,14 @@ detailedSummary <- function(partobject) {
   sumdata <- summary(partobject)
   return(
     cbind(
-      sumdata, 
-      "Value" = 
+      sumdata,
+      "Value" =
         as.character(
           sapply(
             dimnames(sumdata)[[1]], function(x) {
               res <- ""
               if (sumdata[x, "Length"] == 1 &&
-                  sumdata[x, "Mode"] %in% c("numeric", "character")) {
+                sumdata[x, "Mode"] %in% c("numeric", "character")) {
                 res <- partobject[[x]]
               }
               res

@@ -21,13 +21,14 @@ knotsFromKmeans <- function(knots_number, locs) {
     stop("50000 knots numer maximum allowed")
   }
   sampled_locs <- locs[sample(seq_len(nrow(locs)), n_sample, replace = FALSE), ]
-  
+
   # TODO ici j'ai un warning Les etapes de transfer (quick-TRANSfer stage) ont depasse le maximum (= 2500000)
   # Si on met l'algorithme "Lloyd" ca resoud le pb.
   centers <- kmeans(sampled_locs,
-                    knots_number,
-                    algorithm = "Hartigan-Wong",
-                    iter.max = 50)$centers
+    knots_number,
+    algorithm = "Hartigan-Wong",
+    iter.max = 50
+  )$centers
   return(centers)
 }
 
@@ -109,23 +110,25 @@ createPP <- function(vecchia_approx,
                      knots = NULL,
                      seed = 1234,
                      plot = TRUE) {
-  if (!is.list(vecchia_approx))
+  if (!is.list(vecchia_approx)) {
     stop("Argument 'vecchia_approx' must be a list.")
+  }
   if (!is.null(matern_range) &&
-      matern_range <= 0)
+    matern_range <= 0) {
     stop("'matern_range' must be positive.")
+  }
   if (!is.null(knots) &&
-      is.numeric(knots) && is.vector(knots) == 1 && any(knots <= 0)) {
+    is.numeric(knots) && is.vector(knots) == 1 && any(knots <= 0)) {
     stop("'knots' must be positive.")
   }
   if (is.matrix(knots) &&
-      ncol(knots) != ncol(vecchia_approx$locs)) {
+    ncol(knots) != ncol(vecchia_approx$locs)) {
     stop("Matrix 'knots' must have the same number of columns as spatial locations.")
   }
   if (is.vector(knots) && knots > nrow(vecchia_approx$locs)) {
     warning("You requested more knots than spatial locations.")
   }
-  
+
   # Generate knots
   if (is.null(knots)) {
     knots <- 25
@@ -135,24 +138,28 @@ createPP <- function(vecchia_approx,
     knots <- knotsFromKmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
   }
-  
+
   # matern range
   if (is.null(matern_range)) {
     matern_range <- max(dist(knots)) * .25
-    message(paste("Matern range set to ", signif(matern_range, 3)),
-            " 25 % of the space pseudo-diameter")
+    message(
+      paste("Matern range set to ", signif(matern_range, 3)),
+      " 25 % of the space pseudo-diameter"
+    )
   }
-  
+
   # knots order
-  if (is.null(rownames(knots)))
+  if (is.null(rownames(knots))) {
     rownames(knots) <- seq_len(nrow(knots))
+  }
   knots <- knots[GpGp::order_maxmin(knots), ]
-  
+
   additional <- NULL
   if (nrow(vecchia_approx$NNarray) - 1 - nrow(knots) > 0) {
     additional <-
       GpGp::find_ordered_nn(vecchia_approx$locs,
-                            m = nrow(vecchia_approx$NNarray) - 1 - nrow(knots))[, -1]
+        m = nrow(vecchia_approx$NNarray) - 1 - nrow(knots)
+      )[, -1]
   }
   # NNarray
   NNarray <- rbind(
@@ -172,7 +179,7 @@ createPP <- function(vecchia_approx,
       additional + nrow(knots)
     )
   )
-  
+
   # Cholesky matrix
   combined_locs <- rbind(knots, vecchia_approx$locs)
   Linv_vals <- GpGp::vecchia_Linv(
@@ -188,7 +195,7 @@ createPP <- function(vecchia_approx,
     x = Linv_vals[notnaNNarray],
     triangular = TRUE
   )
-  
+
   res <- structure(
     list(
       "knots" = knots,
@@ -199,14 +206,14 @@ createPP <- function(vecchia_approx,
     ),
     class = "PP"
   )
-  
+
   if (plot) {
     plot(res, mar_var_loss = TRUE)
   } else {
     # Just to print the diagnostic of var loss
     varloss <- varLossPP(res)
   }
-  
+
   return(res)
 }
 
@@ -251,8 +258,9 @@ varLossPP <- function(x) {
   }
   PP_mar_var <- apply(Matrix::solve(x$sparse_chol, Matrix::diag(
     nrow = nrow(x$sparse_chol), ncol = nrow(x$knots)
-  )), 1, function(x)
-    sum(x^2))
+  )), 1, function(x) {
+    sum(x^2)
+  })
   # max(0) because of tiny numerical errors
   PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var) / 1.000001) * 100
   mean_mar_var <- mean(PP_mar_var)
@@ -268,7 +276,7 @@ varLossPP <- function(x) {
     "% of marginal variance on average is lost with the use of a PP.\nThis is ",
     msg
   )
-  
+
   return(PP_mar_var)
 }
 
