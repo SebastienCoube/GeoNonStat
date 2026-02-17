@@ -766,20 +766,6 @@ processStates <- function(hm,
 #'   range_PP = NULL,
 #'   seed = 1
 #' )
-#' myobj <- GeoNonStat(
-#'   vecchia_approx = vecchia_approx,
-#'   observed_field = observed_field, # spatial locations
-#'   X = X, # Response variable
-#'   # Covariates per observation
-#'   matern_smoothness = 1.5, # Matern smoothness
-#'   anisotropic = FALSE,
-#'   n_chains = 3,
-#'   noise_X = noise_X,
-#'   noise_PP = noise_PP,
-#'   noise_log_scale_bounds = noise_log_scale_bounds,
-#'   range_X = range_X,
-#'   seed = 1
-#' )
 #' summary(myobj)
 #' myobj
 GeoNonStat <- function(vecchia_approx,

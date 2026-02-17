@@ -129,31 +129,17 @@ runParallelGeoNonStatMcmc <- function(
 
   # TODO : ça n'est pas recommandé par la communauté ici.
   # Il faut laisser l'utilisateur choisir.
-  # On peut mettre le code ci-dessous dans les exemples
-  # Et afficher le plan utiliser pour info.
-  if (n_chains_in_parallel == 1) {
-    future::plan(future::sequential)
-  } else {
-    if (parallelly::supportsMulticore()) {
-      future::plan(future::multicore, workers = n_chains_in_parallel)
-    } else {
-      future::plan(future::multisession, workers = n_chains_in_parallel)
-    }
-  }
-  usedPlan <- utils::capture.output({
-    print(future::plan())
-  })[1]
+  # if (n_chains_in_parallel == 1) {
+  #   future::plan(future::sequential)
+  # } else {
+  #   if (parallelly::supportsMulticore()) {
+  #     future::plan(future::multicore, workers = n_chains_in_parallel)
+  #   } else {
+  #     future::plan(future::multisession, workers = n_chains_in_parallel)
+  #   }
+  # }
+  usedPlan <- utils::capture.output({ print(future::plan()) })[1]
   cat("-------- The parallelism on chains is", usedPlan, "--------\n")
-  cat("You can change it by using:\n")
-  cat("       # For no parallelisation\n")
-  cat("       future::plan(future::sequential) # No parallelisation\n")
-  cat("       # For multisession or multicore (prefered):\n")
-  cat("       if(parallelly::supportsMulticore()) {\n")
-  cat("         future::plan(future::multicore, workers=n_chains_in_parallel)\n")
-  cat("       } else {\n")
-  cat("         future::plan(future::multisession, workers=n_chains_in_parallel)\n")
-  cat("       }\n")
-  cat("See 'help(future::plan)' for more info\n\n")
   cat("-------- MCMC Running..... --------\n")
   chains <- seq_along(object$states)
 
@@ -163,26 +149,56 @@ runParallelGeoNonStatMcmc <- function(
   vecchia_approx_local <- object$vecchia_approx
   states_local <- object$states
 
-  tmpfun <- function(chain, ...) {
-    runGeoNonStatMcmc(
-      state = states_local[[chain]],
-      seed = iter_start + seed + chain,
-      ...
-    )
-  }
+  # tmpfun <- function(chain, ...) {
+  #   runGeoNonStatMcmc(
+  #     state = states_local[[chain]],
+  #     seed = iter_start + seed + chain,
+  #     ...
+  #   )
+  # }
 
-  res <- future.apply::future_lapply(
-    chains,
-    FUN = tmpfun,
-    covariates = covariates_local,
-    observed_field = observed_field_local,
-    hierarchical_model = hierarchical_model_local,
-    vecchia_approx = vecchia_approx_local,
-    iter_start = iter_start,
-    n_iterations_update = n_iterations,
-    num_threads = n_threads_per_chain,
-    future.seed = TRUE
+  res <- future.apply::future_mapply(
+    FUN = function(states_local, seed_for_chain) {
+      runGeoNonStatMcmc(
+        state = states_local,
+        seed = seed_for_chain,
+        covariates = covariates_local,
+        observed_field = observed_field_local,
+        hierarchical_model = hierarchical_model_local,
+        vecchia_approx = vecchia_approx_local,
+        iter_start = iter_start,
+        n_iterations_update = n_iterations,
+        num_threads = n_threads_per_chain
+      )
+    },
+    object$states,
+    iter_start + seed + seq_along(object$states),
+    SIMPLIFY = FALSE,
+    future.seed = TRUE,
+    future.globals = list(
+      covariates_local = covariates_local,
+      observed_field_local = observed_field_local,
+      hierarchical_model_local = hierarchical_model_local,
+      vecchia_approx_local = vecchia_approx_local,
+      iter_start = iter_start,
+      n_iterations = n_iterations,
+      n_threads_per_chain = n_threads_per_chain,
+      runGeoNonStatMcmc = runGeoNonStatMcmc
+    )
   )
+  
+  # res <- future.apply::future_lapply(
+  #   chains,
+  #   FUN = tmpfun,
+  #   covariates = covariates_local,
+  #   observed_field = observed_field_local,
+  #   hierarchical_model = hierarchical_model_local,
+  #   vecchia_approx = vecchia_approx_local,
+  #   iter_start = iter_start,
+  #   n_iterations_update = n_iterations,
+  #   num_threads = n_threads_per_chain,
+  #   future.seed = TRUE
+  # )
 
   # Returning object processed, with for each chain : last state  and records for all iterations
   new_object <- object

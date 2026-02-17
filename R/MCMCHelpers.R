@@ -24,6 +24,7 @@ updateKernel <- function(iter,
 #'
 #' @returns a list of vector or a matrix
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' initStateParams(list(

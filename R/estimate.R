@@ -200,7 +200,7 @@ estimate <- function(object, burn_in = .1, keep = "all") {
 }
 
 
-#' Title
+#' Title TODO
 #'
 #' @param X a matrix of samples
 #' @param beta_samples a matrix of beta
