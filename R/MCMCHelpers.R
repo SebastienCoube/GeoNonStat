@@ -741,7 +741,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
 }
 
 
-UpdateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
+updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
   for (i in seq_len(10))
   {
     q <- current_range_log_scale + rnorm(length(current_range_log_scale), 0, .05)
@@ -768,7 +768,7 @@ UpdateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
   return(current_range_log_scale)
 }
 
-PotSuffRangeLogScale <- function(sparse_chol, field, field_log_var) {
+potSuffRangeLogScale <- function(sparse_chol, field, field_log_var) {
   return(
     (
       +.5 * sum((sparse_chol %*% field)^2) / exp(field_log_var[1, 1])
@@ -776,7 +776,8 @@ PotSuffRangeLogScale <- function(sparse_chol, field, field_log_var) {
     )
   )
 }
-PotAnciRangeLogScale <- function(field, lm_residuals, noise_var, vecchia_approx) {
+
+potAnciRangeLogScale <- function(field, lm_residuals, noise_var, vecchia_approx) {
   return(+.5 * sum((lm_residuals - field[vecchia_approx$locs_match])^2 / noise_var))
 }
 
@@ -808,8 +809,8 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       )
       new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
 
-      current_U <- PotSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
-      proposed_U <- PotSuffRangeLogScale(sparse_chol = new_sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
+      current_U <- potSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
+      proposed_U <- potSuffRangeLogScale(sparse_chol = new_sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
 
       state$ker_var$range_log_scale_sufficient <- updateKernel(
         iter = iter, iter_start = iter_start,
@@ -836,7 +837,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
 
   # sufficient - sufficient ####
 
-  state$params$range_log_scale <- UpdateVarPPSuff(
+  state$params$range_log_scale <- updateVarPPSuff(
     hm4params = hierarchical_model$range,
     beta4params = state$params$range_beta,
     current_range_log_scale = state$params$range_log_scale
@@ -880,8 +881,8 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field <- as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
 
-      current_U <- PotAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
-      proposed_U <- PotAnciRangeLogScale(field = new_field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
+      current_U <- potAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
+      proposed_U <- potAnciRangeLogScale(field = new_field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
       state$ker_var$range_log_scale_ancillary <- updateKernel(
         iter = iter, iter_start = iter_start,
         kernel_value = state$ker_var$range_log_scale_ancillary,
@@ -908,7 +909,7 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
   }
   # sufficient - sufficient ####
   state$params$range_log_scale <-
-    UpdateVarPPSuff(
+    updateVarPPSuff(
       hm4params = hierarchical_model$range,
       beta4params = state$params$range_beta,
       current_range_log_scale = state$params$range_log_scale
