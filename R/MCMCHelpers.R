@@ -33,7 +33,6 @@ updateKernel <- function(iter,
 #' ))
 initStateParams <- function(stateParams) {
   lapply(stateParams, function(x) {
-    # return(matrix(NA_real_, nrow = nrow(x), ncol = ncol(x)))
     tmp <- rep(NA_real_, length(x))
     if (is.matrix(x)) {
       dim(tmp) <- dim(x)
@@ -809,8 +808,16 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       )
       new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
 
-      current_U <- potSuffRangeLogScale(sparse_chol = state$stuff$sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
-      proposed_U <- potSuffRangeLogScale(sparse_chol = new_sparse_chol, field = state$params$field, field_log_var = state$params$field_log_var)
+      current_U <- potSuffRangeLogScale(
+        sparse_chol = state$stuff$sparse_chol, 
+        field = state$params$field, 
+        field_log_var = state$params$field_log_var
+      )
+      proposed_U <- potSuffRangeLogScale(
+        sparse_chol = new_sparse_chol, 
+        field = state$params$field, 
+        field_log_var = state$params$field_log_var
+      )
 
       state$ker_var$range_log_scale_sufficient <- updateKernel(
         iter = iter, iter_start = iter_start,
@@ -881,8 +888,18 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
       new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
       new_field <- as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
 
-      current_U <- potAnciRangeLogScale(field = state$params$field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
-      proposed_U <- potAnciRangeLogScale(field = new_field, lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var, vecchia_approx = vecchia_approx)
+      current_U <- potAnciRangeLogScale(
+        field = state$params$field,
+        lm_residuals = state$stuff$lm_residuals,
+        noise_var = state$stuff$noise_var,
+        vecchia_approx = vecchia_approx
+      )
+      proposed_U <- potAnciRangeLogScale(
+        field = new_field,
+        lm_residuals = state$stuff$lm_residuals,
+        noise_var = state$stuff$noise_var,
+        vecchia_approx = vecchia_approx
+      )
       state$ker_var$range_log_scale_ancillary <- updateKernel(
         iter = iter, iter_start = iter_start,
         kernel_value = state$ker_var$range_log_scale_ancillary,
@@ -1002,10 +1019,20 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
   )
   proposed_K <- sum(p^2) / 2
 
-  state$ker_var$noise_beta_mala <- updateKernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = -.8)
+  state$ker_var$noise_beta_mala <- updateKernel(
+    iter = iter, 
+    iter_start = iter_start, 
+    kernel_value = state$ker_var$noise_beta_mala, 
+    mult = -.8
+  )
   if (!is.nan(current_U - proposed_U + current_K - proposed_K)) {
     if (log(runif(1)) < current_U - proposed_U + current_K - proposed_K) {
-      state$ker_var$noise_beta_mala <- updateKernel(iter = iter, iter_start = iter_start, kernel_value = state$ker_var$noise_beta_mala, mult = 1)
+      state$ker_var$noise_beta_mala <- updateKernel(
+        iter = iter, 
+        iter_start = iter_start, 
+        kernel_value = state$ker_var$noise_beta_mala, 
+        mult = 1
+      )
       state$momenta$noise_beta <- p
       state$params$noise_beta[] <- new_noise_beta
       state$stuff$noise_var <- new_noise_var

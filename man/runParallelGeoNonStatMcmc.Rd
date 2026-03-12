@@ -31,7 +31,7 @@ and records (params records for all iterations, by chain)
 Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 }
 \details{
-The MCMC is run using {future} plan. 
+The MCMC is run using {future} plan.
 
 \preformatted{
  if (n_chains_in_parallel == 1) {

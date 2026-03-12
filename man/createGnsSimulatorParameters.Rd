@@ -16,7 +16,7 @@ createGnsSimulatorParameters(
 )
 }
 \arguments{
-\item{gns_simulator}{an object created by `createGnsSimulator`}
+\item{gns_simulator}{an object created by `createGnsSimulator()`}
 
 \item{range_intercept}{TODO}
 

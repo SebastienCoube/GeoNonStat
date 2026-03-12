@@ -17,13 +17,13 @@ runGeoNonStatMcmc(
 )
 }
 \arguments{
-\item{covariates}{The list of covariates obtained with `processCovariates`}
+\item{covariates}{The list of covariates obtained with `processCovariates()`}
 
 \item{observed_field}{TODO}
 
-\item{hierarchical_model}{a hierarchical model (obtained with `process_hierarchical_model()`)}
+\item{hierarchical_model}{a hierarchical model (obtained with `processHierarchicalModel()`)}
 
-\item{vecchia_approx}{an object created by `vecchia_approx()`}
+\item{vecchia_approx}{an object created by `vecchiaApprox()`}
 
 \item{state}{TODO}
 

@@ -210,7 +210,7 @@ estimate <- function(object, burn_in = .1, keep = "all") {
 #'
 #' @returns a list
 #' @export
-#' 
+#'
 #' @examples
 #' aggregated_records <- aggregateRecords(processedGnsDemo, burn_in, keep = c("beta", "noise_beta", "field"))
 #' noise_var <-

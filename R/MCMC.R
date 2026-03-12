@@ -106,8 +106,8 @@ runGeoNonStatMcmc <- function(
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
 #' @param n_iterations numeric value, number of iterations. Default to 100
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
-#' @details The MCMC is run using {future} plan. 
-#' 
+#' @details The MCMC is run using {future} plan.
+#'
 #' \preformatted{
 #'  if (n_chains_in_parallel == 1) {
 #'    # For no parallelisation
@@ -121,8 +121,8 @@ runGeoNonStatMcmc <- function(
 #'    }
 #'  }
 #' }
-#' You can see `?future::plan` to define your plan more precisely. 
-#' 
+#' You can see `?future::plan` to define your plan more precisely.
+#'
 #' @returns a GeoNonStat object, with updated state (last state by chain)
 #' and records (params records for all iterations, by chain)
 #' @export
@@ -143,7 +143,9 @@ runParallelGeoNonStatMcmc <- function(
 ) {
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
-  usedPlan <- utils::capture.output({ print(future::plan()) })[1]
+  usedPlan <- utils::capture.output({
+    print(future::plan())
+  })[1]
   cat("-------- The parallelism on chains is", usedPlan, "--------\n")
   cat("         you can change it by using                        \n")
   cat("         future::plan(multicore, workers=x)    # if supported \n")
@@ -187,11 +189,11 @@ runParallelGeoNonStatMcmc <- function(
       runGeoNonStatMcmc = runGeoNonStatMcmc
     )
   )
-  
+
   # Returning object processed, with for each chain : last state  and records for all iterations
   new_object <- object
   new_object$states <- lapply(res, function(x) x[["state"]])
   newrecords <- lapply(res, function(x) x[["params_records"]])
-  new_object$records <- mapply(function(x1, x2) c(x1,x2), object$records, newrecords, SIMPLIFY = FALSE)
+  new_object$records <- mapply(function(x1, x2) c(x1, x2), object$records, newrecords, SIMPLIFY = FALSE)
   return(new_object)
 }

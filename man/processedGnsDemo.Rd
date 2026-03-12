@@ -16,7 +16,7 @@ A \code{\link{GeoNonStat}} with processed MCMC.
 }
 \description{
 A S3 GeoNonStat object with nice non-stationarity and little noise.
-generated for demonstration and examples purpose. MCMC has already run on 
+generated for demonstration and examples purpose. MCMC has already run on
 this object.
 }
 \details{

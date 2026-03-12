@@ -27,7 +27,7 @@ a list of Vecchia approximation objects and metadata.
   \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
   \item{\code{obs_per_loc}}{count how many observations correspond to one location))}
   \item{\code{NNarray}}{nearest neighbours for Vecchia approximation}
-  \item{\code{NNarray_non_NA}}{!is.na(NNarray)} 
+  \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
   # TODO voir au final dans predict si c'est utile de trainer NNarray_non_NA ou si le calculer à la volée suffit
   \item{\code{sparse_chol_i}}{sparse_mat at i+1}
   \item{\code{sparse_chol_p}}{sparse_mat at p}
