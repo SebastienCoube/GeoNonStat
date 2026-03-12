@@ -86,7 +86,7 @@ createGnsSimulator <- function(vecchia_approx,
 
 #' @title From a GeoNonStatSimulator object, creates regression coefficients at the right format
 #'
-#' @param gns_simulator an object created by `createGnsSimulator`
+#' @param gns_simulator an object created by `createGnsSimulator()`
 #' @param range_intercept TODO
 #' @param range_PP_log_var TODO
 #' @param noise_intercept TODO
