@@ -25,3 +25,4 @@ knots <- knotsFromKmeans(100, locs)
 plot(locs, col = "grey", pch = 16, cex = 0.5)
 points(knots, col = "red", pch = 19)
 }
+\keyword{internal}

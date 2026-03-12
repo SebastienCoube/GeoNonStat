@@ -21,3 +21,4 @@ initStateParams(list(
   matrix(rnorm(20), ncol = 4)
 ))
 }
+\keyword{internal}

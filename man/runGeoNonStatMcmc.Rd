@@ -60,3 +60,4 @@ processedChain <-
   )
 names(processedChain)
 }
+\keyword{internal}

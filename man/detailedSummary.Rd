@@ -12,3 +12,4 @@ detailedSummary(partobject)
 \description{
 summary of a part of a GeoNonStat object
 }
+\keyword{internal}
