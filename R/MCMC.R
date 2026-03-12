@@ -13,6 +13,7 @@
 #' @returns a list containaing last state and records of parameters for each
 #' MCMC iteration
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' chain_id <- 1
@@ -190,6 +191,7 @@ runParallelGeoNonStatMcmc <- function(
   # Returning object processed, with for each chain : last state  and records for all iterations
   new_object <- object
   new_object$states <- lapply(res, function(x) x[["state"]])
-  new_object$records <- lapply(res, function(x) x[["params_records"]])
+  newrecords <- lapply(res, function(x) x[["params_records"]])
+  new_object$records <- mapply(function(x1, x2) c(x1,x2), object$records, newrecords, SIMPLIFY = FALSE)
   return(new_object)
 }
