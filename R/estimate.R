@@ -209,6 +209,26 @@ estimate <- function(object, burn_in = .1, keep = "all") {
 #' @param observed_field a matrix, the observed field
 #'
 #' @returns a list
+#' @export
+#' 
+#' @examples
+#' aggregated_records <- aggregateRecords(processedGnsDemo, burn_in, keep = c("beta", "noise_beta", "field"))
+#' noise_var <-
+#'   apply(aggregated_records$noise_beta, 1, function(x) {
+#'     as.vector(exp(xPPMultRight(
+#'       X = processedGnsDemo$covariates$noise_X$X, PP = processedGnsDemo$hierarchical_model$noise$PP,
+#'       vecchia_approx = processedGnsDemo$vecchia_approx, Y = x,
+#'       permutate_PP_to_obs = T
+#'     )))
+#'   })
+#' # Gaussian log-dens of the observations
+#' res <- elppd(
+#'   processedGnsDemo$covariates$X$X,
+#'   beta_samples = aggregated_records$beta,
+#'   field_samples = aggregated_records$field[, processedGnsDemo$vecchia_approx$locs_match],
+#'   noise_var_samples = noise_var,
+#'   observed_field = processedGnsDemo$observed_field
+#' )
 elppd <- function(X, beta_samples, field_samples, noise_var_samples, observed_field) {
   elppd_per_obs <- (
     -log((sqrt(2) * pi)) # 1/sqrt(2 pi) passed to the log

@@ -1,5 +1,3 @@
-# TODO ELISE TU PEUX Y ALLER LA DESSUS
-
 #' @title Generate spatial knots using k-means clustering
 #' @description Selects a set of spatial knots using k-means clustering from the observed locations.
 #' If the number of locations is large, a subsample of up to 10,000 points is used,
@@ -18,8 +16,8 @@
 #' points(knots, col = "red", pch = 19)
 knotsFromKmeans <- function(knots_number, locs) {
   n_sample <- min(nrow(locs), 50000)
-  if (knots_number > n_sample) {
-    stop("50000 knots numer maximum allowed")
+  if (knots_number >= n_sample) {
+    stop("49999 knots maximum allowed")
   }
   sampled_locs <- locs[sample(seq_len(nrow(locs)), n_sample, replace = FALSE), ]
 

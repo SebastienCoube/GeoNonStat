@@ -20,14 +20,15 @@ a list of Vecchia approximation objects and metadata.
   \item{\code{n_obs}}{Number of observed locations}
   \item{\code{observed_locs}}{Observed locations}
   \item{\code{locs}}{Unique locations}
-  \item{\code{t_locs}}{t(locs)}  # TODO : A mon avis ça ne sert à rien de stocker ça.
-  \item{\code{locs_match}}{locs_match}
-  \item{\code{locs_match_matrix}}{locs_match_matrix}
-  \item{\code{hctam_scol}}{hctam_scol}
+  \item{\code{t_locs}}{t(locs)}
+  \item{\code{locs_match}}{matching observed locations with reordered, unrepeated locations}
+  \item{\code{locs_match_matrix}}{locs_match as a Sparse Matrix}
+  \item{\code{hctam_scol}}{for a given unrepeated location, tell which observations correspond}
   \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
-  \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol, length))} # count how many observations correspond to one location
-  \item{\code{NNarray}}{NNarray}
-  \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
+  \item{\code{obs_per_loc}}{count how many observations correspond to one location))}
+  \item{\code{NNarray}}{nearest neighbours for Vecchia approximation}
+  \item{\code{NNarray_non_NA}}{!is.na(NNarray)} 
+  # TODO voir au final dans predict si c'est utile de trainer NNarray_non_NA ou si le calculer à la volée suffit
   \item{\code{sparse_chol_i}}{sparse_mat at i+1}
   \item{\code{sparse_chol_p}}{sparse_mat at p}
   \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder}

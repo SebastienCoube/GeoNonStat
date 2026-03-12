@@ -10,14 +10,15 @@
 #'   \item{\code{n_obs}}{Number of observed locations}
 #'   \item{\code{observed_locs}}{Observed locations}
 #'   \item{\code{locs}}{Unique locations}
-#'   \item{\code{t_locs}}{t(locs)}  # TODO : A mon avis ça ne sert à rien de stocker ça.
-#'   \item{\code{locs_match}}{locs_match}
-#'   \item{\code{locs_match_matrix}}{locs_match_matrix}
-#'   \item{\code{hctam_scol}}{hctam_scol}
+#'   \item{\code{t_locs}}{t(locs)}
+#'   \item{\code{locs_match}}{matching observed locations with reordered, unrepeated locations}
+#'   \item{\code{locs_match_matrix}}{locs_match as a Sparse Matrix}
+#'   \item{\code{hctam_scol}}{for a given unrepeated location, tell which observations correspond}
 #'   \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
-#'   \item{\code{obs_per_loc}}{unlist(sapply(hctam_scol, length))} # count how many observations correspond to one location
-#'   \item{\code{NNarray}}{NNarray}
-#'   \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
+#'   \item{\code{obs_per_loc}}{count how many observations correspond to one location))}
+#'   \item{\code{NNarray}}{nearest neighbours for Vecchia approximation}
+#'   \item{\code{NNarray_non_NA}}{!is.na(NNarray)} 
+#'   # TODO voir au final dans predict si c'est utile de trainer NNarray_non_NA ou si le calculer à la volée suffit
 #'   \item{\code{sparse_chol_i}}{sparse_mat at i+1}
 #'   \item{\code{sparse_chol_p}}{sparse_mat at p}
 #'   \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder}
@@ -103,7 +104,6 @@ createVecchia <- function(observed_locs,
       observed_locs = observed_locs,
       locs = locs,
       t_locs = t(locs),
-      # TODO : A mon avis ça ne sert à rien de stocker ça.
       locs_match = locs_match,
       locs_match_matrix = locs_match_matrix,
       hctam_scol = hctam_scol,
@@ -111,10 +111,8 @@ createVecchia <- function(observed_locs,
         x[1]
       }),
       obs_per_loc = unlist(sapply(hctam_scol, length)),
-      # count how many observations correspond to one location
       NNarray = NNarray,
       NNarray_non_NA = NNNoNA,
-      # TODO : idem à voir si c'est utile de trainer ça ?
       sparse_chol_i = sparse_mat@i + 1L,
       sparse_chol_p = sparse_mat@p,
       sparse_chol_x_reorder = sparse_chol_x_reorder,
@@ -179,9 +177,6 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
-#' # TODO
-#' }
 #' nlocs <- 5000
 #' nobs <- 10000
 #' unique_locs <- cbind(runif(nlocs), runif(nlocs))
@@ -201,7 +196,7 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' X <- as.data.frame(cbind(observed_locs, observed_locs[, 1]^2 + observed_locs[, 2]^2))
 #' res <- processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 #'
-#' # Errors ##########################
+#' # Errors ########################## TODO move that in tests (and previous also)
 #' # one obs of x per loc
 #' # X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)

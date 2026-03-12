@@ -26,9 +26,6 @@ processCovariates : pre-processes covariates by adding an intercept,
 creating useful indices, and pre-computing useful matrices and vectors
 }
 \examples{
-\dontrun{
-# TODO
-}
 nlocs <- 5000
 nobs <- 10000
 unique_locs <- cbind(runif(nlocs), runif(nlocs))
@@ -48,7 +45,7 @@ res <- processCovariates(X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALS
 X <- as.data.frame(cbind(observed_locs, observed_locs[, 1]^2 + observed_locs[, 2]^2))
 res <- processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)
 
-# Errors ##########################
+# Errors ########################## TODO move that in tests (and previous also)
 # one obs of x per loc
 # X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 # res = processCovariates(X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE)

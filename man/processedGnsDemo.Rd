@@ -15,7 +15,9 @@ processedGnsDemo
 A \code{\link{GeoNonStat}} with processed MCMC.
 }
 \description{
-A S3 GeoNonStat object TODO
+A S3 GeoNonStat object with nice non-stationarity and little noise.
+generated for demonstration and examples purpose. MCMC has already run on 
+this object.
 }
 \details{
 The data have been generated with the following code :
