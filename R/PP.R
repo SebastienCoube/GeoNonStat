@@ -10,6 +10,7 @@
 #'
 #' @return A matrix of size \code{knots_number} x ncol(\code{locs}) containing the spatial knot coordinates (cluster centers).
 #' @export
+#' @keywords internal
 #' @examples
 #' locs <- cbind(runif(5000), runif(5000))
 #' knots <- knotsFromKmeans(100, locs)

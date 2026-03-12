@@ -910,6 +910,7 @@ print.GeoNonStat <- function(x, ...) {
 #' summary of a part of a GeoNonStat object
 #'
 #' @param partobject object to summarize
+#' @keywords internal
 detailedSummary <- function(partobject) {
   sumdata <- summary(partobject)
   return(
