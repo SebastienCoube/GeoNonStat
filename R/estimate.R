@@ -212,13 +212,15 @@ estimate <- function(object, burn_in = .1, keep = "all") {
 #' @export
 #'
 #' @examples
-#' aggregated_records <- aggregateRecords(processedGnsDemo, burn_in, keep = c("beta", "noise_beta", "field"))
+#' aggregated_records <- aggregateRecords(
+#'   processedGnsDemo, burn_in = 0.1, 
+#'   keep = c("beta", "noise_beta", "field"))
 #' noise_var <-
 #'   apply(aggregated_records$noise_beta, 1, function(x) {
 #'     as.vector(exp(xPPMultRight(
 #'       X = processedGnsDemo$covariates$noise_X$X, PP = processedGnsDemo$hierarchical_model$noise$PP,
 #'       vecchia_approx = processedGnsDemo$vecchia_approx, Y = x,
-#'       permutate_PP_to_obs = T
+#'       permutate_PP_to_obs = TRUE
 #'     )))
 #'   })
 #' # Gaussian log-dens of the observations
@@ -261,7 +263,7 @@ elppdTrain <- function(object, burn_in = .1) {
       as.vector(exp(xPPMultRight(
         X = object$covariates$noise_X$X, PP = object$hierarchical_model$noise$PP,
         vecchia_approx = object$vecchia_approx, Y = x,
-        permutate_PP_to_obs = T
+        permutate_PP_to_obs = TRUE
       )))
     })
   # Gaussian log-dens of the observations

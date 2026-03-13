@@ -52,7 +52,7 @@ knotsFromKmeans <- function(knots_number, locs) {
 #' @export
 #'
 #' @examples
-#' vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10, ncores = 1)
+#' vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10)
 #' # automatic
 #' pepito <- createPP(vecchia_approx)
 #' \dontrun{
@@ -225,7 +225,7 @@ createPP <- function(vecchia_approx,
 #' @aliases PP
 #' @method summary PP
 #' @examples
-#' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
+#' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
 #' pepito <- createPP(vecchia_approx, plot = FALSE)
 #' summary(pepito)
 summary.PP <- function(object, ...) {
@@ -245,10 +245,11 @@ summary.PP <- function(object, ...) {
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @param x an object of class PP, create with `createPP`
+#' @return a numeric vector
 #' @export
 #' @keywords internal
 #' @examples
-#' vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores = 1)
+#' vecchia <- createVecchia(cbind(runif(1000), runif(1000)))
 #' pepito <- createPP(vecchia, plot = FALSE)
 #' varLossPP(pepito)
 varLossPP <- function(x) {

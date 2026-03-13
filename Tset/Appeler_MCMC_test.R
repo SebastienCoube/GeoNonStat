@@ -31,7 +31,7 @@
 # list2env(mygns$states$chain_1, environment())
 # list2env(mygns, environment())
 # 
-# n_iterations_update = 200
+# n_iterations = 200
 # num_threads = 5
 # iter_start = 1
 # iter = 1
@@ -148,7 +148,7 @@ plot_pointillist_painting(mygns$vecchia_approx$locs, mygns$states$chain_1$params
 plot_pointillist_painting(mygns$vecchia_approx$observed_locs, mygns$observed_field)
 
 
-n_iterations_update = 2000
+n_iterations = 2000
 num_threads = 12
 iter_start = 1
 iter = 1

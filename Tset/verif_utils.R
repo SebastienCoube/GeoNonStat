@@ -132,7 +132,7 @@ hist(mycov - mycov_aniso)
 ## xPPMultRight #########################################################
 locs = cbind(runif(1000), runif(1000))
 locs = rbind(locs, locs)
-vecchia_approx = createVecchia(locs, 12, ncores=1)
+vecchia_approx = createVecchia(locs, 12)
 PP = createPP(vecchia_approx, plot=FALSE)
 covariate_coefficients = c(4, 1, 1, .5)
 knots_coeffs = rnorm(PP$n_knots)

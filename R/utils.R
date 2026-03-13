@@ -368,7 +368,7 @@ betaPriorLogDensDerivative <- function(beta,
 #' @examples
 #' locs <- cbind(runif(1000), runif(1000))
 #' locs <- rbind(locs, locs)
-#' vecchia_approx <- createVecchia(locs, 12, ncores = 1)
+#' vecchia_approx <- createVecchia(locs, 12)
 #' PP <- suppressMessages(createPP(vecchia_approx, plot = FALSE))
 #' covariate_coefficients <- c(4, 1, 1, .5)
 #' knots_coeffs <- rnorm(PP$n_knots)
@@ -484,7 +484,7 @@ xPPMultRight <- function(X = NULL,
 #' @examples
 #' set.seed(123)
 #' locs <- cbind(runif(50), runif(50))
-#' vecchia_approx <- createVecchia(locs, ncores = 1)
+#' vecchia_approx <- createVecchia(locs)
 #' PP <- createPP(vecchia_approx, plot = FALSE)
 #' X <- matrix(rnorm(100), 50)
 #' Y <- matrix(rnorm(30 * nrow(X)), nrow(X))

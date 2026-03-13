@@ -61,7 +61,7 @@ state = geo_non_stat$states$chain_1
 #state$params$range_log_scale[1] = 0
 #state$params$range_log_scale[2] = -3
 num_threads = 10
-n_iterations_update = 40
+n_iterations = 40
 iter_start = 1
 iter = 1
 seed=  1
@@ -70,7 +70,7 @@ range_X = covariates$range_X
 samples = runGeoNonStatMcmc(
  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
- state = state, n_iterations_update = 400, num_threads = 8, iter_start = 1, seed = 1
+ state = state, n_iterations = 400, num_threads = 8, iter_start = 1, seed = 1
 )
 
 params = samples$state$params

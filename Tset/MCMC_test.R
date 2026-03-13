@@ -33,7 +33,7 @@ update_kernel = function(
 
 
 #list2env(mcmc_nngp_list, envir = environment())
-#state = mcmc_nngp_list$states$chain_1; n_iterations_update  =100; num_threads = 10; iter_start = 0; seed = 1; iter=1
+#state = mcmc_nngp_list$states$chain_1; n_iterations  =100; num_threads = 10; iter_start = 0; seed = 1; iter=1
 #
 #MCMC = function(
     #    covariates,
@@ -41,13 +41,13 @@ update_kernel = function(
 #    hierarchical_model,
 #    vecchia_approx,
 #    state,
-#    n_iterations_update = 100, 
+#    n_iterations = 100, 
 #    num_threads = 1, 
 #    iter_start,
 #    seed=123 
 #)
 #{
-message(paste("Starting MCMC chain for Nonstat NNGP model at iteration", iter_start, "for", n_iterations_update, "iterations"))
+message(paste("Starting MCMC chain for Nonstat NNGP model at iteration", iter_start, "for", n_iterations, "iterations"))
 set.seed(seed)
 #########################################
 # Initializing chain storage structures #
@@ -58,7 +58,7 @@ set.seed(seed)
 #par(mfrow = c(2, 1))
 
 t1 = Sys.time()
-for(iter in seq(iter, n_iterations_update)){
+for(iter in seq(iter, n_iterations)){
   if(iter%/%20 == iter /20){
     par(mfrow = c(1,2))
     plot_pointillist_painting(vecchia_approx$locs, params$field, main = "sampled")

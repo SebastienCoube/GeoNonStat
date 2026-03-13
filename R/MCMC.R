@@ -5,7 +5,7 @@
 #' @param hierarchical_model a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @param vecchia_approx an object created by `vecchiaApprox()`
 #' @param state TODO
-#' @param n_iterations_update TODO
+#' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
 #' @param num_threads TODO
 #' @param iter_start TODO
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
@@ -26,7 +26,7 @@
 #'     hierarchical_model = gnsDemo$hierarchical_model,
 #'     vecchia_approx = gnsDemo$vecchia_approx,
 #'     state = gnsDemo$states[[chain_id]],
-#'     n_iterations_update = 20,
+#'     n_iterations = 20,
 #'     num_threads = 1,
 #'     iter_start = iter_start,
 #'     seed = iter_start + seed + chain_id
@@ -38,7 +38,7 @@ runGeoNonStatMcmc <- function(
   hierarchical_model,
   vecchia_approx,
   state,
-  n_iterations_update = 100,
+  n_iterations = 100,
   num_threads = 1,
   iter_start,
   seed = 123
@@ -46,13 +46,13 @@ runGeoNonStatMcmc <- function(
   set.seed(seed)
   # Initialization of parameters (empty whith right structure)
   params_records <- lapply(
-    seq_len(n_iterations_update),
+    seq_len(n_iterations),
     function(i) {
       initStateParams(state$params)
     }
   )
 
-  for (iter in seq_len(n_iterations_update)) {
+  for (iter in seq_len(n_iterations)) {
     if (iter / 10 == iter %/% 10) cat("iter = ", iter, "\n")
     # Regression coefficients ###############################
     # Regression coefficients #################################
@@ -104,9 +104,9 @@ runGeoNonStatMcmc <- function(
 #' @param object an object of class `GeoNonStat`
 #' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
-#' @param n_iterations numeric value, number of iterations. Default to 100
+#' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
-#' @details The MCMC is run using {future} plan.
+#' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{
 #'  if (n_chains_in_parallel == 1) {
@@ -170,7 +170,7 @@ runParallelGeoNonStatMcmc <- function(
         hierarchical_model = hierarchical_model_local,
         vecchia_approx = vecchia_approx_local,
         iter_start = iter_start,
-        n_iterations_update = n_iterations,
+        n_iterations = n_iterations,
         num_threads = n_threads_per_chain
       )
     },

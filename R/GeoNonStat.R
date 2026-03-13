@@ -31,7 +31,7 @@
 #' set.seed(100)
 #' size <- 20000
 #' observed_locs <- cbind(runif(size), runif(size))
-#' res <- createVecchia(observed_locs, m = 10, ncores = 1)
+#' res <- createVecchia(observed_locs, m = 10)
 createVecchia <- function(observed_locs,
                           m = 12,
                           ncores = 1) {
@@ -80,7 +80,7 @@ createVecchia <- function(observed_locs,
   sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][match(sparse_mat@x, seq_len(sum(NNNoNA)))]
 
   # Partitioning locations using parallel kmeans for field update
-  locs_partition <- generateLocationPartitions(locs, n_locs, ncores = ncores)
+  locs_partition <- generateLocationPartitions(locs, n_locs)
 
   markov_mat <- Matrix::crossprod(sparse_mat)
   markov_mat@x[] <- 1
@@ -124,8 +124,16 @@ createVecchia <- function(observed_locs,
 
 
 #' Partition spatial locations using parallel k-means
-#' @noRd
-generateLocationPartitions <- function(locs, n, ncores = 1) {
+#'
+#' @param locs numeric matrix of locations positions, with 2 columns
+#' @param n number of locations in each partition
+#' @export
+#' @keywords internal
+#' @return a numeric array
+#' @examples
+#' locs <- matrix(rnorm(4000), ncol=2)
+#' locspart <- generateLocationPartitions(locs, 1000)
+generateLocationPartitions <- function(locs, n) {
   clust_size <- 10000
   n_clusters <- ceiling(n / clust_size)
   centers_seq <- round(seq(n_clusters,
@@ -133,30 +141,17 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
     length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)
   ))
 
-  if (ncores > 1) {
-    cl <- parallel::makeCluster(min(ncores, parallel::detectCores(logical = FALSE)))
-    on.exit(parallel::stopCluster(cl))
-
-    parallel::clusterExport(cl, varlist = c("locs", "n"), envir = environment())
-
-    locs_partition <- parallel::parSapply(cl, centers_seq, function(k) {
+  locs_partition <- sapply(
+    centers_seq, 
+    function(k) { 
       kmeans(
         locs,
         centers = k,
         iter.max = 200,
         algorithm = "Hartigan-Wong"
       )$cluster
-    })
-  } else {
-    locs_partition <- sapply(centers_seq, function(k) {
-      kmeans(
-        locs,
-        centers = k,
-        iter.max = 200,
-        algorithm = "Hartigan-Wong"
-      )$cluster
-    })
-  }
+    }
+  )
 
   colnames(locs_partition) <- paste0(centers_seq, "_clust")
   return(locs_partition)
@@ -182,7 +177,7 @@ generateLocationPartitions <- function(locs, n, ncores = 1) {
 #' unique_locs <- cbind(runif(nlocs), runif(nlocs))
 #' observed_locs <- unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))), ]
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' vecchia_approx <- createVecchia(observed_locs, 12, ncores = 1)
+#' vecchia_approx <- createVecchia(observed_locs, 12)
 #' PP <- createPP(vecchia_approx, plot = FALSE)
 #'
 #' # Good cases ######################
@@ -338,7 +333,7 @@ processCovariates <- function(X,
 #' @keywords internal
 #'
 #' @examples
-#' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
+#' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
 #' myPP <- createPP(vecchia_approx)
 #' PPPP <- processPPPprior(myPP, c(1, 2), "example")
 processPPPprior <- function(PP = NULL,
@@ -389,8 +384,11 @@ processPPPprior <- function(PP = NULL,
 #' Initialize hierarchical model
 #'
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param noise_PP either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary
-#' @param noise_log_scale_bounds either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically
+#' @param noise_PP either an object of class PP used to model the field 
+#' of log-noise parameters, or NULL in which case the model is stationary
+#' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
+#' uniform prior for the log-marginal variance of the noise's PP, 
+#' or NULL in which case the bounds are set automatically.
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
 #' @param observed_locs TODO
@@ -408,7 +406,7 @@ processPPPprior <- function(PP = NULL,
 #' nobs <- 10000
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
 #' observed_field <- rnorm(nobs)
-#' vecchia_approx <- createVecchia(observed_locs, ncores = 1)
+#' vecchia_approx <- createVecchia(observed_locs)
 #' PP <- createPP(vecchia_approx)
 #' X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 #' covariates <- list()
@@ -532,7 +530,7 @@ processTransitionKernels <- function(init = -4) {
 #' observed_field <- rnorm(nobs)
 #'
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-#' vecchia_approx <- createVecchia(observed_locs, 12, ncores = 1)
+#' vecchia_approx <- createVecchia(observed_locs, 12)
 #' PP <- createPP(vecchia_approx)
 #'
 #' covariates <- list(
@@ -720,9 +718,9 @@ processStates <- function(hm,
 #' variance through fixed linear effects
 #' @param noise_PP either an object of class PP used to model the field of
 #' log-noise parameters, or NULL in which case the model is stationary
-#' @param noise_log_scale_bounds either a vector containing two numeric values
-#' bounding Uniform prior for the log-marginal variance of the noise's PP,
-#' or NULL in which case the bounds are set automatically
+#' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
+#' uniform prior for the log-marginal variance of the noise's PP, 
+#' or NULL in which case the bounds are set automatically.
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns an object of class `GeoNonStat`
@@ -734,7 +732,7 @@ processStates <- function(hm,
 #' observed_locs <- cbind(runif(5000), runif(5000))
 #' observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
 #' observed_field <- rnorm(nobs)
-#' vecchia_approx <- createVecchia(observed_locs, ncores = 1)
+#' vecchia_approx <- createVecchia(observed_locs)
 #' noise_PP <- createPP(
 #'   vecchia_approx = vecchia_approx,
 #'   matern_range = .1,
@@ -905,7 +903,7 @@ print.GeoNonStat <- function(x, ...) {
 #' summary of a part of a GeoNonStat object
 #'
 #' @param partobject object to summarize
-#' @keywords internal
+#' @return description a character
 detailedSummary <- function(partobject) {
   sumdata <- summary(partobject)
   return(
@@ -936,8 +934,9 @@ detailedSummary <- function(partobject) {
 #' @export
 #' @method summary GeoNonStat
 summary.GeoNonStat <- function(object, ...) {
+  # TODO revoir cette fonction complètement !!
   cat("### data ###")
-  detailedSummary(object$data)
+  print(detailedSummary(object$data))
   cat("### hierarchical_model ###")
   detailedSummary(object$hierarchical_model)
   cat(
