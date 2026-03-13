@@ -42,6 +42,6 @@ Vecchia approximation setup
 set.seed(100)
 size <- 20000
 observed_locs <- cbind(runif(size), runif(size))
-res <- createVecchia(observed_locs, m = 10, ncores = 1)
+res <- createVecchia(observed_locs, m = 10)
 }
 \keyword{internal}

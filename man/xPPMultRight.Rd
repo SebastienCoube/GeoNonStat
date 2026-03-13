@@ -33,7 +33,7 @@ Multiply the concatenation of a matrix of covariates and a PP by a matrix
 \examples{
 locs <- cbind(runif(1000), runif(1000))
 locs <- rbind(locs, locs)
-vecchia_approx <- createVecchia(locs, 12, ncores = 1)
+vecchia_approx <- createVecchia(locs, 12)
 PP <- suppressMessages(createPP(vecchia_approx, plot = FALSE))
 covariate_coefficients <- c(4, 1, 1, .5)
 knots_coeffs <- rnorm(PP$n_knots)

@@ -31,7 +31,7 @@ nobs <- 10000
 unique_locs <- cbind(runif(nlocs), runif(nlocs))
 observed_locs <- unique_locs[as.numeric(cut(runif(nobs), seq(0, 1, length.out = nlocs))), ]
 X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-vecchia_approx <- createVecchia(observed_locs, 12, ncores = 1)
+vecchia_approx <- createVecchia(observed_locs, 12)
 PP <- createPP(vecchia_approx, plot = FALSE)
 
 # Good cases ######################

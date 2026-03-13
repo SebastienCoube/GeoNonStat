@@ -10,7 +10,7 @@ runGeoNonStatMcmc(
   hierarchical_model,
   vecchia_approx,
   state,
-  n_iterations_update = 100,
+  n_iterations = 100,
   num_threads = 1,
   iter_start,
   seed = 123
@@ -27,7 +27,7 @@ runGeoNonStatMcmc(
 
 \item{state}{TODO}
 
-\item{n_iterations_update}{TODO}
+\item{n_iterations}{numeric value, number of iterations of MCMC. Default to 100}
 
 \item{num_threads}{TODO}
 
@@ -53,7 +53,7 @@ processedChain <-
     hierarchical_model = gnsDemo$hierarchical_model,
     vecchia_approx = gnsDemo$vecchia_approx,
     state = gnsDemo$states[[chain_id]],
-    n_iterations_update = 20,
+    n_iterations = 20,
     num_threads = 1,
     iter_start = iter_start,
     seed = iter_start + seed + chain_id

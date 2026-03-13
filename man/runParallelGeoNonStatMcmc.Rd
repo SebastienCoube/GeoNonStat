@@ -19,7 +19,7 @@ runParallelGeoNonStatMcmc(
 
 \item{n_threads_per_chain}{numeric, number of threads by markov chain, default to 5}
 
-\item{n_iterations}{numeric value, number of iterations. Default to 100}
+\item{n_iterations}{numeric value, number of iterations of MCMC. Default to 100}
 
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
@@ -31,7 +31,7 @@ and records (params records for all iterations, by chain)
 Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 }
 \details{
-The MCMC is run using {future} plan.
+The MCMC is run using [future::plan()].
 
 \preformatted{
  if (n_chains_in_parallel == 1) {

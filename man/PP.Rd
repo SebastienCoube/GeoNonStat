@@ -52,7 +52,7 @@ Creates an object of class `PP`, a low-rank predictive process used as a prior
 to describe spatial variations of covariance parameters.
 }
 \examples{
-vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10, ncores = 1)
+vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10)
 # automatic
 pepito <- createPP(vecchia_approx)
 \dontrun{
@@ -104,7 +104,7 @@ pepito <- createPP(vecchia_approx,
   matern_range = .05
 )
 }
-vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
+vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
 pepito <- createPP(vecchia_approx, plot = FALSE)
 summary(pepito)
 vecchia_approx <- createVecchia(observed_locs = cbind(runif(10000), runif(10000)), 10)

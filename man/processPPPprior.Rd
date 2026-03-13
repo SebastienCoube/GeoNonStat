@@ -17,7 +17,7 @@ processPPPprior(PP = NULL, log_scale_bounds = NULL, parameter_name)
 Safety checks and automatic treatment of PP objects and their marginal variance bounds
 }
 \examples{
-vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10, ncores = 1)
+vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
 myPP <- createPP(vecchia_approx)
 PPPP <- processPPPprior(myPP, c(1, 2), "example")
 }

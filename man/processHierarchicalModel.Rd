@@ -20,9 +20,12 @@ processHierarchicalModel(
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()`}
 
-\item{noise_PP}{either an object of class PP used to model the field of log-noise parameters, or NULL in which case the model is stationary}
+\item{noise_PP}{either an object of class PP used to model the field 
+of log-noise parameters, or NULL in which case the model is stationary}
 
-\item{noise_log_scale_bounds}{either a vector containing two numeric values bounding Uniform prior for the log-marginal variance of the noise's PP, or NULL in which case the bounds are set automatically}
+\item{noise_log_scale_bounds}{either a length 2 numeric vector bounding 
+uniform prior for the log-marginal variance of the noise's PP, 
+or NULL in which case the bounds are set automatically.}
 
 \item{range_PP}{TODO}
 
@@ -49,7 +52,7 @@ Initialize hierarchical model
 nobs <- 10000
 observed_locs <- cbind(runif(nobs), runif(nobs))
 observed_field <- rnorm(nobs)
-vecchia_approx <- createVecchia(observed_locs, ncores = 1)
+vecchia_approx <- createVecchia(observed_locs)
 PP <- createPP(vecchia_approx)
 X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 covariates <- list()

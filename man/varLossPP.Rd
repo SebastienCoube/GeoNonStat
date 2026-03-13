@@ -9,11 +9,14 @@ varLossPP(x)
 \arguments{
 \item{x}{an object of class PP, create with `createPP`}
 }
+\value{
+a numeric vector
+}
 \description{
 Compute the percentage of marginal variance who is lost because of the use of a PP
 }
 \examples{
-vecchia <- createVecchia(cbind(runif(1000), runif(1000)), ncores = 1)
+vecchia <- createVecchia(cbind(runif(1000), runif(1000)))
 pepito <- createPP(vecchia, plot = FALSE)
 varLossPP(pepito)
 }

@@ -33,7 +33,7 @@ Do the cross-product of the concatenation of a matrix of covariates and a PP and
 \examples{
 set.seed(123)
 locs <- cbind(runif(50), runif(50))
-vecchia_approx <- createVecchia(locs, ncores = 1)
+vecchia_approx <- createVecchia(locs)
 PP <- createPP(vecchia_approx, plot = FALSE)
 X <- matrix(rnorm(100), 50)
 Y <- matrix(rnorm(30 * nrow(X)), nrow(X))

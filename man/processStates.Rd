@@ -39,7 +39,7 @@ observed_locs <- cbind(runif(nobs), runif(nobs))
 observed_field <- rnorm(nobs)
 
 X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
-vecchia_approx <- createVecchia(observed_locs, 12, ncores = 1)
+vecchia_approx <- createVecchia(observed_locs, 12)
 PP <- createPP(vecchia_approx)
 
 covariates <- list(

@@ -24,13 +24,15 @@ a list
 Title TODO
 }
 \examples{
-aggregated_records <- aggregateRecords(processedGnsDemo, burn_in, keep = c("beta", "noise_beta", "field"))
+aggregated_records <- aggregateRecords(
+  processedGnsDemo, burn_in = 0.1, 
+  keep = c("beta", "noise_beta", "field"))
 noise_var <-
   apply(aggregated_records$noise_beta, 1, function(x) {
     as.vector(exp(xPPMultRight(
       X = processedGnsDemo$covariates$noise_X$X, PP = processedGnsDemo$hierarchical_model$noise$PP,
       vecchia_approx = processedGnsDemo$vecchia_approx, Y = x,
-      permutate_PP_to_obs = T
+      permutate_PP_to_obs = TRUE
     )))
   })
 # Gaussian log-dens of the observations

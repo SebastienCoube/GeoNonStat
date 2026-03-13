@@ -9,7 +9,9 @@ detailedSummary(partobject)
 \arguments{
 \item{partobject}{object to summarize}
 }
+\value{
+description a character
+}
 \description{
 summary of a part of a GeoNonStat object
 }
-\keyword{internal}

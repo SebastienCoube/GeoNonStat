@@ -56,9 +56,9 @@ variance through fixed linear effects}
 \item{noise_PP}{either an object of class PP used to model the field of
 log-noise parameters, or NULL in which case the model is stationary}
 
-\item{noise_log_scale_bounds}{either a vector containing two numeric values
-bounding Uniform prior for the log-marginal variance of the noise's PP,
-or NULL in which case the bounds are set automatically}
+\item{noise_log_scale_bounds}{either a length 2 numeric vector bounding 
+uniform prior for the log-marginal variance of the noise's PP, 
+or NULL in which case the bounds are set automatically.}
 
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
@@ -80,7 +80,7 @@ nobs <- 10000
 observed_locs <- cbind(runif(5000), runif(5000))
 observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
 observed_field <- rnorm(nobs)
-vecchia_approx <- createVecchia(observed_locs, ncores = 1)
+vecchia_approx <- createVecchia(observed_locs)
 noise_PP <- createPP(
   vecchia_approx = vecchia_approx,
   matern_range = .1,
