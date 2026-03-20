@@ -13,7 +13,7 @@ updateKernel <- function(iter,
   kernel_value <-
     kernel_value +
     length(kernel_value) * mult / sqrt(10 + iter + iter_start)
-  kernel_value <- max(kernel_value, -25)
+  kernel_value <- max(kernel_value, -12)
   kernel_value <- min(kernel_value, 2)
   kernel_value
 }
@@ -212,7 +212,6 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       0, 0, 2 * sqrt(2)
     ), 3)
   }
-  new_compressed_sparse_chol <- state$stuff$compressed_chol
 
   ##########################
   # Range beta (ancillary) #
@@ -333,11 +332,11 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       log_range = t(log_range), locs = vecchia_approx$t_locs,
       NNarray = vecchia_approx$NNarray,
       smoothness = hierarchical_model$matern_smoothness,
-      compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
+      compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    state$stuff$proposed_sparse_chol@x <- state$stuff$proposed_compressed_chol[,,1][vecchia_approx$sparse_chol_x_reorder] 
     new_field <- exp(.5 * state$params$field_log_var[1, 1]) *
-      as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))))
+      as.vector(Matrix::solve(state$stuff$proposed_sparse_chol, state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))))
     # Make a half step for momentum at the end.
     dens_grad[] <- crossprod(range_X$L, (
       -betaPriorLogDensDerivative(
@@ -354,10 +353,10 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
             t(
               # natural gradient of obs likelihood wrt range field
               derivativeSandwiches_(
-                vecchia = new_compressed_sparse_chol,
+                vecchia = state$stuff$proposed_compressed_chol,
                 left_vector = as.vector(
                   Matrix::solve(
-                    Matrix::t(new_sparse_chol),
+                    Matrix::t(state$stuff$proposed_sparse_chol),
                     -as.vector(vecchia_approx$locs_match_matrix %*% # gradient of  Gaussian observations ll wrt latent field
                       ((new_field[vecchia_approx$locs_match] - state$stuff$lm_residuals) / state$stuff$noise_var))
                     * exp(.5 * state$params$field_log_var[1, 1]) # part of sparse chol
@@ -399,7 +398,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     #          vecchia_approx = vecchia_approx,
     #          compressed_sparse_chol = gradient_test_chol
     #        )
-    #        field_ = as.vector(Matrix::solve(sparse_chol_, new_sparse_chol %*% (new_field)))
+    #        field_ = as.vector(Matrix::solve(sparse_chol_, state$stuff$proposed_sparse_chol %*% (new_field)))
     #
     #     derivative_test[i,j] =
     #        (1/ 0.0000001)*(
@@ -470,8 +469,8 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       )
       state$momenta$range_beta_ancillary <- p
       state$params$field <- new_field
-      state$stuff$sparse_chol <- new_sparse_chol
-      state$stuff$compressed_chol[] <- new_compressed_sparse_chol[]
+      names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
+      names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
       state$params$range_beta[] <- new_range_beta
     }
   }
@@ -594,9 +593,9 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       log_range = t(log_range), locs = vecchia_approx$t_locs,
       NNarray = vecchia_approx$NNarray,
       smoothness = hierarchical_model$matern_smoothness,
-      compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
+      compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    state$stuff$proposed_sparse_chol@x <- state$stuff$compressed_chol[,,1][vecchia_approx$sparse_chol_x_reorder]
 
     # Make a half step for momentum at the end.
     dens_grad <- 0 * q
@@ -616,8 +615,8 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
           Y = # Jacobian of range field wrt range_beta
             t( # natural gradient of obs likelihood wrt range field
               derivativeSandwiches_(
-                vecchia = new_compressed_sparse_chol, # derivative of the (unscaled) NNGP factor
-                left_vector = as.vector(new_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
+                vecchia = state$stuff$proposed_compressed_chol, # derivative of the (unscaled) NNGP factor
+                left_vector = as.vector(state$stuff$proposed_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
                 right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
                 NNarray = vecchia_approx$NNarray,
                 sauce_determinant_chef = TRUE,
@@ -674,8 +673,8 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
     ##           )-
     ##           (
     ##             0
-    ##             + .5* sum((new_sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var)))^2)
-    ##             - sum(log(Matrix::diag(new_sparse_chol)))
+    ##             + .5* sum((state$stuff$proposed_sparse_chol %*% (state$params$field/exp(.5 * state$params$field_log_var)))^2)
+    ##             - sum(log(Matrix::diag(state$stuff$proposed_sparse_chol)))
     ##           )
     ##       )
     ##    }
@@ -714,8 +713,8 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       state$params$range_log_scale
     )
     # normal prior
-    + .5 * sum((new_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1])))^2)
-      - sum(log(Matrix::diag(new_sparse_chol)))
+    + .5 * sum((state$stuff$proposed_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1])))^2)
+      - sum(log(Matrix::diag(state$stuff$proposed_sparse_chol)))
   )
 
   # current_U - proposed_U
@@ -732,8 +731,8 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
         kernel_value = state$ker_var$range_beta_sufficient[1], mult = 1
       )
       state$momenta$range_beta_sufficient <- p
-      state$stuff$sparse_chol <- new_sparse_chol
-      state$stuff$compressed_chol[] <- new_compressed_sparse_chol[]
+      names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
+      names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
       state$params$range_beta[] <- new_range_beta
     }
   }
@@ -749,7 +748,6 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       0, 0, 2 * sqrt(2)
     ), 3)
   }
-  new_compressed_sparse_chol <- state$stuff$compressed_chol
 
   ##########################
   # Range beta (ancillary) #
@@ -798,7 +796,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X) / (iter+iter_start)
     stepsize <- exp(state$ker_var$range_beta_ancillary[1])
     # updating MALA innovation with auto-correlation
-    state$momenta$range_beta_ancillary <- renewMomentum(state$momenta$range_beta_ancillary)
+    state$momenta$range_beta_ancillary <- renewMomentum(state$momenta$range_beta_ancillary, kept_momentum = .5)
     # making MALA step 
     new_range_beta <- state$params$range_beta + 
       as.vector(stepsize * (cond_mat %*% (crossprod(cond_mat, c(dens_grad))))/2) + 
@@ -814,9 +812,9 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       log_range = t(log_range), locs = vecchia_approx$t_locs,
       NNarray = vecchia_approx$NNarray,
       smoothness = hierarchical_model$matern_smoothness,
-      compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
+      compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, state$stuff$proposed_compressed_chol)
     new_field <- exp(.5 * state$params$field_log_var[1, 1]) *
       as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))))
     # computing gradient
@@ -835,7 +833,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
           t(
             # natural gradient of obs likelihood wrt range field
             derivativeSandwiches_(
-              vecchia = new_compressed_sparse_chol,
+              vecchia = state$stuff$proposed_compressed_chol,
               left_vector = as.vector(
                 Matrix::solve(
                   Matrix::t(new_sparse_chol),
@@ -905,10 +903,10 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         state$momenta$range_beta_ancillary = - innov_back
         # replacing current gradient
         dens_grad <- dens_grad_back
-        # replacing stuff
+        # replacing state$stuff
         state$params$field <- new_field
         state$stuff$sparse_chol <- new_sparse_chol
-        state$stuff$compressed_chol[] <- new_compressed_sparse_chol[]
+        names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
         state$params$range_beta[] <- new_range_beta
       }
     }
@@ -1004,7 +1002,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X) / (iter+iter_start)
       
     stepsize <- exp(state$ker_var$range_beta_sufficient[1])
-    state$momenta$range_beta_sufficient = renewMomentum(state$momenta$range_beta_sufficient)
+    state$momenta$range_beta_sufficient = renewMomentum(state$momenta$range_beta_sufficient, kept_momentum = .5)
     new_range_beta <- state$params$range_beta + 
       as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad)))) * stepsize/2 + 
       sqrt(stepsize) * as.vector(cond_mat %*% c(state$momenta$range_beta_sufficient))
@@ -1018,9 +1016,9 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       log_range = t(log_range), locs = vecchia_approx$t_locs,
       NNarray = vecchia_approx$NNarray,
       smoothness = hierarchical_model$matern_smoothness,
-      compute_derivative = TRUE, num_threads = num_threads, result = new_compressed_sparse_chol
+      compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, state$stuff$proposed_compressed_chol)
     dens_grad_back <- -(
       -betaPriorLogDensDerivative(
         beta = new_range_beta,
@@ -1037,7 +1035,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         Y = # Jacobian of range field wrt range_beta
           t( # natural gradient of obs likelihood wrt range field
             derivativeSandwiches_(
-              vecchia = new_compressed_sparse_chol, # derivative of the (unscaled) NNGP factor
+              vecchia = state$stuff$proposed_compressed_chol, # derivative of the (unscaled) NNGP factor
               left_vector = as.vector(new_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
               right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray,
@@ -1096,7 +1094,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         state$momenta$range_beta_sufficient <- - innov_back
         dens_grad <- dens_grad_back
         state$stuff$sparse_chol <- new_sparse_chol
-        state$stuff$compressed_chol[] <- new_compressed_sparse_chol[]
+        names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
         state$params$range_beta[] <- new_range_beta
       }
     }

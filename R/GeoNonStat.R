@@ -638,8 +638,14 @@ processStates <- function(hm,
     smoothness = hm$matern_smoothness,
     result = stuff$compressed_chol
   )
+  stuff$proposed_compressed_chol <- array(0, dim = c(
+    nrow(vecchia_approx$NNarray),
+    vecchia_approx$n_locs,
+    1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
+  ))
 
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
+  stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
   stuff$range_beta_conditioning_s = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
   stuff$range_beta_conditioning_a = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
