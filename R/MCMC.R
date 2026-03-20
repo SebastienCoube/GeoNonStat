@@ -68,11 +68,12 @@ runGeoNonStatMcmc <- function(
 
     if (iter + iter_start > 100) {
       # Range beta ###############################
-      res <- updateRangeBeta(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
+      res <- updateRangeBetaMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
       state <- res[["state"]]
 
       # Variance of the  range PP ###############################
-      state <- updateVarianceRangepp(
+      if(!is.null(hierarchical_model$range$PP)){
+        state <- updateVarianceRangepp(
         state = state,
         hierarchical_model = hierarchical_model,
         range_X = covariates$range_X,
@@ -80,7 +81,7 @@ runGeoNonStatMcmc <- function(
         iter = iter,
         iter_start = iter_start,
         num_threads = num_threads
-      )
+      )}
     }
 
     # Noise ###############################

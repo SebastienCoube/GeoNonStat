@@ -289,16 +289,19 @@ betaPriorLogDens <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean # Intercept for range
   var_mat[1, 1] <- beta0_var # Intercept for range
-  var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
-  if (ncb == 3) {
-    if (!length(log_scale) == 2) {
-      stop("log_scale is supposed to be of length 2")
+  determinant_part = 0
+  if(n_PP>0){
+    var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
+    if (ncb == 3) {
+      if (!length(log_scale) == 2) {
+        stop("log_scale is supposed to be of length 2")
+      }
+      var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
     }
-    var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
-  }
-  determinant_part <- -0.5 * log_scale[1] * n_PP
-  if (length(log_scale) == 2) {
-    determinant_part <- determinant_part - 2 * 0.5 * log_scale[2] * n_PP
+    determinant_part <- -0.5 * log_scale[1] * n_PP
+    if (length(log_scale) == 2) {
+      determinant_part <- determinant_part - 2 * 0.5 * log_scale[2] * n_PP
+    }
   }
   quadratic_part <- -0.5 * sum((beta - mean_mat)^2 / var_mat)
   return(quadratic_part + determinant_part)
@@ -333,6 +336,7 @@ betaPriorLogDensDerivative <- function(beta,
   if (!ncb %in% c(1, 3)) {
     stop("beta is expected to have 1 or 3 columns")
   }
+  if(is.null(n_PP))n_PP <- 0
   if (n_PP > nrb + 2) {
     stop("n_PP can't be greater than nrow(beta) + 2")
   }
@@ -340,12 +344,14 @@ betaPriorLogDensDerivative <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean
   var_mat[1, 1] <- beta0_var
-  var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
-  if (ncb == 3) {
-    if (!length(log_scale) == 2) {
-      stop("log_scale is supposed to be of length 2")
+  if(n_PP > 0){
+    var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
+    if (ncb == 3) {
+      if (!length(log_scale) == 2) {
+        stop("log_scale is supposed to be of length 2")
+      }
+      var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
     }
-    var_mat[-seq_len(nrb - n_PP), c(2, 3)] <- exp(log_scale[2])
   }
   return(-(beta - mean_mat) / var_mat)
 }

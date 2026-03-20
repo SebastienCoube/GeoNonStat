@@ -312,6 +312,7 @@ processCovariates <- function(X,
       solve(crossprod_X) / max(solve(crossprod_X))
     ))
     res$L_minus_one <- solve(res$L)
+    res$crossprod_X <- crossprod_X
   }
   if (one_obs_per_locs) {
     res$X <- NULL
@@ -320,6 +321,7 @@ processCovariates <- function(X,
       solve(crossprod_X) / max(solve(crossprod_X))
     ))
     res$L_minus_one <- solve(res$L)
+    res$crossprod_X <- crossprod_X
   }
   return(res)
 }
@@ -638,6 +640,10 @@ processStates <- function(hm,
   )
 
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
+  # conditioning matrix for range beta MALA
+  stuff$range_beta_conditioning_s = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+  stuff$range_beta_conditioning_a = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+  
   # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
 
   # Noise variance  and stuff depending on it ##################################
@@ -825,7 +831,6 @@ GeoNonStat <- function(vecchia_approx,
     anisotropic = anisotropic
   )
 
-
   # Chain states #################################################################
   # cl = parallel::makeCluster(min(parallel::detectCores()-1, n_chains))
   # parallel::clusterExport(cl, c("hierarchical_model", "covariates",
@@ -840,7 +845,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -5
+          init_tk = -6
         )
       }
     )
@@ -857,11 +862,6 @@ GeoNonStat <- function(vecchia_approx,
   )
   # iteration is a 2-colums matrix that records the iteration at the end of
   # each chains join and the associated CPU time
-  checkpoints <- matrix(
-    c(0, as.numeric(Sys.time() - t_begin, unit = "mins")),
-    ncol = 2
-  )
-  colnames(checkpoints) <- c("iteration", "time")
 
   # Result ####################################################################
   res <- structure(
@@ -872,8 +872,7 @@ GeoNonStat <- function(vecchia_approx,
       "vecchia_approx" = vecchia_approx,
       "states" = states,
       "records" = records,
-      "seed" = seed,
-      "checkpoints" = checkpoints
+      "seed" = seed
     ),
     class = "GeoNonStat"
   )
