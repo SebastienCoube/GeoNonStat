@@ -12,7 +12,7 @@
 #'
 #' \preformatted{
 #' set.seed(2)
-#' nlocs = 3000
+#' nlocs = 200
 #' observed_locs = cbind(runif(nlocs), runif(nlocs))
 #' vecchia_approx = createVecchia(observed_locs, m = 6)
 #'
@@ -92,7 +92,7 @@
 #'     object = gnsDemo,
 #'     n_chains_in_parallel = 1,
 #'     n_threads_per_chain = 1,
-#'     n_iterations = 15,
+#'     n_iterations = 55,
 #'     seed = 1
 #'   )
 #' }
