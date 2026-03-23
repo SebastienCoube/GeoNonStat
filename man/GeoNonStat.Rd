@@ -44,14 +44,20 @@ either 0.5 (aka ``exponential kernel'') or 1.5}
 \item{n_chains}{number of MCMC chains}
 
 \item{range_X}{a data.frame of covariates explaining the Gaussian process
-range through fixed linear effects}
+range through fixed linear effects, or NULL in which case the range is
+constant (i.e. the field is stationary).}
 
-\item{range_PP}{TODO}
+\item{range_PP}{an object of class `PP` used to model spatial variations of 
+the range of the latent field, or NULL in which case the model the range 
+depends on range_X if provided or constant otherwise (i.e. the field is
+stationary).}
 
-\item{range_log_scale_bounds}{TODO}
+\item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds 
+for the uniform prior of the latent field marginal variance}
 
 \item{noise_X}{a data.frame of covariates explaining the Gaussian noise
-variance through fixed linear effects}
+variance through fixed linear effects, or NULL.
+The Intercept is automatically added even if X_noise is NULL.}
 
 \item{noise_PP}{either an object of class PP used to model the field of
 log-noise parameters, or NULL in which case the model is stationary}
@@ -73,6 +79,30 @@ an object of class `GeoNonStat`
 }
 \description{
 This package provides functions for hierarchical nonstationary nearest neighbor Gaussian processes.
+}
+\details{
+\begin{itemize}
+\item{Decomposition of the observations} each observation from observed_field is decomposed into 3 components: 
+\begin{itemize}
+  \item{Fixed effects} like in a usual linear model
+  \item{Gaussian noise} like in a usual linear model
+  \item{Gaussian field} with \textbf{spatial coherence}
+\end{itemize}
+\item{Fixed effects} link linearly the interest variable from observed_field with
+ explanatory variables from X using the matrix of regression coefficients beta
+\item{Noise model} can be \textbf{heteroskedastic}, the variance 
+being specified through noise_X and noise_PP. 
+\begin{itemize}
+ \item{noise_X} captures fixed effects of explanatory covariates. 
+ \item{noise_PP} captures random spatial variations. 
+ \item{If both are NULL} then the model depends only on an intercept, and is homoskedastic. 
+\end{itemize}
+\item{Field range model} can be isotropic or anisotropic, and stationary or nonstationary. 
+\begin{itemize}
+ \item{noise_X} captures fixed effects of explanatory covariates. 
+\end{itemize}
+ 
+\end{itemize}
 }
 \examples{
 set.seed(100)

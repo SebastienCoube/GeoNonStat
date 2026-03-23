@@ -1329,10 +1329,15 @@ updateVarianceRangeppMALA <- function(state, hierarchical_model, range_X, vecchi
   }
   # computing gradient
   # ancillary - sufficient ####
-  dens_grad <- c(.5 * exp(.5 * state$params$range_log_scale)) * apply(
-    -(
+  state$params$range_log_scale = c(-3, 2)
+  dens_grad <- #c(.5 * exp(.5 * state$params$range_log_scale)) * 
+    apply(
+      (
+      state$params$range_beta[-seq(range_X$n_regressors),]
+      ) * 
+    (
       # normal prior derivative
-      + xPPCrossprod(
+      - xPPCrossprod(
         X = range_X$X_locs, PP = hierarchical_model$range$PP,
         permutate_PP_to_obs = FALSE,
         vecchia_approx = vecchia_approx,
@@ -1354,7 +1359,7 @@ updateVarianceRangeppMALA <- function(state, hierarchical_model, range_X, vecchi
   deriv_test = rep(0, 2)
   for(deriv_idx in seq(2)){
     q <- state$params$range_log_scale
-    q[deriv_idx] = q[deriv_idx] + .000001
+    q[deriv_idx] = q[deriv_idx] + .00001
     new_range_beta <- state$params$range_beta
     new_range_beta[-seq_len(range_X$n_regressors), ] <-
       new_range_beta[-seq_len(range_X$n_regressors), ] %*%
@@ -1384,8 +1389,9 @@ updateVarianceRangeppMALA <- function(state, hierarchical_model, range_X, vecchi
       field = state$params$field, 
       field_log_var = state$params$field_log_var
     )
-    deriv_test[deriv_idx] = (current_U - proposed_U)*1000000
+    deriv_test[deriv_idx] = (current_U - proposed_U)*100000
   }
+  print(deriv_test/dens_grad)
   
   for (i in seq_len(n_range_log_scale_update)) {
     q <- state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient))

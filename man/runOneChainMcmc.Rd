@@ -53,7 +53,7 @@ processedChain <-
     hierarchical_model = gnsDemo$hierarchical_model,
     vecchia_approx = gnsDemo$vecchia_approx,
     state = gnsDemo$states[[chain_id]],
-    n_iterations = 54,
+    n_iterations = 20,
     num_threads = 1,
     iter_start = iter_start,
     seed = iter_start + seed + chain_id
