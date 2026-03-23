@@ -469,8 +469,10 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       )
       state$momenta$range_beta_ancillary <- p
       state$params$field <- new_field
-      names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
-      names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
+      stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
+      names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
+      stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
+      names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
       state$params$range_beta[] <- new_range_beta
     }
   }
@@ -732,8 +734,10 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
         kernel_value = state$ker_var$range_beta_sufficient[1], mult = 1
       )
       state$momenta$range_beta_sufficient <- p
-      names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
-      names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
+      stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
+      names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
+      stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
+      names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
       state$params$range_beta[] <- new_range_beta
     }
   }
@@ -908,10 +912,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         state$params$field <- new_field
         # invert positions of proposed and current matrix to avoid recreating objects.
         stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
-        stuff_compressed <- stuff_compressed[!is.na(stuff_compressed)]
         names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
         stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
-        stuff_sparse <- stuff_sparse[!is.na(stuff_sparse)]
         names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
         state$params$range_beta[] <- new_range_beta
       }
@@ -1101,10 +1103,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         dens_grad <- dens_grad_back
         # invert positions of proposed and current matrix to avoid recreating objects.
         stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
-        stuff_compressed <- stuff_compressed[!is.na(stuff_compressed)]
         names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
         stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
-        stuff_sparse <- stuff_sparse[!is.na(stuff_sparse)]
         names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
         state$params$range_beta[] <- new_range_beta
       }
