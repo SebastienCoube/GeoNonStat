@@ -197,7 +197,7 @@ GeoNonStatMcmc <- function(
       iter_start = iter_start,
       n_iterations = n_iterations,
       n_threads_per_chain = n_threads_per_chain,
-      runGeoNonStatMcmc = runGeoNonStatMcmc
+      runOneChainMcmc = runOneChainMcmc
     )
   )
 
