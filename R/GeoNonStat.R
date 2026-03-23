@@ -742,10 +742,31 @@ processStates <- function(hm,
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @details
-#' \begin{itemize}
-#' \item{Noise model} TODO
-#' \end{itemize}
+#' \itemize
+#' \item{Decomposition of the observations} each observation from observed_field is decomposed into 3 components: 
+#' \itemize
+#'   \item{Fixed effects} like in a usual linear model
+#'   \item{Gaussian noise} like in a usual linear model
+#'   \item{Gaussian field} with \textbf{spatial coherence}
+#' \item{Fixed effects} link linearly the interest variable from observed_field with
+#'  explanatory variables from X using the matrix of regression coefficients beta
+#' \item{Noise model} can be \textbf{heteroskedastic}, the variance 
+#' being specified through noise_X and noise_PP. 
+#' \itemize
+#'  \item{noise_X} captures fixed effects of explanatory covariates. 
+#'  \item{noise_PP} captures random spatial variations. 
+#'  \item{If both are NULL} then the model depends only on an intercept, and is homoskedastic. 
+#' \item{Field range model} can be isotropic or anisotropic, and stationary or nonstationary. 
+#' \itemize
+#'  \item{Anisotropy} means that the correlation changes with the direction, 
+#'  and is specified through the Boolean argument anisotropic
+#'  \item{Nonstationarity} is specified through range_X and range_PP 
+#'  #' \itemize
+#'  \item{range_X} captures fixed effects of explanatory covariates. 
+#'  \item{range_PP} captures random spatial variations. 
+#'  \item{If both are NULL} then the model depends only on an intercept, and is stationary 
 #' 
+#' \item{Note} The latent field can be anisotropic and stationary, or isotropic and stationary !
 #' @returns an object of class `GeoNonStat`
 #' @export
 #'
