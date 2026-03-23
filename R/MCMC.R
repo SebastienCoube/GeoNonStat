@@ -60,13 +60,14 @@ runGeoNonStatMcmc <- function(
     state$params <- res[["params"]]
     state$stuff <- res[["stuff"]]
 
+    if (iter + iter_start > 25) {
     # Latent field ###############################
     state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
-
     # Field log var ###############################
     state <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-
-    if (iter + iter_start > 100) {
+    }
+    
+    if (iter + iter_start > 50) {
       # Range beta ###############################
       res <- updateRangeBetaMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
       state <- res[["state"]]

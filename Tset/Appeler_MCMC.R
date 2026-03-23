@@ -25,8 +25,8 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = 1
-noise_PP_log_var = 0
+noise_intercept = 1.5
+noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
 # case with no non-stationarity and crazy noise. 
@@ -70,14 +70,14 @@ geo_non_stat = GeoNonStat(
  samples = runGeoNonStatMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 99, num_threads = 8, iter_start = 1, seed = 1
+  state = state, n_iterations = 49, num_threads = 8, iter_start = 1, seed = 1
  )
  
  state = samples$state
  samples = runGeoNonStatMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 500, num_threads = 8, iter_start = 100, seed = 1
+  state = state, n_iterations = 200, num_threads = 8, iter_start = 50, seed = 1
  )
  
  state = samples$state
@@ -110,6 +110,7 @@ geo_non_stat = GeoNonStat(
   abline(h = noise_PP_log_var)
   
   plot(c(noise_PP_log_var, sapply(params_records, function(x)x$noise_beta[1])[seq(iter-1)]), main = "noise intercept")
+  abline(h = noise_intercept)
   
   
   field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter-1)])

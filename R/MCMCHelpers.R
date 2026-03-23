@@ -92,7 +92,7 @@ updateLatentField <- function(params, stuff, vecchia_approx, observed_field, ite
     }
   )
 
-  for (pass in seq_len(1)) {
+  for (asdf in seq_len(1)) {
     for (cluster_idx in unique(locs_partition)) {
       selected_idx <- which(locs_partition == cluster_idx)
       additional_mean_from_field <-
@@ -474,6 +474,7 @@ updateRangeBeta <- function(state, hierarchical_model, vecchia_approx, range_X, 
       state$params$range_beta[] <- new_range_beta
     }
   }
+  
   ###########################
   # Range beta (sufficient) #
   ###########################
@@ -793,7 +794,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
     # updating conditioning matrix
     state$stuff$range_beta_conditioning_a <- ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_a + 
       tcrossprod(c(dens_grad)) / (iter+iter_start) + 
-      .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X) / (iter+iter_start)
+      .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X) / (iter+iter_start)
     stepsize <- exp(state$ker_var$range_beta_ancillary[1])
     # updating MALA innovation with auto-correlation
     state$momenta$range_beta_ancillary <- renewMomentum(state$momenta$range_beta_ancillary, kept_momentum = .5)
@@ -814,9 +815,9 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       smoothness = hierarchical_model$matern_smoothness,
       compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, state$stuff$proposed_compressed_chol)
+    state$stuff$proposed_sparse_chol@x <- state$stuff$proposed_compressed_chol[,,1][vecchia_approx$sparse_chol_x_reorder]
     new_field <- exp(.5 * state$params$field_log_var[1, 1]) *
-      as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))))
+      as.vector(Matrix::solve(state$stuff$proposed_sparse_chol, state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))))
     # computing gradient
     dens_grad_back <- -(
       -betaPriorLogDensDerivative(
@@ -836,7 +837,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
               vecchia = state$stuff$proposed_compressed_chol,
               left_vector = as.vector(
                 Matrix::solve(
-                  Matrix::t(new_sparse_chol),
+                  Matrix::t(state$stuff$proposed_sparse_chol),
                   -as.vector(vecchia_approx$locs_match_matrix %*% # gradient of  Gaussian observations ll wrt latent field
                                ((new_field[vecchia_approx$locs_match] - state$stuff$lm_residuals) / state$stuff$noise_var))
                   * exp(.5 * state$params$field_log_var[1, 1]) # part of sparse chol
@@ -905,8 +906,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         dens_grad <- dens_grad_back
         # replacing state$stuff
         state$params$field <- new_field
-        state$stuff$sparse_chol <- new_sparse_chol
         names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
+        names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
         state$params$range_beta[] <- new_range_beta
       }
     }
@@ -999,7 +1000,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
   for(asdf in seq(1)){
       state$stuff$range_beta_conditioning_s = ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_s + 
         tcrossprod(c(dens_grad)) / (iter+iter_start) + 
-        .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X) / (iter+iter_start)
+        .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X) / (iter+iter_start)
       
     stepsize <- exp(state$ker_var$range_beta_sufficient[1])
     state$momenta$range_beta_sufficient = renewMomentum(state$momenta$range_beta_sufficient, kept_momentum = .5)
@@ -1018,7 +1019,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
       smoothness = hierarchical_model$matern_smoothness,
       compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
     )
-    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, state$stuff$proposed_compressed_chol)
+    state$stuff$proposed_sparse_chol@x <- state$stuff$proposed_compressed_chol[,,1][vecchia_approx$sparse_chol_x_reorder]
     dens_grad_back <- -(
       -betaPriorLogDensDerivative(
         beta = new_range_beta,
@@ -1036,7 +1037,7 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
           t( # natural gradient of obs likelihood wrt range field
             derivativeSandwiches_(
               vecchia = state$stuff$proposed_compressed_chol, # derivative of the (unscaled) NNGP factor
-              left_vector = as.vector(new_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
+              left_vector = as.vector(state$stuff$proposed_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
               right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
               NNarray = vecchia_approx$NNarray,
               sauce_determinant_chef = TRUE,
@@ -1076,8 +1077,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         state$params$range_log_scale
       )
       # normal prior
-      + .5 * sum((new_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1])))^2)
-      - sum(log(Matrix::diag(new_sparse_chol)))
+      + .5 * sum((state$stuff$proposed_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1])))^2)
+      - sum(log(Matrix::diag(state$stuff$proposed_sparse_chol)))
     )
     
     state$ker_var$range_beta_sufficient[1] <- updateKernel(
@@ -1093,8 +1094,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         )
         state$momenta$range_beta_sufficient <- - innov_back
         dens_grad <- dens_grad_back
-        state$stuff$sparse_chol <- new_sparse_chol
         names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
+        names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
         state$params$range_beta[] <- new_range_beta
       }
     }
@@ -1299,21 +1300,218 @@ updateVarianceRangepp <- function(state, hierarchical_model, range_X, vecchia_ap
   return(state)
 }
 
+
+updateVarianceRangeppMALA <- function(state, hierarchical_model, range_X, vecchia_approx, iter, iter_start, num_threads) {
+  n_range_log_scale_update <- 1
+  range_reparam_mat <- matrix(1)
+  if (hierarchical_model$anisotropic) {
+    range_reparam_mat <- matrix(c(
+      2, 2, 0,
+      2, -2, 0,
+      0, 0, 2 * sqrt(2)
+    ), 3)
+  }
+  # computing gradient
+  # ancillary - sufficient ####
+  dens_grad <- 0.5 * exp(0.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]) * apply(-(
+    -betaPriorLogDensDerivative(
+      beta = state$params$range_beta, n_PP = hierarchical_model$range$PP$n_knots,
+      beta0_mean = hierarchical_model$range$beta0_mean,
+      beta0_var = hierarchical_model$range$beta0_sd^2,
+      state$params$range_log_scale
+    ) # normal prior
+    + xPPCrossprod(
+      X = range_X$X_locs, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE,
+      PP = hierarchical_model$range$PP,
+      Y = # Jacobian of range field wrt range_beta
+        t(
+          # natural gradient of obs likelihood wrt range field
+          derivativeSandwiches_(
+            vecchia = state$stuff$compressed_chol,
+            left_vector = as.vector(
+              Matrix::solve(
+                Matrix::t(state$stuff$sparse_chol),
+                -as.vector(vecchia_approx$locs_match_matrix %*% # gradient of  Gaussian observations ll wrt latent field
+                             ((state$params$field[vecchia_approx$locs_match] - state$stuff$lm_residuals) / state$stuff$noise_var))
+                * exp(.5 * state$params$field_log_var[1, 1]) # part of sparse chol
+              )
+            ),
+            right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+            NNarray = vecchia_approx$NNarray,
+            sauce_determinant_chef = FALSE,
+            num_threads = num_threads
+          )
+        )
+    ) %*% range_reparam_mat
+  )[-seq(range_X$n_regressors),], 2, sum)
+  
+  
+  for (i in seq_len(n_range_log_scale_update)) {
+    q <- state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient))
+
+    if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))) {
+      new_range_beta <- state$params$range_beta
+      new_range_beta[-seq_len(range_X$n_regressors), ] <-
+        new_range_beta[-seq_len(range_X$n_regressors), ] %*%
+        diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2 * hierarchical_model$anisotropic))]), 1 + 2 * hierarchical_model$anisotropic) %*%
+        diag(exp(.5 * q[c(1, rep(2, 2 * hierarchical_model$anisotropic))]), 1 + 2 * hierarchical_model$anisotropic)
+      log_range <- computeLogRange(
+        range_beta = new_range_beta,
+        PP = hierarchical_model$range$PP,
+        vecchia_approx = vecchia_approx,
+        range_X = range_X
+      )
+      vecchia_(
+        log_range = t(log_range), locs = vecchia_approx$t_locs,
+        NNarray = vecchia_approx$NNarray,
+        smoothness = hierarchical_model$matern_smoothness,
+        compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
+      )
+      new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+
+      current_U <- potSuffRangeLogScale(
+        sparse_chol = state$stuff$sparse_chol, 
+        field = state$params$field, 
+        field_log_var = state$params$field_log_var
+      )
+      proposed_U <- potSuffRangeLogScale(
+        sparse_chol = new_sparse_chol, 
+        field = state$params$field, 
+        field_log_var = state$params$field_log_var
+      )
+
+      state$ker_var$range_log_scale_sufficient <- updateKernel(
+        iter = iter, iter_start = iter_start,
+        kernel_value = state$ker_var$range_log_scale_sufficient,
+        mult = -.25
+      )
+      if (!is.nan(current_U - proposed_U)) {
+        if (log(runif(1)) < (current_U - proposed_U)) {
+          state$ker_var$range_log_scale_sufficient <- updateKernel(
+            iter = iter, iter_start = iter_start,
+            kernel_value = state$ker_var$range_log_scale_sufficient,
+            mult = 1
+          )
+
+          state$params$range_beta <- new_range_beta
+          state$params$range_log_scale[] <- q
+
+          state$stuff$sparse_chol <- new_sparse_chol
+          state$stuff$compressed_chol[, , 1] <- new_compressed_sparse_chol[, , 1]
+        }
+      }
+    }
+  }
+
+  # sufficient - sufficient ####
+
+  state$params$range_log_scale <- updateVarPPSuff(
+    hm4params = hierarchical_model$range,
+    beta4params = state$params$range_beta,
+    current_range_log_scale = state$params$range_log_scale
+  )
+
+  # ancillary-ancillary ####
+  for (i in seq_len(n_range_log_scale_update)) {
+    q <- state$params$range_log_scale +
+      rnorm(
+        1 + hierarchical_model$anisotropic,
+        0,
+        exp(state$ker_var$range_log_scale_ancillary)
+      )
+
+    if (all(inBounds(hierarchical_model$range$log_scale_bounds, q))) {
+      new_range_beta <- state$params$range_beta
+      new_range_beta[-seq_len(range_X$n_regressors), ] <-
+        new_range_beta[-seq_len(range_X$n_regressors), ] %*%
+        diag(
+          exp(-.5 * state$params$range_log_scale[
+            c(1, rep(2, 2 * hierarchical_model$anisotropic))
+          ]),
+          1 + 2 * hierarchical_model$anisotropic
+        ) %*%
+        diag(
+          exp(.5 * q[c(1, rep(2, 2 * hierarchical_model$anisotropic))]),
+          1 + 2 * hierarchical_model$anisotropic
+        )
+      log_range <- computeLogRange(
+        range_beta = new_range_beta,
+        PP = hierarchical_model$range$PP,
+        vecchia_approx = vecchia_approx,
+        range_X = range_X
+      )
+      vecchia_(
+        log_range = t(log_range), locs = vecchia_approx$t_locs,
+        NNarray = vecchia_approx$NNarray,
+        smoothness = hierarchical_model$matern_smoothness,
+        compute_derivative = FALSE, num_threads = num_threads, result = new_compressed_sparse_chol
+      )
+      new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, new_compressed_sparse_chol)
+      new_field <- as.vector(Matrix::solve(new_sparse_chol, state$stuff$sparse_chol %*% (state$params$field)))
+
+      current_U <- potAnciRangeLogScale(
+        field = state$params$field,
+        lm_residuals = state$stuff$lm_residuals,
+        noise_var = state$stuff$noise_var,
+        vecchia_approx = vecchia_approx
+      )
+      proposed_U <- potAnciRangeLogScale(
+        field = new_field,
+        lm_residuals = state$stuff$lm_residuals,
+        noise_var = state$stuff$noise_var,
+        vecchia_approx = vecchia_approx
+      )
+      state$ker_var$range_log_scale_ancillary <- updateKernel(
+        iter = iter, iter_start = iter_start,
+        kernel_value = state$ker_var$range_log_scale_ancillary,
+        mult = -.25
+      )
+
+      if (!is.nan(current_U - proposed_U)) {
+        if (log(runif(1)) < (current_U - proposed_U)) {
+          state$ker_var$range_log_scale_ancillary <- updateKernel(
+            iter = iter, iter_start = iter_start,
+            kernel_value = state$ker_var$range_log_scale_ancillary,
+            mult = 1
+          )
+
+          state$params$range_beta <- new_range_beta
+          state$params$range_log_scale[] <- q
+          state$params$field <- new_field
+
+          state$stuff$sparse_chol <- new_sparse_chol
+          state$stuff$compressed_chol[, , 1] <- new_compressed_sparse_chol[, , 1]
+        }
+      }
+    }
+  }
+  # sufficient - sufficient ####
+  state$params$range_log_scale <-
+    updateVarPPSuff(
+      hm4params = hierarchical_model$range,
+      beta4params = state$params$range_beta,
+      current_range_log_scale = state$params$range_log_scale
+    )
+  # return ####
+  return(state)
+}
+
 updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
   # VEWY IMPOWTANT don't remove or comment
   squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
-  # HMC update
-  q <- noise_X$L_minus_one %*% state$params$noise_beta
-  state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)
-  p <- state$momenta$noise_beta
-  dens_grad <- (
-    -betaPriorLogDensDerivative(
-      beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
-      beta0_mean = noise$beta0_mean,
-      beta0_var = noise$beta0_sd^2,
-      log_scale = state$params$noise_log_scale
-    ) # normal prior
-    + xPPCrossprod(
+  for(asdf in seq(5)){
+    # HMC update
+    q <- noise_X$L_minus_one %*% state$params$noise_beta
+    state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)
+    p <- state$momenta$noise_beta
+    dens_grad <- (
+      -betaPriorLogDensDerivative(
+        beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
+        beta0_mean = noise$beta0_mean,
+        beta0_var = noise$beta0_sd^2,
+        log_scale = state$params$noise_log_scale
+      ) # normal prior
+      + xPPCrossprod(
         X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE,
         Y =
           (
@@ -1321,85 +1519,86 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
             - (squared_residuals / state$stuff$noise_var) / 2 # exponential part of normal likelihood
           )
       )
-  )
-  # Make a half step for momentum at the beginning
-  exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
-  p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
-
-  n_hmc_steps <- 10
-  for (hmc_step in seq_len(n_hmc_steps)) {
-    # Make a full step for the position
-    q <- q + exp_noise_mala * p
-    new_noise_beta <- noise_X$L %*% q
-    new_noise_var <- as.vector(exp(xPPMultRight(
-      X = noise_X$X, PP = noise$PP,
-      vecchia_approx = vecchia_approx, Y = new_noise_beta,
-      permutate_PP_to_obs = TRUE
-    )))
-    # Make a half step for momentum at the end
-    dens_grad <- (
-      -betaPriorLogDensDerivative(
-        beta = new_noise_beta, n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + xPPCrossprod(
+    )
+    # Make a half step for momentum at the beginning
+    exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
+    p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
+    
+    n_hmc_steps <- 5
+    for (hmc_step in seq_len(n_hmc_steps)) {
+      # Make a full step for the position
+      q <- q + exp_noise_mala * p
+      new_noise_beta <- noise_X$L %*% q
+      new_noise_var <- as.vector(exp(xPPMultRight(
+        X = noise_X$X, PP = noise$PP,
+        vecchia_approx = vecchia_approx, Y = new_noise_beta,
+        permutate_PP_to_obs = TRUE
+      )))
+      # Make a half step for momentum at the end
+      dens_grad <- (
+        -betaPriorLogDensDerivative(
+          beta = new_noise_beta, n_PP = noise$PP$n_knots,
+          beta0_mean = noise$beta0_mean,
+          beta0_var = noise$beta0_sd^2,
+          log_scale = state$params$noise_log_scale
+        ) # normal prior
+        + xPPCrossprod(
           X = noise_X$X,
           noise$PP,
           vecchia_approx = vecchia_approx,
           permutate_PP_to_obs = TRUE,
           Y = (+.5 # determinant part of normal likelihood
-          - (squared_residuals / new_noise_var) / 2 # exponential part of normal likelihood
+               - (squared_residuals / new_noise_var) / 2 # exponential part of normal likelihood
           )
         )
-    )
-    p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / (1 + (hmc_step == n_hmc_steps))
-  }
-
-  # Evaluate potential and kinetic energies at start and end of trajectory
-  current_U <- (
-    -betaPriorLogDens(
-      beta = state$params$noise_beta,
-      n_PP = noise$PP$n_knots,
-      beta0_mean = noise$beta0_mean,
-      beta0_var = noise$beta0_sd^2,
-      log_scale = state$params$noise_log_scale
-    ) # normal prior
-    + .5 * sum(log(state$stuff$noise_var)) # det
-      + .5 * sum(squared_residuals / state$stuff$noise_var) # observations
-  )
-  current_K <- sum(state$momenta$noise_beta^2) / 2
-  proposed_U <- (
-    -betaPriorLogDens(
-      beta = new_noise_beta,
-      n_PP = noise$PP$n_knots,
-      beta0_mean = noise$beta0_mean,
-      beta0_var = noise$beta0_sd^2,
-      log_scale = state$params$noise_log_scale
-    ) # normal prior
-    + .5 * sum(log(new_noise_var)) # det
-      + .5 * sum(squared_residuals / new_noise_var) # observations
-  )
-  proposed_K <- sum(p^2) / 2
-
-  state$ker_var$noise_beta_mala <- updateKernel(
-    iter = iter, 
-    iter_start = iter_start, 
-    kernel_value = state$ker_var$noise_beta_mala, 
-    mult = -.8
-  )
-  if (!is.nan(current_U - proposed_U + current_K - proposed_K)) {
-    if (log(runif(1)) < current_U - proposed_U + current_K - proposed_K) {
-      state$ker_var$noise_beta_mala <- updateKernel(
-        iter = iter, 
-        iter_start = iter_start, 
-        kernel_value = state$ker_var$noise_beta_mala, 
-        mult = 1
       )
-      state$momenta$noise_beta <- p
-      state$params$noise_beta[] <- new_noise_beta
-      state$stuff$noise_var <- new_noise_var
+      p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / (1 + (hmc_step == n_hmc_steps))
+    }
+    
+    # Evaluate potential and kinetic energies at start and end of trajectory
+    current_U <- (
+      -betaPriorLogDens(
+        beta = state$params$noise_beta,
+        n_PP = noise$PP$n_knots,
+        beta0_mean = noise$beta0_mean,
+        beta0_var = noise$beta0_sd^2,
+        log_scale = state$params$noise_log_scale
+      ) # normal prior
+      + .5 * sum(log(state$stuff$noise_var)) # det
+      + .5 * sum(squared_residuals / state$stuff$noise_var) # observations
+    )
+    current_K <- sum(state$momenta$noise_beta^2) / 2
+    proposed_U <- (
+      -betaPriorLogDens(
+        beta = new_noise_beta,
+        n_PP = noise$PP$n_knots,
+        beta0_mean = noise$beta0_mean,
+        beta0_var = noise$beta0_sd^2,
+        log_scale = state$params$noise_log_scale
+      ) # normal prior
+      + .5 * sum(log(new_noise_var)) # det
+      + .5 * sum(squared_residuals / new_noise_var) # observations
+    )
+    proposed_K <- sum(p^2) / 2
+    
+    state$ker_var$noise_beta_mala <- updateKernel(
+      iter = iter, 
+      iter_start = iter_start, 
+      kernel_value = state$ker_var$noise_beta_mala, 
+      mult = -.8
+    )
+    if (!is.nan(current_U - proposed_U + current_K - proposed_K)) {
+      if (log(runif(1)) < current_U - proposed_U + current_K - proposed_K) {
+        state$ker_var$noise_beta_mala <- updateKernel(
+          iter = iter, 
+          iter_start = iter_start, 
+          kernel_value = state$ker_var$noise_beta_mala, 
+          mult = 1
+        )
+        state$momenta$noise_beta <- p
+        state$params$noise_beta[] <- new_noise_beta
+        state$stuff$noise_var <- new_noise_var
+      }
     }
   }
 

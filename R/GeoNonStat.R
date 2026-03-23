@@ -851,7 +851,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -6
+          init_tk = -3
         )
       }
     )
