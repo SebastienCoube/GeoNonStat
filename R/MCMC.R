@@ -20,7 +20,7 @@
 #' seed <- 1
 #' iter_start <- length(gnsDemo$records$chain_1)
 #' processedChain <-
-#'   runGeoNonStatMcmc(
+#'   runOneChainMcmc(
 #'     covariates = gnsDemo$covariates,
 #'     observed_field = gnsDemo$observed_field,
 #'     hierarchical_model = gnsDemo$hierarchical_model,
@@ -32,7 +32,7 @@
 #'     seed = iter_start + seed + chain_id
 #'   )
 #' names(processedChain)
-runGeoNonStatMcmc <- function(
+runOneChainMcmc <- function(
   covariates,
   observed_field,
   hierarchical_model,
@@ -134,13 +134,13 @@ runGeoNonStatMcmc <- function(
 #' @export
 #'
 #' @examples
-#' processedGns <- runParallelGeoNonStatMcmc(
+#' processedGns <- GeoNonStatMcmc(
 #'   gnsDemo,
 #'   n_chains_in_parallel = 1,
 #'   n_threads_per_chain = 1, # example in sequential
 #'   n_iterations = 15
 #' )
-runParallelGeoNonStatMcmc <- function(
+GeoNonStatMcmc <- function(
   object,
   n_chains_in_parallel = NULL,
   n_threads_per_chain = 5,
@@ -173,7 +173,7 @@ runParallelGeoNonStatMcmc <- function(
 
   res <- future.apply::future_mapply(
     FUN = function(states_local, seed_for_chain) {
-      runGeoNonStatMcmc(
+      runOneChainMcmc(
         state = states_local,
         seed = seed_for_chain,
         covariates = covariates_local,

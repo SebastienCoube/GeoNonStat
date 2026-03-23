@@ -647,8 +647,8 @@ processStates <- function(hm,
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
-  stuff$range_beta_conditioning_s = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  stuff$range_beta_conditioning_a = diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+  stuff$range_beta_conditioning_s = diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+  stuff$range_beta_conditioning_a = diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
   
   # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
 
@@ -846,12 +846,12 @@ GeoNonStat <- function(vecchia_approx,
     lapply(
       seq_len(n_chains), function(chain_number) {
         processStates(
-          seed = chain_number + seed,
           hm = hierarchical_model,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -3
+          init_tk = -3,
+          seed = chain_number + seed
         )
       }
     )

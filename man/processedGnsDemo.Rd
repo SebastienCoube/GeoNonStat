@@ -24,7 +24,7 @@ The data have been generated with the following code :
 
 \preformatted{
   set.seed(123)
-  processedGnsDemo = runParallelGeoNonStatMcmc(
+  processedGnsDemo = GeoNonStatMcmc(
     object = gnsDemo,
     n_chains_in_parallel = 1,
     n_threads_per_chain = 1,
