@@ -723,11 +723,17 @@ processStates <- function(hm,
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
 #' @param range_X a data.frame of covariates explaining the Gaussian process
-#' range through fixed linear effects
-#' @param range_PP TODO
-#' @param range_log_scale_bounds TODO
+#' range through fixed linear effects, or NULL in which case the range is
+#' constant (i.e. the field is stationary).
+#' @param range_PP an object of class `PP` used to model spatial variations of 
+#' the range of the latent field, or NULL in which case the model the range 
+#' depends on range_X if provided or constant otherwise (i.e. the field is
+#' stationary).
+#' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds 
+#' for the uniform prior of the latent field marginal variance
 #' @param noise_X a data.frame of covariates explaining the Gaussian noise
-#' variance through fixed linear effects
+#' variance through fixed linear effects, or NULL.
+#' The Intercept is automatically added even if X_noise is NULL. 
 #' @param noise_PP either an object of class PP used to model the field of
 #' log-noise parameters, or NULL in which case the model is stationary
 #' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
@@ -735,6 +741,11 @@ processStates <- function(hm,
 #' or NULL in which case the bounds are set automatically.
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
+#' @details
+#' \begin{itemize}
+#' \item{Noise model} TODO
+#' \end{itemize}
+#' 
 #' @returns an object of class `GeoNonStat`
 #' @export
 #'
