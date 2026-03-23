@@ -906,8 +906,11 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         dens_grad <- dens_grad_back
         # replacing state$stuff
         state$params$field <- new_field
-        names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
-        names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
+        # invert positions of proposed and current matrix to avoid recreating objects.
+        stuff_compressed <- match(names(state$stuff), c("compressed_chol", "proposed_compressed_chol"))
+        names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
+        stuff_sparse <- match(names(state$stuff), c("sparse_chol", "proposed_sparse_chol"))
+        names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
         state$params$range_beta[] <- new_range_beta
       }
     }
@@ -1094,8 +1097,11 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx, range
         )
         state$momenta$range_beta_sufficient <- - innov_back
         dens_grad <- dens_grad_back
-        names(state$stuff)[grep("compressed_chol", names(state$stuff))] = names(state$stuff)[grep("compressed_chol", names(state$stuff))[c(2,1)]]
-        names(state$stuff)[grep("sparse_chol", names(state$stuff))] = names(state$stuff)[grep("sparse_chol", names(state$stuff))[c(2,1)]]
+        # invert positions of proposed and current matrix to avoid recreating objects.
+        stuff_compressed <- match(names(state$stuff), c("compressed_chol", "proposed_compressed_chol"))
+        names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
+        stuff_sparse <- match(names(state$stuff), c("sparse_chol", "proposed_sparse_chol"))
+        names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
         state$params$range_beta[] <- new_range_beta
       }
     }

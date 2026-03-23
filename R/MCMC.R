@@ -51,20 +51,24 @@ runGeoNonStatMcmc <- function(
       initStateParams(state$params)
     }
   )
-
+  
   for (iter in seq_len(n_iterations)) {
     if (iter / 10 == iter %/% 10) cat("iter = ", iter, "\n")
     # Regression coefficients ###############################
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res[["params"]]
-    state$stuff <- res[["stuff"]]
+    state$stuff$lm_fit <- res[["stuff"]]$lm_fit
+    state$stuff$lm_residuals <- res[["stuff"]]$lm_residuals
 
     if (iter + iter_start > 25) {
-    # Latent field ###############################
-    state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
-    # Field log var ###############################
-    state <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+      # Latent field ###############################
+      state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
+      # Field log var ###############################
+      res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+      state$params$field <- res$params$field
+      state$params$field_log_var <- res$params$field_log_var
+      state$ker_var <- state$ker_var
     }
     
     if (iter + iter_start > 50) {
@@ -143,8 +147,13 @@ runParallelGeoNonStatMcmc <- function(
   n_iterations = 100,
   seed = 1
 ) {
+  
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
+  if(n_iterations + iter_start < 50) {
+    warning("The algorithm is implemented to update the spatial range paramters ",
+    "after at least 50 iterations. You should increase n_iterations.")
+  }
   usedPlan <- utils::capture.output({
     print(future::plan())
   })[1]
