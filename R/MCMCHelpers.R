@@ -1315,42 +1315,73 @@ updateVarianceRangeppMALA <- function(state, hierarchical_model, range_X, vecchi
       2, 2, 0,
       2, -2, 0,
       0, 0, 2 * sqrt(2)
-    ), 3)
+    ), 3) 
+  }
+  scale_reparam_mat <- matrix(1)
+  if (hierarchical_model$anisotropic) {
+    scale_reparam_mat <- matrix(c(
+      1,0,0,0,1,1
+    ), 3) 
   }
   # computing gradient
   # ancillary - sufficient ####
-  dens_grad <- 0.5 * exp(0.5 * state$params$range_log_scale[c(1, rep(2, 2*hierarchical_model$anisotropic))]) * apply(-(
-    -betaPriorLogDensDerivative(
-      beta = state$params$range_beta, n_PP = hierarchical_model$range$PP$n_knots,
-      beta0_mean = hierarchical_model$range$beta0_mean,
-      beta0_var = hierarchical_model$range$beta0_sd^2,
-      state$params$range_log_scale
-    ) # normal prior
-    + xPPCrossprod(
-      X = range_X$X_locs, vecchia_approx = vecchia_approx, permutate_PP_to_obs = FALSE,
-      PP = hierarchical_model$range$PP,
-      Y = # Jacobian of range field wrt range_beta
-        t(
-          # natural gradient of obs likelihood wrt range field
-          derivativeSandwiches_(
-            vecchia = state$stuff$compressed_chol,
-            left_vector = as.vector(
-              Matrix::solve(
-                Matrix::t(state$stuff$sparse_chol),
-                -as.vector(vecchia_approx$locs_match_matrix %*% # gradient of  Gaussian observations ll wrt latent field
-                             ((state$params$field[vecchia_approx$locs_match] - state$stuff$lm_residuals) / state$stuff$noise_var))
-                * exp(.5 * state$params$field_log_var[1, 1]) # part of sparse chol
-              )
-            ),
-            right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
-            NNarray = vecchia_approx$NNarray,
-            sauce_determinant_chef = FALSE,
-            num_threads = num_threads
+  dens_grad <- c(.5 * exp(.5 * state$params$range_log_scale)) * apply(
+    -(
+      # normal prior derivative
+      + xPPCrossprod(
+        X = range_X$X_locs, PP = hierarchical_model$range$PP,
+        permutate_PP_to_obs = FALSE,
+        vecchia_approx = vecchia_approx,
+        Y = # Jacobian of range field wrt range_beta
+          t( # natural gradient of obs likelihood wrt range field
+            derivativeSandwiches_(
+              vecchia = state$stuff$compressed_chol, # derivative of the (unscaled) NNGP factor
+              left_vector = as.vector(state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1]))), # left vector = whitened latent field
+              right_vector = state$params$field / exp(.5 * state$params$field_log_var[1, 1]), # scaled latent field, the scaling actually belongs to the derivative since the derivative must be scaled
+              NNarray = vecchia_approx$NNarray,
+              sauce_determinant_chef = TRUE,
+              num_threads = num_threads
+            )
           )
-        )
-    ) %*% range_reparam_mat
-  )[-seq(range_X$n_regressors),], 2, sum)
+      ) %*% range_reparam_mat
+    )[-seq(range_X$n_regressors),], 
+  2, sum) %*% scale_reparam_mat
   
+  deriv_test = rep(0, 2)
+  for(deriv_idx in seq(2)){
+    q <- state$params$range_log_scale
+    q[deriv_idx] = q[deriv_idx] + .000001
+    new_range_beta <- state$params$range_beta
+    new_range_beta[-seq_len(range_X$n_regressors), ] <-
+      new_range_beta[-seq_len(range_X$n_regressors), ] %*%
+      diag(exp(-.5 * state$params$range_log_scale[c(1, rep(2, 2 * hierarchical_model$anisotropic))]), 1 + 2 * hierarchical_model$anisotropic) %*%
+      diag(exp(.5 * q[c(1, rep(2, 2 * hierarchical_model$anisotropic))]), 1 + 2 * hierarchical_model$anisotropic)
+    log_range <- computeLogRange(
+      range_beta = new_range_beta,
+      PP = hierarchical_model$range$PP,
+      vecchia_approx = vecchia_approx,
+      range_X = range_X
+    )
+    vecchia_(
+      log_range = t(log_range), locs = vecchia_approx$t_locs,
+      NNarray = vecchia_approx$NNarray,
+      smoothness = hierarchical_model$matern_smoothness,
+      compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
+    )
+    new_sparse_chol <- decompressChol(vecchia_approx = vecchia_approx, state$stuff$proposed_compressed_chol)
+    
+    current_U <- potSuffRangeLogScale(
+      sparse_chol = state$stuff$sparse_chol, 
+      field = state$params$field, 
+      field_log_var = state$params$field_log_var
+    )
+    proposed_U <- potSuffRangeLogScale(
+      sparse_chol = new_sparse_chol, 
+      field = state$params$field, 
+      field_log_var = state$params$field_log_var
+    )
+    deriv_test[deriv_idx] = (current_U - proposed_U)*1000000
+  }
   
   for (i in seq_len(n_range_log_scale_update)) {
     q <- state$params$range_log_scale + rnorm(1 + hierarchical_model$anisotropic, 0, exp(state$ker_var$range_log_scale_sufficient))

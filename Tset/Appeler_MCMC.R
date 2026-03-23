@@ -77,7 +77,7 @@ geo_non_stat = GeoNonStat(
  samples = runGeoNonStatMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 200, num_threads = 8, iter_start = 50, seed = 1
+  state = state, n_iterations = 15, num_threads = 8, iter_start = 50, seed = 1
  )
  
  state = samples$state
@@ -90,8 +90,11 @@ geo_non_stat = GeoNonStat(
  plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
  plotPointillistPainting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
  plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
- 
-  par(mar = rep(2, 4))
+  
+ plot(params$field, fake_data$latent_field)
+ abline(a=0, b=1)
+  
+ par(mar = rep(2, 4))
   par(mfrow = c(3,3))
   for(i in seq(nrow(params$range_beta))){
     for(j in seq(ncol(params$range_beta))){
@@ -117,18 +120,18 @@ geo_non_stat = GeoNonStat(
   plot(field_log_var_samples, main = "field log var")
   abline(h = field_log_var)
  
- # parallel run
- future::plan(strategy = "multisession", workers = 3)
- geo_non_stat = runParallelGeoNonStatMcmc(
-   object = geo_non_stat, n_chains_in_parallel = 3, 
-   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
- geo_non_stat = runParallelGeoNonStatMcmc(
-   object = geo_non_stat, n_chains_in_parallel = 3, 
-   n_threads_per_chain = 10, n_iterations = 30, seed = 1)
-
- 
- 
-tracePlots(geo_non_stat, keep = "range_beta")
+#  # parallel run
+#  future::plan(strategy = "multisession", workers = 3)
+#  geo_non_stat = runParallelGeoNonStatMcmc(
+#    object = geo_non_stat, n_chains_in_parallel = 3, 
+#    n_threads_per_chain = 10, n_iterations = 30, seed = 1)
+#  geo_non_stat = runParallelGeoNonStatMcmc(
+#    object = geo_non_stat, n_chains_in_parallel = 3, 
+#    n_threads_per_chain = 10, n_iterations = 30, seed = 1)
+# 
+#  
+#  
+# tracePlots(geo_non_stat, keep = "range_beta")
 
  
 # records = geo_non_stat$records

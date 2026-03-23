@@ -60,7 +60,7 @@ runOneChainMcmc <- function(
     state$params <- res[["params"]]
     state$stuff$lm_fit <- res[["stuff"]]$lm_fit
     state$stuff$lm_residuals <- res[["stuff"]]$lm_residuals
-
+    
     if (iter + iter_start > 25) {
       # Latent field ###############################
       state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
