@@ -337,10 +337,10 @@ processCovariates <- function(X,
 #' @examples
 #' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
 #' myPP <- createPP(vecchia_approx)
-#' PPPP <- processPPPprior(myPP, c(1, 2), "example")
-processPPPprior <- function(PP = NULL,
-                            log_scale_bounds = NULL,
-                            parameter_name) {
+#' PPPP <- processPPPrior(myPP, c(1, 2), "example")
+processPPPrior <- function(PP = NULL,
+                           log_scale_bounds = NULL,
+                           parameter_name) {
   if (is.null(PP) && is.null(log_scale_bounds)) {
     return(log_scale_bounds)
   }
@@ -438,8 +438,8 @@ processHierarchicalModel <- function(vecchia_approx,
     stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   }
   # Processing PP priors
-  noise_log_scale_bounds <- processPPPprior(noise_PP, noise_log_scale_bounds, "noise")
-  range_log_scale_bounds <- processPPPprior(range_PP, range_log_scale_bounds, "range")
+  noise_log_scale_bounds <- processPPPrior(noise_PP, noise_log_scale_bounds, "noise")
+  range_log_scale_bounds <- processPPPrior(range_PP, range_log_scale_bounds, "range")
 
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
