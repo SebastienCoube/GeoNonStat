@@ -81,28 +81,35 @@ an object of class `GeoNonStat`
 This package provides functions for hierarchical nonstationary nearest neighbor Gaussian processes.
 }
 \details{
-\begin{itemize}
-\item{Decomposition of the observations} each observation from observed_field is decomposed into 3 components: 
-\begin{itemize}
-  \item{Fixed effects} like in a usual linear model
-  \item{Gaussian noise} like in a usual linear model
-  \item{Gaussian field} with \textbf{spatial coherence}
-\end{itemize}
-\item{Fixed effects} link linearly the interest variable from observed_field with
- explanatory variables from X using the matrix of regression coefficients beta
-\item{Noise model} can be \textbf{heteroskedastic}, the variance 
-being specified through noise_X and noise_PP. 
-\begin{itemize}
- \item{noise_X} captures fixed effects of explanatory covariates. 
- \item{noise_PP} captures random spatial variations. 
- \item{If both are NULL} then the model depends only on an intercept, and is homoskedastic. 
-\end{itemize}
-\item{Field range model} can be isotropic or anisotropic, and stationary or nonstationary. 
-\begin{itemize}
- \item{noise_X} captures fixed effects of explanatory covariates. 
-\end{itemize}
- 
-\end{itemize}
+\describe{
+ \item{\strong{Decomposition of the observations}}{Each observation from observed_field is decomposed into 3 components:}
+ \itemize{
+  \item Fixed effects like in a usual linear model
+  \item Gaussian noise like in a usual linear model
+  \item Gaussian field with \strong{spatial coherence}
+ }
+ \item{\strong{Fixed effects}}{Link linearly the interest variable from observed_field with
+ explanatory variables from \code{X} using the matrix of regression coefficients beta}
+ \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance 
+being specified through \code{noise_X} and \code{noise_PP}} 
+  \itemize{
+   \item \code{noise_X} captures fixed effects of explanatory covariates. 
+   \item \code{noise_PP} captures random spatial variations. 
+   \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic. 
+  }
+\item{\strong{Field range model}}{can be isotropic or anisotropic, and stationary or nonstationary.}
+\itemize{
+ \item Anisotropy means that the correlation changes with the direction, 
+ and is specified through the Boolean argument \code{anisotropic}
+ \item Nonstationarity is specified through \code{range_X} and \code{range_PP} 
+ \itemize{
+ \item \code{range_X} captures fixed effects of explanatory covariates. 
+ \item \code{range_PP} captures random spatial variations. 
+ \item If both are \code{NULL} then the model depends only on an intercept, and is stationary 
+ }
+}
+\item{Note}{The latent field can be anisotropic and stationary, or isotropic and stationary !}
+}
 }
 \examples{
 set.seed(100)

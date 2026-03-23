@@ -23,7 +23,7 @@ The data have been generated with the following code :
 
 \preformatted{
 set.seed(2)
-nlocs = 3000
+nlocs = 200
 observed_locs = cbind(runif(nlocs), runif(nlocs))
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
