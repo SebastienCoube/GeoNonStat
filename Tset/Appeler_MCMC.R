@@ -1,4 +1,3 @@
-library(GeoNonStat)
 set.seed(2)
 nlocs = 20000
 observed_locs = cbind(runif(nlocs), runif(nlocs))
@@ -67,14 +66,14 @@ geo_non_stat = GeoNonStat(
  seed=  1
  range_X = covariates$range_X
  
- samples = runGeoNonStatMcmc(
+ samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
   state = state, n_iterations = 49, num_threads = 8, iter_start = 1, seed = 1
  )
  
  state = samples$state
- samples = runGeoNonStatMcmc(
+ samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
   state = state, n_iterations = 15, num_threads = 8, iter_start = 50, seed = 1
