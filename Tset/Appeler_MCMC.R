@@ -24,7 +24,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = 1.5
+noise_intercept = -1
 noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -76,7 +76,7 @@ geo_non_stat = GeoNonStat(
  samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 15, num_threads = 8, iter_start = 50, seed = 1
+  state = state, n_iterations = 300, num_threads = 8, iter_start = 50, seed = 1
  )
  
  state = samples$state
@@ -101,21 +101,27 @@ geo_non_stat = GeoNonStat(
       abline(h = rbind(coeff_list$range_X_coeff, coeff_list$range_PP_coeff)[i,j])
     }}
   
+  
   range_log_scale_samples = rbind(range_log_scale, t(sapply(params_records, function(x)x$range_log_scale))[seq(iter-1),])
   plot(range_log_scale_samples[,1], main = "range log scale")
   abline(h = range_log_scale[1])
   plot(range_log_scale_samples[,2], main = "aniso log scale")
   abline(h = range_log_scale[2])
   
-  noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter-1)])
+  noise_log_scale_samples = c(noise_PP_log_var, sapply(params_records, function(x)x$noise_log_scale)[seq(iter/10, iter-1)])
   plot(noise_log_scale_samples, main = "noise log scale")
   abline(h = noise_PP_log_var)
   
-  plot(c(noise_PP_log_var, sapply(params_records, function(x)x$noise_beta[1])[seq(iter-1)]), main = "noise intercept")
-  abline(h = noise_intercept)
+  plot(c(coeff_list$noise_X_coeff[1], sapply(params_records, function(x)x$noise_beta[1])[seq(iter/10, iter-1)]), main = "noise intercept")
+  abline(h = coeff_list$noise_X_coeff[1])
+  for(i in c(1,2,20, 50, 100, 250, 500, 800, 1000)){
+  plot(c(coeff_list$noise_PP_coeff[i], sapply(params_records, function(x)x$noise_beta[i+1])[seq(iter-1)]), main = paste("noise PP", i))
+  abline(h = coeff_list$noise_PP_coeff[i])
+  abline(h = 0)
+  }
   
   
-  field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter-1)])
+  field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/10, iter-1)])
   plot(field_log_var_samples, main = "field log var")
   abline(h = field_log_var)
  

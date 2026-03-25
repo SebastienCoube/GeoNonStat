@@ -598,6 +598,8 @@ processStates <- function(hm,
   }
 
   if (!is.null(hm$range$PP)) {
+    momenta$range_log_scale_sufficient = rnorm(1 + hm$anisotropic)
+    momenta$range_log_scale_ancillary  = rnorm(1 + hm$anisotropic)
     params$range_beta <- matrix(
       data = 0,
       nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots,
@@ -607,7 +609,7 @@ processStates <- function(hm,
       colnames(covariates$range_X$X_locs),
       paste("PP", seq_len(hm$range$PP$n_knots), sep = "_")
     )
-    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1]))
+    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1] , hm$range$log_scale_bounds[1]+ .05 * (hm$range$log_scale_bounds[2]-hm$range$log_scale_bounds[1])))
     row.names(params$range_log_scale) <- c("range", "aniso")[seq_len(1 + hm$anisotropic)]
   }
   # params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
@@ -886,7 +888,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -3,
+          init_tk = -6,
           seed = chain_number + seed
         )
       }
