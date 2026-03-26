@@ -37,6 +37,9 @@ arma::cube vecchia(
 #if _OPENMP
   omp_set_num_threads(num_threads);
 #endif
+  double diag_term = 1.0001;
+  double diff_term = 0.0000001;
+  
   // initializing stuff
   int n = locs.n_cols;
   int m = NNarray.n_rows;
@@ -74,19 +77,19 @@ arma::cube vecchia(
       exprange(1, i) = rangemat(1,1); 
       exprange(2, i) = rangemat(0,1); 
       if(compute_derivative){
-        lograngemat(0,0) = lograngemat(0,0) + .00001;
+        lograngemat(0,0) = lograngemat(0,0) + diff_term;
         rangemat = expmat_sym(lograngemat);
         exprange(3, i) = rangemat(0,0); 
         exprange(4, i) = rangemat(1,1); 
         exprange(5, i) = rangemat(0,1); 
-        lograngemat(0,0) = lograngemat(0,0) - .00001;
-        lograngemat(1,1) = lograngemat(1,1) + .00001;
+        lograngemat(0,0) = lograngemat(0,0) - diff_term;
+        lograngemat(1,1) = lograngemat(1,1) + diff_term;
         rangemat = expmat_sym(lograngemat);
         exprange(6, i) = rangemat(0,0); 
         exprange(7, i) = rangemat(1,1); 
         exprange(8, i) = rangemat(0,1); 
-        lograngemat(1,1) = lograngemat(1,1) - .00001;
-        lograngemat(0,1) = lograngemat(0,1) + .00001/sqrt(2);
+        lograngemat(1,1) = lograngemat(1,1) - diff_term;
+        lograngemat(0,1) = lograngemat(0,1) + diff_term/sqrt(2);
         lograngemat(1,0) = lograngemat(0,1);
         rangemat = expmat_sym(lograngemat);
         exprange(9, i)  = rangemat(0,0); 
@@ -144,7 +147,7 @@ arma::cube vecchia(
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
           
         }
-        sigma11 (j1-1, j1-1) = 1.00001;
+        sigma11 (j1-1, j1-1) = diag_term;
         //filling sigma12
         hybrid_range_inv(0,0) = (rangesub(0, j1) + rangesub(0, 0))*.5;
         hybrid_range_inv(1,0) = (rangesub(2, j1) + rangesub(2, 0))*.5;
@@ -181,7 +184,7 @@ arma::cube vecchia(
             matern_thingy(mahala_dist, smoothness);
           sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
         }
-        sigma11 (j1-1, j1-1) = 1.00001;
+        sigma11 (j1-1, j1-1) = diag_term;
         mahala_dist = pow( 
           ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
           /(rangesub(0, j1)*.5 + rangesub(0, 0)*.5) , 
@@ -198,7 +201,7 @@ arma::cube vecchia(
     // computing a vector used everyvhere
     arma::mat salt  = agmis11 * sigma12 ;
     //computing Vecchia approx itself
-    double inverse_cond_sd = pow(1.00001- sum(salt % sigma12), -.5);
+    double inverse_cond_sd = pow(diag_term- sum(salt % sigma12), -.5);
     double pow_invcondsd_3  = pow(inverse_cond_sd, 3);
     out(0, 0) = inverse_cond_sd ;
     for(int j=1; j<bsize; j++){
@@ -247,7 +250,7 @@ arma::cube vecchia(
                     pow(arma::det(hybrid_range_inv), .5) * 
                     matern_thingy(mahala_dist, smoothness);
             }
-            dsigma11 (j1-1, j1-1) = 1.00001;
+            dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
             hybrid_range_inv(0,0) = (rangesub((d_idx + 1) * 3 + 0, j1) + rangesub(0, 0))*.5;
             hybrid_range_inv(1,1) = (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5;
@@ -296,40 +299,40 @@ arma::cube vecchia(
             for(int j2=1; j2<bsize; j2++){
               mahala_dist = pow( 
                 ( pow(locsub(0, j1)-locsub(0, j2), 2) + pow(locsub(1, j1)-locsub(1, j2), 2) )
-              /(rangesub(0, j1)*.5*1.00001 + rangesub(0, j2)*.5) , 
+              /(rangesub(0, j1)*.5*(1 + diff_term) + rangesub(0, j2)*.5) , 
                                 .5);
               dsigma11 (j1-1, j2-1) = 
-              pow(rangesub(0, j1) * 1.00001 *    rangesub(0, j2)    , .25  ) * 
-              pow(rangesub(0, j1) * 1.00001 *.5 + rangesub(0, j2)*.5 , -.5) * 
+              pow(rangesub(0, j1) * (1 + diff_term) *    rangesub(0, j2)    , .25  ) * 
+              pow(rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             }
-            dsigma11 (j1-1, j1-1) = 1.000001;
+            dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
             mahala_dist = pow( 
               ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
-              /(rangesub(0, j1) * 1.00001 *.5 + rangesub(0, 0)*.5) , 
+              /(rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, 0)*.5) , 
                                 .5);
               dpsigma12 (j1-1) = 
-              pow(rangesub(0, j1)  * 1.00001  *    rangesub(0, 0)    , .25  ) * 
-              pow(rangesub(0, j1)  * 1.00001 *.5 + rangesub(0, 0)*.5 , -.5) * 
+              pow(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)    , .25  ) * 
+              pow(rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             
             //filling dcsigma12
             mahala_dist = pow( 
               ( pow(locsub(0, j1)-locsub(0, 0), 2) + pow(locsub(1, j1)-locsub(1, 0), 2) )
-              /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * 1.00001) , 
+              /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * (1 + diff_term)) , 
                                 .5);
               dcsigma12 (j1-1) = 
-              pow(rangesub(0, j1)  *    rangesub(0, 0)  * 1.00001     , .25  ) * 
-              pow(rangesub(0, j1) *.5 + rangesub(0, 0)  * 1.00001 *.5 , -.5) * 
+              pow(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term)     , .25  ) * 
+              pow(rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5 , -.5) * 
               matern_thingy(mahala_dist, smoothness);
             
           }
         }
         
-        dsigma11 = (dsigma11 - sigma11)*100000;
-        dpsigma12 = (dpsigma12 - sigma12)*100000;
-        dcsigma12 = -(dcsigma12 - sigma12)*100000;
+        dsigma11 = (dsigma11 - sigma11)/diff_term;
+        dpsigma12 = (dpsigma12 - sigma12)/diff_term;
+        dcsigma12 = -(dcsigma12 - sigma12)/diff_term;
         // computing derivative of Vecchia approx 
         
         // case child range is differentiated 
@@ -383,6 +386,7 @@ arma::cube vecchia(
           }
       }
     }
+//# pragma omp critical
     result.slice(i) = out;
   }
   
@@ -434,7 +438,7 @@ arma::mat derivative_sandwiches
      for(int aniso_idx = 0; aniso_idx <d; aniso_idx++){
        for(int col_idx = 0; col_idx < bsize; col_idx++){
          res(aniso_idx, NNarray_col(col_idx)-1) += 
-           mini_sandwich(1 + col_idx + aniso_idx*m) + 
+           mini_sandwich(   1 + col_idx + aniso_idx*m) -  
            vecchia_slice(0, 1 + col_idx + aniso_idx*m)/vecchia_slice(0, 0);
        }
      }

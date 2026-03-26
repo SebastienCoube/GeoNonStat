@@ -17,14 +17,14 @@ NNarray[is.na(NNarray)] = 0
 set.seed(1)
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness=  1.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 # nominally anisotropic, with smoothness = 1.5
 set.seed(1)
 log_range = cbind(log_range, log_range, 0)
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness = 1.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 # actually anisotropic, with smoothness = 1.5
 set.seed(1)
@@ -32,7 +32,7 @@ log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness = 1.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 #isotropic, with smoothness = 0.5
 set.seed(1)
@@ -40,14 +40,14 @@ log_range = matrix(0, n, 1)
 log_range[,1] = -10 + 3*locs[,1]
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness=  0.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 # nominally anisotropic, with smoothness = 0.5
 set.seed(1)
 log_range = cbind(log_range, log_range, 0)
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness = 0.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 # actually anisotropic, with smoothness = 0.5
 set.seed(1)
@@ -55,7 +55,7 @@ log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 tatato = vecchia(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = F, smoothness = 0.5)
-GeoNonStat::plot_pointillist_painting(locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
+GeoNonStat::plot_pointillist_painting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,1,]), NNarray))
 
 
 ########################################################################
@@ -76,6 +76,7 @@ log_range[,3] = -3*locs[,2]
 NNarray = GpGp::find_ordered_nn(locs, 10)
 NNarray[is.na(NNarray)] = 0
 smoothness = c(0.5, 1.5)
+par(mfrow = c(2,2))
 for(sm in smoothness){
   # computing Vecchia 
   tatato = vecchia(
@@ -120,6 +121,7 @@ for(sm in smoothness){
     abline(a = 0, b=1)
   }
 }
+
 
 
 ########################################################################
@@ -184,11 +186,10 @@ for(sm in smoothness){
   
 }
 
+###############################
+# testing derivative sandwich #
+###############################
 
-
-# testing derivative sandwich
-
-set.seed(1)
 # spatial locations 
 n = 10000
 locs = cbind(runif(n), runif(n))
@@ -206,6 +207,7 @@ tatato = vecchia(
 # computing new Vecchia approx with a new range parameter
 range_row_idx = 30
 range_col_idx = 1
+
 for(range_col_idx in seq(3)){
   print(paste("range_col_idx = ", range_col_idx))
   # computing new Vecchia approx and derivatrives
@@ -238,12 +240,21 @@ for(range_col_idx in seq(3)){
   print(((
     v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato_[,1,])[!is.na(NNarray)]) %*% v_right -
       v_left %*% Matrix::sparseMatrix(i = row(NNarray)[!is.na(NNarray)], j= NNarray[!is.na(NNarray)], x= t(tatato [,1,])[!is.na(NNarray)]) %*% v_right 
-    + sum(log(tatato_[1,1,])) - sum(log(tatato[1,1,]))
+    - sum(log(tatato_[1,1,])) + sum(log(tatato[1,1,]))
   )*100000)[1,1])
   print("finite diff sandwich with determinant sauce")
   print(tatata[range_col_idx, range_row_idx])
   print("=========================")
+  
+  print("determinant only, analytical")
+  ttt = derivative_sandwiches(vecchia = tatato, left_vector = 0*v_left, right_vector = v_right, NNarray = t(NNarray), num_threads = 4, sauce_determinant_chef = T)
+  print(ttt[range_col_idx, range_row_idx])
+    print("determinant only, finite diff")
+  print(sum(log(tatato_[1,1,]) - log(tatato[1,1,]))*100000)
+  print("=========================")
 }
+
+
 
 
 

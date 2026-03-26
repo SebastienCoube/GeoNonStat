@@ -4,118 +4,146 @@
 \name{GeoNonStat}
 \alias{GeoNonStat-package}
 \alias{GeoNonStat}
+\alias{print.GeoNonStat}
+\alias{summary.GeoNonStat}
 \title{GeoNonStat: Hierarchical Nonstationary Nearest Neighbor Gaussian Process}
 \usage{
 GeoNonStat(
   vecchia_approx,
   observed_field,
   X = NULL,
-  m = 10,
   matern_smoothness = 1.5,
   anisotropic = FALSE,
   n_chains = 2,
-  noise_X = NULL,
   range_X = NULL,
-  scale_X = NULL,
-  noise_PP = F,
-  range_PP = F,
-  scale_PP = F,
-  noise_log_scale_prior = NULL,
-  range_log_scale_prior = NULL,
-  scale_log_scale_prior = NULL,
+  range_PP = NULL,
+  range_log_scale_bounds = NULL,
+  noise_X = NULL,
+  noise_PP = NULL,
+  noise_log_scale_bounds = NULL,
   seed = 1
 )
+
+\method{print}{GeoNonStat}(x, ...)
+
+\method{summary}{GeoNonStat}(object, ...)
 }
 \arguments{
-\item{vecchia_approx}{TODO}
+\item{vecchia_approx}{an object created by `vecchia_approx()`}
 
 \item{observed_field}{a vector of observations of the interest variable}
 
-\item{X}{a data.frame of covariates explaining the interest variable through fixed linear effects}
+\item{X}{a data.frame of covariates explaining the interest variable
+through fixed linear effects}
 
-\item{matern_smoothness}{Matern smoothness, either 0.5 or 1.5}
+\item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
+either 0.5 (aka ``exponential kernel'') or 1.5}
 
-\item{anisotropic}{anisotropic covariance}
+\item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 
-\item{n_chains}{TODO}
+\item{n_chains}{number of MCMC chains}
 
-\item{noise_X}{a data.frame of covariates explaining the Gaussian noise variance through fixed linear effects}
+\item{range_X}{a data.frame of covariates explaining the Gaussian process
+range through fixed linear effects, or NULL in which case the range is
+constant (i.e. the field is stationary).}
 
-\item{range_X}{a data.frame of covariates explaining the Gaussian process range through fixed linear effects}
+\item{range_PP}{an object of class `PP` used to model spatial variations of 
+the range of the latent field, or NULL in which case the model the range 
+depends on range_X if provided or constant otherwise (i.e. the field is
+stationary).}
 
-\item{scale_X}{a data.frame of covariates explaining the Gaussian process marginal variance through fixed linear effects}
+\item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds 
+for the uniform prior of the latent field marginal variance}
 
-\item{noise_PP}{TODO}
+\item{noise_X}{a data.frame of covariates explaining the Gaussian noise
+variance through fixed linear effects, or NULL.
+The Intercept is automatically added even if X_noise is NULL.}
 
-\item{range_PP}{TODO}
+\item{noise_PP}{either an object of class PP used to model the field of
+log-noise parameters, or NULL in which case the model is stationary}
 
-\item{scale_PP}{TODO}
+\item{noise_log_scale_bounds}{either a length 2 numeric vector bounding 
+uniform prior for the log-marginal variance of the noise's PP, 
+or NULL in which case the bounds are set automatically.}
 
-\item{seed}{TODO}
+\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
-\item{PP}{TODO}
+\item{x}{an object of class \code{GeoNonStat}}
 
-\item{noise_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the noise PP field.}
+\item{...}{additional arguments (unused)}
 
-\item{scale_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the scale PP field.}
-
-\item{range_log_scale_bounds}{1 times 2 matrix for the prior on the log-variance of the range PP field. #' In the case of anisotropic range, input an 3 times 2 matrix, indicating bounds for the eigenvalues of the trivariate log-variance matrix.}
+\item{object}{an object of class \code{GeoNonStat}}
 }
 \value{
-a list
+an object of class `GeoNonStat`
 }
 \description{
 This package provides functions for hierarchical nonstationary nearest neighbor Gaussian processes.
 }
+\details{
+\describe{
+ \item{\strong{Decomposition of the observations}}{Each observation from observed_field is decomposed into 3 components:}
+ \itemize{
+  \item Fixed effects like in a usual linear model
+  \item Gaussian noise like in a usual linear model
+  \item Gaussian field with \strong{spatial coherence}
+ }
+ \item{\strong{Fixed effects}}{Link linearly the interest variable from observed_field with
+ explanatory variables from \code{X} using the matrix of regression coefficients beta}
+ \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance 
+being specified through \code{noise_X} and \code{noise_PP}} 
+  \itemize{
+   \item \code{noise_X} captures fixed effects of explanatory covariates. 
+   \item \code{noise_PP} captures random spatial variations. 
+   \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic. 
+  }
+\item{\strong{Field range model}}{can be isotropic or anisotropic, and stationary or nonstationary.}
+\itemize{
+ \item Anisotropy means that the correlation changes with the direction, 
+ and is specified through the Boolean argument \code{anisotropic}
+ \item Nonstationarity is specified through \code{range_X} and \code{range_PP} 
+ \itemize{
+ \item \code{range_X} captures fixed effects of explanatory covariates. 
+ \item \code{range_PP} captures random spatial variations. 
+ \item If both are \code{NULL} then the model depends only on an intercept, and is stationary 
+ }
+}
+\item{Note}{The latent field can be anisotropic and stationary, or isotropic and stationary !}
+}
+}
 \examples{
 set.seed(100)
-nobs = 10000
-observed_locs = cbind(runif(5000), runif(5000))[sample(seq_len(5000), nobs, replace=TRUE),]
-observed_field = rnorm(nobs)
-vecchia_approx = createVecchia(observed_locs)
-myPP = createPP(
+nobs <- 10000
+observed_locs <- cbind(runif(5000), runif(5000))
+observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
+observed_field <- rnorm(nobs)
+vecchia_approx <- createVecchia(observed_locs)
+noise_PP <- createPP(
   vecchia_approx = vecchia_approx,
   matern_range = .1,
-  knots = 600
+  knots = 50,
+  plot = FALSE
 )
-range_PP = myPP
-scale_PP = myPP
-noise_PP = myPP
+noise_log_scale_bounds <- c(-8, 3)
 
-noise_log_scale_bounds = c(-6, 3)
-scale_log_scale_bounds = c(-6, 3)
-range_log_scale_bounds = c(-6, 3)
+X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+range_X <- as.data.frame(observed_locs)
+noise_X <- X
 
-X = as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
-range_X = as.data.frame(observed_locs)
-scale_X = as.data.frame(observed_locs)
-noise_X = X
-
-
-
-matern_smoothness = 1.5
-n_chains = 4
-anisotropic = T
-seed = 1
-
-myobj = GeoNonStat(
+myobj <- GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = observed_field,  #spatial locations
-  X = X, # Response variable 
-  # Covariates per observation
-  matern_smoothness = 1.5, #Matern smoothness
-  anisotropic = FALSE, 
-  n_chains = 5,
-  # number of MCMC chains
-  noise_X =  noise_X ,
-  range_X =  range_X ,
-  scale_X =  scale_X ,
-  noise_PP = noise_PP ,
-  range_PP = range_PP ,
-  scale_PP = scale_PP ,
-  noise_log_scale_prior = NULL,
-  range_log_scale_prior = NULL,
-  scale_log_scale_prior = NULL,
+  observed_field = observed_field, # spatial locations
+  X = X, # Response variable
+  matern_smoothness = 1.5, # Matern smoothness
+  anisotropic = FALSE,
+  n_chains = 3,
+  noise_X = X,
+  noise_PP = noise_PP,
+  noise_log_scale_bounds = noise_log_scale_bounds,
+  range_X = range_X,
+  range_PP = NULL,
   seed = 1
 )
+summary(myobj)
+myobj
 }

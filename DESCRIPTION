@@ -8,6 +8,8 @@ Maintainer: Seb Coube-Sisqueille <scoube@univ-pau.fr>
 Description: Hierarchical Nonstationary Nearest Neighbor Gaussian Process. blablabla. TODO. Add some sentences. (Description should be a paragraph).
 License: GPL-3
 Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
 Imports: 
     Rcpp (>= 1.0.7), 
     abind, 
@@ -19,16 +21,23 @@ Imports:
     ellipse, 
     BH,
     methods,
-    scales,
     coda,
-    FNN
+    FNN,
+    utils,
+    graphics,
+    methods,
+    future,
+    future.apply,
+    parallelly
 LinkingTo: 
     Rcpp, 
     RcppArmadillo
-RoxygenNote: 7.3.2
-SystemRequirements: C++11
+RoxygenNote: 7.3.3
+SystemRequirements: C++
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Depends: 
+    R (>= 3.5)

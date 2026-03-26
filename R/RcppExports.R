@@ -9,3 +9,15 @@ derivative_sandwiches <- function(vecchia, left_vector, right_vector, NNarray, s
     .Call(`_GeoNonStat_derivative_sandwiches`, vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads)
 }
 
+maternThingy_ <- function(mahala_dist, smoothness15) {
+    .Call(`_GeoNonStat_maternThingy_`, mahala_dist, smoothness15)
+}
+
+vecchia_ <- function(log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result) {
+    invisible(.Call(`_GeoNonStat_vecchia_`, log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result))
+}
+
+derivativeSandwiches_ <- function(vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads) {
+    .Call(`_GeoNonStat_derivativeSandwiches_`, vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads)
+}
+
