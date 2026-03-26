@@ -9,7 +9,7 @@ X = as.data.frame(cbind(observed_locs[,1], rnorm(nrow(observed_locs)), rnorm(nro
 #X_range = as.data.frame(observed_locs)
 
 PP_range = createPP(vecchia_approx, knots = 16, matern_range = .3)
-PP_noise = createPP(vecchia_approx, knots = 1000, matern_range = .05)
+PP_noise = createPP(vecchia_approx, knots = 800, matern_range = .05)
 
 
 gns_simulator = createGnsSimulator(
@@ -69,14 +69,14 @@ geo_non_stat = GeoNonStat(
  samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 49, num_threads = 8, iter_start = 1, seed = 1
+  state = state, n_iterations = 49, num_threads = 5, iter_start = 1, seed = 1
  )
  
  state = samples$state
  samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 300, num_threads = 8, iter_start = 50, seed = 1
+  state = state, n_iterations = 1500, num_threads = 5, iter_start = 50, seed = 1
  )
  
  state = samples$state
