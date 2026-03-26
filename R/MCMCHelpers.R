@@ -69,6 +69,59 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
 }
 
 
+updateLatentFieldMC <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads) {
+  cluster_idx <- 1
+  chosen_locs_partition_idx <- 1 + iter %% ncol(vecchia_approx$locs_partition)
+  locs_partition <- vecchia_approx$locs_partition[, chosen_locs_partition_idx]
+  precision_from_obs <- vecchia_approx$locs_match_matrix %*% (1 / stuff$noise_var)
+  mean_from_obs <- as.vector(vecchia_approx$locs_match_matrix %*% ((observed_field - stuff$lm_fit) / stuff$noise_var))
+
+  d <- 1 / exp(.5 * params$field_log_var[1, 1])
+  unique_clusters <- unique(locs_partition)
+
+  chol_list <- lapply(
+    unique(locs_partition),
+    function(cluster_idx) { # posterior_precision_subset
+      idx <- which(locs_partition == cluster_idx)
+      pbs <- Matrix::crossprod(stuff$sparse_chol[, idx])
+      pbs <- Matrix::Diagonal(length(idx), d) %*% pbs %*% Matrix::Diagonal(length(idx), d)
+      Matrix::diag(pbs) <- Matrix::diag(pbs) + as.vector(precision_from_obs[idx])
+      pbs <- Matrix::expand(Matrix::Cholesky(pbs))
+      return(pbs)
+    }
+  )
+
+  for (asdf in seq_len(1)) {
+    for (cluster_idx in unique(locs_partition)) {
+      selected_idx <- which(locs_partition == cluster_idx)
+      additional_mean_from_field <-
+        as.vector(
+          (1 / exp(.5 * params$field_log_var[1, 1])) *
+            Matrix::crossprod(
+              stuff$sparse_chol[, selected_idx],
+              (stuff$sparse_chol %*%
+                ((params$field * (locs_partition != cluster_idx)) / exp(.5 * params$field_log_var[1, 1]))
+              )
+            )
+        )
+      chololo <- chol_list[[match(cluster_idx, unique(locs_partition))]]
+      params$field[selected_idx] <- as.vector(
+        Matrix::t(chololo$P) %*%
+          Matrix::solve(
+            Matrix::t(chololo$L),
+            rnorm(nrow(chololo$L)) +
+              Matrix::solve(
+                chololo$L, # inverse of precision matrix...
+                chololo$P %*%
+                  (-additional_mean_from_field + mean_from_obs[selected_idx])
+              )
+          )
+      )
+    }
+  }
+  return(params$field)
+}
+
 updateLatentField <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads) {
   cluster_idx <- 1
   chosen_locs_partition_idx <- 1 + iter %% ncol(vecchia_approx$locs_partition)
@@ -583,32 +636,32 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
 updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
   # VEWY IMPOWTANT don't remove or comment
   squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
-  for(asdf in seq(5)){
+  dens_grad <- (
+    -betaPriorLogDensDerivative(
+      beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
+      beta0_mean = noise$beta0_mean,
+      beta0_var = noise$beta0_sd^2,
+      log_scale = state$params$noise_log_scale
+    ) # normal prior
+    + xPPCrossprod(
+      X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE,
+      Y =
+        (
+          +.5 # determinant part of normal likelihood
+          - (squared_residuals / state$stuff$noise_var) / 2 # exponential part of normal likelihood
+        )
+    )
+  )
+  for(asdf in seq(25)){
     # HMC update
     q <- noise_X$L_minus_one %*% state$params$noise_beta
     state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)
     p <- state$momenta$noise_beta
-    dens_grad <- (
-      -betaPriorLogDensDerivative(
-        beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + xPPCrossprod(
-        X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE,
-        Y =
-          (
-            +.5 # determinant part of normal likelihood
-            - (squared_residuals / state$stuff$noise_var) / 2 # exponential part of normal likelihood
-          )
-      )
-    )
     # Make a half step for momentum at the beginning
     exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
     p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
     
-    n_hmc_steps <- 5
+    n_hmc_steps <- 1
     for (hmc_step in seq_len(n_hmc_steps)) {
       # Make a full step for the position
       q <- q + exp_noise_mala * p
@@ -619,7 +672,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
         permutate_PP_to_obs = TRUE
       )))
       # Make a half step for momentum at the end
-      dens_grad <- (
+      new_dens_grad <- (
         -betaPriorLogDensDerivative(
           beta = new_noise_beta, n_PP = noise$PP$n_knots,
           beta0_mean = noise$beta0_mean,
@@ -636,7 +689,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
           )
         )
       )
-      p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / (1 + (hmc_step == n_hmc_steps))
+      p <- p - exp_noise_mala * crossprod(noise_X$L, new_dens_grad) / (1 + (hmc_step == n_hmc_steps))
     }
     
     # Evaluate potential and kinetic energies at start and end of trajectory
@@ -679,6 +732,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
           kernel_value = state$ker_var$noise_beta_mala, 
           mult = 1
         )
+        dens_grad = new_dens_grad
         state$momenta$noise_beta <- p
         state$params$noise_beta[] <- new_noise_beta
         state$stuff$noise_var <- new_noise_var

@@ -69,14 +69,14 @@ geo_non_stat = GeoNonStat(
  samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 49, num_threads = 5, iter_start = 1, seed = 1
+  state = state, n_iterations = 59, num_threads = 8, iter_start = 1, seed = 1
  )
  
  state = samples$state
  samples = runOneChainMcmc(
   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-  state = state, n_iterations = 1500, num_threads = 5, iter_start = 50, seed = 1
+  state = state, n_iterations = 10, num_threads = 8, iter_start = 50, seed = 1
  )
  
  state = samples$state

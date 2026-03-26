@@ -543,7 +543,7 @@ xPPCrossprod <- function(X,
       Y <- vecchia_approx$locs_match_matrix %*% Y
     }
     res <-
-      rbind(res, Matrix::solve(Matrix::t(PP$sparse_chol), rbind(matrix(
+      rbind(res, Matrix::solve(PP$t_sparse_chol, rbind(matrix(
         0, nrow(PP$knots), ncol(Y)
       ), Y))[1:PP$n_knots, , drop = FALSE])
   }

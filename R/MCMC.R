@@ -61,7 +61,7 @@ runOneChainMcmc <- function(
     state$stuff$lm_fit <- res[["stuff"]]$lm_fit
     state$stuff$lm_residuals <- res[["stuff"]]$lm_residuals
     
-    if (iter + iter_start > 25) {
+    if (iter + iter_start > 30) {
       # Latent field ###############################
       state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
       # Field log var ###############################
@@ -71,7 +71,7 @@ runOneChainMcmc <- function(
       state$ker_var <- state$ker_var
     }
     
-    if (iter + iter_start > 50) {
+    if (iter + iter_start > 60) {
       # Range beta ###############################
       res <- updateRangeBetaMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
       state <- res[["state"]]

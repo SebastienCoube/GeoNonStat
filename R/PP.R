@@ -200,6 +200,7 @@ createPP <- function(vecchia_approx,
       "knots" = knots,
       "matern_range" = matern_range,
       "sparse_chol" = sparse_chol,
+      "t_sparse_chol" = Matrix::t(sparse_chol),
       "n_knots" = nrow(knots),
       "vecchia_locs" = vecchia_approx$locs
     ),
