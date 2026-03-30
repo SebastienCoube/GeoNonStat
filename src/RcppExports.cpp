@@ -87,6 +87,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vecchia_stoopid
+void vecchia_stoopid(arma::mat log_range, arma::mat locs, arma::mat NNarray, int num_threads, double smoothness, bool compute_derivative, arma::cube& result);
+RcppExport SEXP _GeoNonStat_vecchia_stoopid(SEXP log_rangeSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP smoothnessSEXP, SEXP compute_derivativeSEXP, SEXP resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type log_range(log_rangeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type NNarray(NNarraySEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    Rcpp::traits::input_parameter< double >::type smoothness(smoothnessSEXP);
+    Rcpp::traits::input_parameter< bool >::type compute_derivative(compute_derivativeSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type result(resultSEXP);
+    vecchia_stoopid(log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_GeoNonStat_vecchia", (DL_FUNC) &_GeoNonStat_vecchia, 6},
@@ -94,6 +110,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_GeoNonStat_maternThingy_", (DL_FUNC) &_GeoNonStat_maternThingy_, 2},
     {"_GeoNonStat_vecchia_", (DL_FUNC) &_GeoNonStat_vecchia_, 7},
     {"_GeoNonStat_derivativeSandwiches_", (DL_FUNC) &_GeoNonStat_derivativeSandwiches_, 6},
+    {"_GeoNonStat_vecchia_stoopid", (DL_FUNC) &_GeoNonStat_vecchia_stoopid, 7},
     {NULL, NULL, 0}
 };
 

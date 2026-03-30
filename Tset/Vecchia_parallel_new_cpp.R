@@ -279,15 +279,16 @@ for(range_col_idx in seq(3)){
 
 ########################
 # speed test
+########################
 
 
 
 
 
-Rcpp::sourceCpp("src/vecchia_.cpp")
+Rcpp::sourceCpp("src/vecchia.cpp")
 
 # spatial locations 
-n = 50000
+n = 200000
 locs = cbind(runif(n), runif(n))
 # range parameters 
 log_range = matrix(0, n, 3)
@@ -303,7 +304,7 @@ tatato = array(0, dim = c(ncol(NNarray), n,  1 + 3*ncol(NNarray)))
 
 
 
-timediff1 = mean(sapply(seq(50), function(x){
+timediff1 = mean(sapply(seq(10), function(x){
   t1 = Sys.time()
 vecchia_(
   log_range = t(log_range), locs = t(locs), 
@@ -312,7 +313,7 @@ vecchia_(
   Sys.time()-t1
 }))
 
-timediff5 = mean(sapply(seq(50), function(x){
+timediff5 = mean(sapply(seq(10), function(x){
   t1 = Sys.time()
 vecchia_(
   log_range = t(log_range), locs = t(locs), 
@@ -321,7 +322,7 @@ vecchia_(
   Sys.time()-t1
 }))
 
-timediff8 = mean(sapply(seq(50), function(x){
+timediff8 = mean(sapply(seq(10), function(x){
   t1 = Sys.time()
 vecchia_(
   log_range = t(log_range), locs = t(locs), 
@@ -339,7 +340,7 @@ vecchia_(
   Sys.time()-t1
 }))
 
-timediff20 = mean(sapply(seq(50), function(x){
+timediff20 = mean(sapply(seq(10), function(x){
   t1 = Sys.time()
 vecchia_(
   log_range = t(log_range), locs = t(locs), 
@@ -347,4 +348,6 @@ vecchia_(
   smoothness = 1.5, tatato)
   Sys.time()-t1
 }))
+
+plot(c(1,5,8,10,20), c(timediff1, timediff5, timediff8, timediff10, timediff20), ylim = c(0, timediff1))
 

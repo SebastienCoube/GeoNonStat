@@ -107,6 +107,7 @@ knotsFromKmeans <- function(knots_number, locs) {
 createPP <- function(vecchia_approx,
                      matern_range = NULL,
                      knots = NULL,
+                     reorder_knots = FALSE,
                      seed = 1234,
                      plot = TRUE) {
   if (!is.list(vecchia_approx)) {
@@ -151,7 +152,7 @@ createPP <- function(vecchia_approx,
   if (is.null(rownames(knots))) {
     rownames(knots) <- seq_len(nrow(knots))
   }
-  knots <- knots[GpGp::order_maxmin(knots), ]
+  if(reorder_knots) knots <- knots[GpGp::order_maxmin(knots), ]
 
   additional <- NULL
   if (nrow(vecchia_approx$NNarray) - 1 - nrow(knots) > 0) {

@@ -53,8 +53,6 @@ runOneChainMcmc <- function(
   )
   
   for (iter in seq_len(n_iterations)) {
-    if (iter / 10 == iter %/% 10) cat("iter = ", iter, "\n")
-    # Regression coefficients ###############################
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res[["params"]]
@@ -63,12 +61,13 @@ runOneChainMcmc <- function(
     
     if (iter + iter_start > 30) {
       # Latent field ###############################
-      state$params$field <- updateLatentField(state$params, state$stuff, vecchia_approx, observed_field, iter, num_threads)
-      # Field log var ###############################
-      res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-      state$params$field <- res$params$field
-      state$params$field_log_var <- res$params$field_log_var
-      state$ker_var <- state$ker_var
+      res <- updateLatentFieldAndLogVar(
+        state = state, hierarchical_model = hierarchical_model,
+        vecchia_approx = vecchia_approx, observed_field = observed_field, 
+        iter = iter, num_threads = num_threads)
+      state$params$field = res$field
+      state$params$field_log_var = res$log_var
+      state$ker_var = res$ker_var
     }
     
     if (iter + iter_start > 60) {

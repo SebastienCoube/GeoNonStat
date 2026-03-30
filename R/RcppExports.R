@@ -21,3 +21,7 @@ derivativeSandwiches_ <- function(vecchia, left_vector, right_vector, NNarray, s
     .Call(`_GeoNonStat_derivativeSandwiches_`, vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads)
 }
 
+vecchia_stoopid <- function(log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result) {
+    invisible(.Call(`_GeoNonStat_vecchia_stoopid`, log_range, locs, NNarray, num_threads, smoothness, compute_derivative, result))
+}
+

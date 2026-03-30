@@ -178,7 +178,7 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 }
 
 
-#' Estimate the records of a GeoNonStat object.
+#' MCMC estimation of the model parameters using the records of a GeoNonStat object.
 #'
 #' @param object a GeoNonStat object containing records
 #' @param burn_in numeric, value, between 0 and 1. Gives the percentage of
@@ -200,7 +200,7 @@ estimate <- function(object, burn_in = .1, keep = "all") {
 }
 
 
-#' Title TODO
+#' Empirical Log Pointwise Predictive Likelihood
 #'
 #' @param X a matrix of samples
 #' @param beta_samples a matrix of beta
@@ -244,7 +244,7 @@ elppd <- function(X, beta_samples, field_samples, noise_var_samples, observed_fi
   return(list("elppd_per_obs" = elppd_per_obs, "mean_elppd" = mean(elppd_per_obs)))
 }
 
-#' Compute the log-dens of the observations
+#' Empirical Log Pointwise Predictive Likelihood 
 #'
 #' @param object a GeoNonStat object
 #' @param burn_in numeric, value, between 0 and 1. Gives the percentage of

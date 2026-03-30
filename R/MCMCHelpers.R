@@ -69,21 +69,21 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
 }
 
 
-updateLatentFieldMC <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads) {
+updateLatentFieldAndLogVar <- function(state, vecchia_approx, hierarchical_model, observed_field, iter, num_threads) {
   cluster_idx <- 1
   chosen_locs_partition_idx <- 1 + iter %% ncol(vecchia_approx$locs_partition)
   locs_partition <- vecchia_approx$locs_partition[, chosen_locs_partition_idx]
-  precision_from_obs <- vecchia_approx$locs_match_matrix %*% (1 / stuff$noise_var)
-  mean_from_obs <- as.vector(vecchia_approx$locs_match_matrix %*% ((observed_field - stuff$lm_fit) / stuff$noise_var))
+  precision_from_obs <- vecchia_approx$locs_match_matrix %*% (1 / state$stuff$noise_var)
+  mean_from_obs <- as.vector(vecchia_approx$locs_match_matrix %*% ((observed_field - state$stuff$lm_fit) / state$stuff$noise_var))
 
-  d <- 1 / exp(.5 * params$field_log_var[1, 1])
+  d <- 1 / exp(.5 * state$params$field_log_var[1, 1])
   unique_clusters <- unique(locs_partition)
 
   chol_list <- lapply(
     unique(locs_partition),
     function(cluster_idx) { # posterior_precision_subset
       idx <- which(locs_partition == cluster_idx)
-      pbs <- Matrix::crossprod(stuff$sparse_chol[, idx])
+      pbs <- Matrix::crossprod(state$stuff$sparse_chol[, idx])
       pbs <- Matrix::Diagonal(length(idx), d) %*% pbs %*% Matrix::Diagonal(length(idx), d)
       Matrix::diag(pbs) <- Matrix::diag(pbs) + as.vector(precision_from_obs[idx])
       pbs <- Matrix::expand(Matrix::Cholesky(pbs))
@@ -91,21 +91,29 @@ updateLatentFieldMC <- function(params, stuff, vecchia_approx, observed_field, i
     }
   )
 
-  for (asdf in seq_len(1)) {
+  for (asdf in seq_len(3)) {
+    
+    # Field log var ###############################
+    res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    state$params$field <- res$params$field
+    state$params$field_log_var <- res$params$field_log_var
+    state$ker_var <- state$ker_var
+    
+    # field itself
     for (cluster_idx in unique(locs_partition)) {
       selected_idx <- which(locs_partition == cluster_idx)
       additional_mean_from_field <-
         as.vector(
-          (1 / exp(.5 * params$field_log_var[1, 1])) *
+          (1 / exp(.5 * state$params$field_log_var[1, 1])) *
             Matrix::crossprod(
-              stuff$sparse_chol[, selected_idx],
-              (stuff$sparse_chol %*%
-                ((params$field * (locs_partition != cluster_idx)) / exp(.5 * params$field_log_var[1, 1]))
+              state$stuff$sparse_chol[, selected_idx],
+              (state$stuff$sparse_chol %*%
+                ((state$params$field * (locs_partition != cluster_idx)) / exp(.5 * state$params$field_log_var[1, 1]))
               )
             )
         )
       chololo <- chol_list[[match(cluster_idx, unique(locs_partition))]]
-      params$field[selected_idx] <- as.vector(
+      state$params$field[selected_idx] <- as.vector(
         Matrix::t(chololo$P) %*%
           Matrix::solve(
             Matrix::t(chololo$L),
@@ -119,138 +127,82 @@ updateLatentFieldMC <- function(params, stuff, vecchia_approx, observed_field, i
       )
     }
   }
-  return(params$field)
-}
-
-updateLatentField <- function(params, stuff, vecchia_approx, observed_field, iter, num_threads) {
-  cluster_idx <- 1
-  chosen_locs_partition_idx <- 1 + iter %% ncol(vecchia_approx$locs_partition)
-  locs_partition <- vecchia_approx$locs_partition[, chosen_locs_partition_idx]
-  precision_from_obs <- vecchia_approx$locs_match_matrix %*% (1 / stuff$noise_var)
-  mean_from_obs <- as.vector(vecchia_approx$locs_match_matrix %*% ((observed_field - stuff$lm_fit) / stuff$noise_var))
-
-  d <- 1 / exp(.5 * params$field_log_var[1, 1])
-  unique_clusters <- unique(locs_partition)
-
-  chol_list <- parallel::mclapply(
-    mc.cores = num_threads,
-    unique(locs_partition),
-    function(cluster_idx) { # posterior_precision_subset
-      idx <- which(locs_partition == cluster_idx)
-      pbs <- Matrix::crossprod(stuff$sparse_chol[, idx])
-      pbs <- Matrix::Diagonal(length(idx), d) %*% pbs %*% Matrix::Diagonal(length(idx), d)
-      Matrix::diag(pbs) <- Matrix::diag(pbs) + as.vector(precision_from_obs[idx])
-      pbs <- Matrix::expand(Matrix::Cholesky(pbs))
-      return(pbs)
-    }
-  )
-
-  for (asdf in seq_len(1)) {
-    for (cluster_idx in unique(locs_partition)) {
-      selected_idx <- which(locs_partition == cluster_idx)
-      additional_mean_from_field <-
-        as.vector(
-          (1 / exp(.5 * params$field_log_var[1, 1])) *
-            Matrix::crossprod(
-              stuff$sparse_chol[, selected_idx],
-              (stuff$sparse_chol %*%
-                ((params$field * (locs_partition != cluster_idx)) / exp(.5 * params$field_log_var[1, 1]))
-              )
-            )
-        )
-      chololo <- chol_list[[match(cluster_idx, unique(locs_partition))]]
-      params$field[selected_idx] <- as.vector(
-        Matrix::t(chololo$P) %*%
-          Matrix::solve(
-            Matrix::t(chololo$L),
-            rnorm(nrow(chololo$L)) +
-              Matrix::solve(
-                chololo$L, # inverse of precision matrix...
-                chololo$P %*%
-                  (-additional_mean_from_field + mean_from_obs[selected_idx])
-              )
-          )
-      )
-    }
-  }
-  return(params$field)
+  return(list(field = state$params$field, log_var = state$params$field_log_var, ker_var = state$ker_var))
 }
 
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
-  for (iii in seq(2)) {
-    # ancillary
-    for (field_log_var_idx in seq_len(4)) {
-      new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
-      new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
-      current_U <-
-        (
-          -betaPriorLogDens(
-            beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
-            beta0_mean = scale$beta0_mean,
-            beta0_var = scale$beta0_sd^2
-          ) # normal prior
-          + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-        )
-
-      proposed_U <-
-        (
-          -betaPriorLogDens(
-            beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
-            beta0_mean = scale$beta0_mean,
-            beta0_var = scale$beta0_sd^2
-          ) # normal prior
-          + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-        )
+  # ancillary
+  for (field_log_var_idx in seq_len(4)) {
+    new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
+    new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
+    current_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+      )
+    
+    proposed_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+      )
+    state$ker_var$field_log_var_ancillary <- updateKernel(
+      iter_start = iter_start,
+      kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25
+    )
+    if (current_U - proposed_U > log(runif(1))) {
       state$ker_var$field_log_var_ancillary <- updateKernel(
         iter_start = iter_start,
-        kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25
+        kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
       )
-      if (current_U - proposed_U > log(runif(1))) {
-        state$ker_var$field_log_var_ancillary <- updateKernel(
-          iter_start = iter_start,
-          kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
-        )
-        state$params$field_log_var[1, 1] <- new_field_log_var
-        state$params$field <- new_field
-      }
+      state$params$field_log_var[1, 1] <- new_field_log_var
+      state$params$field <- new_field
     }
-
-    # Sufficient
-    fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
-    for (field_log_var_idx in seq_len(10)) {
-      new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * exp(state$ker_var$field_log_var_sufficient)
-      current_U <-
-        (
-          -betaPriorLogDens(
-            beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
-            beta0_mean = scale$beta0_mean,
-            beta0_var = scale$beta0_sd^2
-          ) # normal prior
-          + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
-            + vecchia_approx$n_locs * (.5 * state$params$field_log_var[1, 1]) # observation ll
-        )
-
-      proposed_U <-
-        (
-          -betaPriorLogDens(
-            beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
-            beta0_mean = scale$beta0_mean,
-            beta0_var = scale$beta0_sd^2
-          ) # normal prior
-          + .5 * fieldT_cholT_chol_field / exp(new_field_log_var) # observation ll
-            + vecchia_approx$n_locs * (.5 * new_field_log_var) # observation ll
-        )
+  }
+  
+  # Sufficient
+  fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
+  for (field_log_var_idx in seq_len(20)) {
+    new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(2 + field_log_var_idx%%5) #exp(state$ker_var$field_log_var_sufficient)
+    current_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
+        + vecchia_approx$n_locs * (.5 * state$params$field_log_var[1, 1]) # observation ll
+      )
+    
+    proposed_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * fieldT_cholT_chol_field / exp(new_field_log_var) # observation ll
+        + vecchia_approx$n_locs * (.5 * new_field_log_var) # observation ll
+      )
+    state$ker_var$field_log_var_sufficient <- updateKernel(
+      iter_start = iter_start,
+      kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = -.25
+    )
+    if (current_U - proposed_U > log(runif(1))) {
       state$ker_var$field_log_var_sufficient <- updateKernel(
         iter_start = iter_start,
-        kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = -.25
+        kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = 1
       )
-      if (current_U - proposed_U > log(runif(1))) {
-        state$ker_var$field_log_var_sufficient <- updateKernel(
-          iter_start = iter_start,
-          kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = 1
-        )
-        state$params$field_log_var[1, 1] <- new_field_log_var
-      }
+      state$params$field_log_var[1, 1] <- new_field_log_var
     }
   }
   return(state)
