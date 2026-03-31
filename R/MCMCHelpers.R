@@ -69,7 +69,8 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
 }
 
 
-updateLatentFieldAndLogVar <- function(state, vecchia_approx, hierarchical_model, observed_field, iter, num_threads) {
+updateLatentField <- function(state, vecchia_approx, hierarchical_model, observed_field, iter, num_threads) {
+  # Field log var ###############################
   cluster_idx <- 1
   chosen_locs_partition_idx <- 1 + iter %% ncol(vecchia_approx$locs_partition)
   locs_partition <- vecchia_approx$locs_partition[, chosen_locs_partition_idx]
@@ -91,13 +92,8 @@ updateLatentFieldAndLogVar <- function(state, vecchia_approx, hierarchical_model
     }
   )
 
-  for (asdf in seq_len(3)) {
+  for (asdf in seq_len(1)) {
     
-    # Field log var ###############################
-    res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-    state$params$field <- res$params$field
-    state$params$field_log_var <- res$params$field_log_var
-    state$ker_var <- state$ker_var
     
     # field itself
     for (cluster_idx in unique(locs_partition)) {
@@ -127,7 +123,7 @@ updateLatentFieldAndLogVar <- function(state, vecchia_approx, hierarchical_model
       )
     }
   }
-  return(list(field = state$params$field, log_var = state$params$field_log_var, ker_var = state$ker_var))
+  return(list(field = state$params$field))
 }
 
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
@@ -205,6 +201,192 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
       state$params$field_log_var[1, 1] <- new_field_log_var
     }
   }
+  return(state)
+}
+
+updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start) {
+  # ancillary ####
+  current_U <-
+    (
+      -betaPriorLogDens(
+        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta0_mean = scale$beta0_mean,
+        beta0_var = scale$beta0_sd^2
+      ) # normal prior
+      + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+    )
+  dens_grad =
+    (
+      betaPriorLogDensDerivative(
+        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta0_mean = scale$beta0_mean,
+        beta0_var = scale$beta0_sd^2
+      ) # normal prior
+      +  .5 * sum(
+        state$params$field[vecchia_approx$locs_match] * 
+          (state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match]) / 
+          state$stuff$noise_var) # observation ll
+    )
+  #print(
+  #  100000*(
+  #    current_U - 
+  #      (
+  #        -betaPriorLogDens(
+  #          beta = as.matrix(state$params$field_log_var[1, 1] + .00001), n_PP = 0, log_scale = 0,
+  #          beta0_mean = scale$beta0_mean,
+  #          beta0_var = scale$beta0_sd^2
+  #        ) # normal prior
+  #        + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match] * 
+  #                      sqrt(exp(state$params$field_log_var[1, 1] + .00001) / exp(state$params$field_log_var[1, 1]) ))^2 / state$stuff$noise_var) # observation ll
+  #      )
+  #  )
+  #)
+  #print(dens_grad)
+  for (field_log_var_idx in seq_len(4)) {
+    stepsize <- exp(state$ker_var$field_log_var_ancillary)
+    state$momenta$field_log_var_ancillary <- renewMomentum(state$momenta$field_log_var_ancillary)
+    
+    new_field_log_var <- 
+      state$params$field_log_var + 
+      stepsize * dens_grad/2 + 
+      sqrt(stepsize) * state$momenta$field_log_var_ancillary
+    new_field <- state$params$field * exp(.5 * (new_field_log_var[1,1] - state$params$field_log_var[1, 1]))
+    
+    dens_grad_back =
+      (
+        betaPriorLogDensDerivative(
+          beta = as.matrix(new_field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5* sum(
+          new_field[vecchia_approx$locs_match] * 
+            (state$stuff$lm_residuals - new_field[vecchia_approx$locs_match]) / 
+            state$stuff$noise_var) # observation ll
+      )
+    innov_back <- (
+      state$params$field_log_var 
+      - new_field_log_var          
+      - dens_grad_back * stepsize/2
+    ) / sqrt(stepsize)
+    
+    proposed_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+      )
+    state$ker_var$field_log_var_ancillary <- updateKernel(
+      iter_start = iter_start,
+      kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.6
+    )
+    if (current_U - proposed_U  + .5 * sum(state$momenta$field_log_var_ancillary^2) -.5 * sum(innov_back^2) > log(runif(1))) {
+      state$ker_var$field_log_var_ancillary <- updateKernel(
+        iter_start = iter_start,
+        kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
+      )
+      current_U = proposed_U
+      dens_grad = dens_grad_back
+      state$params$field_log_var[1, 1] <- new_field_log_var
+      state$params$field <- new_field
+      state$momenta$field_log_var_ancillary = -innov_back
+    }
+  }
+  
+  
+  
+  # sufficient ####
+  fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
+  current_U <-
+    (
+      -betaPriorLogDens(
+        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta0_mean = scale$beta0_mean,
+        beta0_var = scale$beta0_sd^2
+      ) # normal prior
+      + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
+      + vecchia_approx$n_locs * (.5 * state$params$field_log_var[1, 1]) # observation ll
+    )
+  dens_grad =
+    (
+      betaPriorLogDensDerivative(
+        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta0_mean = scale$beta0_mean,
+        beta0_var = scale$beta0_sd^2
+      ) # normal prior
+      + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
+      - .5 * vecchia_approx$n_locs # observation ll 
+    )
+  # print(
+  #   1000000*(
+  #      current_U - 
+  #       (
+  #         -betaPriorLogDens(
+  #           beta = as.matrix(state$params$field_log_var[1, 1] + .000001), n_PP = 0, log_scale = 0,
+  #           beta0_mean = scale$beta0_mean,
+  #           beta0_var = scale$beta0_sd^2
+  #         ) # normal prior
+  #         + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1] + .000001) # observation ll
+  #         + vecchia_approx$n_locs * (.5 * (state$params$field_log_var[1, 1] + .000001)) # observation ll
+  #       ) 
+  #   )
+  # )
+  # print(dens_grad)
+  for (field_log_var_idx in seq_len(4)) {
+    stepsize <- exp(state$ker_var$field_log_var_sufficient)
+    state$momenta$field_log_var_sufficient <- renewMomentum(state$momenta$field_log_var_sufficient)
+    
+    new_field_log_var <- 
+      state$params$field_log_var + 
+      stepsize * dens_grad/2 + 
+      sqrt(stepsize) * state$momenta$field_log_var_sufficient
+    
+    dens_grad_back =
+      (
+        betaPriorLogDensDerivative(
+          beta = as.matrix(new_field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        ) # normal prior
+        + .5 * fieldT_cholT_chol_field / exp(new_field_log_var[1, 1]) # observation ll
+        - .5 * vecchia_approx$n_locs # observation ll 
+      )
+    innov_back <- (
+      state$params$field_log_var 
+      - new_field_log_var          
+      - dens_grad_back * stepsize/2
+    ) / sqrt(stepsize)
+    
+    proposed_U <-
+      (
+        -betaPriorLogDens(
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
+          beta0_mean = scale$beta0_mean,
+          beta0_var = scale$beta0_sd^2
+        )  # normal prior
+        + .5 * fieldT_cholT_chol_field / exp(new_field_log_var[1, 1]) # observation ll
+        + vecchia_approx$n_locs * (.5 * new_field_log_var[1, 1]) # observation ll
+        
+      )
+    state$ker_var$field_log_var_sufficient <- updateKernel(
+      iter_start = iter_start,
+      kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = -2
+    )
+    if (current_U - proposed_U  + .5 * sum(state$momenta$field_log_var_sufficient^2) -.5 * sum(innov_back^2) > log(runif(1))) {
+      state$ker_var$field_log_var_sufficient <- updateKernel(
+        iter_start = iter_start,
+        kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = 3
+      )
+      current_U = proposed_U
+      dens_grad = dens_grad_back
+      state$params$field_log_var[1, 1] <- new_field_log_var
+      state$momenta$field_log_var_sufficient = -innov_back
+    }
+  }
+  
   return(state)
 }
 

@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 40000
-nlocs = 20000
+nobs = 20000
+nlocs = 10000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[sample(seq(nlocs), nobs, T),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
@@ -82,9 +82,9 @@ geo_non_stat = GeoNonStat(
 # samples = runOneChainMcmc(
 #  covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
 #  hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-#  state = state, n_iterations = 500, num_threads = 8, iter_start = 50, seed = 1
+#  state = state, n_iterations = 200, num_threads = 8, iter_start = 50, seed = 1
 # )
- 
+# 
 # state = samples$state
 # params = samples$state$params
 # params_records = samples$params_records
@@ -130,19 +130,19 @@ geo_non_stat = GeoNonStat(
 #  field_log_var_samples = c(field_log_var, sapply(params_records, function(x)x$field_log_var)[seq(iter/10, iter-1)])
 #  plot(field_log_var_samples, main = "field log var")
 #  abline(h = field_log_var)
- 
+
 # parallel run
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 600, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 250, seed = 1)
 
 
 # plotting and diagnostics
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .4)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .4)
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .4)
-MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .4)
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .7)
+MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .7)
 MCMC_diags$diags["field_log_var. ",] 
 
 # prediction

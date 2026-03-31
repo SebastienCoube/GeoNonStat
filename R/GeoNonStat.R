@@ -466,7 +466,8 @@ processHierarchicalModel <- function(vecchia_approx,
     ),
     scale = list(
       beta0_mean = (sigma_max + sigma_min) / 2,
-      beta0_sd = (sigma_max - sigma_min) / 8
+      beta0_sd = (sigma_max - sigma_min) / 8, 
+      sigma_bounds = c(sigma_min, sigma_max)
     ),
     range = list(
       PP = range_PP,
@@ -618,6 +619,9 @@ processStates <- function(hm,
   params$range_beta[1, 1] <- hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
 
   # momenta
+  momenta$field_log_var_sufficient <- rnorm(1)
+  momenta$field_log_var_ancillary <-  rnorm(1)
+  
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   # cholesky factors of precision matrices

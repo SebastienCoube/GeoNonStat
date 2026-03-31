@@ -58,16 +58,18 @@ runOneChainMcmc <- function(
     state$params <- res[["params"]]
     state$stuff$lm_fit <- res[["stuff"]]$lm_fit
     state$stuff$lm_residuals <- res[["stuff"]]$lm_residuals
+    # Latent field ###############################
+    res <- updateLatentField(
+      state = state, hierarchical_model = hierarchical_model,
+      vecchia_approx = vecchia_approx, observed_field = observed_field, 
+      iter = iter, num_threads = num_threads)
+    state$params$field = res$field
     
     if (iter + iter_start > 30) {
-      # Latent field ###############################
-      res <- updateLatentFieldAndLogVar(
-        state = state, hierarchical_model = hierarchical_model,
-        vecchia_approx = vecchia_approx, observed_field = observed_field, 
-        iter = iter, num_threads = num_threads)
-      state$params$field = res$field
-      state$params$field_log_var = res$log_var
-      state$ker_var = res$ker_var
+      res <- updateFieldLogVarMALA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+      state$params$field <- res$params$field
+      state$params$field_log_var <- res$params$field_log_var
+      state$ker_var <- res$ker_var
     }
     
     if (iter + iter_start > 60) {
