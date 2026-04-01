@@ -444,8 +444,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
   )
   # conditioning matrix
   cond_mat <- solve(
-    #min(1, max((400 - (iter + iter_start))/200, .05)) *
-    #  state$stuff$range_beta_conditioning_a / sqrt(sum(state$stuff$range_beta_conditioning_a^2)) 
+    (1 - min(1, max((400 - (iter + iter_start))/200, .05))) *
+      state$stuff$range_beta_conditioning_a / sqrt(sum(state$stuff$range_beta_conditioning_a^2)) 
     + min(1, max((400 - (iter + iter_start))/200, .05)) *
       (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
       sqrt(3*sum(as.matrix(range_X$crossprod_X)^2))
@@ -665,8 +665,8 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
   
   #cond_mat <- solve(state$stuff$range_beta_conditioning_s)
   cond_mat <- solve(
-    #min(1, max((400 - (iter + iter_start))/200, .05)) *
-    #  state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2)) 
+    (1 - min(1, max((400 - (iter + iter_start))/200, .05))) *
+      state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2)) 
     + min(1, max((400 - (iter + iter_start))/200, .05)) *
       (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
       sqrt(3*sum(as.matrix(range_X$crossprod_X)^2))
@@ -788,6 +788,33 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
   return(list(state = state))
 }
 
+
+updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
+  for (i in seq_len(10))
+  {
+    q <- current_range_log_scale + rnorm(length(current_range_log_scale), 0, .05)
+    if (all(inBounds(hm4params$log_scale_bounds, q)) &
+        (
+          +betaPriorLogDens(
+            beta = beta4params, n_PP = hm4params$PP$n_knots,
+            beta0_mean = hm4params$beta0_mean,
+            beta0_var = hm4params$beta0_sd^2,
+            log_scale = q
+          )
+          - betaPriorLogDens(
+            beta = beta4params, n_PP = hm4params$PP$n_knots,
+            beta0_mean = hm4params$beta0_mean,
+            beta0_var = hm4params$beta0_sd^2,
+            log_scale = current_range_log_scale
+          )
+          > log(runif(1))
+        )
+    ) {
+      current_range_log_scale[] <- q
+    }
+  }
+  return(current_range_log_scale)
+}
 
 updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
   # VEWY IMPOWTANT don't remove or comment

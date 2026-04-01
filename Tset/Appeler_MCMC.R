@@ -27,7 +27,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = -3
+noise_intercept = +3
 noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -35,7 +35,7 @@ noise_PP_log_var = -.5
 coeff_list = createGnsSimulatorParameters(
   gns_simulator, range_PP_log_var =range_log_scale, 
   noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, field_log_var = field_log_var)
-coeff_list$range_X_coeff[1,1] = -4.5
+coeff_list$range_X_coeff[1,1] = -5.5
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 
 
@@ -134,7 +134,7 @@ geo_non_stat = GeoNonStat(
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 2000, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 1500, seed = 1)
 
 
 # plotting and diagnostics
@@ -142,7 +142,7 @@ tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
-MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .1)
+MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .2)
 MCMC_diags$diags["field_log_var. ",] 
 
 # prediction
