@@ -204,24 +204,33 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
   return(state)
 }
 
+#slope_prior = function(x, bounds, height = 10){
+#  if(!inBounds(bounds, x))return(-Inf)
+#  return(-height * (x - bounds[1]) / diff(bounds))
+#}
+#slope_prior_grad = function(x, bounds, height = 10){
+#  return(-height / diff(bounds))
+#}
+
 updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start) {
+    
   # ancillary ####
   current_U <-
     (
       -betaPriorLogDens(
-        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta = as.matrix(state$params$field_log_var), n_PP = 0, log_scale = 0,
         beta0_mean = scale$beta0_mean,
         beta0_var = scale$beta0_sd^2
-      ) # normal prior
+      )
       + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
     )
   dens_grad =
     (
       betaPriorLogDensDerivative(
-        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta = as.matrix(state$params$field_log_var), n_PP = 0, log_scale = 0,
         beta0_mean = scale$beta0_mean,
         beta0_var = scale$beta0_sd^2
-      ) # normal prior
+      )
       +  .5 * sum(
         state$params$field[vecchia_approx$locs_match] * 
           (state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match]) / 
@@ -231,11 +240,7 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
   #  100000*(
   #    current_U - 
   #      (
-  #        -betaPriorLogDens(
-  #          beta = as.matrix(state$params$field_log_var[1, 1] + .00001), n_PP = 0, log_scale = 0,
-  #          beta0_mean = scale$beta0_mean,
-  #          beta0_var = scale$beta0_sd^2
-  #        ) # normal prior
+  #        - slope_prior(x = state$params$field_log_var+ .00001, bounds = scale$sigma_bounds)
   #        + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match] * 
   #                      sqrt(exp(state$params$field_log_var[1, 1] + .00001) / exp(state$params$field_log_var[1, 1]) ))^2 / state$stuff$noise_var) # observation ll
   #      )
@@ -252,13 +257,13 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
       sqrt(stepsize) * state$momenta$field_log_var_ancillary
     new_field <- state$params$field * exp(.5 * (new_field_log_var[1,1] - state$params$field_log_var[1, 1]))
     
-    dens_grad_back =
+    dens_grad_back <-
       (
         betaPriorLogDensDerivative(
-          beta = as.matrix(new_field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
           beta0_mean = scale$beta0_mean,
           beta0_var = scale$beta0_sd^2
-        ) # normal prior
+        )
         + .5* sum(
           new_field[vecchia_approx$locs_match] * 
             (state$stuff$lm_residuals - new_field[vecchia_approx$locs_match]) / 
@@ -272,11 +277,11 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
     
     proposed_U <-
       (
-        -betaPriorLogDens(
+        - betaPriorLogDens(
           beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
           beta0_mean = scale$beta0_mean,
           beta0_var = scale$beta0_sd^2
-        ) # normal prior
+        )
         + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
       )
     state$ker_var$field_log_var_ancillary <- updateKernel(
@@ -292,7 +297,7 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
       dens_grad = dens_grad_back
       state$params$field_log_var[1, 1] <- new_field_log_var
       state$params$field <- new_field
-      state$momenta$field_log_var_ancillary = -innov_back
+      state$momenta$field_log_var_ancillary <- -innov_back
     }
   }
   
@@ -302,21 +307,21 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
   fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
   current_U <-
     (
-      -betaPriorLogDens(
-        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+      - betaPriorLogDens(
+        beta = as.matrix(state$params$field_log_var), n_PP = 0, log_scale = 0,
         beta0_mean = scale$beta0_mean,
         beta0_var = scale$beta0_sd^2
-      ) # normal prior
+      )
       + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
       + vecchia_approx$n_locs * (.5 * state$params$field_log_var[1, 1]) # observation ll
     )
   dens_grad =
     (
       betaPriorLogDensDerivative(
-        beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+        beta = as.matrix(state$params$field_log_var), n_PP = 0, log_scale = 0,
         beta0_mean = scale$beta0_mean,
         beta0_var = scale$beta0_sd^2
-      ) # normal prior
+      )
       + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
       - .5 * vecchia_approx$n_locs # observation ll 
     )
@@ -344,13 +349,13 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
       stepsize * dens_grad/2 + 
       sqrt(stepsize) * state$momenta$field_log_var_sufficient
     
-    dens_grad_back =
+    dens_grad_back <-
       (
         betaPriorLogDensDerivative(
-          beta = as.matrix(new_field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
           beta0_mean = scale$beta0_mean,
           beta0_var = scale$beta0_sd^2
-        ) # normal prior
+        )
         + .5 * fieldT_cholT_chol_field / exp(new_field_log_var[1, 1]) # observation ll
         - .5 * vecchia_approx$n_locs # observation ll 
       )
@@ -366,7 +371,7 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
           beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
           beta0_mean = scale$beta0_mean,
           beta0_var = scale$beta0_sd^2
-        )  # normal prior
+        )
         + .5 * fieldT_cholT_chol_field / exp(new_field_log_var[1, 1]) # observation ll
         + vecchia_approx$n_locs * (.5 * new_field_log_var[1, 1]) # observation ll
         
@@ -383,10 +388,11 @@ updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start
       current_U = proposed_U
       dens_grad = dens_grad_back
       state$params$field_log_var[1, 1] <- new_field_log_var
-      state$momenta$field_log_var_sufficient = -innov_back
+      state$momenta$field_log_var_sufficient <- -innov_back
     }
   }
   
+ 
   return(state)
 }
 
@@ -437,15 +443,23 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
     ) %*% range_reparam_mat
   )
   # conditioning matrix
-  cond_mat <- solve(state$stuff$range_beta_conditioning_a)
-  cond_mat <- cond_mat / sum(cond_mat^2)
+  cond_mat <- solve(
+    #min(1, max((400 - (iter + iter_start))/200, .05)) *
+    #  state$stuff$range_beta_conditioning_a / sqrt(sum(state$stuff$range_beta_conditioning_a^2)) 
+    + min(1, max((400 - (iter + iter_start))/200, .05)) *
+      (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
+      sqrt(3*sum(as.matrix(range_X$crossprod_X)^2))
+  )
+  cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
   cond_mat <- t(chol(cond_mat))
   
   for(asdf in seq(1)){
     # updating conditioning matrix
-    state$stuff$range_beta_conditioning_a <- ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_a + 
-      tcrossprod(c(dens_grad)) / (iter+iter_start) + 
-      .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X) / (iter+iter_start)
+    if(iter + iter_start >200){
+      state$stuff$range_beta_conditioning_a <- 
+        ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_a + 
+        tcrossprod(c(dens_grad)) / (iter+iter_start)
+    }
     stepsize <- exp(state$ker_var$range_beta_ancillary[1])
     # updating MALA innovation with auto-correlation
     state$momenta$range_beta_ancillary <- renewMomentum(state$momenta$range_beta_ancillary, kept_momentum = .95)
@@ -648,16 +662,24 @@ updateRangeBetaMALA <- function(state, hierarchical_model, vecchia_approx,
   # }
   # plot(finit_diff_grad, dens_grad)
   # abline(a = 0, b = 1)
-  cond_mat <- solve(state$stuff$range_beta_conditioning_s)
-  cond_mat <- cond_mat / sum(cond_mat^2)
+  
+  #cond_mat <- solve(state$stuff$range_beta_conditioning_s)
+  cond_mat <- solve(
+    #min(1, max((400 - (iter + iter_start))/200, .05)) *
+    #  state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2)) 
+    + min(1, max((400 - (iter + iter_start))/200, .05)) *
+      (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
+      sqrt(3*sum(as.matrix(range_X$crossprod_X)^2))
+  )
+  cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
   cond_mat <- t(chol(cond_mat))
-  #cond_mat <- cond_mat / sum(diag(cond_mat))
   
   for(asdf in seq(1)){
-      state$stuff$range_beta_conditioning_s = ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_s + 
-        tcrossprod(c(dens_grad)) / (iter+iter_start) + 
-        .05 *diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X) / (iter+iter_start)
-      
+    if(iter + iter_start >200){
+      state$stuff$range_beta_conditioning_s <- 
+        ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$range_beta_conditioning_s + 
+        tcrossprod(c(dens_grad)) / (iter+iter_start)
+    }    
     stepsize <- exp(state$ker_var$range_beta_sufficient[1])
     state$momenta$range_beta_sufficient = renewMomentum(state$momenta$range_beta_sufficient, kept_momentum = .95)
     new_range_beta <- state$params$range_beta + 

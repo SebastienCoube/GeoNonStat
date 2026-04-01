@@ -1,6 +1,6 @@
 #' @export
-# only two significant digits are kept
 printMcmcDiags <- function(object, burn_in = .1, min_ESS = 50, max_Gelman_upper = 1.05) {
+  # only two significant digits are kept
   records <- aggregateRecords(object, burn_in = burn_in, keep = "all", keep_separate_chains = TRUE)
   ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
   ess <- lapply(ess, unlist)

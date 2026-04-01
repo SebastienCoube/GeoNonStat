@@ -1,8 +1,8 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 20000
-nlocs = 10000
-observed_locs = cbind(runif(nlocs), runif(nlocs))[sample(seq(nlocs), nobs, T),]
+nobs = 50000
+nlocs = 15000
+observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
 
@@ -27,7 +27,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = -1
+noise_intercept = -3
 noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -40,7 +40,6 @@ coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 
 
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
-dev.off()
 
 
 plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, cex= .5, pch= 15)
@@ -135,14 +134,15 @@ geo_non_stat = GeoNonStat(
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 250, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 2000, seed = 1)
 
 
 # plotting and diagnostics
-tracePlots(geo_non_stat, keep = "range_beta", burn_in = .4)
-tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .4)
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .7)
-MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .7)
+tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
+tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
+MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .1)
 MCMC_diags$diags["field_log_var. ",] 
 
 # prediction
