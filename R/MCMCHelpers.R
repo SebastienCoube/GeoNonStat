@@ -126,92 +126,6 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
   return(list(field = state$params$field))
 }
 
-updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
-  # ancillary
-  for (field_log_var_idx in seq_len(4)) {
-    new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
-    new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
-    current_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-      )
-    
-    proposed_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-      )
-    state$ker_var$field_log_var_ancillary <- updateKernel(
-      iter_start = iter_start,
-      kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25
-    )
-    if (current_U - proposed_U > log(runif(1))) {
-      state$ker_var$field_log_var_ancillary <- updateKernel(
-        iter_start = iter_start,
-        kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
-      )
-      state$params$field_log_var[1, 1] <- new_field_log_var
-      state$params$field <- new_field
-    }
-  }
-  
-  # Sufficient
-  fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
-  for (field_log_var_idx in seq_len(20)) {
-    new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(2 + field_log_var_idx%%5) #exp(state$ker_var$field_log_var_sufficient)
-    current_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * fieldT_cholT_chol_field / exp(state$params$field_log_var[1, 1]) # observation ll
-        + vecchia_approx$n_locs * (.5 * state$params$field_log_var[1, 1]) # observation ll
-      )
-    
-    proposed_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * fieldT_cholT_chol_field / exp(new_field_log_var) # observation ll
-        + vecchia_approx$n_locs * (.5 * new_field_log_var) # observation ll
-      )
-    state$ker_var$field_log_var_sufficient <- updateKernel(
-      iter_start = iter_start,
-      kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = -.25
-    )
-    if (current_U - proposed_U > log(runif(1))) {
-      state$ker_var$field_log_var_sufficient <- updateKernel(
-        iter_start = iter_start,
-        kernel_value = state$ker_var$field_log_var_sufficient, iter = iter, mult = 1
-      )
-      state$params$field_log_var[1, 1] <- new_field_log_var
-    }
-  }
-  return(state)
-}
-
-#slope_prior = function(x, bounds, height = 10){
-#  if(!inBounds(bounds, x))return(-Inf)
-#  return(-height * (x - bounds[1]) / diff(bounds))
-#}
-#slope_prior_grad = function(x, bounds, height = 10){
-#  return(-height / diff(bounds))
-#}
-
 updateFieldLogVarMALA <- function(state, scale, vecchia_approx, iter, iter_start) {
     
   # ancillary ####
@@ -835,7 +749,7 @@ updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_st
         )
     )
   )
-  for(asdf in seq(25)){
+  for(asdf in seq(10)){
     # HMC update
     q <- noise_X$L_minus_one %*% state$params$noise_beta
     state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)

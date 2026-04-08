@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 50000
-nlocs = 15000
+nobs = 100000
+nlocs = 50000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
@@ -27,21 +27,19 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -1)
-noise_intercept = +3
+noise_intercept = 1
 noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
 # case with no non-stationarity and crazy noise. 
 coeff_list = createGnsSimulatorParameters(
   gns_simulator, range_PP_log_var =range_log_scale, 
-  noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, field_log_var = field_log_var)
-coeff_list$range_X_coeff[1,1] = -5.5
+  noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, 
+  field_log_var = field_log_var)
+coeff_list$range_X_coeff[1,1] = -5
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
-
-
+set.seed(1)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
-
-
 plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, cex= .5, pch= 15)
 
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed_field, cex= 1, pch= 15)
@@ -134,7 +132,7 @@ geo_non_stat = GeoNonStat(
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 1500, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 800, seed = 1)
 
 
 # plotting and diagnostics

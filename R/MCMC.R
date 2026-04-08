@@ -53,6 +53,8 @@ runOneChainMcmc <- function(
   )
   
   for (iter in seq_len(n_iterations)) {
+    
+    if(iter%/%20 == iter / 20)gc()
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res[["params"]]
