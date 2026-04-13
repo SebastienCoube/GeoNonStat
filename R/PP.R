@@ -43,6 +43,8 @@ knotsFromKmeans <- function(knots_number, locs) {
 #'   * a matrix of spatial knots,
 #'   * a positive integer (number of knots, determined via k-means), or
 #'   * `NULL` (default) - in which case a default number and placement of knots is used.
+#' @param reorder_knots logical, default to FALSE. Should knots be reordered ?
+#' If so, the knots will be reordered using `GpGp::order_maxmin`
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
 #'
