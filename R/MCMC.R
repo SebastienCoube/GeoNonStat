@@ -149,9 +149,9 @@ GeoNonStatMcmc <- function(
   
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
-  if(n_iterations + iter_start < 50) {
-    warning("The algorithm is implemented to update the spatial range paramters ",
-    "after at least 50 iterations. You should increase n_iterations.")
+  if(n_iterations + iter_start < 60) {
+    warning("The algorithm is implemented to update the spatial range parameters ",
+    "after at least 60 iterations. You should increase n_iterations.")
   }
   usedPlan <- utils::capture.output({
     print(future::plan())
