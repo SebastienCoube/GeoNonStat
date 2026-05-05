@@ -126,7 +126,7 @@ tracePlots <- function(object, burn_in = .1, keep = "all") {
       starts <- intercepts
     }
 
-    columns <- splitIntervals(n, starts, nmax = 16)
+    columns <- splitIntervals(n, starts, nmax = 9)
     cat("Plot", name)
     if (length(columns) > 1) cat(" (on", length(columns), "plots)")
     cat("\n")

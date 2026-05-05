@@ -61,7 +61,7 @@ void vecchia_(
 #endif
   bool smoothness15 = false; 
   if (smoothness == 1.5)smoothness15 = true;
-  double diag_term = 1.0001;
+  double diag_term = 1.0000001;
   double diff_term = 0.0000001;
   double sqrt2 = sqrt(2); 
   // initializing stuff

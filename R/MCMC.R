@@ -53,8 +53,6 @@ runOneChainMcmc <- function(
   )
   
   for (iter in seq_len(n_iterations)) {
-    
-    if(iter%/%20 == iter / 20)gc()
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res[["params"]]
@@ -66,24 +64,23 @@ runOneChainMcmc <- function(
       vecchia_approx = vecchia_approx, observed_field = observed_field, 
       iter = iter, num_threads = num_threads)
     state$params$field = res$field
-    
     if (iter + iter_start > 30) {
-      res <- updateFieldLogVarMALA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+      res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
       state$params$field <- res$params$field
       state$params$field_log_var <- res$params$field_log_var
       state$ker_var <- res$ker_var
     }
     
     if (iter + iter_start > 60) {
-      # Range beta ###############################
-      res <- updateRangeBetaMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
-      state <- res[["state"]]
-      # Variance of the  range PP ###############################
-      if(!is.null(hierarchical_model$range$PP)){
-        state$params$range_log_scale = updateVarPPSuff(
-          hm4params = hierarchical_model$range, 
-          beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
-      }
+       # Range beta ###############################
+       res <- updateRangeBetaAndLogVarMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
+       state <- res[["state"]]
+       # Variance of the  range PP ###############################
+       if(!is.null(hierarchical_model$range$PP)){
+         state$params$range_log_scale = updateVarPPSuff(
+           hm4params = hierarchical_model$range, 
+           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+       }
     }
     
     # Noise ###############################

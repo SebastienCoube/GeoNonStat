@@ -107,7 +107,7 @@ knotsFromKmeans <- function(knots_number, locs) {
 createPP <- function(vecchia_approx,
                      matern_range = NULL,
                      knots = NULL,
-                     reorder_knots = FALSE,
+                     reorder_knots = TRUE,
                      seed = 1234,
                      plot = TRUE) {
   if (!is.list(vecchia_approx)) {

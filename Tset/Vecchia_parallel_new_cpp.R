@@ -285,7 +285,7 @@ for(range_col_idx in seq(3)){
 
 
 
-Rcpp::sourceCpp("src/vecchia.cpp")
+Rcpp::sourceCpp("src/vecchia_.cpp")
 
 # spatial locations 
 n = 200000
