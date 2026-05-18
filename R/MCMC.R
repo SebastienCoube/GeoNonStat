@@ -185,7 +185,7 @@ GeoNonStatMcmc <- function(
       )
     },
     object$states,
-    iter_start + seed + seq_along(object$states),
+    iter_start + seed + chains,
     SIMPLIFY = FALSE,
     future.seed = TRUE,
     future.globals = list(
