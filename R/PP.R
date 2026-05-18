@@ -104,6 +104,8 @@ knotsFromKmeans <- function(knots_number, locs) {
 #'   matern_range = .05
 #' )
 #' }
+
+
 createPP <- function(vecchia_approx,
                      matern_range = NULL,
                      knots = NULL,

@@ -45,7 +45,8 @@ extendPP <- function(PP, extended_vecchia_approx){
   if(is.null(PP))return(NULL)
   createPP(
     vecchia_approx = extended_vecchia_approx, 
-    matern_range = PP$matern_range, knots = PP$knots, plot = F)
+    matern_range = PP$matern_range, knots = PP$knots, reorder_knots = F,
+    plot = F)
 }
 
 
