@@ -4,3 +4,5 @@
 Tset/
 Rplot.png
 data_raw/
+^\.positai$
+^\.claude$

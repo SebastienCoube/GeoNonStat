@@ -6,3 +6,4 @@ deps_*.png
 src/*.o
 src/*.so
 *.png
+.positai
