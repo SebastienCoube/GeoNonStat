@@ -70,9 +70,12 @@ predictNoise <- function(geo_non_stat, extended_vecchia_approx, new_noise_X, bur
   # apply to MCMC samples of noise_beta from geo_non_stat
 }
 
-predict1Field <- function(range_beta, field, extended_PP_range, 
+predict1Field <- function(range_beta, 
+                          field, 
+                          extended_PP_range, 
                           extended_vecchia_approx, 
-                          complete_range_X_locs, hierarchical_model, 
+                          complete_range_X_locs, 
+                          hierarchical_model, 
                           num_threads){
   compressed_chol <- 
     array(0, c(nrow(extended_vecchia_approx$NNarray), extended_vecchia_approx$n_locs, 1))
@@ -106,40 +109,47 @@ predict1Field <- function(range_beta, field, extended_PP_range,
 
 
 
-predict <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_threads) {
+predictGns <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_threads) {
   # Checks 
   # new_X au même format que X
   # new_noise_X au même format que noise_X
   # new_range_X au même format que range_X
   
-  extended_vecchia_approx <- extendVecchia(object$vecchiaapprox, new_locs)
+  extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
   
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
   extended_PP_range <- extendPP(object$hierarchical_model$range$PP, extended_vecchia_approx) 
   
   estimated_beta<- aggregateRecords(object, keep="noise_beta", keep_separate_chains = TRUE)
-  estimated_field_range<- aggregateRecords(object, keep=c("range_beta", "field"), keep_separate_chains = TRUE)
-  allBeta <- aggregateRecords(object, keep=c("beta"), keep_separate_chains = TRUE)
-  predictedNoises <- lapply(
+  # estimated_field_range<- aggregateRecords(object, keep=c("range_beta", "field"), 
+                                           # keep_separate_chains = TRUE)
+  
+  predicted_noises <- lapply(
     estimated_beta, function(x) {
-      apply(x, 1, function(y) {
+      apply(x[["noise_beta"]], 1, function(y) {
         predict1Noise(y, extended_PP_noise, extended_vecchia_approx, new_noise_X)
       })
     }
   )
-  nfield <- nrow(estimated_field_range[[1]]$range_beta)
-  predictedField <- lapply(
-    estimated_field_range, function(x) {
-      lapply(seq_len(nfield), function(y) {
-        predict1Field(x$range_beta[y,], x$field[y,], 
-                      extended_PP_range, extended_vecchia_approx, 
-                      complete_range_X_locs, object$hierarchical_model,
+  predicted_field <- lapply(
+    object$states, function(x) {
+        predict1Field(x$params$range_beta,
+                      x$params$field, 
+                      extended_PP_range, 
+                      extended_vecchia_approx, 
+                      new_range_X, 
+                      object$hierarchical_model,
                       num_threads)
-      })
     }
   )
-
-  # 
+  
+  # predicted_field = predict1Field(
+  #   range_beta = range_beta, field = field, 
+  #   extended_PP_range = extended_PP_range, 
+  #   extended_vecchia_approx, 
+  #   complete_range_X_locs, geo_non_stat$hierarchical_model, 
+  #   num_threads = 8)
+  
   # predictedY <- lapply( 
   #                        )
   
@@ -147,4 +157,6 @@ predict <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_thre
   # return( predicted values)
   # A voir si on retourne le summary. 
   # Sebastien est pour. 
+  
+  return(list("predicted_noises" = predicted_noises, "predicted_field" = predicted_field))
 }
