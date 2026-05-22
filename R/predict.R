@@ -108,8 +108,19 @@ predict1Field <- function(range_beta,
 }
 
 
-
-predictGns <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_threads) {
+#' Predict a 'GeoNonStat' object on new locations
+#'
+#' @param object an object of class \code{GeoNonStat}
+#' @param new_locs new locations
+#' @param new_X new X 
+#' @param new_noise_X new noise X
+#' @param new_range_X new range X
+#' @param num_threads number of threads. Integer.
+#' @param ... additional arguments (unused)
+#' @rdname GeoNonStat
+#' @export
+#' @method predict GeoNonStat
+predict.GeoNonStat <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_threads, ...) {
   # Checks 
   # new_X au même format que X
   # new_noise_X au même format que noise_X
@@ -125,7 +136,7 @@ predictGns <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_t
                                            # keep_separate_chains = TRUE)
   
   predicted_noises <- lapply(
-    estimated_beta, function(x) {
+    object$states, function(x) {
       apply(x[["noise_beta"]], 1, function(y) {
         predict1Noise(y, extended_PP_noise, extended_vecchia_approx, new_noise_X)
       })
@@ -142,6 +153,8 @@ predictGns <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_t
                       num_threads)
     }
   )
+  
+  # Attention à l'ordre des locs pour représenter après. Il faudra sûrement les sortir.
   
   # predicted_field = predict1Field(
   #   range_beta = range_beta, field = field, 
