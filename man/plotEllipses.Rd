@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualisation.R
 \name{plotEllipses}
 \alias{plotEllipses}
-\title{Plots range ellipses for nonstationary covariance functions.}
+\title{Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.}
 \usage{
 plotEllipses(locs, log_range, shrink = 0.1, add = FALSE, ...)
 }
@@ -23,7 +23,7 @@ correlation  = .1 (rho following INLA's terminology)}
 a plot object
 }
 \description{
-Plots range ellipses for nonstationary covariance functions.
+Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 }
 \examples{
 locs <- matrix(rnorm(20), ncol = 2)

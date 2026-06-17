@@ -1,5 +1,6 @@
-#' Ingredients needed to simulate observations from GeoNonStat model
-#'
+#' Ingredients needed to simulate observations from a GeoNonStat model: 
+#' explanatory variables, spatial process, and noise process. 
+#' 
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param X a data.frame of covariates explaining the interest variable
 #' through fixed linear effects
@@ -84,7 +85,7 @@ createGnsSimulator <- function(vecchia_approx,
 }
 
 
-#' @title From a GeoNonStatSimulator object, creates regression coefficients at the right format
+#' @title From a GeoNonStatSimulator object, creates parameters at the right format
 #'
 #' @param gns_simulator an object created by `createGnsSimulator()`
 #' @param range_intercept TODO
@@ -330,9 +331,9 @@ createGnsSimulatorParameters <- function(gns_simulator,
 }
 
 
-#' @title simulates fake data
+#' @title Simulates fake data
 #' @description From a GeoNonStatSimulator object and
-#' regression coefficients at the right format,
+#' parameters at the right format,
 #' simulates fake data
 #'
 #' @param gns_simulator  an object created by `createGnsSimulator()`

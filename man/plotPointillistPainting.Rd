@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualisation.R
 \name{plotPointillistPainting}
 \alias{plotPointillistPainting}
-\title{Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.}
+\title{Plots a spatial variable like a \href{https://en.wikipedia.org/wiki/Pointillism}{pointillist painting}, the color intensity being the variable value.}
 \usage{
 plotPointillistPainting(
   locs,
@@ -31,7 +31,7 @@ if `add=TRUE`, to `points`}
 a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 }
 \description{
-Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.
+Plots a spatial variable like a \href{https://en.wikipedia.org/wiki/Pointillism}{pointillist painting}, the color intensity being the variable value.
 }
 \examples{
 locs <- matrix(rnorm(2000), ncol = 2)

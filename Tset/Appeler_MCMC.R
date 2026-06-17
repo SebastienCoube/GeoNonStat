@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
 nobs = 10000
-nlocs = 5000
+nlocs = 4000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
@@ -56,6 +56,8 @@ geo_non_stat = GeoNonStat(
   range_PP = PP_range
 )
 
+
+summary(geo_non_stat)
 
 # ## # #Run MCMC chain for 40 iterations
 #  list2env(geo_non_stat, environment())
@@ -137,12 +139,12 @@ geo_non_stat = GeoNonStatMcmc(
 print("DOOOONE")
 
 # plotting and diagnostics
-tracePlots(geo_non_stat, keep = "beta", burn_in = .0)
-tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
-tracePlots(geo_non_stat, keep = "noise_beta", burn_in = 0)
-tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
-tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .0)
+tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
+tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .3)
+tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
+tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
+tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
 MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .3)
 MCMC_diags$diags["field_log_var. ",] 
 

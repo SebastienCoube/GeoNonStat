@@ -4,7 +4,7 @@
 \alias{createVecchia}
 \title{Vecchia approximation setup}
 \usage{
-createVecchia(observed_locs, m = 12, ncores = 1)
+createVecchia(observed_locs, m = 6, ncores = 1, round_locs = 0)
 }
 \arguments{
 \item{observed_locs}{a matrix of spatial coordinates where observations are done}
@@ -12,6 +12,8 @@ createVecchia(observed_locs, m = 12, ncores = 1)
 \item{m}{number of nearest neighbors to do Vecchia's approximation}
 
 \item{ncores}{number of cores to run in parallel, default to 5.}
+
+\item{round_locs}{maximal distance to round locations coordinates, resulting in leaner Vecchia's approximations}
 }
 \value{
 a list of Vecchia approximation objects and metadata.

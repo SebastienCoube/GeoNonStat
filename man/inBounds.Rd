@@ -23,3 +23,4 @@ Is a numeric include in an interval ?
 inBounds(c(0, 12), 0, includeBounds = FALSE)
 inBounds(c(0, 12), 12, includeBounds = TRUE)
 }
+\keyword{internal}

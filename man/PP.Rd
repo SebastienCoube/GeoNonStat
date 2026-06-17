@@ -31,6 +31,9 @@ If `NULL`, a default value is inferred from spatial locations.}
 * a positive integer (number of knots, determined via k-means), or
 * `NULL` (default) - in which case a default number and placement of knots is used.}
 
+\item{reorder_knots}{logical, default to FALSE. Should knots be reordered ?
+If so, the knots will be reordered using `GpGp::order_maxmin`}
+
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
 \item{plot}{Logical, whether to produce diagnostic plots (default `TRUE`).}

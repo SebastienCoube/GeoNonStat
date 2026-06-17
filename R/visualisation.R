@@ -1,5 +1,4 @@
 #' Create visualisations for a PP object, according to the vecchia_approx that produced it.
-#'
 #' @param x an object of class PP, create with `createPP`
 #' @param ... additional arguments (unused)
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
@@ -155,7 +154,7 @@ plotKnotsPP <- function(x,
   par(mar = omar, mgp = def.par[["mgp"]])
 }
 
-#' Plots range ellipses for nonstationary covariance functions.
+#' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 #' @param locs ellipses centers coordinates. A matrix with 2 columns, 1 row for each ellipse
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
 #' @param add logical, default to FALSE. Add on existing plot ?
@@ -314,6 +313,7 @@ plotEllipses <- function(locs,
 #'
 #' @returns a vector of colors of length `length(x)`
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' getColors(c(1, 2, 3))
@@ -339,6 +339,7 @@ getColors <- function(x, alpha = FALSE) {
 #'
 #' @returns a vector of colors of length `length(x)`
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' getColorsCat(3)
@@ -355,7 +356,7 @@ getColorsCat <- function(n, alpha = FALSE) {
   return(cols)
 }
 
-#' Plots a spatial variable like a pointillist painting using R base's points. Stupid, but handy.
+#' Plots a spatial variable like a \href{https://en.wikipedia.org/wiki/Pointillism}{pointillist painting}, the color intensity being the variable value.
 #'
 #' @param locs numeric matrix of spatial locations
 #' @param field numerical vector, interest variable to define color of points

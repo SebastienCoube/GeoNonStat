@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulateFakeData.R
 \name{simulateGnsData}
 \alias{simulateGnsData}
-\title{simulates fake data}
+\title{Simulates fake data}
 \usage{
 simulateGnsData(gns_simulator, gns_params, num_threads = 5)
 }
@@ -18,7 +18,7 @@ a list
 }
 \description{
 From a GeoNonStatSimulator object and
-regression coefficients at the right format,
+parameters at the right format,
 simulates fake data
 }
 \examples{

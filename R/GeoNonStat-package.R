@@ -1,6 +1,16 @@
 #' @title GeoNonStat: Hierarchical Nonstationary Nearest Neighbor Gaussian Process
-#' @description This package provides functions for hierarchical nonstationary nearest neighbor Gaussian processes.
-#'
+#' @description 
+#' Hierarchical Nonstationary Nearest Neighbor Gaussian Process. 
+#' This package allows to model observations with point coordinates in a 2D, 
+#' geographic space. 
+#' Explanatory variable impact on the interest variable is modeled using a 
+#' linear model.  
+#' Spatial auto-correlation of the data is captured using a possibly 
+#' non-stationary Nearest Neighbor Gaussian process. 
+#' Independent observation noise is captured using a possibly heteroskedastic 
+#' Gaussian noise.   
+#' The complexity levels of the Gaussian Process and the observation noise are 
+#' specified by the user through an interpretable parametrization.  
 #' @docType package
 #' @name GeoNonStat
 #'

@@ -287,27 +287,3 @@ varLossPP <- function(x) {
 }
 
 
-#' TODO : est-ce que cette fonction est utilisee ?
-#'
-#' @param PP an object of class `PP`
-#' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param df logical, default to TRUE. Return result as a data.frame ?
-getBasis <- function(PP, vecchia_approx, df = TRUE) {
-  res <- xPPMultRight(
-    X = NULL,
-    PP = PP,
-    vecchia_approx = vecchia_approx,
-    Y = diag(1, PP$n_knots),
-    permutate_PP_to_obs = TRUE
-  )
-  colnames(res) <- paste("Basis_", seq_len(ncol(res)), sep = "")
-  if (any(res < .001)) {
-    res[res < .001] <- 0
-  }
-  if (df) {
-    res <- as.data.frame(res)
-  } else {
-    res <- as(res, "sparseMatrix")
-  }
-  return(res)
-}

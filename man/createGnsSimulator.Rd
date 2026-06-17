@@ -2,7 +2,8 @@
 % Please edit documentation in R/simulateFakeData.R
 \name{createGnsSimulator}
 \alias{createGnsSimulator}
-\title{Ingredients needed to simulate observations from GeoNonStat model}
+\title{Ingredients needed to simulate observations from a GeoNonStat model: 
+explanatory variables, spatial process, and noise process.}
 \usage{
 createGnsSimulator(
   vecchia_approx,
@@ -41,7 +42,8 @@ range through fixed linear effects}
 a list
 }
 \description{
-Ingredients needed to simulate observations from GeoNonStat model
+Ingredients needed to simulate observations from a GeoNonStat model: 
+explanatory variables, spatial process, and noise process.
 }
 \examples{
 set.seed(2)

@@ -6,6 +6,7 @@
 #'
 #' @returns a logical value, of same length as x
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' inBounds(c(0, 12), 0, includeBounds = FALSE)

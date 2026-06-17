@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulateFakeData.R
 \name{createGnsSimulatorParameters}
 \alias{createGnsSimulatorParameters}
-\title{From a GeoNonStatSimulator object, creates regression coefficients at the right format}
+\title{From a GeoNonStatSimulator object, creates parameters at the right format}
 \usage{
 createGnsSimulatorParameters(
   gns_simulator,
@@ -36,7 +36,7 @@ createGnsSimulatorParameters(
 a list
 }
 \description{
-From a GeoNonStatSimulator object, creates regression coefficients at the right format
+From a GeoNonStatSimulator object, creates parameters at the right format
 }
 \examples{
 set.seed(2)

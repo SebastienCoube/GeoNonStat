@@ -20,3 +20,4 @@ Title getColors TODO
 \examples{
 getColors(c(1, 2, 3))
 }
+\keyword{internal}

@@ -160,6 +160,7 @@ aggregateRecords <- function(object, burn_in = 0.1, keep = "all", keep_separate_
 #'
 #' @returns a matrix
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' tt <- matrix(rnorm(200), ncol = 20)

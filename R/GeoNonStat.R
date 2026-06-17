@@ -963,6 +963,7 @@ print.GeoNonStat <- function(x, ...) {
 #'
 #' @param partobject object to summarize
 #' @return description a character
+#' @noRD
 detailedSummary <- function(partobject) {
   sumdata <- summary(partobject)
   return(
@@ -994,6 +995,28 @@ detailedSummary <- function(partobject) {
 #' @method summary GeoNonStat
 summary.GeoNonStat <- function(object, ...) {
   # TODO revoir cette fonction complètement !!
+  # There are <> observations of the interest variables on <> distinct sites. 
+  # Aside of the intercept, there are <> variables who explain the interest variable through linear effects 
+  # The noise model is 
+  #   -> (if only noise intercept and no PP :) stationary 
+  #   -> (else) nonstationary, with <> explanatory variables aside of the Intercept
+  #      -> (if no PP) . 
+  #      -> (if PP) and a PP. 
+  # The Gaussian Process range model is
+  #   -> isotropic.
+  #   -> anisotropic.
+  # and 
+  #   -> (if only range intercept and no PP :) stationary 
+  #   -> (else) nonstationary, with <> explanatory variables aside of the Intercept
+  #      -> (if no PP) . 
+  #      -> (if PP) and a PP. 
+  # There are <> MCMC iterations. With burn-in 0.25, the minimal ESS is <>, which is
+  #   -> (if > 100) sufficient but can always be improved with more iterations,
+  #   -> (else) not sufficient,
+  # and the worst Gelman-Rubin upper bound is <>, which is 
+  #   -> (if <= 1.1) good enough.
+  #   -> (else) not good enough. 
+  
   cat("### data ###")
   print(detailedSummary(object$data))
   cat("### hierarchical_model ###")

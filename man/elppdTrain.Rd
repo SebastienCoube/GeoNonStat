@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate.R
 \name{elppdTrain}
 \alias{elppdTrain}
-\title{Compute the log-dens of the observations}
+\title{Empirical Log Pointwise Predictive Likelihood}
 \usage{
 elppdTrain(object, burn_in = 0.1)
 }
@@ -17,7 +17,7 @@ records will be removed from the result.}
 a list
 }
 \description{
-Compute the log-dens of the observations
+Empirical Log Pointwise Predictive Likelihood
 }
 \examples{
 lppd <- elppdTrain(processedGnsDemo)

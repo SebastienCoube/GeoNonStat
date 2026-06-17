@@ -24,3 +24,4 @@ Summarize a matrix by column
 tt <- matrix(rnorm(200), ncol = 20)
 summarizeRecords(tt)
 }
+\keyword{internal}
