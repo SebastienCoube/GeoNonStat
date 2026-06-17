@@ -134,8 +134,8 @@ predict1Field <- function(range_beta,
 #' @param object an object of class \code{GeoNonStat}
 #' @param new_locs new locations
 #' @param new_X new X 
-#' @param new_noise_X new noise X
-#' @param new_range_X new range X
+#' @param new_noise_X new X for noise parameters
+#' @param new_range_X new X for range parameters
 #' @param num_threads number of threads. Integer.
 #' @param ... additional arguments (unused)
 #' @rdname GeoNonStat
@@ -174,6 +174,7 @@ predict.GeoNonStat <-  function(object, new_locs, new_X, new_noise_X, new_range_
                       num_threads)
     }
   )
+  
   
   # Attention à l'ordre des locs pour représenter après. Il faudra sûrement les sortir.
   
