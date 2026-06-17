@@ -1,44 +1,65 @@
-
-extendVecchia <- function(vecchia_approx, new_locs){
-   new_vecchia_approx <- list()
-   new_vecchia_approx$new_observed_locs <- new_locs
-   new_vecchia_approx$observed_locs <- rbind(vecchia_approx$observed_locs, new_locs)
-   #new_vecchia_approx$observed_locs[seq(vecchia_approx$n_obs),] - vecchia_approx$observed_locs
-   #new_vecchia_approx$observed_locs[-seq(vecchia_approx$n_obs),] - new_locs
-   new_vecchia_approx$previous_n_obs <- vecchia_approx$n_obs
-   new_vecchia_approx$previous_n_locs <-  vecchia_approx$n_locs 
-   new_vecchia_approx$n_obs <- nrow(new_vecchia_approx$observed_locs)
-   new_vecchia_approx$locs <- unique(rbind(vecchia_approx$locs, new_locs))
-   #new_vecchia_approx$locs[seq(vecchia_approx$n_locs),] - vecchia_approx$locs
-   new_vecchia_approx$new_locs <- new_vecchia_approx$locs[-seq(vecchia_approx$n_locs),]
-   new_vecchia_approx$n_locs <- nrow(new_vecchia_approx$locs)
-   new_vecchia_approx$t_locs <- t(new_vecchia_approx$locs)
-   new_vecchia_approx$locs_match <- match(split(new_vecchia_approx$observed_locs, row(new_vecchia_approx$observed_locs)), split(new_vecchia_approx$locs, row(new_vecchia_approx$locs)))
-   new_vecchia_approx$locs_match_matrix <- Matrix::sparseMatrix(i = new_vecchia_approx$locs_match, j = seq_len(new_vecchia_approx$n_obs), x = 1)
-   # doing reversed operation : for a given unrepeated location, tell which observations correspond
-   new_vecchia_approx$hctam_scol <- split(seq_len(new_vecchia_approx$n_obs), new_vecchia_approx$locs_match)
-   # extracting NNarray =  nearest neighbours for Vecchia approximation
-   unobserved_new_locs = new_vecchia_approx$locs[-seq(vecchia_approx$n_locs),]
-   new_vecchia_approx$NNarray <- cbind(
-     vecchia_approx$NNarray,  
-     t(cbind(
-       seq(vecchia_approx$n_locs + 1, new_vecchia_approx$n_locs),
-       FNN::get.knnx(
-         data = vecchia_approx$locs, query = unobserved_new_locs, 
-         k = nrow(vecchia_approx$NNarray)-1)$nn.index
-     ))
-   )
-   new_vecchia_approx$NNNoNA <- !is.na(new_vecchia_approx$NNarray)
-   
-   sparse_mat <- Matrix::sparseMatrix(
-     x = seq_len(sum(new_vecchia_approx$NNNoNA)),
-     i = col(new_vecchia_approx$NNarray )[new_vecchia_approx$NNNoNA],
-     j = new_vecchia_approx$NNarray [new_vecchia_approx$NNNoNA],
-     triangular = TRUE
-   )
-   new_vecchia_approx$sparse_chol_x_reorder <- seq_along(new_vecchia_approx$NNarray)[new_vecchia_approx$NNNoNA][match(sparse_mat@x, seq_len(sum(new_vecchia_approx$NNNoNA)))]
-   return(new_vecchia_approx) 
- }
+extendVecchia <- function(vecchia_approx, new_locs) {
+  observed_locs <- rbind(vecchia_approx$observed_locs, new_locs)
+  locs <- unique(rbind(vecchia_approx$locs, new_locs))
+  n_obs  <- nrow(observed_locs)
+  n_locs <- nrow(locs)
+  
+  # TODO ici je ne comprends pas la logique
+  new_locs_unique <- locs[-seq_len(vecchia_approx$n_locs), , drop = FALSE]
+  
+  locs_match <- match(
+    split(observed_locs, row(observed_locs)),
+    split(locs, row(locs))
+  )
+  
+  locs_match_matrix <- Matrix::sparseMatrix(
+    i = locs_match,
+    j = seq_len(n_obs),
+    x = 1
+  )
+  
+  hctam_scol <- split(seq_len(n_obs), locs_match)
+  
+  nn_new <- FNN::get.knnx(
+    data  = vecchia_approx$locs,
+    query = new_locs_unique,
+    k     = nrow(vecchia_approx$NNarray) - 1
+  )$nn.index
+  
+  NNarray <- cbind(
+    vecchia_approx$NNarray,
+    t(cbind(seq(vecchia_approx$n_locs + 1, n_locs), nn_new))
+  )
+  NNNoNA <- !is.na(NNarray)
+  sparse_mat <- Matrix::sparseMatrix(
+    x = seq_len(sum(NNNoNA)),
+    i = col(NNarray)[NNNoNA],
+    j = NNarray[NNNoNA],
+    triangular = TRUE
+  )
+  
+  sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][
+    match(sparse_mat@x, seq_len(sum(NNNoNA)))
+  ]
+  
+  list(
+    new_observed_locs     = new_locs,
+    observed_locs         = observed_locs,
+    previous_n_obs        = vecchia_approx$n_obs,
+    previous_n_locs       = vecchia_approx$n_locs,
+    n_obs                 = n_obs,
+    locs                  = locs,
+    new_locs              = new_locs_unique,
+    n_locs                = n_locs,
+    t_locs                = t(locs),
+    locs_match            = locs_match,
+    locs_match_matrix     = locs_match_matrix,
+    hctam_scol            = hctam_scol,
+    NNarray               = NNarray,
+    NNNoNA                = NNNoNA,
+    sparse_chol_x_reorder = sparse_chol_x_reorder
+  )
+}
 
 #extended_PP = extendPP(PP, extended_vecchia_approx)
 extendPP <- function(PP, extended_vecchia_approx){
