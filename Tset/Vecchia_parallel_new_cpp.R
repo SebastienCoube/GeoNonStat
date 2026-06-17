@@ -351,3 +351,86 @@ vecchia_(
 
 plot(c(1,5,8,10,20), c(timediff1, timediff5, timediff8, timediff10, timediff20), ylim = c(0, timediff1))
 
+
+
+
+
+
+
+
+
+
+########################################################################
+# Checking derivatives with high range
+########################################################################
+
+set.seed(1)
+# spatial locations 
+n = 30000
+locs = cbind(runif(n), runif(n))
+# range parameters 
+log_range = matrix(0, n, 1)
+log_range[,1] = 2 + 3*locs[,1]
+
+# vecchia_ approx 
+NNarray = GpGp::find_ordered_nn(locs, 10)
+NNarray[is.na(NNarray)] = 0
+smoothness = c(0.5, 1.5)
+
+tatato = array(0, dim = c(ncol(NNarray), n,  1 + 1*ncol(NNarray)))
+tatato_ = array(0, dim = c(ncol(NNarray), n, 1 + 1*ncol(NNarray)))
+
+for(sm in smoothness){
+  # computing vecchia_ 
+  vecchia_(
+    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, tatato)
+  GeoNonStat::plotPointillistPainting(pch = 16, cex = .8,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
+  
+  
+  # computing new vecchia_ approx with a new range parameter
+  range_row_idx = 15000
+  range_col_idx = 1
+  
+  # computing new vecchia_ approx and derivatrives
+  log_range_ = log_range 
+  log_range_[range_row_idx, range_col_idx] = log_range_[range_row_idx, range_col_idx] + .00001
+  vecchia_(log_range = t(log_range_), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, tatato_)
+  
+  # testing impact when impacted range is child in the DAG
+  plot(
+    (tatato_[,range_row_idx,1] - tatato[,range_row_idx, 1])*100000, 
+    tatato[,range_row_idx, 2 + 11 * (range_col_idx-1)], 
+    xlab = "derivative using finite diff", ylab = "derivative computed using formula", 
+    main = paste("test for the derivative of ", range_row_idx, 
+                 "-th vecchia_ approx \n when its range is moved at column", range_col_idx, "\n smoothness = ", sm)
+  )
+  abline (a=0, b=1)
+  
+  
+  # testing impact when impacted range is parent in the DAG
+  
+  idx_impacted_child = row(NNarray)[which(NNarray == range_row_idx)[6]]
+  any(NNarray[idx_impacted_child,] == range_row_idx) # testing that the chosen index is present among parents of the impacted child
+  idx_among_parents_of_impacted_child = col(NNarray)[which(NNarray == range_row_idx)[6]]-1
+  (NNarray[idx_impacted_child,idx_among_parents_of_impacted_child + 1] == range_row_idx)# testing that the chosen index is at the right place among parents of the impacted child
+  
+  
+  plot(
+    (tatato_[,idx_impacted_child,1]-tatato[,idx_impacted_child,1])*100000,
+    tatato[,idx_impacted_child, 2 + 11 * (range_col_idx-1) + idx_among_parents_of_impacted_child],
+    xlab = "derivative using finite diff", ylab = "derivative computed using formula", 
+    main = paste("test for the derivative of ", idx_impacted_child, 
+                 "-th vecchia_ approx \n when the range of its", idx_among_parents_of_impacted_child, 
+                 "-th parent is moved \n smoothness = ", sm )
+  )
+  abline(a = 0, b=1)
+}
+
+
+
+
+
+
+
+
+

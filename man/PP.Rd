@@ -11,6 +11,7 @@ createPP(
   vecchia_approx,
   matern_range = NULL,
   knots = NULL,
+  reorder_knots = TRUE,
   seed = 1234,
   plot = TRUE
 )

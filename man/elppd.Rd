@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate.R
 \name{elppd}
 \alias{elppd}
-\title{Title TODO}
+\title{Empirical Log Pointwise Predictive Likelihood}
 \usage{
 elppd(X, beta_samples, field_samples, noise_var_samples, observed_field)
 }
@@ -21,7 +21,7 @@ elppd(X, beta_samples, field_samples, noise_var_samples, observed_field)
 a list
 }
 \description{
-Title TODO
+Empirical Log Pointwise Predictive Likelihood
 }
 \examples{
 aggregated_records <- aggregateRecords(
