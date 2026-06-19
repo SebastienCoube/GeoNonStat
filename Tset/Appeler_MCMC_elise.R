@@ -1,4 +1,4 @@
-library(GeoNonStat)
+# library(GeoNonStat)
 set.seed(2)
 nobs = 50000
 nlocs = 2500
@@ -48,7 +48,8 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$noise, cex= 1, p
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
-  observed_field = fake_data$observed_field, X = X, 
+  observed_field = fake_data$observed_field, 
+  X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
   noise_X = NULL, range_X = NULL,
@@ -76,57 +77,63 @@ new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01)))
 new_locs = rbind(new_locs, new_locs[rev(seq_len(nrow(new_locs))),])
 extended_vecchia_approx = extendVecchia(vecchia_approx, new_locs)
 
-# prediction of 1 log - noise variance realization
-extended_PP_noise = extendPP(
-  PP = PP_noise, 
-  extended_vecchia_approx = extended_vecchia_approx)
-noise_beta = geo_non_stat$states$chain_2$params$noise_beta
+# # prediction of 1 log - noise variance realization
+# extended_PP_noise = extendPP(
+#   PP = PP_noise, 
+#   extended_vecchia_approx = extended_vecchia_approx)
+# noise_beta = geo_non_stat$states$chain_2$params$noise_beta
 
-predicted_noise = predict1Noise(
-  noise_beta, 
-  extended_PP_noise = extended_PP_noise, 
-  extended_vecchia_approx, 
-  new_noise_X = matrix(1, nrow(new_locs)))
-par(mfrow = c(2,3))
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
-plotPointillistPainting(vecchia_approx$observed_locs, log(geo_non_stat$states$chain_2$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_observed_locs, predicted_noise, main = "predicted log noise variance")
-# prediction of 1 realization of the latent field + range field
+# predicted_noise = predict1Noise(
+#   noise_beta, 
+#   extended_PP_noise = extended_PP_noise, 
+#   extended_vecchia_approx, 
+#   new_noise_X = matrix(1, nrow(new_locs)))
+# par(mfrow = c(2,3))
+# plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field, main = "true log noise var", pch = 16, cex=  1)
+# plotPointillistPainting(vecchia_approx$observed_locs, log(geo_non_stat$states$chain_2$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
+# plotPointillistPainting(extended_vecchia_approx$new_observed_locs, predicted_noise, main = "predicted log noise variance")
+# # prediction of 1 realization of the latent field + range field
 
-range_beta = geo_non_stat$states$chain_2$params$range_beta
-extended_PP_range = extendPP(
-  PP = PP_range, 
-  extended_vecchia_approx = extended_vecchia_approx)
+# range_beta = geo_non_stat$states$chain_2$params$range_beta
+# extended_PP_range = extendPP(
+#   PP = PP_range, 
+#   extended_vecchia_approx = extended_vecchia_approx)
 complete_range_X_locs = list(X_locs = matrix(1, extended_vecchia_approx$n_locs))
-field = geo_non_stat$states$chain_2$params$field
+# field = geo_non_stat$states$chain_2$params$field
+# 
+# predicted_field = predict1Field(
+#   range_beta = range_beta, field = field, 
+#   extended_PP_range = extended_PP_range, 
+#   extended_vecchia_approx, 
+#   complete_range_X_locs, geo_non_stat$hierarchical_model, 
+#   num_threads = 8)
+# 
+# plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true latent field", pch = 16, cex=  1)
+# plotPointillistPainting(vecchia_approx$locs, field, main = "sampled latent field", pch = 16, cex=  1)
+# plotPointillistPainting(
+#   extended_vecchia_approx$new_locs, 
+#   predicted_field$field, 
+#   main = "predicted latent field")
+# 
+# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,1], main = "true log range", pch = 16, cex=  1)
+# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,1], main = "predicted log range")
+# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,2], main = "true log aniso 1", pch = 16, cex=  1)
+# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,2], main = "predicted log aniso 1")
+# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,3], main = "true log aniso 2", pch = 16, cex=  1)
+# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,3], main = "predicted log aniso 2")
 
-predicted_field = predict1Field(
-  range_beta = range_beta, field = field, 
-  extended_PP_range = extended_PP_range, 
-  extended_vecchia_approx, 
-  complete_range_X_locs, geo_non_stat$hierarchical_model, 
-  num_threads = 8)
-
-plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true latent field", pch = 16, cex=  1)
-plotPointillistPainting(vecchia_approx$locs, field, main = "sampled latent field", pch = 16, cex=  1)
-plotPointillistPainting(
-  extended_vecchia_approx$new_locs, 
-  predicted_field$field, 
-  main = "predicted latent field")
-
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,1], main = "true log range", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,1], main = "predicted log range")
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,2], main = "true log aniso 1", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,2], main = "predicted log aniso 1")
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,3], main = "true log aniso 2", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,3], main = "predicted log aniso 2")
-
+new_X <- as.data.frame(
+  cbind(rnorm(nrow(new_locs)), 
+        rnorm(nrow(new_locs)), 
+        rnorm(nrow(new_locs)), 
+        rnorm(nrow(new_locs))))
 
 predict.GeoNonStat(
   object = geo_non_stat, 
   new_locs = new_locs, 
-  new_X = NULL, 
+  new_X = new_X, 
   new_noise_X = matrix(1, nrow(new_locs)), 
-  new_range_X = complete_range_X_locs, 
+  new_range_X = list(X_locs=matrix(1, 12043)), 
+  burn_in=0,
   num_threads=2)
-  
+# TODO : ici je ne comprends pas comment l'utilisateur est supposé avoir la bonne taille de new_range_X
