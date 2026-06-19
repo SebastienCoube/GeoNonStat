@@ -102,18 +102,19 @@ doTheScores <- function(true_y, mean_samples, sd_samples){
 }
 
 
-#' Several model scores: 
-#' \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95% intervals}, 
-#' \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS), 
-#' \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD), 
-#' and \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE). 
+#' Model scoring for train and test data
+#' @description
+#'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals}, 
+#'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS), 
+#'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD), 
+#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).\n 
+#'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations. 
 #' @param geo_non_stat, an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL
 #' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL
 #' @param new_y a vector on new observations from the interest variable in order to evaluate the scores on the test data set, or NULL
 #' @export
-#' @examples
 
-score <- function(geo_non_stat, prediction, test_y){
+scores <- function(geo_non_stat = NULL, prediction = NULL, test_y = NULL){
   train <- !is.null(geo_non_stat)&is.null(prediction)&is.null(test_y)&(class(geo_non_stat) == "GeoNonStat")
   test <- is.null(geo_non_stat)&!is.null(prediction)&!is.null(test_y)
   if(!(train|test))stop("Either: geo_non_stat must be from class GeoNonStat, prediction be NULL, and test_y be NULL; or geo_non_stat must be NULL, prediction be a prediction from a GeoNonStat model, and y be test observations"

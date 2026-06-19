@@ -959,32 +959,32 @@ print.GeoNonStat <- function(x, ...) {
 }
 
 
-#' summary of a part of a GeoNonStat object
-#'
-#' @param partobject object to summarize
-#' @return description a character
-#' @noRD
-detailedSummary <- function(partobject) {
-  sumdata <- summary(partobject)
-  return(
-    cbind(
-      sumdata,
-      "Value" =
-        as.character(
-          sapply(
-            dimnames(sumdata)[[1]], function(x) {
-              res <- ""
-              if (sumdata[x, "Length"] == 1 &&
-                  sumdata[x, "Mode"] %in% c("numeric", "character")) {
-                res <- partobject[[x]]
-              }
-              res
-            }
-          )
-        )
-    )
-  )
-}
+## #' summary of a part of a GeoNonStat object
+## #'
+## #' @param partobject object to summarize
+## #' @return description a character
+## #' @noRD
+## detailedSummary <- function(partobject) {
+##   sumdata <- summary(partobject)
+##   return(
+##     cbind(
+##       sumdata,
+##       "Value" =
+##         as.character(
+##           sapply(
+##             dimnames(sumdata)[[1]], function(x) {
+##               res <- ""
+##               if (sumdata[x, "Length"] == 1 &&
+##                   sumdata[x, "Mode"] %in% c("numeric", "character")) {
+##                 res <- partobject[[x]]
+##               }
+##               res
+##             }
+##           )
+##         )
+##     )
+##   )
+## }
 
 #' Summary of a 'GeoNonStat' object
 #'
@@ -1017,26 +1017,26 @@ summary.GeoNonStat <- function(object, ...) {
   #   -> (if <= 1.1) good enough.
   #   -> (else) not good enough. 
   
-  cat("### data ###")
-  print(detailedSummary(object$data))
-  cat("### hierarchical_model ###")
-  detailedSummary(object$hierarchical_model)
-  cat(
-    "### vecchia_approx ###",
-    summary(object$vecchia_approx),
-    "### states ###",
-    summary(object$states),
-    "### records ###",
-    summary(object$records),
-    "### seed ###",
-    object$seed,
-    "### iterations ###",
-    paste(
-      nrow(object$iterations$checkpoints),
-      "iterations for a total time of",
-      round(sum(object$iterations$checkpoints[, "time"]), 5),
-      "seconds"
-    ),
-    sep = "\n"
-  )
+  # cat("### data ###")
+  # print(detailedSummary(object$data))
+  # cat("### hierarchical_model ###")
+  # detailedSummary(object$hierarchical_model)
+  # cat(
+  #   "### vecchia_approx ###",
+  #   summary(object$vecchia_approx),
+  #   "### states ###",
+  #   summary(object$states),
+  #   "### records ###",
+  #   summary(object$records),
+  #   "### seed ###",
+  #   object$seed,
+  #   "### iterations ###",
+  #   paste(
+  #     nrow(object$iterations$checkpoints),
+  #     "iterations for a total time of",
+  #     round(sum(object$iterations$checkpoints[, "time"]), 5),
+  #     "seconds"
+  #   ),
+  #   sep = "\n"
+  # )
 }

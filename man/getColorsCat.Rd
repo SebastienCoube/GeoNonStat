@@ -20,3 +20,4 @@ Colors for a categorical variable
 \examples{
 getColorsCat(3)
 }
+\keyword{internal}

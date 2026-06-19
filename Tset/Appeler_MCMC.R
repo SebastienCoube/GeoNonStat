@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 10000
-nlocs = 4000
+nobs = 20000
+nlocs = 10000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
@@ -137,6 +137,8 @@ geo_non_stat = GeoNonStatMcmc(
   n_threads_per_chain = 7, n_iterations = 600, seed = 1)
 
 print("DOOOONE")
+
+
 
 # plotting and diagnostics
 tracePlots(geo_non_stat, keep = "beta", burn_in = .3)

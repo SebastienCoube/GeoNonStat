@@ -340,7 +340,7 @@ createGnsSimulatorParameters <- function(gns_simulator,
 #' @param gns_params an object created by `createGnsSimulatorParameters()`
 #' @param num_threads integer, number of treads to use. Default to 1.
 #'
-#' @returns a list
+#' @returns A list containing the simulated data
 #' @export
 #'
 #' @examples

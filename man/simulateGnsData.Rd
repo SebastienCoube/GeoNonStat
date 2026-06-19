@@ -14,7 +14,7 @@ simulateGnsData(gns_simulator, gns_params, num_threads = 5)
 \item{num_threads}{integer, number of treads to use. Default to 1.}
 }
 \value{
-a list
+A list containing the simulated data
 }
 \description{
 From a GeoNonStatSimulator object and
