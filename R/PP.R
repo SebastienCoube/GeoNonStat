@@ -31,10 +31,10 @@ knotsFromKmeans <- function(knots_number, locs) {
   return(centers)
 }
 
-#' @title Create a Predictive Process (PP) object
+#' @title Create a Predictive Process (PP)
 #' @description
 #' Creates an object of class `PP`, a low-rank predictive process used as a prior
-#' to describe spatial variations of covariance parameters.
+#' to describe spatial variations of nonstationary covariance parameters.
 #'
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param matern_range numeric (optional). Matern range parameter for the PP.

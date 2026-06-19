@@ -89,7 +89,7 @@ or NULL in which case the bounds are set automatically.}
 \item{num_threads}{number of threads. Integer.}
 }
 \value{
-an object of class `GeoNonStat`
+An object of class `GeoNonStat`
 }
 \description{
 Hierarchical Nonstationary Nearest Neighbor Gaussian Process. 
@@ -121,7 +121,7 @@ being specified through \code{noise_X} and \code{noise_PP}}
    \item \code{noise_PP} captures random spatial variations. 
    \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic. 
   }
-\item{\strong{Field range model}}{can be isotropic or anisotropic, and stationary or nonstationary.}
+\item{\strong{Field range model}}{Can be isotropic or anisotropic, and stationary or nonstationary.}
 \itemize{
  \item Anisotropy means that the correlation changes with the direction, 
  and is specified through the Boolean argument \code{anisotropic}
@@ -129,10 +129,16 @@ being specified through \code{noise_X} and \code{noise_PP}}
  \itemize{
  \item \code{range_X} captures fixed effects of explanatory covariates. 
  \item \code{range_PP} captures random spatial variations. 
- \item If both are \code{NULL} then the model depends only on an intercept, and is stationary 
+ \item If both are \code{NULL} then the model depends only on an intercept, and is stationary. 
  }
 }
-\item{Note}{The latent field can be anisotropic and stationary, or isotropic and stationary !}
+\item{\strong{Notes}}{
+
+The latent field can be anisotropic and stationary, in which case there will be a constant direction in the field correlation.
+
+When the field is isotropic and nonstationary, it is only locally isotropic.
+
+}
 }
 }
 \examples{

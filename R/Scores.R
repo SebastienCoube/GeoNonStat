@@ -121,3 +121,85 @@ scores <- function(geo_non_stat = NULL, prediction = NULL, test_y = NULL){
   # TODO check test_y and prediction same length
   )
 }
+
+#' Find scattered spatial locations for cross validation
+#' @description 
+#'  A max-min heuristic is used to scatter the test locations across space,
+#'  so that test locations are independent-ish from each other, and surrounded
+#'  by training locations. 
+#' @param observed_locs a matrix of spatial locations.
+#' @param n_test the number of test locations. Some locations can be observed 
+#' several times, so the number of test indices can be greater than n_test.  
+#' @returns A list of train and test indices
+#' @export
+#' @example
+#' 
+#' # duplicated observed locations  
+#' observed_locs <- cbind(runif(1000), runif(1000))
+#'  observed_locs <- rbind(observed_locs, observed_locs)
+#' # number of non-duplicated test locations
+#'  n_test = 100
+#' # train-test split
+#' idx <- testIndicesScattered(observed_locs, n_test = n_test)
+#' plot(observed_locs, pch = ".")
+#' # checking number of non-duplicated test locations
+#' points(observed_locs[idx$test,], pch = 16, col=2)
+#' length(idx$test)
+#' sum(!duplicated(observed_locs[idx$test,]))
+  
+testIndicesScattered <- function(observed_locs, n_test = NULL){
+  locs  <- unique(observed_locs)
+  if(is.null(n_test))n_test <- ceiling(nrow(locs)/10)
+  test <- GpGp::order_maxmin(locs)[seq(n_test)]
+  locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
+  return(list("train" = which(!locs_match%in%test) , "test" = which(locs_match%in%test)))
+}
+
+#' Find scattered spatial locations for cross validation and remove observations
+#' who are too close to test locations
+#' @description 
+#'  A K-means algorithm is run in order to parition the spatial locations into
+#'  clusters. A max-min heuristic is used on the clusters to scatter the 
+#'  test clusters across space, so that test clusters are independent-ish from 
+#'  each other, and surrounded by training locations. The observation that is 
+#'  closest to the center of each cluster is kept for validation and the rest of
+#'  the cluster is discarded, in order to forbid immediate interpolation of 
+#'  the test data.
+#' @param observed_locs a matrix of spatial locations.
+#' @param n_clust the number of test locations.
+#' @param n_test the number of test clusters.
+#' @export
+#' 
+#' @example
+observed_locs <- cbind(runif(20000), runif(20000))
+observed_locs <- rbind(observed_locs, observed_locs)
+plot(observed_locs, pch = ".")
+idx <- testIndicesLump(observed_locs)
+plot(observed_locs[idx$train,], pch = ".", xlab = "", ylab = "")
+points(observed_locs[idx$discarded,], pch = ".", xlab = "", ylab = "", col=  2)
+points(observed_locs[idx$test,], pch = 16, xlab = "", ylab = "", col=  4, cex = .5)
+
+
+testIndicesLump <- function(observed_locs, n_clust = 200, n_test = 40){
+  locs  <- unique(observed_locs)
+  K = kmeans(locs, centers = n_clust)
+  test_clust = GpGp::order_maxmin(K$centers)[seq(n_test)]
+  test = FNN::knnx.index(data = locs, k = 1, query = K$centers[test_clust,])
+  discarded = setdiff(which(K$cluster %in% test_clust), test)
+  train = which(! K$cluster %in% test_clust)
+  # intersect(train, discarded)
+  # intersect(train, test)
+  # intersect(test, discarded)
+  locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
+  return(list("train" = which(locs_match%in%train), "test" = which(locs_match%in%test), 
+              "discarded" = which(locs_match%in%discarded)))
+}
+
+
+#' Split data between train and test
+#' @description
+#'  
+#' @param geo_non_stat, an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL
+#' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL
+#' @param new_y a vector on new observations from the interest variable in order to evaluate the scores on the test data set, or NULL
+#' @export

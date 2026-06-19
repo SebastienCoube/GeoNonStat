@@ -90,7 +90,7 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
   intervals
 }
 
-#' trace the records of a processed GeoNonStat object
+#' Trace the records of a processed GeoNonStat object
 #'
 #' @param object a processed GeoNonStat object
 #' @param burn_in percentage of first records to remove

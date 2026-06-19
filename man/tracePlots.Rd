@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualisationMCMC.R
 \name{tracePlots}
 \alias{tracePlots}
-\title{trace the records of a processed GeoNonStat object}
+\title{Trace the records of a processed GeoNonStat object}
 \usage{
 tracePlots(object, burn_in = 0.1, keep = "all")
 }
@@ -14,7 +14,7 @@ tracePlots(object, burn_in = 0.1, keep = "all")
 \item{keep}{names of pramaters to plot}
 }
 \description{
-trace the records of a processed GeoNonStat object
+Trace the records of a processed GeoNonStat object
 }
 \examples{
 tracePlots(processedGnsDemo)

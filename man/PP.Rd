@@ -5,7 +5,7 @@
 \alias{PP}
 \alias{summary.PP}
 \alias{plot.PP}
-\title{Create a Predictive Process (PP) object}
+\title{Create a Predictive Process (PP)}
 \usage{
 createPP(
   vecchia_approx,
@@ -53,7 +53,7 @@ An object of class `PP`.
 }
 \description{
 Creates an object of class `PP`, a low-rank predictive process used as a prior
-to describe spatial variations of covariance parameters.
+to describe spatial variations of nonstationary covariance parameters.
 }
 \examples{
 vecchia_approx <- createVecchia(cbind(runif(10000), runif(10000)), 10)
