@@ -1,34 +1,18 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 20000
-nlocs = 10000
+nobs = 2000
+nlocs = 2000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
-vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
-
-# fixed effects
 X = as.data.frame(cbind(vecchia_approx$locs[vecchia_approx$locs_match,1], vecchia_approx$observed_locs[,1] + rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
-
-#X_range = as.data.frame(observed_locs)
-
-PP_range = createPP(vecchia_approx, knots = 10, matern_range = .5)
-
-plotPointillistPainting(
-  vecchia_approx$locs, 
-  xPPMultRight(PP = PP_range, Y = rnorm(PP_range$n_knots), vecchia_approx = vecchia_approx)
-)
-PP_noise = createPP(vecchia_approx, knots = 1000, matern_range = .05)
-plotPointillistPainting(
-  vecchia_approx$locs, 
-  xPPMultRight(PP = PP_noise, Y = rnorm(PP_noise$n_knots), vecchia_approx = vecchia_approx)
-)
+vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
 
 
 gns_simulator = createGnsSimulator(
   vecchia_approx = vecchia_approx,
   X = X, 
-  noise_X = X, noise_PP = PP_noise, 
-  range_X = NULL,range_PP = PP_range, 
+  noise_X = X, 
+  range_X = as.data.frame(vecchia_approx$locs[vecchia_approx$locs_match,]),
   anisotropic = T
 )
 
@@ -45,7 +29,8 @@ coeff_list = createGnsSimulatorParameters(
   gns_simulator, range_PP_log_var =range_log_scale, 
   noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, 
   field_log_var = field_log_var)
-coeff_list$range_X_coeff[1,1] = -4.5
+coeff_list$range_X_coeff[1,1] = -5
+coeff_list$range_X_coeff[-1,] = rnorm(6)
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
@@ -60,9 +45,7 @@ geo_non_stat = GeoNonStat(
   observed_field = fake_data$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
-  noise_X = NULL, range_X = NULL,
-  noise_PP = PP_noise,
-  range_PP = PP_range
+  noise_X = X, range_X = as.data.frame(vecchia_approx$locs[vecchia_approx$locs_match,]),
 )
 
 
@@ -143,84 +126,12 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 600, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 400, seed = 1)
 
 print("DOOOONE")
 
 
 
 # plotting and diagnostics
-tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
-tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .3)
-MCMC_diags$diags["field_log_var. ",] 
-
-# prediction
-new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 
-new_locs = rbind(new_locs, new_locs[rev(seq_len(nrow(new_locs))),])
-extended_vecchia_approx = extendVecchia(vecchia_approx, new_locs)
-
-# prediction of 1 log - noise variance realization
-extended_PP_noise = extendPP(
-  PP = PP_noise, 
-  extended_vecchia_approx = extended_vecchia_approx)
-noise_beta = geo_non_stat$states$chain_1$params$noise_beta
-
-predicted_noise = predict1Noise(
-  noise_beta, 
-  extended_PP_noise = extended_PP_noise, 
-  extended_vecchia_approx, 
-  new_noise_X = matrix(1, nrow(new_locs)))
-
-par(mfrow = c(2,3))
-
-
-plotPointillistPainting(
-  vecchia_approx$observed_locs, fake_data$log_noise_var_field, 
-  main = "true log noise var", pch = 16, cex=  1)
-
-plotPointillistPainting(
-  vecchia_approx$observed_locs, 
-  log(geo_non_stat$states$chain_1$stuff$noise_var), 
-  main = "sampled log noise var", pch = 16, cex=  1)
-
-plotPointillistPainting(
-  extended_vecchia_approx$new_locs, predicted_noise, 
-  main = "predicted log noise variance")
-
-
-# prediction of 1 realization of the latent field + range field
-
-
-range_beta = geo_non_stat$states$chain_1$params$range_beta
-extended_PP_range = extendPP(
-  PP = PP_range, 
-  extended_vecchia_approx = extended_vecchia_approx)
-complete_range_X_locs = list(X_locs = matrix(1, extended_vecchia_approx$n_locs))
-field = geo_non_stat$states$chain_1$params$field
-
-predicted_field = predict1Field(
-  range_beta = range_beta, field = field, 
-  extended_PP_range = extended_PP_range, 
-  extended_vecchia_approx, 
-  complete_range_X_locs, geo_non_stat$hierarchical_model, 
-  num_threads = 8)
-
-plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true latent field", pch = 16, cex=  1)
-plotPointillistPainting(vecchia_approx$locs, field, main = "sampled latent field", pch = 16, cex=  1)
-plotPointillistPainting(
-  extended_vecchia_approx$new_locs, 
-  predicted_field$field, 
-  main = "predicted latent field")
-
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,1], main = "true log range", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,1], main = "predicted log range")
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,2], main = "true log aniso 1", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,2], main = "predicted log aniso 1")
-plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,3], main = "true log aniso 2", pch = 16, cex=  1)
-plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,3], main = "predicted log aniso 2")
-
