@@ -122,7 +122,7 @@ scores <- function(geo_non_stat = NULL, prediction = NULL, test_y = NULL){
   )
 }
 
-#' Find scattered spatial locations for cross validation
+#' Find scattered spatial locations for train-test partition
 #' @description 
 #'  A max-min heuristic is used to scatter the test locations across space,
 #'  so that test locations are independent-ish from each other, and surrounded
@@ -135,28 +135,29 @@ scores <- function(geo_non_stat = NULL, prediction = NULL, test_y = NULL){
 #' @example
 #' 
 #' # duplicated observed locations  
-#' observed_locs <- cbind(runif(1000), runif(1000))
+#' observed_locs <- cbind(runif(20000), runif(20000))
 #'  observed_locs <- rbind(observed_locs, observed_locs)
 #' # number of non-duplicated test locations
 #'  n_test = 100
 #' # train-test split
-#' idx <- testIndicesScattered(observed_locs, n_test = n_test)
+#' idx <- testIndicesClose(observed_locs, n_test = n_test)
 #' plot(observed_locs, pch = ".")
 #' # checking number of non-duplicated test locations
 #' points(observed_locs[idx$test,], pch = 16, col=2)
 #' length(idx$test)
 #' sum(!duplicated(observed_locs[idx$test,]))
   
-testIndicesScattered <- function(observed_locs, n_test = NULL){
+testIndicesClose <- function(observed_locs, n_test = NULL){
   locs  <- unique(observed_locs)
   if(is.null(n_test))n_test <- ceiling(nrow(locs)/10)
   test <- GpGp::order_maxmin(locs)[seq(n_test)]
   locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  return(list("train" = which(!locs_match%in%test) , "test" = which(locs_match%in%test)))
+  return(list("train" = which(!locs_match%in%test) , "test_close" = which(locs_match%in%test)))
 }
 
-#' Find scattered spatial locations for cross validation and remove observations
-#' who are too close to test locations
+#' Find scattered spatial locations for train-test partition and remove 
+#' train locations who are too close to test locations in order to assess long 
+#' range prediction
 #' @description 
 #'  A K-means algorithm is run in order to parition the spatial locations into
 #'  clusters. A max-min heuristic is used on the clusters to scatter the 
@@ -171,16 +172,14 @@ testIndicesScattered <- function(observed_locs, n_test = NULL){
 #' @export
 #' 
 #' @example
-observed_locs <- cbind(runif(20000), runif(20000))
-observed_locs <- rbind(observed_locs, observed_locs)
-plot(observed_locs, pch = ".")
-idx <- testIndicesLump(observed_locs)
-plot(observed_locs[idx$train,], pch = ".", xlab = "", ylab = "")
-points(observed_locs[idx$discarded,], pch = ".", xlab = "", ylab = "", col=  2)
-points(observed_locs[idx$test,], pch = 16, xlab = "", ylab = "", col=  4, cex = .5)
-
-
-testIndicesLump <- function(observed_locs, n_clust = 200, n_test = 40){
+#'  observed_locs <- cbind(runif(20000), runif(20000))
+#'  observed_locs <- rbind(observed_locs, observed_locs)
+#'  plot(observed_locs, pch = ".")
+#'  idx <- testIndicesFar(observed_locs)
+#'  plot(observed_locs[idx$train,], pch = ".", xlab = "", ylab = "")
+#'  points(observed_locs[idx$discarded,], pch = ".", xlab = "", ylab = "", col=  2)
+#'  points(observed_locs[idx$test,], pch = 16, xlab = "", ylab = "", col=  4, cex = .5)
+testIndicesFar <- function(observed_locs, n_clust = 200, n_test = 40){
   locs  <- unique(observed_locs)
   K = kmeans(locs, centers = n_clust)
   test_clust = GpGp::order_maxmin(K$centers)[seq(n_test)]
@@ -191,9 +190,16 @@ testIndicesLump <- function(observed_locs, n_clust = 200, n_test = 40){
   # intersect(train, test)
   # intersect(test, discarded)
   locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  return(list("train" = which(locs_match%in%train), "test" = which(locs_match%in%test), 
+  return(list("train" = which(locs_match%in%train), 
+              "test_far" = which(locs_match%in%test), 
               "discarded" = which(locs_match%in%discarded)))
 }
+
+# TODO testIndicesCloseAndFar
+# TODO plotTestIndices(test_indices, locs)
+# TODO split(y, observed_locs, X, X_range, 
+#            X_noise, train_test_indices)
+
 
 
 #' Split data between train and test
