@@ -71,7 +71,7 @@ extendPP <- function(PP, extended_vecchia_approx){
 }
 
 
-predict1Noise <- function(noise_beta, extended_PP_noise, extended_vecchia_approx, new_noise_X){
+predict1LogVarNoise <- function(noise_beta, extended_PP_noise, extended_vecchia_approx, new_noise_X){
   PP_effect <- xPPMultRight(X = NULL, PP = extended_PP_noise, 
                            vecchia_approx = extended_vecchia_approx, 
                            permutate_PP_to_obs = T, 
@@ -83,13 +83,13 @@ predict1Noise <- function(noise_beta, extended_PP_noise, extended_vecchia_approx
   return(res)
 }
 
-predictNoise <- function(geo_non_stat, extended_vecchia_approx, new_noise_X, burn_in){
-  extended_PP_noise <- extendPP(geo_non_stat$hierarchical_model$noise$PP)
-  new_noise_X <- cbind(rep(1, extended_vecchia_approx$n_obs - 
-                             extended_vecchia_approx$previous_n_obs), 
-                       new_noise_X)
-  # apply to MCMC samples of noise_beta from geo_non_stat
-}
+# predictNoise <- function(geo_non_stat, extended_vecchia_approx, new_noise_X, burn_in){
+#   extended_PP_noise <- extendPP(geo_non_stat$hierarchical_model$noise$PP)
+#   new_noise_X <- cbind(rep(1, extended_vecchia_approx$n_obs - 
+#                              extended_vecchia_approx$previous_n_obs), 
+#                        new_noise_X)
+#   # apply to MCMC samples of noise_beta from geo_non_stat
+# }
 
 predict1Field <- function(range_beta, 
                           field, 
@@ -141,7 +141,14 @@ predict1Field <- function(range_beta,
 #' @rdname GeoNonStat
 #' @export
 #' @method predict GeoNonStat
-predict.GeoNonStat <-  function(object, new_locs, new_X, new_noise_X, new_range_X, num_threads, ...) {
+predict.GeoNonStat <-  function(
+    object, 
+    new_locs, 
+    new_X, 
+    new_noise_X, 
+    new_range_X, 
+    burn_in=0.1, # TODO virer les premiers params burn_in
+    num_threads, ...) {
   # Checks 
   # new_X au même format que X
   # new_noise_X au même format que noise_X
@@ -152,46 +159,59 @@ predict.GeoNonStat <-  function(object, new_locs, new_X, new_noise_X, new_range_
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
   extended_PP_range <- extendPP(object$hierarchical_model$range$PP, extended_vecchia_approx) 
   
-  estimated_beta<- aggregateRecords(object, keep="noise_beta", keep_separate_chains = TRUE)
+  #rm burn-in
+  est <- aggregateRecords(object, 
+                          keep=c("beta", "noise_beta"),
+                          keep_separate_chains = FALSE, 
+                          burn_in = burn_in)
+  field <- filterRecords(object$records, 
+                          keep=c("range_beta", "field"),
+                          burn_in = burn_in)
   # estimated_field_range<- aggregateRecords(object, keep=c("range_beta", "field"), 
                                            # keep_separate_chains = TRUE)
   
-  predicted_noises <- lapply(
-    object$states, function(x) {
-      apply(x[["noise_beta"]], 1, function(y) {
-        predict1Noise(y, extended_PP_noise, extended_vecchia_approx, new_noise_X)
-      })
-    }
-  )
+  # TODO a paralleliser 
+  # le burn_in es tdéjà compris dans le agregate records. 
+  predicted_lvn <- apply(est$noise_beta, 1, function(x){
+    predict1LogVarNoise(
+      x, 
+      extended_PP_noise, 
+      extended_vecchia_approx, 
+      new_noise_X)
+  })
+  
+  field <- unlist(field, recursive = FALSE)
+  
+  # TODO a paralleliser
+  print("TODO ici comment l'uilisateur est supposé connaitre la longueur de new_range_X ??")
   predicted_field <- lapply(
-    object$states, function(x) {
-        predict1Field(x$params$range_beta,
-                      x$params$field, 
+    field, function(x) {
+        predict1Field(x$range_beta,
+                      x$field, 
                       extended_PP_range, 
                       extended_vecchia_approx, 
                       new_range_X, 
                       object$hierarchical_model,
-                      num_threads)
+                      num_threads = num_threads)
     }
   )
-  
+  pred_log_range <- Map(function(x) x[["log_range"]], predicted_field)
+  pred_field <- Map(function(x) x[["field"]], predicted_field)
+  pred_field <- do.call("rbind", pred_field)
   
   # Attention à l'ordre des locs pour représenter après. Il faudra sûrement les sortir.
   
-  # predicted_field = predict1Field(
-  #   range_beta = range_beta, field = field, 
-  #   extended_PP_range = extended_PP_range, 
-  #   extended_vecchia_approx, 
-  #   complete_range_X_locs, geo_non_stat$hierarchical_model, 
-  #   num_threads = 8)
-  
-  # predictedY <- lapply( 
-  #                        )
+  # Prediction finale de la variable réponse
+  # TODO filtrer les burnin partout
+  # Agreger object$records$beta pour les avoir au bon format
+  # predicted_resp <- new_X * object$records$beta + predicted_field + predicted_noise 
+  predicted_resp <- as.matrix(cbind(1, new_X)) %*% t(est$beta)
   
   # print(summary des predictions)
   # return( predicted values)
   # A voir si on retourne le summary. 
   # Sebastien est pour. 
+  
   
   return(list("predicted_noises" = predicted_noises, "predicted_field" = predicted_field))
 }

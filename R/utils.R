@@ -467,9 +467,8 @@ xPPMultRight <- function(X = NULL,
     res <- as.matrix(res)
   }
   if (ncol(res) == 3) {
-    colnames(res) <- c("det", "an", "an")
-  }
-  if (ncol(res) == 1) {
+    colnames(res) <- c("det", "aniso1", "aniso2")
+  } else if (ncol(res) == 1) {
     colnames(res) <- "det"
   }
   return(res)
