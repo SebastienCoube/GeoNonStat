@@ -147,18 +147,25 @@ predict.GeoNonStat <-  function(
     new_X, 
     new_noise_X, 
     new_range_X, 
-    burn_in=0.1, # TODO virer les premiers params burn_in
+    burn_in=0.1, 
     num_threads, ...) {
-  # Checks 
-  # new_X au même format que X
-  # new_noise_X au même format que noise_X
-  # new_range_X au même format que range_X
-  
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
-  
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
   extended_PP_range <- extendPP(object$hierarchical_model$range$PP, extended_vecchia_approx) 
   
+  # setup for new_noise_X
+  if(object$covariates$noise_X$n_regressors==1)new_noise_X = cbind("Intercept"=rep(1, nrow(new_locs)))
+  if(object$covariates$noise_X$n_regressors>1){
+    if(any(colnames(new_noise_X))!=colnames(object$covariates$noise_X$arg))stop(paste("The variables names of new_noise_X must match those of noise_X, who are", colnames()))
+    new_noise_X = model.matrix(~., new_noise_X)
+  }
+  # setup for new_range_X
+  if(object$covariates$range_X$n_regressors>1){
+    if(any(colnames(new_range_X))!=colnames(object$covariates$range_X$arg))stop(paste("The variables names of new_noise_X must match those of noise_X, who are", colnames()))
+  }
+  complete_range_X_locs = processCovariates(
+    X = rbind(object$covariates$range_X$arg, new_range_X), one_obs_per_locs = T, 
+    PP = extended_PP_range, vecchia_approx = extended_vecchia_approx)$X_locs
   #rm burn-in
   est <- aggregateRecords(object, 
                           keep=c("beta", "noise_beta"),

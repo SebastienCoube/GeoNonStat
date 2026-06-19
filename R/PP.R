@@ -21,11 +21,9 @@ knotsFromKmeans <- function(knots_number, locs) {
   }
   sampled_locs <- locs[sample(seq_len(nrow(locs)), n_sample, replace = FALSE), ]
 
-  # TODO ici j'ai un warning Les etapes de transfer (quick-TRANSfer stage) ont depasse le maximum (= 2500000)
-  # Si on met l'algorithme "Lloyd" ca resoud le pb.
   centers <- kmeans(sampled_locs,
     knots_number,
-    algorithm = "Hartigan-Wong",
+    algorithm = "Lloyd",
     iter.max = 50
   )$centers
   return(centers)
@@ -113,7 +111,8 @@ createPP <- function(vecchia_approx,
                      knots = NULL,
                      reorder_knots = TRUE,
                      seed = 1234,
-                     plot = TRUE) {
+                     plot = TRUE, verbose = T) {
+  # Sanity checks
   if (!is.list(vecchia_approx)) {
     stop("Argument 'vecchia_approx' must be a list.")
   }
@@ -121,6 +120,26 @@ createPP <- function(vecchia_approx,
     matern_range <= 0) {
     stop("'matern_range' must be positive.")
   }
+  
+  
+  # Automatic if no knots
+  if (is.null(knots)) {
+    message(paste("Finding knots number using marginal variance loss criterion", knots))
+    knots <- 4
+    variance_loss <- 100
+    while(variance_loss>3){
+      knots <- 2*knots 
+      message(paste("Trying", knots, "knots"))
+      res <- createPP(vecchia_approx = vecchia_approx, 
+                     plot = F, seed = seed, reorder_knots = T, 
+                     knots = knots, matern_range = matern_range, verbose = F)
+      variance_loss <- mean(varLossPP(res, verbose = F))
+    }
+    plot(res)
+    return(res)  
+  }
+  
+  # If knots
   if (!is.null(knots) &&
     is.numeric(knots) && is.vector(knots) == 1 && any(knots <= 0)) {
     stop("'knots' must be positive.")
@@ -133,11 +152,6 @@ createPP <- function(vecchia_approx,
     warning("You requested more knots than spatial locations.")
   }
 
-  # Generate knots
-  if (is.null(knots)) {
-    knots <- 25
-    message(paste("number of knots set to", knots))
-  }
   if (!is.matrix(knots)) {
     knots <- knotsFromKmeans(knots, vecchia_approx$locs)
     message("knot placement done by default using k-means")
@@ -216,7 +230,7 @@ createPP <- function(vecchia_approx,
     plot(res, mar_var_loss = TRUE)
   } else {
     # Just to print the diagnostic of var loss
-    varloss <- varLossPP(res)
+    varloss <- varLossPP(res, verbose = verbose)
   }
 
   return(res)
@@ -258,7 +272,7 @@ summary.PP <- function(object, ...) {
 #' vecchia <- createVecchia(cbind(runif(1000), runif(1000)))
 #' pepito <- createPP(vecchia, plot = FALSE)
 #' varLossPP(pepito)
-varLossPP <- function(x) {
+varLossPP <- function(x, verbose = T) {
   if (is.null(x$knots | is.null(x$sparse_chol))) {
     stop("x must contains 'knots' and 'sparse_chol'")
   }
@@ -277,11 +291,13 @@ varLossPP <- function(x) {
   } else {
     "great !"
   }
-  message(
-    round(mean_mar_var, 1),
-    "% of marginal variance on average is lost with the use of a PP.\nThis is ",
-    msg
-  )
+  if(verbose){
+    message(
+      round(mean_mar_var, 1),
+      "% of marginal variance on average is lost with the use of a PP.\nThis is ",
+      msg
+    )
+  }
 
   return(PP_mar_var)
 }

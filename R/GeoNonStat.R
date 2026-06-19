@@ -240,7 +240,7 @@ processCovariates <- function(X,
   
   # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
   if (is.null(X)) {
-    res$arg <- "No covariates were provided"
+    res$arg <- NULL
     res$X <- matrix(1, vecchia_approx$n_obs)
   }
   colnames(res$X)[1] <- "(Intercept)"
@@ -732,28 +732,28 @@ processStates <- function(hm,
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
 #'
-#' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param observed_field a vector of observations of the interest variable
-#' @param X a data.frame of covariates explaining the interest variable
-#' through fixed linear effects
+#' @param vecchia_approx an object created by `vecchia_approx()` from the 
+#' N spatial coordinates of the observations 
+#' @param observed_field a vector of N observations of the interest variable
+#' @param X a data.frame of N observations from covariates explaining the 
+#' interest variable through fixed linear effects
 #' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
-#' @param range_X a data.frame of covariates explaining the Gaussian process
-#' range through fixed linear effects, or NULL in which case the range is
-#' constant (i.e. the field is stationary).
+#' @param range_X a data.frame of N observations from covariates explaining the 
+#' Gaussian process range through fixed linear effects, or NULL in which case 
+#' the range is constant (i.e. the field is stationary).
 #' @param range_PP an object of class `PP` used to model spatial variations of 
-#' the range of the latent field, or NULL in which case the model the range 
-#' depends on range_X if provided or constant otherwise (i.e. the field is
-#' stationary).
+#' the range of the latent field, or NULL. 
+#' The Intercept is automatically added even if X_range is NULL. 
 #' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds 
 #' for the uniform prior of the latent field marginal variance
-#' @param noise_X a data.frame of covariates explaining the Gaussian noise
-#' variance through fixed linear effects, or NULL.
+#' @param noise_X a data.frame of N observations from covariates explaining the 
+#' Gaussian noise variance through fixed linear effects, or NULL.
 #' The Intercept is automatically added even if X_noise is NULL. 
 #' @param noise_PP either an object of class PP used to model the field of
-#' log-noise parameters, or NULL in which case the model is stationary
+#' log-noise parameters, or NULL. 
 #' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
 #' uniform prior for the log-marginal variance of the noise's PP, 
 #' or NULL in which case the bounds are set automatically.
@@ -761,7 +761,7 @@ processStates <- function(hm,
 #'
 #' @details
 #' \describe{
-#'  \item{\strong{Decomposition of the observations}}{Each observation from observed_field is decomposed into 3 components:}
+#'  \item{\strong{Decomposition of the observations}}{Each of the N observation from observed_field is decomposed into 3 components:}
 #'  \itemize{
 #'   \item Fixed effects like in a usual linear model
 #'   \item Gaussian noise like in a usual linear model
@@ -789,10 +789,11 @@ processStates <- function(hm,
 #' }
 #' \item{\strong{Notes}}{
 #' 
-#' The latent field can be anisotropic and stationary, in which case there will be a constant direction in the field correlation.
+#' The latent field can be anisotropic and stationary, in which case there will 
+#' be a constant direction in the field correlation.
 #' 
-#' When the field is isotropic and nonstationary, it is only locally isotropic.
-#' 
+#' When the field is specified as isotropic but nonstationary, it actually is 
+#' just locally isotropic.
 #' }
 #' }
 #' @returns An object of class `GeoNonStat`

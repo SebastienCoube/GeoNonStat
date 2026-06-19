@@ -17,6 +17,7 @@
 plot.PP <- function(x,
                     ...,
                     mar_var_loss = TRUE,
+                    samples = TRUE,
                     separate = FALSE) {
   def.par <- par(no.readonly = TRUE)
   par(mar = c(3, 3, 3, 1) + 0.5)
@@ -34,6 +35,25 @@ plot.PP <- function(x,
       xlab = "percentage of lost variance",
       main = "Histogram of lost marginal\nvariance between the PP and\nthe full GP",
       cex.main = 1
+    )
+  }
+  if(samples){
+    par(mfrow = c(2,2))
+    plotPointillistPainting(
+      x$vecchia_locs,  legend = F, main = "A PP sample",
+      Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
+    )
+    plotPointillistPainting(
+      x$vecchia_locs,  legend = F, main = "Another PP sample",
+      Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
+    )
+    plotPointillistPainting(
+      x$vecchia_locs,  legend = F, main = "Yet another PP sample",
+      Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
+    )
+    plotPointillistPainting(
+      x$vecchia_locs,  legend = F, main = "A last PP sample",
+      Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
   }
   par(def.par)

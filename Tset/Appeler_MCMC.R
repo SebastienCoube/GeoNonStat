@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 20000
-nlocs = 10000
+nobs = 2000
+nlocs = 1000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
@@ -11,18 +11,8 @@ X = as.data.frame(cbind(vecchia_approx$locs[vecchia_approx$locs_match,1], vecchi
 
 #X_range = as.data.frame(observed_locs)
 
-PP_range = createPP(vecchia_approx, knots = 10, matern_range = .5)
-
-plotPointillistPainting(
-  vecchia_approx$locs, 
-  xPPMultRight(PP = PP_range, Y = rnorm(PP_range$n_knots), vecchia_approx = vecchia_approx)
-)
-PP_noise = createPP(vecchia_approx, knots = 1000, matern_range = .05)
-plotPointillistPainting(
-  vecchia_approx$locs, 
-  xPPMultRight(PP = PP_noise, Y = rnorm(PP_noise$n_knots), vecchia_approx = vecchia_approx)
-)
-
+PP_range = createPP(vecchia_approx, matern_range = .5, plot = F)
+PP_noise = createPP(vecchia_approx, matern_range = .2)
 
 gns_simulator = createGnsSimulator(
   vecchia_approx = vecchia_approx,
@@ -60,7 +50,7 @@ geo_non_stat = GeoNonStat(
   observed_field = fake_data$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
-  noise_X = NULL, range_X = NULL,
+  noise_X = X, range_X = NULL,
   noise_PP = PP_noise,
   range_PP = PP_range
 )
@@ -143,7 +133,7 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 600, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 100, seed = 1)
 
 print("DOOOONE")
 
