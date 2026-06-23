@@ -636,7 +636,7 @@ processStates <- function(hm,
     vecchia_approx$n_locs,
     1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
   ))
-  vecchia_(
+  vecchia_(start_idx = 1,
     log_range = t(computeLogRange(
       range_beta = params$range_beta,
       vecchia_approx = vecchia_approx,
@@ -659,15 +659,15 @@ processStates <- function(hm,
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
-  stuff$range_beta_conditioning_s = 
+  stuff$range_beta_conditioning_s <-
     diag(1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_s[-1,-1] = 
+  stuff$range_beta_conditioning_s[-1,-1] <-
     diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  stuff$range_beta_conditioning_a = 
+  stuff$range_beta_conditioning_a <- 
     diag(1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_a[-1,-1] = 
+  stuff$range_beta_conditioning_a[-1,-1] <- 
     diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  
+  stuff$noise_beta_conditioning <- as.matrix(covariates$noise_X$crossprod_X)
   # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
   
   # Noise variance  and stuff depending on it ##################################

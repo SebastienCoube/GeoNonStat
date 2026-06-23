@@ -400,7 +400,7 @@ simulateGnsData <- function(gns_simulator,
       gns_simulator$vecchia_approx$n_locs, 1
     )
   )
-  vecchia_(
+  vecchia_(start_idx = 1,
     log_range = t(log_range_field),
     locs = gns_simulator$vecchia_approx$t_locs,
     NNarray = gns_simulator$vecchia_approx$NNarray,

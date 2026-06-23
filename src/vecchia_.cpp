@@ -53,6 +53,7 @@ void vecchia_(
     arma::mat locs,
     arma::mat NNarray, 
     int num_threads,
+    int start_idx,
     double smoothness,
     bool compute_derivative, 
     arma::cube &result){
@@ -128,7 +129,7 @@ void vecchia_(
   {
   arma::mat out(m, 1 + log_range.n_rows * m * compute_derivative);
 #pragma omp for
-  for(int i=1; i<n; i++){
+  for(int i=start_idx; i<n; i++){
     // Fill subsets of locations, range
     int bsize = std::min(i+1,m);
     arma::mat locsub(2, bsize);
