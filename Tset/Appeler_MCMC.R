@@ -236,3 +236,6 @@ plotPointillistPainting(new_locs, prediction$summaries$field[,"mean"])
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
 plotPointillistPainting(new_locs, prediction$samples$noise_log_var[,1])
 plotPointillistPainting(new_locs, prediction$summaries$noise_log_var[,"mean"])
+
+
+

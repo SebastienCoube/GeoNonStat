@@ -207,13 +207,6 @@ predict.GeoNonStat <-  function(
                           keep=c("beta", "noise_beta"),
                           keep_separate_chains = FALSE, 
                           burn_in = burn_in)
-  latent_samples <- filterRecords(object$records, 
-                          keep=c("range_beta", "field"),
-                          burn_in = burn_in)
-  latent_samples <- unlist(latent_samples, recursive = FALSE)
-  
-  
-  # log variance of the noise
   predicted_log_variance_noise <- apply(estimates$noise_beta, 1, function(x){
     predict1LogVarNoise(
       x, 
@@ -221,31 +214,37 @@ predict.GeoNonStat <-  function(
       extended_vecchia_approx, 
       new_noise_X)
   })
+  gc()
   
   # field + range
-  predicted_latent <- lapply(
-    latent_samples, function(x) {
-        predict1Field(range_beta = x$range_beta, field = x$field,
-                      extended_PP_range = extended_PP_range, 
-                      extended_vecchia_approx = extended_vecchia_approx, 
-                      complete_range_X_locs = complete_range_X_locs, 
-                      object$hierarchical_model,
-                      num_threads = num_threads)
-    }
-  )
-  pred_log_range <- Map(function(x) x[["log_range"]], predicted_latent)
+ latent_samples <- filterRecords(object$records, 
+                         keep=c("range_beta", "field"),
+                         burn_in = burn_in)
+ latent_samples <- unlist(latent_samples, recursive = FALSE)
+ predicted_latent <- lapply(
+   latent_samples, function(x) {
+       predict1Field(range_beta = x$range_beta, field = x$field,
+                     extended_PP_range = extended_PP_range, 
+                     extended_vecchia_approx = extended_vecchia_approx, 
+                     complete_range_X_locs = complete_range_X_locs, 
+                     object$hierarchical_model,
+                     num_threads = num_threads)
+   }
+ )
+  gc()
+  pred_log_range <- lapply(predicted_latent, function(x)x$log_range)
   
   samples = list(
     noise_log_var = predicted_log_variance_noise, 
     fixed_effects = new_X %*% t(estimates$beta), 
-    field = t(do.call("rbind", Map(function(x) x[["field"]], predicted_latent))), 
+    field = sapply(predicted_latent, function(x)x$field), 
     range = sapply(pred_log_range, function(x)x[,1])
   )
   if(object$hierarchical_model$anisotropic){
     samples$pred_log_range_aniso1 <- sapply(pred_log_range, function(x)x[,2])
     samples$pred_log_range_aniso2 <- sapply(pred_log_range, function(x)x[,3])
   }
-  
+  gc()
   return(list(
     samples = samples, 
     summaries = lapply(samples, function(x)t(summarizeRecords(t(x))))
