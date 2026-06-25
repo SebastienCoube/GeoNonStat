@@ -134,9 +134,7 @@ createGnsSimulatorParameters <- function(gns_simulator,
                                          noise_intercept = NULL,
                                          noise_PP_log_var = NULL,
                                          field_log_var = NULL,
-                                         verbose = TRUE,
-                                         seed = 1) {
-  set.seed(seed)
+                                         verbose = TRUE) {
   covs <- gns_simulator$covariates
   res <- list(
     "X_coeff" = matrix(

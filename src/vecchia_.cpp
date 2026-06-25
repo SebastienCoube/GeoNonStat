@@ -20,8 +20,7 @@
 
 double maternThingy_(double mahala_dist, bool smoothness15){
   double res;
-  if (smoothness15){res = (exp(- mahala_dist) * (1 + mahala_dist));}
-  else{res = (exp(- mahala_dist));}
+  if (smoothness15){res = (exp(- mahala_dist) * (1 + mahala_dist));}else{res = (exp(- mahala_dist));}
   return(res);
 }
 

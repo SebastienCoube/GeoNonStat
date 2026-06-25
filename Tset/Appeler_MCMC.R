@@ -17,7 +17,7 @@ gns_simulator = createGnsSimulator(
   X = X, 
   noise_X = X, noise_PP = PP_noise, 
   range_X = NULL,range_PP = PP_range, 
-  anisotropic = T
+  anisotropic = T, matern_smoothness = .5
 )
 
 
@@ -38,6 +38,8 @@ coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
 plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, cex= .5, pch= 15)
+
+
 
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed_field, cex= 1, pch= 15)
 

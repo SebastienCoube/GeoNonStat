@@ -7,6 +7,7 @@
 plotPointillistPainting(
   locs,
   field,
+  override_layout = T,
   add = FALSE,
   alpha = TRUE,
   legend = TRUE,

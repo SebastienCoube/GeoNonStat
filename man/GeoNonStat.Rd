@@ -30,15 +30,24 @@ GeoNonStat(
 
 \method{summary}{GeoNonStat}(object, ...)
 
-\method{predict}{GeoNonStat}(object, new_locs, new_X, new_noise_X, new_range_X, num_threads, ...)
+\method{predict}{GeoNonStat}(
+  object,
+  new_locs,
+  new_X = NULL,
+  new_noise_X = NULL,
+  new_range_X = NULL,
+  burn_in = 0.2,
+  num_threads = 5
+)
 }
 \arguments{
-\item{vecchia_approx}{an object created by `vecchia_approx()`}
+\item{vecchia_approx}{an object created by `vecchia_approx()` from the 
+N spatial coordinates of the observations}
 
-\item{observed_field}{a vector of observations of the interest variable}
+\item{observed_field}{a vector of N observations of the interest variable}
 
-\item{X}{a data.frame of covariates explaining the interest variable
-through fixed linear effects}
+\item{X}{a data.frame of N observations from covariates explaining the 
+interest variable through fixed linear effects}
 
 \item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}
@@ -47,24 +56,23 @@ either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{n_chains}{number of MCMC chains}
 
-\item{range_X}{a data.frame of covariates explaining the Gaussian process
-range through fixed linear effects, or NULL in which case the range is
-constant (i.e. the field is stationary).}
+\item{range_X}{a data.frame of N observations from covariates explaining the 
+Gaussian process range through fixed linear effects, or NULL in which case 
+the range is constant (i.e. the field is stationary).}
 
 \item{range_PP}{an object of class `PP` used to model spatial variations of 
-the range of the latent field, or NULL in which case the model the range 
-depends on range_X if provided or constant otherwise (i.e. the field is
-stationary).}
+the range of the latent field, or NULL. 
+The Intercept is automatically added even if X_range is NULL.}
 
 \item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds 
 for the uniform prior of the latent field marginal variance}
 
-\item{noise_X}{a data.frame of covariates explaining the Gaussian noise
-variance through fixed linear effects, or NULL.
+\item{noise_X}{a data.frame of N observations from covariates explaining the 
+Gaussian noise variance through fixed linear effects, or NULL.
 The Intercept is automatically added even if X_noise is NULL.}
 
 \item{noise_PP}{either an object of class PP used to model the field of
-log-noise parameters, or NULL in which case the model is stationary}
+log-noise parameters, or NULL.}
 
 \item{noise_log_scale_bounds}{either a length 2 numeric vector bounding 
 uniform prior for the log-marginal variance of the noise's PP, 
@@ -106,7 +114,7 @@ specified by the user through an interpretable parametrization.
 }
 \details{
 \describe{
- \item{\strong{Decomposition of the observations}}{Each observation from observed_field is decomposed into 3 components:}
+ \item{\strong{Decomposition of the observations}}{Each of the N observation from observed_field is decomposed into 3 components:}
  \itemize{
   \item Fixed effects like in a usual linear model
   \item Gaussian noise like in a usual linear model
@@ -134,10 +142,11 @@ being specified through \code{noise_X} and \code{noise_PP}}
 }
 \item{\strong{Notes}}{
 
-The latent field can be anisotropic and stationary, in which case there will be a constant direction in the field correlation.
+The latent field can be anisotropic and stationary, in which case there will 
+be a constant direction in the field correlation.
 
-When the field is isotropic and nonstationary, it is only locally isotropic.
-
+When the field is specified as isotropic but nonstationary, it actually is 
+just locally isotropic.
 }
 }
 }

@@ -20,7 +20,7 @@ log_range = matrix(0, n, 1)
 log_range[,1] = -8 + 3*locs[,1]
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, 
-  compute_derivative = T, smoothness = 1.5, tatato)
+  compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # nominally anisotropic, with smoothness = 1.5
@@ -28,7 +28,7 @@ set.seed(1)
 log_range = cbind(log_range[,1], log_range[,1], 0)
 tatato = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = 1.5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # actually anisotropic, with smoothness = 1.5
@@ -36,7 +36,8 @@ set.seed(1)
 log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = 1.5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, 
+  compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 #isotropic, with smoothness = 0.5
@@ -45,23 +46,26 @@ tatato = array(0, dim = c(ncol(NNarray), n, 1 + ncol(NNarray)))
 log_range = matrix(0, n, 1)
 log_range[,1] = -8 + 3*locs[,1]
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = .5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, 
+  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
-# nominally anisotropic, with smoothness = 1.5
+# nominally anisotropic, with smoothness = .5
 set.seed(1)
 log_range = cbind(log_range[,1], log_range[,1], 0)
 tatato = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = .5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8,
+  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
-# actually anisotropic, with smoothness = 1.5
+# actually anisotropic, with smoothness = 0.5
 set.seed(1)
 log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = .5, tatato)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, 
+  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 

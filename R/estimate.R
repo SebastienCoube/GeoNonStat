@@ -179,7 +179,7 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 }
 
 
-#' MCMC estimation of the model parameters using the records of a GeoNonStat object.
+#' Estimation of the model parameters using the MCMC records of a GeoNonStat object.
 #'
 #' @param object a GeoNonStat object containing records
 #' @param burn_in numeric, value, between 0 and 1. Gives the percentage of

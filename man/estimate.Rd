@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate.R
 \name{estimate}
 \alias{estimate}
-\title{MCMC estimation of the model parameters using the records of a GeoNonStat object.}
+\title{Estimation of the model parameters using the MCMC records of a GeoNonStat object.}
 \usage{
 estimate(object, burn_in = 0.1, keep = "all")
 }
@@ -21,7 +21,7 @@ parameters, event the `field.`}
 a list of numerical summary by parameters.
 }
 \description{
-MCMC estimation of the model parameters using the records of a GeoNonStat object.
+Estimation of the model parameters using the MCMC records of a GeoNonStat object.
 }
 \examples{
 estimate(processedGnsDemo)

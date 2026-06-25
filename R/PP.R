@@ -24,7 +24,7 @@ knotsFromKmeans <- function(knots_number, locs) {
   centers <- kmeans(sampled_locs,
     knots_number,
     algorithm = "Lloyd",
-    iter.max = 50
+    iter.max = 800
   )$centers
   return(centers)
 }
@@ -135,7 +135,7 @@ createPP <- function(vecchia_approx,
                      knots = knots, matern_range = matern_range, verbose = F)
       variance_loss <- mean(varLossPP(res, verbose = F))
     }
-    plot(res)
+    if(plot)plot(res)
     return(res)  
   }
   

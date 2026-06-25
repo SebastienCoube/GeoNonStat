@@ -74,7 +74,7 @@ squaredError <- function(true_y, mean_samples) {
 }
 
 
-#' Return averaged and per-observation model comparisons 
+#' Return averaged and per-observation model scoring 
 #' @param true_y a vector of true observations of the response variable
 #' @param mean_samples a matrix of samples of mean from the model
 #' @param sd_samples a matrix of samples of standard deviation from the model
@@ -84,9 +84,9 @@ squaredError <- function(true_y, mean_samples) {
 #' true_y <- rnorm(100)
 #' mean_samples <- matrix(rep(0, 1000*length(true_y)), length(true_y))
 #' sd_samples <- matrix(rep(1, 1000*length(true_y)), length(true_y))
-#' doTheScores(true_y, mean_samples, sd_samples)
+#' score(true_y, mean_samples, sd_samples)
 
-doTheScores <- function(true_y, mean_samples, sd_samples){
+score <- function(true_y, mean_samples, sd_samples){
   y_samples = mean_samples + sd_samples * rnorm(length(sd_samples))
   per_obs = matrix(0, length(y_true), 4)
   colnames(per_obs) = c("95% coverage", "CRPS", "predictive density", "squared error")
@@ -107,7 +107,7 @@ doTheScores <- function(true_y, mean_samples, sd_samples){
 #'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals}, 
 #'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS), 
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD), 
-#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).\n 
+#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations. 
 #' @param geo_non_stat, an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL
 #' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL

@@ -13,12 +13,13 @@ createPP(
   knots = NULL,
   reorder_knots = TRUE,
   seed = 1234,
-  plot = TRUE
+  plot = TRUE,
+  verbose = T
 )
 
 \method{summary}{PP}(object, ...)
 
-\method{plot}{PP}(x, ..., mar_var_loss = TRUE, separate = FALSE)
+\method{plot}{PP}(x, ..., mar_var_loss = TRUE, samples = TRUE, separate = FALSE)
 }
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()`}

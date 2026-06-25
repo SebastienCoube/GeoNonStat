@@ -394,9 +394,10 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' plotPointillistPainting(locs = locs, field = rnorm(1000))
 plotPointillistPainting <- function(locs,
                                     field,
+                                    override_layout = T,
                                     add = FALSE,
                                     alpha = TRUE,
-                                    legend = TRUE,
+                                    legend = TRUE, 
                                     ...) {
   args <- list(...)
   if (is.null(args$pch)) args[["pch"]] <- "."
@@ -409,11 +410,12 @@ plotPointillistPainting <- function(locs,
   if (legend && !add) {
     oldpar <- par(no.readonly = TRUE)
     on.exit(par(oldpar))
-
-    layout(
-      matrix(c(1, 2), nrow = 1),
-      widths = c(6, 1)
-    )
+    if(legend){
+      layout(
+        matrix(c(1, 2), nrow = 1),
+        widths = c(6, 1)
+      )
+    }
   }
 
   if (add) {
