@@ -406,7 +406,7 @@ plotPointillistPainting <- function(locs,
   if (is.null(args$ylab)) args[["ylab"]] <- NA
   args$col <- getColors(field, alpha = TRUE)
 
-  # ---- gestion de la mise en page ----
+# gestion de la mise en page
   if (legend && !add) {
     oldpar <- par(no.readonly = TRUE)
     on.exit(par(oldpar))
@@ -425,7 +425,7 @@ plotPointillistPainting <- function(locs,
     do.call("plot", c(list(x = locs), args))
   }
 
-  # ---- légende ----
+# légende
   if (legend && !add) {
     pointillistColorscale(field)
   }

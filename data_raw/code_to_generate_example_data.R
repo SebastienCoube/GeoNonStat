@@ -60,7 +60,7 @@ processedGnsDemo = GeoNonStatMcmc(
   object = gnsDemo,
   n_chains_in_parallel = 1,
   n_threads_per_chain = 1,
-  n_iterations = 55,
+  n_iterations = 65,
   seed = 1
 )
 save(processedGnsDemo, file="data/processedGnsDemo.rda", compress="xz")
