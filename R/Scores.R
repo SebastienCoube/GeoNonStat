@@ -67,7 +67,7 @@ predictiveDensity <- function(true_y, mean_samples, sd_samples) {
 #' @examples
 #' true_y <- rnorm(100)
 #' mean_samples <- matrix(rep(0, 1000*length(true_y)), length(true_y))
-#' MSE(true_y, mean_samples) 
+#' squaredError(true_y, mean_samples) 
 squaredError <- function(true_y, mean_samples) {
   per_obs <- (true_y - apply(mean_samples, 1, mean))^2
   return(per_obs)
@@ -88,7 +88,7 @@ squaredError <- function(true_y, mean_samples) {
 
 doTheScores <- function(true_y, mean_samples, sd_samples){
   y_samples = mean_samples + sd_samples * rnorm(length(sd_samples))
-  per_obs = matrix(0, length(y_true), 4)
+  per_obs = matrix(0, length(true_y), 4)
   colnames(per_obs) = c("95% coverage", "CRPS", "predictive density", "squared error")
   per_obs[,"95% coverage"] = coverage(true_y, y_samples)
   per_obs[,"CRPS"] = CRPS(true_y, y_samples)
@@ -135,7 +135,7 @@ scores <- function(object = NULL, prediction = NULL, test_y = NULL){
 #' greater than prop_test. If NULL, set to 0.1. 
 #' @returns A list of train and test indices
 #' @export
-#' @example
+#' @examples
 #' # duplicated observed locations  
 #' observed_locs <- cbind(runif(2000), runif(2000))
 #' observed_locs <- rbind(observed_locs, observed_locs[1:1000,])
@@ -176,7 +176,7 @@ getIndexesClose <- function(locs, prop_test = 0.1){
 #' Default to 10%/
 #' @export
 #' 
-#' @example
+#' @examples
 #' observed_locs <- round(cbind(runif(10000), runif(10000)),3)
 #' idx <- getIndexesFar(observed_locs)
 #' plotSplit(observed_locs, idx)
