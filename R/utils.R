@@ -28,6 +28,19 @@ inBounds <- function(bounds, x, includeBounds = FALSE) {
   return(res)
 }
 
+#' Subset a list containing matrices or a data.frames objects. 
+#' If NULL, return NULL
+#'
+#' @param data a list containing matrices or data.frames objects.
+#' @param idx a numeric vector of indexes to filter rows
+#'
+#' @returns a list
+#' @keywords internal
+subset_data <- function(data, idx) {
+  lapply(data, function(x) {
+      if (is.null(x)) NULL else x[idx, ]
+  })
+}
 
 #' Exponential of a square matrix, adding a small numeric value on the diagonal
 #'
