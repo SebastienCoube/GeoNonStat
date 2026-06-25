@@ -133,26 +133,25 @@ scores <- function(geo_non_stat = NULL, prediction = NULL, test_y = NULL){
 #' @returns A list of train and test indices
 #' @export
 #' @example
-#' 
 #' # duplicated observed locations  
-#' observed_locs <- cbind(runif(20000), runif(20000))
-#'  observed_locs <- rbind(observed_locs, observed_locs)
-#' # number of non-duplicated test locations
-#'  n_test = 100
-#' # train-test split
-#' idx <- testIndicesClose(observed_locs, n_test = n_test)
-#' plot(observed_locs, pch = ".")
-#' # checking number of non-duplicated test locations
+#' observed_locs <- cbind(runif(2000), runif(2000))
+#' observed_locs <- rbind(observed_locs, observed_locs[1:1000,])
+#' idx <- getIndicesClose(observed_locs, n_test = 100)
+#' plot(observed_locs[idx$train,], pch = ".")
 #' points(observed_locs[idx$test,], pch = 16, col=2)
-#' length(idx$test)
-#' sum(!duplicated(observed_locs[idx$test,]))
-  
-testIndicesClose <- function(observed_locs, n_test = NULL){
+getIndicesClose <- function(observed_locs, n_test = NULL){
   locs  <- unique(observed_locs)
-  if(is.null(n_test))n_test <- ceiling(nrow(locs)/10)
+  if(is.null(n_test)) n_test <- ceiling(nrow(locs)/10)
+  
   test <- GpGp::order_maxmin(locs)[seq(n_test)]
-  locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  return(list("train" = which(!locs_match%in%test) , "test_close" = which(locs_match%in%test)))
+  locs_match <- match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
+  idx_test <- which(locs_match %in% test)
+  if(length(idx_test) > n_test){
+    message("Due to duplicates, ", length(idx_test), " indices returned for 'close' test sample") 
+  }
+  idx_train <- which(!(locs_match %in% test))
+  return(list("test" = idx_test, 
+              "train" = idx_train))
 }
 
 #' Find scattered spatial locations for train-test partition and remove 
@@ -175,33 +174,66 @@ testIndicesClose <- function(observed_locs, n_test = NULL){
 #'  observed_locs <- cbind(runif(20000), runif(20000))
 #'  observed_locs <- rbind(observed_locs, observed_locs)
 #'  plot(observed_locs, pch = ".")
-#'  idx <- testIndicesFar(observed_locs)
+#'  idx <- getIndicesFar(observed_locs)
+#'  plotTrainTestSplit(observed_locs, idx, pch=c(".", 16), cex=c(1, 0.5))
 #'  plot(observed_locs[idx$train,], pch = ".", xlab = "", ylab = "")
-#'  points(observed_locs[idx$discarded,], pch = ".", xlab = "", ylab = "", col=  2)
 #'  points(observed_locs[idx$test,], pch = 16, xlab = "", ylab = "", col=  4, cex = .5)
-testIndicesFar <- function(observed_locs, n_clust = 200, n_test = 40){
+getIndicesFar <- function(observed_locs, n_clust = 200, n_test = 40){
   locs  <- unique(observed_locs)
   K = kmeans(locs, centers = n_clust)
   test_clust = GpGp::order_maxmin(K$centers)[seq(n_test)]
   test = FNN::knnx.index(data = locs, k = 1, query = K$centers[test_clust,])
   discarded = setdiff(which(K$cluster %in% test_clust), test)
   train = which(! K$cluster %in% test_clust)
-  # intersect(train, discarded)
-  # intersect(train, test)
-  # intersect(test, discarded)
   locs_match = match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  return(list("train" = which(locs_match%in%train), 
-              "test_far" = which(locs_match%in%test), 
-              "discarded" = which(locs_match%in%discarded)))
+  idx_test <- which(locs_match%in%test)
+  if(length(idx_test)>n_test){
+    message("Due to duplicates, ", length(idx_test), " indices returned for 'far' test sample") 
+  }
+  idx_train <- which(!(locs_match %in% discarded) & !(locs_match %in% test))
+  return(list("test" = idx_test, 
+              "train" = idx_train))
+}
+
+
+
+#' Plot the locations of train/test split
+#'
+#' @param locs a matrix (or data.frame or array) with 2 columns containing 
+#' spatial locations
+#' @param indices a list of length 2, containing test and train indices 
+#' among row indices of `locs`
+
+#' @returns a plot
+#' @export
+#'
+#' @examples
+#' locs <- cbind(runif(200), runif(200))
+#' idx <- list("train" = 1:150, "test" = 151:200)
+#' plotTrainTestSplit(locs, idx)
+plotTrainTestSplit <- function(locs, indices, 
+                               pch=c(16, 16), 
+                               cex=c(1, 0.5), 
+                               col=c("red", "blue")){
+  plot(locs[indices[[1]],], pch = pch[1], cex=cex[1], col = col[1], 
+       xlab = "locs[,1]", ylab = "locs[,2]")
+  points(locs[indices[[2]],], pch = pch[2], cex = cex[2], col=col[2])
+  if(!is.null(names(indices))) {
+    legend(
+      x ="topright",
+      legend = names(indices)[1:2],
+      pt.cex = 0,
+      inset = c(-0.1, 0.1),
+      text.col=col,
+      bty = "n"
+    )
+  }
 }
 
 # TODO testIndicesCloseAndFar
 # TODO plotTestIndices(test_indices, locs)
 # TODO split(y, observed_locs, X, X_range, 
 #            X_noise, train_test_indices)
-
-
-
 #' Split data between train and test
 #' @description
 #'  
