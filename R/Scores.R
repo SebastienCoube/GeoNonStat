@@ -254,10 +254,6 @@ plotSplit <- function(locs, indexes,
   }
 }
 
-# TODO testIndicesCloseAndFar
-# TODO plotTestIndices(test_indices, locs)
-# TODO split(y, observed_locs, X, X_range, 
-#            X_noise, train_test_indices)
 #' Split data between train and test
 #' @description Split a GeoNonStat object between test and train samples
 #'  
