@@ -13,6 +13,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+set.seed(1)
 knitr::opts_chunk$set(
     collapse = TRUE,
     comment = "#>"
@@ -22,7 +23,12 @@ options(warn=-1)
 
 # Introduction
 
-The aim of GeoNonStat is non-stationary geostatistical modeling. 
+The aim of GeoNonStat is to perform Bayesian non-stationary geostatistical modeling. 
+
+## Model construction 
+
+The model is a hierarchical model with several layers. 
+This section explains what kind of data can be analyzed with the proposed model. 
 
 The data is decomposed as 
 $$ y(s) = x(s)^T\beta + w(s) + \epsilon(s),$$
@@ -34,7 +40,7 @@ $$ y(s) = x(s)^T\beta + w(s) + \epsilon(s),$$
  - $w(s)$ being an uni-variate spatial effect term at the coordinate $s$ who captures the spatial auto-correlation of the data,
  - $\epsilon(s)$ being an uni-variate noise term at the coordinate $s$.
  
-Measurements are done in several coordinates $S = (s_1, \ldots, s_n)$, and replicates are possible. 
+Measurements are done in several coordinates $S = (s_1, \ldots, s_n)$, and having several observations within the same spatial site is possible. 
 
 Both $w(s)$ and $\epsilon(s)$ are nonstationary: their behavior may change following the coordinate $s$ and some explanatory variables. 
 
@@ -45,6 +51,17 @@ The estimates or confidence intervals may change with respect to an usual linear
 
 ### Nonstationary Gaussian Process model for the spatial effect
 
+#### Tl;dr
+
+- The latent field $w(S)$ has a smoothness parameter that is chosen by the modeler.
+- The spatial correlation range and marginal variance are estimated by the model
+- The modeler choses if $w(S)$ is (locally) isotropic or anisotropic.
+- The modeler also choses if the range of $w(S)$ is allowed to change, in which case  $w(S)$ is nonstationary.
+- If $w(S)$ is nonstationary: 
+    - Explanatory variables $x_\theta(s)$ can explain the range, and they must be highly coherent spatially.
+    - A latent field $w_\theta(s)$ can capture the spatial coherence of the range, and it must be highly coherent spatially too.
+
+#### Gaussian Process model for $w$
 The spatial effect is specified through a *Gaussian Process* who guarantees its spatial coherence. 
 $$w(S) \sim \mathcal{N}\left(0,~\sigma^2~M(S, \theta(S), \nu)\right)$$
 
@@ -90,7 +107,7 @@ for(nu in c(.5, 1.5)){
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste(c("small", "big")[match(beta0, rangevalues)], "range,", c("small", "big")[match(nu, c(.5, 1.5))], "smoothness"), legend = F, override_layout = F)
+      pch= 15, main = paste("w with", c("small", "big")[match(beta0, rangevalues)], "range,", c("small", "big")[match(nu, c(.5, 1.5))], "smoothness"), legend = F, override_layout = F)
     print(nu)
     print(beta0)
   }
@@ -101,32 +118,32 @@ for(nu in c(.5, 1.5)){
 
 Now imagine that our landscape behaves differently following the region and/or some explanatory variables. 
 The range parameters of the spatial effect are decomposed as: 
- $$\theta(s) = x_\theta(s)^T\beta_\theta +  w_\theta(s)$$
+ $$log(\theta(s)) = x_\theta(s)^T\beta_\theta +  w_\theta(s)$$
  
  - $s$ being a spatial coordinate in 2D,
  - $x_\theta(s)$ being a vector of explanatory variables at the coordinate $s$,
  - $\beta_\theta$ being a vector of regression coefficient,
- - $w(s)$ being an spatial effect term at the coordinate $s$ who enforces some spatial coherence on $\theta$. 
+ - $w_{\theta}(s)$ being an spatial effect term at the coordinate $s$ who enforces some spatial coherence on $\theta$. 
  
 This differs from the decomposition of the data by the fact that there is no noise. 
 
 The spatial coherence on $w_\theta$ is enforced by a Gaussian Process, with distribution: 
-$$w_\theta(S) \sim \mathcal{N}\left(0,~\sigma^2_\theta~M(S,\alpha,\nu = 1.5)\right)$$
+$$w_\theta(S) \sim \mathcal{N}\left(0,~\sigma^2_\theta~M(S,\theta_\theta,\nu = 1.5)\right)$$
 
 - $\sigma^2_\theta$ is the marginal variance parameter.
-- $M(S,\alpha_\theta,\nu = 1.5)$ is the correlation matrix of $w(S)$. Now, 
-  - The range $\alpha$ is constant and chosen by the modeler
+- $M(S,\theta_\theta,\nu = 1.5)$ is the correlation matrix of $w(S)$. Now, 
+  - The range $\theta_\theta$ is constant and chosen by the modeler
   - The smoothness $\nu$ is set to $1.5$. 
 
-So one parameter ($\alpha_\theta$) is user-chosen, and one ($\sigma_\theta$) is estimated by the model. 
+So one parameter ($\theta_\theta$) is user-chosen, and one ($\sigma_\theta$) is estimated by the model. 
 
 For the sake of identifiability, the spatial coherence of $\theta(S)$ must be much higher than the spatial coherence of $w(S)$. There are two practical consequences to that: 
 
-- $\alpha_\theta$ must be big,
+- $\theta_\theta$ must be big,
 - $X_\theta$ must be really smooth and spatially coherent. 
 
 When $X_\theta$ is just an intercept, and $\sigma^2_\theta$ is constrained to $0$, then $\theta(S)$ is constant and the model boils down to a stationary model. 
-`````{r, echo=FALSE, message=FALSE, results='hide'}
+`````{r, echo=FALSE, message=FALSE, results='hide', fig.width=7, fig.height=3.5}
 par(mfrow  =c(1,2))
   for(nonstationary in c(FALSE, TRUE)){
     set.seed(1)
@@ -140,7 +157,7 @@ par(mfrow  =c(1,2))
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste(c("stationary", "nonstationary")[1+nonstationary]), legend = F, override_layout = F)
+      pch= 15, main = paste("w when the range is", c("stationary", "nonstationary")[1+nonstationary]), legend = F, override_layout = F)
     print(nu)
     print(beta0)
   }
@@ -149,14 +166,14 @@ par(mfrow  =c(1,2))
 
 #### Local isotropy or anisotropy of the spatial effect
 
-The spatial effect can be either locally isotropic or anisotropic. 
+ 
 When the correlation of the spatial effect does not change with spatial orientation, the field is isotropic. 
-If not so, the field is anisotropic. The model can be anisotropic and nonstationary, with both the correlation range and direction evolving across space. 
+If not so, the field is anisotropic. The range parameter of an anisotropic field is an ellipse, which is equivalent to a positive-definite matrix. When the field is isotropic, the ellipse boils down to a circle: the isotropic case is just a particular case of the anisotropic case. 
 
-`````{r, echo=FALSE, message=FALSE, results='hide'}
-par(mfrow  =c(1,3))
+`````{r, echo=FALSE, message=FALSE, results='hide', fig.width=7, fig.height=3.5}
+par(mfrow  =c(1,2))
 for(aniso in c(FALSE, TRUE)){
-  for(nonstationary in c(FALSE, TRUE)[seq(1+ aniso)]){
+  for(nonstationary in c(FALSE)){
     set.seed(1)
     coeff_list = createGnsSimulatorParameters(
       gns_simulator, range_PP_log_var =range_log_scale, 
@@ -169,34 +186,109 @@ for(aniso in c(FALSE, TRUE)){
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste(c("isotropic", "anisotropic")[1+aniso], "and", c("stationary", "nonstationary")[1+nonstationary]), legend = F, override_layout = F)
+      pch= 15, main = paste("w when the range is", c("isotropic", "anisotropic")[1+aniso]), legend = F, override_layout = F)
     print(nu)
     print(beta0)
   }
 }
 `````  
-Notes: 
 
-  - The model choice changes the dimension of $\theta(s)$:
-    - The isotropic model is parametrized using scalars, so $\theta(s)$ is a vector with length 1.
-    - The anisotropic model is parametrized using ellipses, so $\theta(s)$ is a vector with length 3.
-  - When the model is nonstationary, is is by definition not isotropic. However, since $X\theta$ and $w_\theta(S)$
-  are supposed to be much more coherent than $w(S)$, the we can consider than the field is locally isotropic. 
+In anisotropic settings, $\theta(s)$ is a positive-definite matrix. The model can be anisotropic and nonstationary, with both the correlation range and direction evolving across space. 
+The previous decomposition, using the logarithm, is replaced by a decomposition who uses the matrix logarithm $mlog(\cdot)$. The matrix logarithm of a positive-definite matrix is a symmetric matrix. 
+The symmetric matrices are modeled using the basis: 
+$$e_{range} = \begin{pmatrix} \sqrt 2 & 0 \\ 0 & \sqrt 2 \end{pmatrix}, e_{aniso}^1 = \begin{pmatrix} \sqrt 2 & 0 \\ 0 & -\sqrt 2 \end{pmatrix}, e_{aniso}^2 = \begin{pmatrix} 0 & \sqrt 2 \\ \sqrt 2 & 0 \end{pmatrix}.$$
+The choice of the matrix basis used to decompose $mlog(\theta(s))$ is not arbitrary:  
+$e_{range}$ controls the ellipse size, while the other two components control its shape only. 
+Changing $e_{range}$ will inflate or deflate the ellipses, while changing the two other components will squash the ellipses while leaving their size invariant. 
 
-#### Takeaway
+So now, instead of having one component to model, we have three components:
 
-- The latent field can be either (locally) isotropic or anisotropic.
-- The latent field can be either stationary or nonstationary.
-- If the latent field is nonstationary: 
-    - The explanatory variables $x_\theta(s)$ explaining the spatial range of the spatial effect must be highly coherent spatially.
-    - The spatial effects $w_\theta(s)$ explaining the spatial range of the spatial effect must be highly coherent spatially too.
+$$\log(\theta(s)) = \big(x_\theta(s)^T\beta_{range} + w_{range}(s)\big)\, e_{range} + \big(x_\theta(s)^T\beta_{aniso}^1 + w_{aniso}^1(s)\big)\, e_{aniso}^1 + \big(x_\theta(s)^T\beta_{aniso}^2 + w_{aniso}^2(s)\big)\, e_{aniso}^2.$$
+There are therefore three times more parameters than in a locally isotropic model. 
+
+The spatial coherence on $w_{range}, w_{aniso}^1, w_{aniso}^2$ is enforced by a Gaussian Process, with distribution: 
+$$w_{range,\theta}(S) \sim \mathcal{N}\left(0,~\sigma_{range}^2~M(S,\theta_\theta,\nu = 1.5)\right); \quad w_{aniso,\theta}^1(S), w_{aniso,\theta}^2(S) \sim \mathcal{N}\left(0,~\sigma_{aniso}^2~M(S,\theta_\theta,\nu = 1.5)\right)$$
+All three components share the same correlation matrix, but they have different variance parameters depending on their role in the decomposition of the range ellipses. If $\sigma^2_{range}$ is big, then the ellipses will vary in size. $\sigma^2_{aniso}$ is big, then the ellipses will vary in shape and direction. The impact of that on $w$ can be seen in the figure below. 
+
+`````{r, echo=FALSE, message=FALSE, results='hide'}
+par(mfrow  =c(2,2))
+for(sigma_range in c(.01, 1)){
+  for(sigma_aniso in c(.01, 1)){
+    set.seed(1)
+    coeff_list = createGnsSimulatorParameters(
+      gns_simulator, range_PP_log_var =range_log_scale, 
+      noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, 
+      verbose = F, field_log_var = field_log_var)
+    coeff_list$range_X_coeff[1,1] = -4
+    coeff_list$range_X_coeff[1,2] = .3*aniso
+    coeff_list$range_X_coeff[1,3] = -.6*aniso
+    coeff_list$range_PP_coeff[,1] = rnorm(length(coeff_list$range_PP_coeff[,1]))*sigma_range
+    coeff_list$range_PP_coeff[,-1] = rnorm(length(coeff_list$range_PP_coeff[,-1]))*sigma_aniso
+    fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
+    range_label = ifelse(sigma_range == .01, "small", "big")
+    aniso_label = ifelse(sigma_aniso == .01, "small", "big")
+    plot_main = bquote("w when"~ sigma[range] ~ "is" ~ .(range_label) * "," ~ sigma[aniso] ~ "is" ~ .(aniso_label))
+    
+    plotPointillistPainting(
+      vecchia_approx$locs, fake_data$latent_field, cex = .5, 
+      pch = 15, legend = F, override_layout = F, main = plot_main)
+  }
+  }
+`````  
 
 
-## Nonstationary model for the noise
 
-## Model architecture and catalogue of the parameters
+### Nonstationary model for the noise
+ 
+ 
+The variance of the noise $\tau^2(s)$  plays the same role as in a simple linear model, but it may depend on explanatory variables and/or the spatial location. The resulting noise is then heteroskedastic. The decomposition is 
+
+ $$log(\tau^2(s)) = x_{\tau^2}(s)^T\beta_{\tau^2} +  w_{\tau^2}(s),$$
+ 
+ - $s$ being a spatial coordinate in 2D,
+ - $x_{\tau^2}(s)$ being a vector of explanatory variables at the coordinate $s$,
+ - $\beta_{\tau^2}$ being a vector of regression coefficient,
+ - $w_{\tau^2}(s)$ being an spatial effect term at the coordinate $s$ who enforces some spatial coherence on $\tau^2$. 
+
+The spatial coherence on $w_{\tau^2}$ is enforced by a Gaussian Process, with distribution:
+ 
+ $$w_{\tau^2}(S) \sim \mathcal{N}\left(0,~\sigma^2_{\tau^2}~M(S,\theta_{\tau^2},\nu = 1.5)\right)$$
+ 
+ 
+Contrary to the range, $\tau^2$ does not need to be spatially coherent. Any explanatory variable can go into $x_{\tau^2}(s)$, and the range $\theta_{\tau^2}$ can be small. 
 
 
+### Model architecture 
+Putting all those elements together, we get the following model architecture. 
 
-#### Parameters, set by the user
-#### Hyperparameters, set by the user
+## Model uses
+
+Once the model has run, we can get estimates, and then use those estimates to perform prediction at un-obsered spatial sites. 
+
+### Estimation 
+
+#### At the level of the response variable $y(S)$
+
+- Fixed effects: estimates and credibility intervals of the regression coefficients $\beta$ are obtained, allowing to interpret the effect of the explanatory variables $x(S)$ on the response variable $y(S)$. 
+- Spatial effects: estimates and credibility intervals of the spatial effects $w(S)$ are obtained. This allows to understand the spatially coherent patterns in the response $y(S)$, and in particular to construct a map of the spatial effects at the observed sites. 
+- Denoising: by combining estimates of $\beta$ and $w(S)$, we can obtain $x(S)\beta + w(S)$, which denoises $y(S)$ by removing $\epsilon(s)$ 
+
+#### At the level of the noise variance $\tau^2(S)$
+
+- Fixed effects: estimates and credibility intervals of the regression coefficients $\beta_{\tau^2}$ are obtained, allowing to interpret the effect of the explanatory variables $x_{\tau^2}(S)$ on the noise variance $\tau^2(S)$.
+- Spatial effects:  estimates and credibility intervals of the spatial effects $w(S)$ are obtained. This allows to understand the spatially coherent patterns in the the noise variance $\tau^2(S)$, and in particular to construct a map of the spatial effects at the observed sites. 
+- Reconstitution of the heteroskedastic noise variance $\tau^2(S)$ using fixed and spatial effects.
+
+#### Analysis of the range model
+
+- Fixed effects
+- Spatial effects
+- More difficult when anisotropic
+
+### Prediction
+
+- Linear effects 
+- Range and latent field 
+- Denoised interest variable
+- Noise variance
+- Interest variable
