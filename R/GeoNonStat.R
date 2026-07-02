@@ -437,7 +437,7 @@ processHierarchicalModel <- function(vecchia_approx,
                                      matern_smoothness,
                                      observed_field,
                                      covariates,
-                                     anisotropic) {
+                                     anisotropic=FALSE) {
   if (!matern_smoothness %in% c(1.5, .5)) {
     stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   }
@@ -835,11 +835,10 @@ processStates <- function(hm,
 #' summary(myobj)
 #' myobj
 GeoNonStat <- function(vecchia_approx,
-                       observed_field,
                        # spatial locations
-                       X = NULL,
-                       # Response variable
+                       observed_field,
                        # Covariates per observation
+                       X = NULL,
                        matern_smoothness = 1.5,
                        # Matern smoothness
                        anisotropic = FALSE,
@@ -996,54 +995,65 @@ print.GeoNonStat <- function(x, ...) {
 #' Summary of a 'GeoNonStat' object
 #'
 #' @param object an object of class \code{GeoNonStat}
+#' @param burn_in numerical value, proportion of iteration to discard for summary of MCMC
 #' @param ... additional arguments (unused)
 #' @rdname GeoNonStat
 #' @export
 #' @method summary GeoNonStat
-summary.GeoNonStat <- function(object, ...) {
+summary.GeoNonStat <- function(object, burn_in=0.25, ...) {
   # TODO revoir cette fonction complètement !!
-  # There are <> observations of the interest variables on <> distinct sites. 
-  # Aside of the intercept, there are <> variables who explain the interest variable through linear effects 
-  # The noise model is 
-  #   -> (if only noise intercept and no PP :) stationary 
-  #   -> (else) nonstationary, with <> explanatory variables aside of the Intercept
-  #      -> (if no PP) . 
-  #      -> (if PP) and a PP. 
-  # The Gaussian Process range model is
-  #   -> isotropic.
-  #   -> anisotropic.
-  # and 
-  #   -> (if only range intercept and no PP :) stationary 
-  #   -> (else) nonstationary, with <> explanatory variables aside of the Intercept
-  #      -> (if no PP) . 
-  #      -> (if PP) and a PP. 
-  # There are <> MCMC iterations. With burn-in 0.25, the minimal ESS is <>, which is
-  #   -> (if > 100) sufficient but can always be improved with more iterations,
-  #   -> (else) not sufficient,
-  # and the worst Gelman-Rubin upper bound is <>, which is 
-  #   -> (if <= 1.1) good enough.
-  #   -> (else) not good enough. 
+  n_vars_X <- ncol(object$covariates$X$X)-1
+  cat("GeoNonStat object with:\n", 
+      object$vecchia_approx$n_obs, "observations on", 
+      object$vecchia_approx$n_locs, "distinct locations\nand", 
+      ncol(object$covariates$X$X)-1,
+      "variable(s) (+ intercept) who explain the interest variable through linear effects.\n")
   
-  # cat("### data ###")
-  # print(detailedSummary(object$data))
-  # cat("### hierarchical_model ###")
-  # detailedSummary(object$hierarchical_model)
-  # cat(
-  #   "### vecchia_approx ###",
-  #   summary(object$vecchia_approx),
-  #   "### states ###",
-  #   summary(object$states),
-  #   "### records ###",
-  #   summary(object$records),
-  #   "### seed ###",
-  #   object$seed,
-  #   "### iterations ###",
-  #   paste(
-  #     nrow(object$iterations$checkpoints),
-  #     "iterations for a total time of",
-  #     round(sum(object$iterations$checkpoints[, "time"]), 5),
-  #     "seconds"
-  #   ),
-  #   sep = "\n"
-  # )
+    # The noise model is 
+  cat("\n### Noise model ###\n")
+  n_var_noise <- ncol(object$covariates$noise_X$X)-1
+  noise_PP <- !is.null(object$hierarchical_model$noise$PP)
+  if (n_var_noise == 0 && !noise_PP) {
+    cat("Stationary\n")
+  } else if (!noise_PP) {
+    cat("Non stationary with", n_var_noise, "explanatory variable(s) (+ intercept)\n")
+  } else {
+    cat("Non stationary with", n_var_noise, "explanatory variable(s) (+ intercept) and a PP\n")
+  }
+  
+  cat("\n### Gaussian Process range model ###\n")
+  n_var_range <- ncol(object$covariates$range_X$X)-1
+  noise_range <- !is.null(object$hierarchical_model$range$PP)
+  cat(ifelse(object$hierarchical_model$anisotropic, "Anisotropic\n", "Isotropic\n"))
+  if (n_var_range == 0 && !noise_range) {
+    "Stationary\n"
+  } else if (!noise_PP) {
+    cat("Non stationary with", n_var_range, "explanatory variable(s) (+ intercept)\n")
+  } else {
+    cat("Non stationary with", n_var_range, "explanatory variable(s) (+ intercept) and a PP\n")
+  }
+  
+  cat("\n###MCMC###\n")
+  n_iter <- length(object$records$chain_1)-1
+  cat(n_iter, "MCMC iterations already run.\n")
+  if(n_iter>0) {
+    diags <- mcmcDiags(object, burn_in = burn_in, verbose = FALSE)
+    min_ess <- diags$worst[diags$worst$criterium=="ess","value"]
+    cat("With burn_in=", burn_in, ",\nthe minimal ESS is", min_ess, " which is ")
+    if(min_ess>100) {
+      cat("sufficient but can always be improved with more iterations\n")
+    } else { 
+      cat("not sufficient\n")
+    }
+    max_grup <- diags$worst[diags$worst$criterium=="Upper C.I. Gelman","value"]
+    cat("the worst Gelman-Rubin upper bound is", max_grup, " which is ")
+    if(max_grup <= 1.1) {
+      cat("good enough\n")
+    } else { 
+      cat("not good enough\n")
+    }
+    return(invisible(diags))
+  } else {
+    return(invisible(NULL))
+  }
 }

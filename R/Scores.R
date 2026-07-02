@@ -124,9 +124,8 @@ scores <- function(object = NULL, prediction = NULL, test_y = NULL){
   # TODO check test_y and prediction same length
 }
 
-#' Find scattered spatial locations for train-test partition
-#' @description 
-#'  A max-min heuristic is used to scatter the test locations across space,
+#' @title Find scattered spatial locations for train-test partition
+#' @description A max-min heuristic is used to scatter the test locations across space,
 #'  so that test locations are independent-ish from each other, and surrounded
 #'  by training locations. 
 #' @param observed_locs a matrix of spatial locations.
@@ -159,9 +158,10 @@ getIndexesClose <- function(locs, prop_test = 0.1){
               "test" = idx_test))
 }
 
+
 #' Find scattered spatial locations for train-test partition and remove 
 #' train locations who are too close to test locations in order to assess long 
-#' range prediction
+#' range prediction.
 #' @description 
 #'  A K-means algorithm is run in order to parition the spatial locations into
 #'  clusters. A max-min heuristic is used on the clusters to scatter the 
@@ -171,9 +171,10 @@ getIndexesClose <- function(locs, prop_test = 0.1){
 #'  the cluster is discarded, in order to forbid immediate interpolation of 
 #'  the test data.
 #' @param observed_locs a matrix of spatial locations.
-#' @param n_clust the number of clusters. If NULL, will be set to 1% of the data.
+#' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
 #' @param prop_test the proportion of clusters used as test locations.
-#' Default to 10%/
+#' Default to 0.01.
+#' @returns A list of train and test indices
 #' @export
 #' 
 #' @examples

@@ -1,4 +1,4 @@
-#' Print the summary of MCMC diagnostics
+#' summary of MCMC diagnostics
 #'
 #' @param object a GeoNonStat object
 #' @param burn_in numeric, between 0 and 1. Default to 0.1
@@ -7,9 +7,9 @@
 #' @export
 #' @keywords internal
 #' @examples
-#' MCMC_diags <- printMcmcDiags(processedGnsDemo)
+#' MCMC_diags <- mcmcDiags(processedGnsDemo)
 #' # TODO - quid des NA ? 
-printMcmcDiags <- function(object, burn_in = .1) {
+mcmcDiags <- function(object, burn_in = .1, verbose=TRUE) {
   # only two significant digits are kept
   records <- aggregateRecords(object, burn_in = burn_in, keep = "all", keep_separate_chains = TRUE)
   ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
@@ -45,10 +45,12 @@ printMcmcDiags <- function(object, burn_in = .1) {
     }, res, regle, USE.NAMES = FALSE)
   )
 
-  cat("Summary of diagnostics\n")
-  print(summary(res))
-  cat("----------------------\n")
-  print(worst)
+  if(verbose){
+    cat("Summary of diagnostics\n")
+    print(summary(res))
+    cat("----------------------\n")
+    print(worst)
+  }
   return(list("diags" = res, "worst" = worst))
 }
 
