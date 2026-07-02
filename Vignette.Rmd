@@ -207,7 +207,7 @@ $$\log(\theta(s)) = \big(x_\theta(s)^T\beta_{range} + w_{range}(s)\big)\, e_{ran
 There are therefore three times more parameters than in a locally isotropic model. 
 
 The spatial coherence on $w_{range}, w_{aniso}^1, w_{aniso}^2$ is enforced by a Gaussian Process, with distribution: 
-$$w_{range,\theta}(S) \sim \mathcal{N}\left(0,~\sigma_{range}^2~M(S,\theta_\theta,\nu = 1.5)\right); \quad w_{aniso,\theta}^1(S), w_{aniso,\theta}^2(S) \sim \mathcal{N}\left(0,~\sigma_{aniso}^2~M(S,\theta_\theta,\nu = 1.5)\right)$$
+$$w_{range}(S) \sim \mathcal{N}\left(0,~\sigma_{range}^2~M(S,\theta_\theta,\nu = 1.5)\right); \quad w_{aniso}^1(S), w_{aniso}^2(S) \sim \mathcal{N}\left(0,~\sigma_{aniso}^2~M(S,\theta_\theta,\nu = 1.5)\right)$$
 All three components share the same correlation matrix, but they have different variance parameters depending on their role in the decomposition of the range ellipses. If $\sigma^2_{range}$ is big, then the ellipses will vary in size. $\sigma^2_{aniso}$ is big, then the ellipses will vary in shape and direction. The impact of that on $w$ can be seen in the figure below. 
 
 `````{r, echo=FALSE, message=FALSE, results='hide'}
@@ -258,37 +258,63 @@ The spatial coherence on $w_{\tau^2}$ is enforced by a Gaussian Process, with di
 Contrary to the range, $\tau^2$ does not need to be spatially coherent. Any explanatory variable can go into $x_{\tau^2}(s)$, and the range $\theta_{\tau^2}$ can be small. 
 
 
-### Model architecture 
-Putting all those elements together, we get the following model architecture. 
+### Model architecture
 
-## Model uses
+
+#### Graphical representation
+
+Putting all the elements together, we get the following model architecture. 
+
+![](Vignette_Figures/Architecture.png)
+#### Russian doll structure
+
+The Modeler can choose simpler models who are encompassed in the ``full monty'' model above. 
+
+- The Modeler can cancel $w_\theta$ and/or $w_{\tau^2}$. 
+- The Modeler can provide no variable for $x_\theta$ and/or $x_{\tau^2}$. 
+- If the Modeler cancels both $w_\theta$ and $x_\theta$, then $w$ is stationary. 
+- Similarly, if the Modeler cancels both $w_{\tau^2}$ and $x_{\tau^2}$, then $\epsilon$ is stationary. 
+- An anisotropic model is more general than a locally isotropic model. 
+- An overspecified model will tend to regress towards a simpler model if presented stationary data.
+This can be detected if $\sigma_{\tau^2}^2$ and/or $\sigma_{\tau^2^2}$ go to very small values. 
+Also, if an anisotropic model is presented isotropic data, then $\sigma_{amiso^2}$ will go to very small values. 
+Should those situations happen, it is better to restart the model with a simpler formulation. 
+
+
+## Model use
 
 Once the model has run, we can get estimates, and then use those estimates to perform prediction at un-obsered spatial sites. 
+Those estimations and predictions can be used to compare models. 
 
 ### Estimation 
 
-#### At the level of the response variable $y(S)$
+#### Analysis of the response variable $y(S)$
 
 - Fixed effects: estimates and credibility intervals of the regression coefficients $\beta$ are obtained, allowing to interpret the effect of the explanatory variables $x(S)$ on the response variable $y(S)$. 
 - Spatial effects: estimates and credibility intervals of the spatial effects $w(S)$ are obtained. This allows to understand the spatially coherent patterns in the response $y(S)$, and in particular to construct a map of the spatial effects at the observed sites. 
 - Denoising: by combining estimates of $\beta$ and $w(S)$, we can obtain $x(S)\beta + w(S)$, which denoises $y(S)$ by removing $\epsilon(s)$ 
 
-#### At the level of the noise variance $\tau^2(S)$
+#### Analysis of the noise variance $\tau^2(S)$
 
-- Fixed effects: estimates and credibility intervals of the regression coefficients $\beta_{\tau^2}$ are obtained, allowing to interpret the effect of the explanatory variables $x_{\tau^2}(S)$ on the noise variance $\tau^2(S)$.
-- Spatial effects:  estimates and credibility intervals of the spatial effects $w(S)$ are obtained. This allows to understand the spatially coherent patterns in the the noise variance $\tau^2(S)$, and in particular to construct a map of the spatial effects at the observed sites. 
-- Reconstitution of the heteroskedastic noise variance $\tau^2(S)$ using fixed and spatial effects.
+- Fixed effects: estimates and credibility intervals of the regression coefficients $\beta_{\tau^2}$ are obtained, allowing to interpret the effect of the explanatory variables $x_{\tau^2}(S)$ on the noise variance.
+- Spatial effects:  estimates and credibility intervals of the spatial effects $w_{\tau^2}(S)$ are obtained. This allows to understand the spatially coherent patterns in the the noise variance, and in particular to construct a map of the spatial effects at the observed sites.
+- Reconstitution of the heteroskedastic noise variance $\tau^2(S)$ at the observed sites using fixed and spatial effects.
 
-#### Analysis of the range model
+#### Analysis of the spatial correlation range $\theta(S)$
 
-- Fixed effects
-- Spatial effects
-- More difficult when anisotropic
+- Fixed effects: estimates and credibility intervals of the regression coefficients $\beta_{\theta^2}$ are obtained, allowing to interpret the effect of the explanatory variables $x_{\theta^2}(S)$ on the spatial correlation range.
+- Spatial effects:  estimates and credibility intervals of the spatial effects $w_\theta(S)$ are obtained. This allows to understand the spatially coherent patterns in the the spatial correlation range, and in particular to construct a map of the spatial effects at the observed sites. 
+- Reconstitution of the spatial correlation range $\theta^2(S)$ at the observed sites using fixed and spatial effects.
+
 
 ### Prediction
 
-- Linear effects 
-- Range and latent field 
-- Denoised interest variable
-- Noise variance
-- Interest variable
+If a new spatial coordinate $s'$ is given, and that the explanatory variables $x(s')$, $x_{\theta}(s')$, and $x_{\tau^2}(s')$ are observed at the new spatial site, the following can be predicted, with a posterior mean and credible intervals. 
+
+- Linear effects $x(s')^T\beta$.
+- The spatial correlation range parameters $\theta(s')$.
+- In turn, the latent field $w(s')$ can be computed.
+- Using  $x(s')$ and $w(s')$, the denoised interest variable can be computed.
+- The variance of the heteroskedastic noise $\tau^2(s')$.
+- The interest variable $y(s')$ can then be computed from all the above. 
+
