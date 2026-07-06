@@ -38,7 +38,9 @@ inBounds <- function(bounds, x, includeBounds = FALSE) {
 #' @keywords internal
 subset_data <- function(data, idx) {
   lapply(data, function(x) {
-      if (is.null(x)) NULL else x[idx, ]
+      if (is.null(x)) return(NULL) 
+      if(is.data.frame(x)) return(x[idx, ])
+      if(is.vector(x)) return(x[idx])
   })
 }
 

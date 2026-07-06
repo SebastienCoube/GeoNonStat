@@ -47,7 +47,7 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_fi
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
-  observed_field = fake_data$observed_field, X = X, 
+  observed_field = fake_data$observed$data$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
   noise_X = X, range_X = NULL,
@@ -133,7 +133,7 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 300, seed = 1)
+  n_threads_per_chain = 7, n_iterations = 30, seed = 1)
 
 print("DOOOONE")
 

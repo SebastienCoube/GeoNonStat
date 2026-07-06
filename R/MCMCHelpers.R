@@ -342,14 +342,16 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
   
   
   # conditioning matrix
-  cond_mat <- solve(
+  cond_mat <- solve(as(
     (1 - min(1, max((500 - (iter + iter_start))/200, .05))) *
       state$stuff$range_beta_conditioning_a / sqrt(sum(state$stuff$range_beta_conditioning_a^2)) 
     + Matrix::bdiag(
       1, 
       min(1, max((500 - (iter + iter_start))/200, .05)) *
         (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
-        sqrt(3*sum(as.matrix(range_X$crossprod_X)^2)))
+        sqrt(3*sum(as.matrix(range_X$crossprod_X)^2))), 
+    "sparseMatrix"
+  )
   )
   cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
   cond_mat <- t(chol(cond_mat))
@@ -716,13 +718,17 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
   
   #cond_mat <- solve(state$stuff$range_beta_conditioning_s)
   cond_mat <- solve(
-    (1 - min(1, max((500 - (iter + iter_start))/200, .05))) *
-      state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2)) 
-    + Matrix::bdiag(
-      1, 
-      min(1, max((500 - (iter + iter_start))/200, .05)) *
-        (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
-        sqrt(3*sum(as.matrix(range_X$crossprod_X)^2)))
+    as(
+      (1 - min(1, max((500 - (iter + iter_start))/200, .05))) *
+        state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2)) 
+      + Matrix::bdiag(
+        1, 
+        min(1, max((500 - (iter + iter_start))/200, .05)) *
+          (diag(rep(1, 1+ 2*hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) / 
+          sqrt(3*sum(as.matrix(range_X$crossprod_X)^2)))
+      , 
+      "sparseMatrix"
+    )
   )
   cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
   cond_mat <- t(chol(cond_mat))
@@ -1120,24 +1126,26 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
   )
   
   cond_mat <- solve(
+    as(
     (1 - min(1, max((500 - (iter + iter_start))/200, .05))) *
       state$stuff$noise_beta_conditioning / sqrt(sum(state$stuff$noise_beta_conditioning^2)) 
     + 
       min(1, max((500 - (iter + iter_start))/200, .05)) *
       as.matrix(noise_X$crossprod_X) / 
-      sqrt(3*sum(as.matrix(noise_X$crossprod_X)^2))
+      sqrt(3*sum(as.matrix(noise_X$crossprod_X)^2)), 
+    "sparseMatrix"
+    )
   )
   cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
   cond_mat <- t(chol(cond_mat))
   
-  n_mala = 8 + 20*(iter + iter_start<150)
+  # for conditioning matrix update
+  grad_record_for_Fisher = list()
+  
+  n_mala = 30
   for(asdf in seq(n_mala)){
-    # updating conditioning matrix
-    if(iter + iter_start >150){
-      state$stuff$noise_beta_conditioning <- 
-        ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$noise_beta_conditioning + 
-        tcrossprod(c(dens_grad)) / (iter+iter_start)
-    }
+    # for conditioning matrix update
+    grad_record_for_Fisher[[length(grad_record_for_Fisher)+1]] = as.vector(dens_grad)
     
     # HMC update
     q <- solve(cond_mat, state$params$noise_beta)
@@ -1226,6 +1234,13 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
     }
     # negating momentum
     state$momenta$noise_beta <- -state$momenta$noise_beta
+  }
+  
+  # updating conditioning matrix
+  if(iter + iter_start >150){
+    state$stuff$noise_beta_conditioning[] <- 
+      ((iter+iter_start)/(iter+iter_start-1)) * state$stuff$noise_beta_conditioning[] + 
+      tcrossprod(do.call(cbind, grad_record_for_Fisher))[] / (iter+iter_start)
   }
   
   return(list("state" = state, "squared_residuals" = squared_residuals))

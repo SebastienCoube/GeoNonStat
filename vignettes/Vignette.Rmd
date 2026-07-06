@@ -4,6 +4,7 @@ date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 author: "Sébastien Coube-Sisqueille & Elise Maigné"
 output:
   rmarkdown::html_vignette:
+    toc: true
     fig_width: 7
     fig_height: 7
 vignette: >
@@ -80,7 +81,6 @@ the regression model, its covariance matrix is decomposed into two components:
 Imagine $w(S)$ as a landscape of hills. The width of the hills is controlled by the range $\theta$, and their roughness is controlled by the smoothness $\nu$. The smoothness is an important parameter, but it is very difficult to identify with the range, so the smoothness is set by the user to $0.5$ or $1.5$. 
 
 `````{r, echo=FALSE, message=FALSE, results='hide'}
-library(GeoNonStat)
 observed_locs = as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
 vecchia_approx = createVecchia(observed_locs, m = 6, round_locs = 0)
 PP_range = createPP(vecchia_approx, matern_range = .5, plot = F)
@@ -140,9 +140,9 @@ So one parameter ($\theta_\theta$) is user-chosen, and one ($\sigma_\theta$) is 
 For the sake of identifiability, the spatial coherence of $\theta(S)$ must be much higher than the spatial coherence of $w(S)$. There are two practical consequences to that: 
 
 - $\theta_\theta$ must be big,
-- $X_\theta$ must be really smooth and spatially coherent. 
+- $x_\theta$ must be really smooth and spatially coherent. 
 
-When $X_\theta$ is just an intercept, and $\sigma^2_\theta$ is constrained to $0$, then $\theta(S)$ is constant and the model boils down to a stationary model. 
+When $x_\theta$ is just an intercept, and $\sigma^2_\theta$ is constrained to $0$, then $\theta(S)$ is constant and the model boils down to a stationary model. 
 `````{r, echo=FALSE, message=FALSE, results='hide', fig.width=7, fig.height=3.5}
 par(mfrow  =c(1,2))
   for(nonstationary in c(FALSE, TRUE)){
@@ -258,7 +258,7 @@ The spatial coherence on $w_{\tau^2}$ is enforced by a Gaussian Process, with di
 Contrary to the range, $\tau^2$ does not need to be spatially coherent. Any explanatory variable can go into $x_{\tau^2}(s)$, and the range $\theta_{\tau^2}$ can be small. 
 
 
-### Model architecture
+### Model architecture: putting all the above together
 
 
 #### Graphical representation

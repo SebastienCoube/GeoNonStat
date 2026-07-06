@@ -265,10 +265,11 @@ plotSplit <- function(locs, indexes,
 #' @examples
 #' n <- 10000
 #' observed_locs <- round(cbind(runif(n), runif(n)),3)
-#' X <- matrix(rnorm(n*4), ncol=4)
-#' range_X <- matrix(rnorm(n*4), ncol=4)
-#' noise_X <- matrix(rnorm(n*4), ncol=4)
-#' datalist <- list("X" = X, "range_X"=range_X, "noise_X"=noise_X)
+#' X <-       as.data.frame(matrix(rnorm(n*4), ncol=4))
+#' range_X <- as.data.frame(matrix(rnorm(n*4), ncol=4))
+#' noise_X <- as.data.frame(matrix(rnorm(n*4), ncol=4))
+#' y <- rnorm(n)
+#' datalist <- list("X" = X, "range_X"=range_X, "noise_X"=noise_X, "y" = y)
 #' traintest <- createSplitData(observed_locs, datalist, prop_test=c(0.1, 0.01))
 createSplitData <- function(locs, data,
                             n_clust=NULL, 

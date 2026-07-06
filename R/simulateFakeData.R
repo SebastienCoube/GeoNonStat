@@ -423,13 +423,27 @@ simulateGnsData <- function(gns_simulator,
     noise +
     fixed_effects
 
-  res <- list(
+  res <- list()
+  res$hidden_fields <- list(
     "log_range_field" = log_range_field,
     "log_noise_var_field" = log_noise_field,
-    "sparse_chol" = sparse_chol,
     "noise" = noise,
     "fixed_effects" = fixed_effects,
-    "latent_field" = latent_field,
-    "observed_field" = observed_field
+    "latent_field" = latent_field
   )
+  res <- c(res, gns_simulator)
+  res$true_parameters <- coeff_list
+  res$true_PP_ranges <- c(
+    "noise_PP" = gns_simulator$noise_PP$matern_range, 
+    "range_PP" = gns_simulator$range_PP$matern_range)
+  res$observed <- list(
+    locs = gns_simulator$vecchia_approx$observed_locs,
+    data = list(
+      observed_field = observed_field, 
+      X = gns_simulator$covariates$X$arg, 
+      noise_X = gns_simulator$covariates$noise_X$arg, 
+      range_X = gns_simulator$covariates$range_X$arg 
+    )
+  )
+  return(res)
 }

@@ -6,4 +6,5 @@ deps_*.png
 src/*.o
 src/*.so
 *.png
+!Architecture.png
 .positai
