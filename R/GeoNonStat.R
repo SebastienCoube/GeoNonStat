@@ -1001,58 +1001,84 @@ print.GeoNonStat <- function(x, ...) {
 #' @export
 #' @method summary GeoNonStat
 summary.GeoNonStat <- function(object, burn_in=0.25, ...) {
-  # TODO revoir cette fonction complètement !!
-  n_vars_X <- ncol(object$covariates$X$X)-1
+  res <- list("info"=list(), 
+              "noise_model" = list(),
+              "range_model" = list(),
+              "mcmc" = list())
+  
+  #### General infos #####
+  res$info <- list("n_obs" = object$vecchia_approx$n_obs,
+                   "n_locs" = object$vecchia_approx$n_locs,
+                   "n_vars_X" = ncol(object$covariates$X$X)-1)
   cat("GeoNonStat object with:\n", 
-      object$vecchia_approx$n_obs, "observations on", 
-      object$vecchia_approx$n_locs, "distinct locations\nand", 
-      ncol(object$covariates$X$X)-1,
+      res$info$n_obs, "observations on", 
+      res$info$n_locs, "distinct locations\nand", 
+      res$info$n_vars_X,
       "variable(s) (+ intercept) who explain the interest variable through linear effects.\n")
   
     # The noise model is 
   cat("\n### Noise model ###\n")
-  n_var_noise <- ncol(object$covariates$noise_X$X)-1
-  noise_PP <- !is.null(object$hierarchical_model$noise$PP)
-  if (n_var_noise == 0 && !noise_PP) {
+  res$noise_model <- list(
+    "n_var_noise" = ncol(object$covariates$noise_X$X)-1,
+    "noise_PP" = !is.null(object$hierarchical_model$noise$PP)
+  )
+  if (res$noise_model$n_var_noise == 0 && !res$noise_model$noise_PP) {
     cat("Stationary\n")
-  } else if (!noise_PP) {
-    cat("Non stationary with", n_var_noise, "explanatory variable(s) (+ intercept)\n")
+  } else if (!res$noise_model$noise_PP) {
+    cat("Non stationary with", res$noise_model$n_var_noise, 
+        "explanatory variable(s) (+ intercept)\n")
   } else {
-    cat("Non stationary with", n_var_noise, "explanatory variable(s) (+ intercept) and a PP\n")
+    cat("Non stationary with", res$noise_model$n_var_noise, 
+        "explanatory variable(s) (+ intercept) and a PP\n")
   }
   
   cat("\n### Gaussian Process range model ###\n")
-  n_var_range <- ncol(object$covariates$range_X$X)-1
-  noise_range <- !is.null(object$hierarchical_model$range$PP)
-  cat(ifelse(object$hierarchical_model$anisotropic, "Anisotropic\n", "Isotropic\n"))
-  if (n_var_range == 0 && !noise_range) {
+  res$range_model <- list(
+    "n_var_range" = ncol(object$covariates$range_X$X)-1,
+    "range_PP" = !is.null(object$hierarchical_model$range$PP),
+    "anisotropic" = object$hierarchical_model$anisotropic
+  )
+  cat(ifelse(res$range_model$anisotropic, "Anisotropic\n", "Isotropic\n"))
+  if (res$range_model$n_var_range == 0 && !res$range_model$range_PP) {
     "Stationary\n"
-  } else if (!noise_PP) {
-    cat("Non stationary with", n_var_range, "explanatory variable(s) (+ intercept)\n")
+  } else if (!res$range_model$range_PP) {
+    cat("Non stationary with", res$range_model$n_var_range, 
+        "explanatory variable(s) (+ intercept)\n")
   } else {
-    cat("Non stationary with", n_var_range, "explanatory variable(s) (+ intercept) and a PP\n")
+    cat("Non stationary with", res$range_model$n_var_range, 
+        "explanatory variable(s) (+ intercept) and a PP\n")
   }
   
-  cat("\n###MCMC###\n")
+  cat("\n### MCMC ###\n")
+  res$mcmc <- list(
+    "n_iter" = length(object$records$chain_1)-1,
+    "burn_in" = burn_in
+  )
   n_iter <- length(object$records$chain_1)-1
-  cat(n_iter, "MCMC iterations already run.\n")
-  if(n_iter>0) {
+  cat(res$mcmc$n_iter, "MCMC iterations already run.\n")
+  if(res$mcmc$n_iter>0) {
     diags <- mcmcDiags(object, burn_in = burn_in, verbose = FALSE)
-    min_ess <- diags$worst[diags$worst$criterium=="ess","value"]
-    cat("With burn_in=", burn_in, ",\nthe minimal ESS is", min_ess, " which is ")
-    if(min_ess>100) {
+    res$mcmc$diags <- diags
+    
+    res$mcmc$min_ess <- diags$worst[diags$worst$criterium=="ess","value"]
+    cat(paste0("With burn_in=", burn_in), ":\n  -the minimal ESS is", 
+        res$mcmc$min_ess, "which is ")
+    if(res$mcmc$min_ess>100) {
       cat("sufficient but can always be improved with more iterations\n")
     } else { 
       cat("not sufficient\n")
     }
-    max_grup <- diags$worst[diags$worst$criterium=="Upper C.I. Gelman","value"]
-    cat("the worst Gelman-Rubin upper bound is", max_grup, " which is ")
-    if(max_grup <= 1.1) {
+    
+    res$mcmc$max_grup <- diags$worst[diags$worst$criterium=="Upper C.I. Gelman","value"]
+    cat("  -the worst Gelman-Rubin upper bound is", 
+        res$mcmc$max_grup, " which is ")
+    if(res$mcmc$max_grup <= 1.1) {
       cat("good enough\n")
     } else { 
       cat("not good enough\n")
     }
-    return(invisible(diags))
+    cat("\nSee more detailed diagnostics with `mcmcDiags` function.\n")
+    return(invisible(res))
   } else {
     return(invisible(NULL))
   }
