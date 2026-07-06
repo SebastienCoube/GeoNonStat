@@ -958,39 +958,9 @@ GeoNonStat <- function(vecchia_approx,
 #' @export
 #' @method print GeoNonStat
 print.GeoNonStat <- function(x, ...) {
-  cat("Object of class 'GeoNonStat'\n")
-  print(paste(length(x$observed_field), "observed fields"))
-  print(paste(nrow(x$vecchia_approx$observed_locs), "observed locations"))
-  print(paste("Currently", length(x$records[[1]]), "state(s) including starting point"))
+  summary(x, burn_in=NA)
+  return(invisible(NULL))
 }
-
-
-## #' summary of a part of a GeoNonStat object
-## #'
-## #' @param partobject object to summarize
-## #' @return description a character
-## #' @noRD
-## detailedSummary <- function(partobject) {
-##   sumdata <- summary(partobject)
-##   return(
-##     cbind(
-##       sumdata,
-##       "Value" =
-##         as.character(
-##           sapply(
-##             dimnames(sumdata)[[1]], function(x) {
-##               res <- ""
-##               if (sumdata[x, "Length"] == 1 &&
-##                   sumdata[x, "Mode"] %in% c("numeric", "character")) {
-##                 res <- partobject[[x]]
-##               }
-##               res
-##             }
-##           )
-##         )
-##     )
-##   )
-## }
 
 #' Summary of a 'GeoNonStat' object
 #'
@@ -1051,13 +1021,13 @@ summary.GeoNonStat <- function(object, burn_in=0.25, ...) {
   
   cat("\n### MCMC ###\n")
   res$mcmc <- list(
-    "n_iter" = length(object$records$chain_1)-1,
-    "burn_in" = burn_in
+    "n_iter" = length(object$records$chain_1)-1
   )
-  n_iter <- length(object$records$chain_1)-1
+  
   cat(res$mcmc$n_iter, "MCMC iterations already run.\n")
-  if(res$mcmc$n_iter>0) {
+  if(res$mcmc$n_iter>0 & !is.na(burn_in)) {
     diags <- mcmcDiags(object, burn_in = burn_in, verbose = FALSE)
+    res$mcmc$burn_in <- burn_in
     res$mcmc$diags <- diags
     
     res$mcmc$min_ess <- diags$worst[diags$worst$criterium=="ess","value"]
