@@ -26,6 +26,10 @@ options(warn=-1)
 
 # Introduction
 
+```{r}
+library("GeoNonStat")
+```
+
 The aim of GeoNonStat is to perform Bayesian non-stationary geostatistical modeling. 
 
 ## Model construction 

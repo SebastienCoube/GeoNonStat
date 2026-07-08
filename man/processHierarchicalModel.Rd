@@ -14,7 +14,7 @@ processHierarchicalModel(
   matern_smoothness,
   observed_field,
   covariates,
-  anisotropic
+  anisotropic = FALSE
 )
 }
 \arguments{

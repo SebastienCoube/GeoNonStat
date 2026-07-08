@@ -28,7 +28,7 @@ GeoNonStat(
 
 \method{print}{GeoNonStat}(x, ...)
 
-\method{summary}{GeoNonStat}(object, ...)
+\method{summary}{GeoNonStat}(object, burn_in = 0.1, ...)
 
 \method{predict}{GeoNonStat}(
   object,
@@ -37,7 +37,8 @@ GeoNonStat(
   new_noise_X = NULL,
   new_range_X = NULL,
   burn_in = 0.2,
-  num_threads = 5
+  num_threads = 5,
+  ...
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ or NULL in which case the bounds are set automatically.}
 \item{...}{additional arguments (unused)}
 
 \item{object}{an object of class \code{GeoNonStat}}
+
+\item{burn_in}{numeric value,}
 
 \item{new_locs}{new locations}
 

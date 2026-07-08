@@ -17,7 +17,7 @@ Description:
   Gaussian noise.   
   The complexity levels of the Gaussian Process and the observation noise are 
   specified by the user through an interpretable parametrization.  
-License: GPL-3
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: xz
@@ -47,7 +47,7 @@ SystemRequirements: C++
 NeedsCompilation: yes
 Packaged: 2024-05-11 10:46:56 UTC; scs
 Suggests: 
-    testthat (>= 3.0.0)
+    rmarkdown, knitr, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
     R (>= 3.5)

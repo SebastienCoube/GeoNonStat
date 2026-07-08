@@ -10,7 +10,7 @@ processCovariates(X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE)
 \arguments{
 \item{X}{a data.frame with as many rows as vecchia_approx$observed_locs}
 
-\item{vecchia_approx}{an object created by `vecchia_approx()`}
+\item{vecchia_approx}{an object created by `createVecchia()`}
 
 \item{PP}{an object of class PP,}
 

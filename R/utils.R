@@ -36,11 +36,12 @@ inBounds <- function(bounds, x, includeBounds = FALSE) {
 #'
 #' @returns a list
 #' @keywords internal
-subset_data <- function(data, idx) {
+subsetData <- function(data, idx) {
   lapply(data, function(x) {
       if (is.null(x)) return(NULL) 
-      if(is.data.frame(x)) return(x[idx, ])
+      if(is.data.frame(x)) return(x[idx, , drop=FALSE])
       if(is.vector(x)) return(x[idx])
+      return(stop("subsetData only works on data.frame or vector"))
   })
 }
 
@@ -422,7 +423,6 @@ betaPriorLogDensDerivative <- function(beta,
 #' #                           main = "PP + covariates,\n  one covariate for each observation")
 #'
 #' # multiplying
-#' X_by_obs <- cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
 #' res5 <- xPPMultRight(
 #'   X = NULL, PP = PP,
 #'   Y = diag(1, PP$n_knots),

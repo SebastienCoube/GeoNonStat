@@ -94,7 +94,6 @@ createGnsSimulator <- function(vecchia_approx,
 #' @param noise_PP_log_var TODO
 #' @param field_log_var TODO
 #' @param verbose logical, default to TRUE. Active verbose mode ?
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns a list
 #' @export

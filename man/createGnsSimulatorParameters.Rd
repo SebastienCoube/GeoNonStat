@@ -11,8 +11,7 @@ createGnsSimulatorParameters(
   noise_intercept = NULL,
   noise_PP_log_var = NULL,
   field_log_var = NULL,
-  verbose = TRUE,
-  seed = 1
+  verbose = TRUE
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ createGnsSimulatorParameters(
 \item{field_log_var}{TODO}
 
 \item{verbose}{logical, default to TRUE. Active verbose mode ?}
-
-\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
 a list

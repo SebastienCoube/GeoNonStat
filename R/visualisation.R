@@ -2,6 +2,7 @@
 #' @param x an object of class PP, create with `createPP`
 #' @param ... additional arguments (unused)
 #' @param mar_var_loss boolean, default to TRUE. Should loss of margine variance be computed and plotted ?
+#' @param samples logical, default to TRUE. Also show samples that could be produced by the PP ? 
 #' @param separate logical(default to FALSE). Should the plots be printed separatly ?
 #'
 #' @returns NULL
@@ -394,7 +395,6 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' plotPointillistPainting(locs = locs, field = rnorm(1000))
 plotPointillistPainting <- function(locs,
                                     field,
-                                    override_layout = T,
                                     add = FALSE,
                                     alpha = TRUE,
                                     legend = TRUE, 

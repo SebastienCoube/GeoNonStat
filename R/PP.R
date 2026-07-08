@@ -44,7 +44,8 @@ knotsFromKmeans <- function(knots_number, locs) {
 #' @param reorder_knots logical, default to FALSE. Should knots be reordered ?
 #' If so, the knots will be reordered using `GpGp::order_maxmin`
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
-#' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
+#' @param plot logical, whether to produce diagnostic plots (default `TRUE`).
+#' @param verbose logical, default to TRUE. print the diagnostic of var loss ?
 #'
 #' @rdname PP
 #' @aliases PP

@@ -14,7 +14,7 @@ aggregateRecords(
 \arguments{
 \item{object}{a GeoNonStat object containing records}
 
-\item{burn_in}{numeric, value, between 0 and 1. Gives the percentage of
+\item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed If burn_in = 0.1 : the first 10% of
 records will be removed from the result.}
 

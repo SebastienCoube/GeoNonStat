@@ -85,7 +85,6 @@ squaredError <- function(true_y, mean_samples) {
 #' mean_samples <- matrix(rep(0, 1000*length(true_y)), length(true_y))
 #' sd_samples <- matrix(rep(1, 1000*length(true_y)), length(true_y))
 #' score(true_y, mean_samples, sd_samples)
-
 score <- function(true_y, mean_samples, sd_samples){
   y_samples = mean_samples + sd_samples * rnorm(length(sd_samples))
   per_obs = matrix(0, length(true_y), 4)
@@ -113,22 +112,22 @@ score <- function(true_y, mean_samples, sd_samples){
 #' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL
 #' @param new_y a vector on new observations from the interest variable in order to evaluate the scores on the test data set, or NULL
 #' @export
-scores <- function(object = NULL, prediction = NULL, test_y = NULL){
-  train <- !is.null(object) & is.null(prediction) & is.null(test_y) & (class(object) == "GeoNonStat")
-  test <- is.null(object) & !is.null(prediction) & !is.null(test_y)
+scores <- function(object = NULL, prediction = NULL, new_y = NULL){
+  train <- !is.null(object) & is.null(prediction) & is.null(new_y) & (class(object) == "GeoNonStat")
+  test <- is.null(object) & !is.null(prediction) & !is.null(new_y)
   if(!(train|test)) 
     stop("Either: object must be from class GeoNonStat, prediction be NULL,",
-         "and test_y be NULL; or geo_non_stat must be NULL, ",
+         "and new_y be NULL; or geo_non_stat must be NULL, ",
          "prediction be a prediction from a GeoNonStat model, ",
          "and y be test observations")
-  # TODO check test_y and prediction same length
+  # TODO check new_y and prediction same length
 }
 
 #' @title Find scattered spatial locations for train-test partition
 #' @description A max-min heuristic is used to scatter the test locations across space,
 #'  so that test locations are independent-ish from each other, and surrounded
 #'  by training locations. 
-#' @param observed_locs a matrix of spatial locations.
+#' @param locs a matrix of spatial locations.
 #' @param prop_test the proportion of test locations. Some locations can 
 #' be observed several times, so the proportion of test indices can be 
 #' greater than prop_test. If NULL, set to 0.1. 
@@ -170,7 +169,7 @@ getIndexesClose <- function(locs, prop_test = 0.1){
 #'  closest to the center of each cluster is kept for validation and the rest of
 #'  the cluster is discarded, in order to forbid immediate interpolation of 
 #'  the test data.
-#' @param observed_locs a matrix of spatial locations.
+#' @param locs a matrix of spatial locations.
 #' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
 #' @param prop_test the proportion of clusters used as test locations.
 #' Default to 0.01.
@@ -212,8 +211,11 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1){
 #'
 #' @param locs a matrix (or data.frame or array) with 2 columns containing 
 #' spatial locations
-#' @param indices a list of length n, containing usually train and test indices,  
-#' among row indices of `locs`
+#' @param indexes a list of length n, containing usually train and test indices,  
+#' among row indexes of `locs`
+#' @param pch a vector of pch for points shape of length 1 or 2. Passed to `plot`
+#' @param cex a numeric vector for points size of length 1 or 2. Passed to `plot`
+#' @param col a vector for points color of length 1 or 2. Passed to `plot`
 
 #' @returns a plot
 #' @export
@@ -258,10 +260,14 @@ plotSplit <- function(locs, indexes,
 #' Split data between train and test
 #' @description Split a GeoNonStat object between test and train samples
 #'  
-#' @param geo_non_stat, an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL
-#' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL
-#' @param new_y a vector on new observations from the interest variable in order to evaluate the scores on the test data set, or NULL
+#' @param locs a matrix of spatial locations.
+#' @param data a list containing vectors or data.frames to split into
+#' train/test  
+#' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
+#' @param prop_test the proportion of clusters used as test locations.
+#' Default to 0.01.
 #' @export
+#' 
 #' @examples
 #' n <- 10000
 #' observed_locs <- round(cbind(runif(n), runif(n)),3)
@@ -287,15 +293,15 @@ createSplitData <- function(locs, data,
   return(list(
     "train" = c(
       list(locs = locs[final_split$train,]),
-      subset_data(data, final_split$train)
+      subsetData(data, final_split$train)
       ),
     "test_far" = c(
       list(locs = locs[final_split$test_far,]),
-      subset_data(data, final_split$test_far)
+      subsetData(data, final_split$test_far)
     ),
     "test_close" = c(
       list(locs = locs[final_split$test_close,]),
-      subset_data(data, final_split$test_close)
+      subsetData(data, final_split$test_close)
     )
     ))
 }
