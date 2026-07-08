@@ -114,7 +114,7 @@ predict1Field <- function(range_beta,
     range_X = complete_range_X_locs
   )
   res = list()
-  vecchia_(start_idx = vecchia_approx$n_locs-1,
+  vecchia_(start_idx = extended_vecchia_approx$n_locs-1,
     log_range = t(log_range), locs = extended_vecchia_approx$t_locs,
     NNarray = extended_vecchia_approx$NNarray,
     smoothness = hierarchical_model$matern_smoothness,
@@ -148,6 +148,7 @@ predict1Field <- function(range_beta,
 #' @param new_X new X 
 #' @param new_noise_X new X for noise parameters
 #' @param new_range_X new X for range parameters
+#' @param burn_in numeric value, 
 #' @param num_threads number of threads. Integer.
 #' @param ... additional arguments (unused)
 #' @rdname GeoNonStat
@@ -160,7 +161,8 @@ predict.GeoNonStat <-  function(
     new_noise_X = NULL, 
     new_range_X = NULL, 
     burn_in=0.2, 
-    num_threads = 5
+    num_threads = 5,
+    ...
     ) {
   
   # extending Vecchia approx and new PP

@@ -31,7 +31,7 @@ coverage <- function(true_y, y_samples){
 #' y_samples <- matrix(rnorm(1000*length(true_y)), length(true_y))
 #' CRPS(true_y, y_samples)
 CRPS <- function(true_y, y_samples){
-  ecdfs <- apply(y_samples, 1, ecdf)
+  ecdfs <- apply(y_samples, 1, stats::ecdf)
   per_obs <- mapply(
     function(f, x)f(x), 
     x = true_y, 
@@ -230,7 +230,7 @@ plotSplit <- function(locs, indexes,
   n <- length(indexes)
   if(length(pch) != n) pch <- rep(pch[1], n) 
   if(length(cex) != n) cex <- rep(cex[1], n) 
-  if(length(col) != n) col <- rainbow(n) 
+  if(length(col) != n) col <- grDevices::rainbow(n) 
   # plot locations
   plot(locs[indexes[[1]],], 
        pch = pch[1], cex=cex[1], col = col[1], 

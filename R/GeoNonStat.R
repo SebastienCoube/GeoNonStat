@@ -26,7 +26,6 @@
 #'   \item{\code{locs_partition}}{locs_partition}
 #' }
 #' @export
-#' @keywords internal
 #'
 #' @examples
 #' set.seed(100)
@@ -165,7 +164,7 @@ generateLocationPartitions <- function(locs, n) {
 #' creating useful indices, and pre-computing useful matrices and vectors
 #'
 #' @param X a data.frame with as many rows as vecchia_approx$observed_locs
-#' @param vecchia_approx an object created by `vecchia_approx()`
+#' @param vecchia_approx an object created by `createVecchia()`
 #' @param PP an object of class PP,
 #' @param one_obs_per_locs (logical, default to FALSE). Should the covariate be
 #' constrained to not vary within a spatial location
@@ -965,12 +964,13 @@ print.GeoNonStat <- function(x, ...) {
 #' Summary of a 'GeoNonStat' object
 #'
 #' @param object an object of class \code{GeoNonStat}
-#' @param burn_in numerical value, proportion of iteration to discard for summary of MCMC
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @param ... additional arguments (unused)
 #' @rdname GeoNonStat
 #' @export
 #' @method summary GeoNonStat
-summary.GeoNonStat <- function(object, burn_in=0.25, ...) {
+summary.GeoNonStat <- function(object, burn_in=0.1, ...) {
   res <- list("info"=list(), 
               "noise_model" = list(),
               "range_model" = list(),

@@ -432,7 +432,7 @@ simulateGnsData <- function(gns_simulator,
     "latent_field" = latent_field
   )
   res <- c(res, gns_simulator)
-  res$true_parameters <- coeff_list
+  res$true_parameters <- gns_params
   res$true_PP_ranges <- c(
     "noise_PP" = gns_simulator$noise_PP$matern_range, 
     "range_PP" = gns_simulator$range_PP$matern_range)
@@ -447,3 +447,4 @@ simulateGnsData <- function(gns_simulator,
   )
   return(res)
 }
+
