@@ -98,7 +98,7 @@ tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .2)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .2)
 plot(sapply(geo_non_stat$records$chain_1, function(x)mean(x$field)))
 
-MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .2)
+MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .2)
 MCMC_diags$diags["field_log_var. ",] 
 
 # prediction
