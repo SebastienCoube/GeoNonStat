@@ -22,55 +22,62 @@ and length 2 for a 1 column beta matrix}
 a numeric value
 }
 \description{
-#'   beta follows a Normal distribution, with independent components.
+beta follows a Normal distribution, with independent components.
 
-  -------------------------------------------------------------------------------
-  In the isotropic case, beta has one column.
-  It has 3 categories of rows :
-  - the first row, corresponding to the Intercept.
-  - the next rows, corresponding to the rest of the explanatory variables if there are any.
-  - the last rows, corresponding to the PP coefficients if there are any.
+In the isotropic case, beta has one column.
+It has 3 categories of rows :
 
-                The mean is a vector     The diagonal of the variance matrix is
-                     with shape :                    a vector with shape :
+- the first row, corresponding to the Intercept.
+ 
+- the next rows, corresponding to the rest of the explanatory variables if there are any.
+ 
+- the last rows, corresponding to the PP coefficients if there are any.
 
-   (Intercept)      beta_0_mean                           beta_0_var
-                |-       0                                   0.01
-                |        0                                   0.01
-           X   -|        0                                   0.01
-                |        0                                   0.01
-                |_       0                                   0.01
-                |-       0                          exp(range_log_scale)
-                |        0                          exp(range_log_scale)
-           PP  -|        0                          exp(range_log_scale)
-                |        0                          exp(range_log_scale)
-                |        0                          exp(range_log_scale)
-                |_       0                          exp(range_log_scale)
+For example with \code{nrow(X)=5} and \code{n_PP=6} :
 
-  -------------------------------------------------------------------------------
+\preformatted{
+                      The mean          The diagonal of the
+                     is a vector        variance matrix is
+                     with shape :      a vector with shape :
 
-  In the anisotropic case, beta has 3 columns, one for the Range, two for the Anisotropy
-  The categories of rows are the same as in the Isotropic case.
+   (Intercept)      beta_0_mean             beta_0_var
+           X    |-       0                     0.01
+           X    |        0                     0.01
+           X   -|        0                     0.01
+           X    |        0                     0.01
+           X    |        0                     0.01
+          PP    |        0            exp(range_log_scale)
+          PP    |        0            exp(range_log_scale)
+          PP   -|        0            exp(range_log_scale)
+          PP    |        0            exp(range_log_scale)
+          PP    |        0            exp(range_log_scale)
+          PP    |        0            exp(range_log_scale)
+}
 
-  The mean and the diagonal of the variance matrix are stored under
-  the shape of matrices with 3 columns, like beta.
+In the anisotropic case, beta has 3 columns, one for the Range, two for the Anisotropy
+The categories of rows are the same as in the Isotropic case.
 
-                                    mean                                                        variance
+The mean and the diagonal of the variance matrix are stored under
+the shape of matrices with 3 columns, like beta.
+
+\preformatted{
+                                    mean                                                 variance
 
                      (range)      (aniso)    (aniso)
 
-   (Intercept)      beta_0_mean      0           0                     beta_0_var                  0.01                      0.01
-                |-       0           0           0                        0.01                     0.01                      0.01
-                |        0           0           0                        0.01                     0.01                      0.01
-           X   -|        0           0           0                        0.01                     0.01                      0.01
-                |        0           0           0                        0.01                     0.01                      0.01
-                |_       0           0           0                        0.01                     0.01                      0.01
-                |-       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-                |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-           PP  -|        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-                |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-                |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-                |_       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+   (Intercept)      beta_0_mean      0           0              beta_0_var                  0.01                      0.01
+                |-       0           0           0                 0.01                     0.01                      0.01
+                |        0           0           0                 0.01                     0.01                      0.01
+           X   -|        0           0           0                 0.01                     0.01                      0.01
+                |        0           0           0                 0.01                     0.01                      0.01
+                |_       0           0           0                 0.01                     0.01                      0.01
+                |-       0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+                |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+           PP  -|        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+                |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+                |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+                |_       0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+}
 }
 \examples{
 betaPriorLogDens(

@@ -38,16 +38,10 @@ inBounds <- function(bounds, x, includeBounds = FALSE) {
 #' @keywords internal
 subsetData <- function(data, idx) {
   lapply(data, function(x) {
-    if (is.null(x)) {
-      return(NULL)
-    }
-    if (is.data.frame(x)) {
-      return(x[idx, , drop = FALSE])
-    }
-    if (is.vector(x)) {
-      return(x[idx])
-    }
-    return(stop("subsetData only works on data.frame or vector"))
+      if (is.null(x)) return(NULL) 
+      if(is.data.frame(x)) return(x[idx, , drop=FALSE])
+      if(is.vector(x)) return(x[idx])
+      return(stop("subsetData only works on data.frame or vector"))
   })
 }
 
@@ -140,12 +134,6 @@ naiveGreedyColoring <- function(M) {
 #' @export
 #' @keywords internal
 decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
-  # Matrix::sparseMatrix(
-  #   i = vecchia_approx$sparse_chol_i,
-  #   p = vecchia_approx$sparse_chol_p,
-  #   x = compressed_sparse_chol[, 1, ][vecchia_approx$sparse_chol_x_reorder],
-  #   triangular = TRUE
-  # )
   n <- length(vecchia_approx$sparse_chol_p) - 1L
   return(
     new("dtCMatrix",
@@ -235,56 +223,62 @@ computeLogRange <- function(range_beta,
 #' @param log_scale numeric vector of length 1 for a 1 column beta matrix
 #' and length 2 for a 1 column beta matrix
 #' @description
-#' #'   beta follows a Normal distribution, with independent components.
+#' beta follows a Normal distribution, with independent components.
 #'
-#'   -------------------------------------------------------------------------------
-#'   In the isotropic case, beta has one column.
-#'   It has 3 categories of rows :
-#'   - the first row, corresponding to the Intercept.
-#'   - the next rows, corresponding to the rest of the explanatory variables if there are any.
-#'   - the last rows, corresponding to the PP coefficients if there are any.
+#' In the isotropic case, beta has one column.
+#' It has 3 categories of rows :
+#' 
+#' - the first row, corresponding to the Intercept.
+#'  
+#' - the next rows, corresponding to the rest of the explanatory variables if there are any.
+#'  
+#' - the last rows, corresponding to the PP coefficients if there are any.
+#' 
+#' For example with \code{nrow(X)=5} and \code{n_PP=6} :
+#' 
+#' \preformatted{
+#'                       The mean          The diagonal of the
+#'                      is a vector        variance matrix is
+#'                      with shape :      a vector with shape :
 #'
-#'                 The mean is a vector     The diagonal of the variance matrix is
-#'                      with shape :                    a vector with shape :
+#'    (Intercept)      beta_0_mean             beta_0_var
+#'            X    |-       0                     0.01
+#'            X    |        0                     0.01
+#'            X   -|        0                     0.01
+#'            X    |        0                     0.01
+#'            X    |        0                     0.01
+#'           PP    |        0            exp(range_log_scale)
+#'           PP    |        0            exp(range_log_scale)
+#'           PP   -|        0            exp(range_log_scale)
+#'           PP    |        0            exp(range_log_scale)
+#'           PP    |        0            exp(range_log_scale)
+#'           PP    |        0            exp(range_log_scale)
+#' }
 #'
-#'    (Intercept)      beta_0_mean                           beta_0_var
-#'                 |-       0                                   0.01
-#'                 |        0                                   0.01
-#'            X   -|        0                                   0.01
-#'                 |        0                                   0.01
-#'                 |_       0                                   0.01
-#'                 |-       0                          exp(range_log_scale)
-#'                 |        0                          exp(range_log_scale)
-#'            PP  -|        0                          exp(range_log_scale)
-#'                 |        0                          exp(range_log_scale)
-#'                 |        0                          exp(range_log_scale)
-#'                 |_       0                          exp(range_log_scale)
+#' In the anisotropic case, beta has 3 columns, one for the Range, two for the Anisotropy
+#' The categories of rows are the same as in the Isotropic case.
 #'
-#'   -------------------------------------------------------------------------------
+#' The mean and the diagonal of the variance matrix are stored under
+#' the shape of matrices with 3 columns, like beta.
 #'
-#'   In the anisotropic case, beta has 3 columns, one for the Range, two for the Anisotropy
-#'   The categories of rows are the same as in the Isotropic case.
-#'
-#'   The mean and the diagonal of the variance matrix are stored under
-#'   the shape of matrices with 3 columns, like beta.
-#'
-#'                                     mean                                                        variance
+#' \preformatted{
+#'                                     mean                                                 variance
 #'
 #'                      (range)      (aniso)    (aniso)
 #'
-#'    (Intercept)      beta_0_mean      0           0                     beta_0_var                  0.01                      0.01
-#'                 |-       0           0           0                        0.01                     0.01                      0.01
-#'                 |        0           0           0                        0.01                     0.01                      0.01
-#'            X   -|        0           0           0                        0.01                     0.01                      0.01
-#'                 |        0           0           0                        0.01                     0.01                      0.01
-#'                 |_       0           0           0                        0.01                     0.01                      0.01
-#'                 |-       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'            PP  -|        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'                 |        0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'                 |_       0           0           0               exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
-#'
+#'    (Intercept)      beta_0_mean      0           0              beta_0_var                  0.01                      0.01
+#'                 |-       0           0           0                 0.01                     0.01                      0.01
+#'                 |        0           0           0                 0.01                     0.01                      0.01
+#'            X   -|        0           0           0                 0.01                     0.01                      0.01
+#'                 |        0           0           0                 0.01                     0.01                      0.01
+#'                 |_       0           0           0                 0.01                     0.01                      0.01
+#'                 |-       0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#'                 |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#'            PP  -|        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#'                 |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#'                 |        0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#'                 |_       0           0           0        exp(range_log_scale[1])  exp(range_log_scale[2])   exp(range_log_scale[2])
+#' }
 #' @returns a numeric value
 #' @export
 #' @keywords internal
@@ -312,8 +306,8 @@ betaPriorLogDens <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean # Intercept for range
   var_mat[1, 1] <- beta0_var # Intercept for range
-  determinant_part <- 0
-  if (n_PP > 0) {
+  determinant_part = 0
+  if(n_PP>0){
     var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
     if (ncb == 3) {
       if (!length(log_scale) == 2) {
@@ -359,7 +353,7 @@ betaPriorLogDensDerivative <- function(beta,
   if (!ncb %in% c(1, 3)) {
     stop("beta is expected to have 1 or 3 columns")
   }
-  if (is.null(n_PP)) n_PP <- 0
+  if(is.null(n_PP))n_PP <- 0
   if (n_PP > nrb + 2) {
     stop("n_PP can't be greater than nrow(beta) + 2")
   }
@@ -367,7 +361,7 @@ betaPriorLogDensDerivative <- function(beta,
   var_mat <- matrix(0.01, nrb, ncb)
   mean_mat[1, 1] <- beta0_mean
   var_mat[1, 1] <- beta0_var
-  if (n_PP > 0) {
+  if(n_PP > 0){
     var_mat[-seq_len(nrb - n_PP), 1] <- exp(log_scale[1])
     if (ncb == 3) {
       if (!length(log_scale) == 2) {

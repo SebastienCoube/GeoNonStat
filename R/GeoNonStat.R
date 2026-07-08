@@ -898,11 +898,7 @@ GeoNonStat <- function(vecchia_approx,
   )
 
   # Chain states #################################################################
-  # cl = parallel::makeCluster(min(parallel::detectCores()-1, n_chains))
-  # parallel::clusterExport(cl, c("hierarchical_model", "covariates",
-  #                              "vecchia_approx", "observed_field", "seed"))
   states <-
-    # parallel::parLapply(cl =  cl,
     lapply(
       seq_len(n_chains), function(chain_number) {
         processStates(
@@ -916,7 +912,6 @@ GeoNonStat <- function(vecchia_approx,
       }
     )
   names(states) <- paste("chain", seq_len(n_chains), sep = "_")
-  # parallel::stopCluster(cl)
 
   # Chain records setup #######################################################
   # records is a list that stocks the recorded parameters of the model,
@@ -928,7 +923,6 @@ GeoNonStat <- function(vecchia_approx,
   )
   # iteration is a 2-colums matrix that records the iteration at the end of
   # each chains join and the associated CPU time
-
   # Result ####################################################################
   res <- structure(
     list(
