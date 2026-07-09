@@ -1,9 +1,8 @@
 #' Filter records of a GeoNonStat object
 #'
 #' @param records a list containing records from a `GeoNonStat` object.
-#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of
-#' first records that should be removed If burn_in = 0.1 : the first 10% of
-#' records will be removed from the result.
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed.
 #' @param keep character vector. What params should be kept. Can also be
 #' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
 #' parameters, event the `field.`
@@ -122,7 +121,7 @@ aggregateRecordsChain <- function(chain) {
 #' Aggregate records of a GeoNonStat object, for 1 chain
 #'
 #' @param object a GeoNonStat object containing records
-#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed If burn_in = 0.1 : the first 10% of
 #' records will be removed from the result.
 #' @param keep character vector. What params should be kept. Can also be
@@ -182,9 +181,8 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #' Estimation of the model parameters using the MCMC records of a GeoNonStat object.
 #'
 #' @param object a GeoNonStat object containing records
-#' @param burn_in numeric, value, between 0 and 1. Gives the percentage of
-#' first records that should be removed If burn_in = 0.1 : the first 10% of
-#' records will be removed from the result.
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @param keep character vector. What params should be kept. Can also be
 #' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
 #' parameters, event the `field.`
@@ -194,7 +192,7 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #'
 #' @examples
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = .1, keep = "all") {
+estimate <- function(object, burn_in = 0.1, keep = "all") {
   res <- aggregateRecords(object, burn_in = burn_in, keep = "all")
   res <- sapply(res, summarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
   return(res)

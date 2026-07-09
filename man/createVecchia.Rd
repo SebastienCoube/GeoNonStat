@@ -46,4 +46,3 @@ size <- 20000
 observed_locs <- cbind(runif(size), runif(size))
 res <- createVecchia(observed_locs, m = 10)
 }
-\keyword{internal}

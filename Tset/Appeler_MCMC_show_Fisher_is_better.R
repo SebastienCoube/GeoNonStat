@@ -141,7 +141,7 @@ library(GeoNonStat)
  tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
  tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
  tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
- MCMC_diags = printMcmcDiags(geo_non_stat, burn_in = .2)
+ MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .2)
 
 
 MCMC_diags_ = readRDS("Tset/diags_no_fisher.RDS")

@@ -9,9 +9,8 @@ filterRecords(records, burn_in = 0, keep = "all")
 \arguments{
 \item{records}{a list containing records from a `GeoNonStat` object.}
 
-\item{burn_in}{numeric, value, between 0 and 1. Gives the percentage of
-first records that should be removed If burn_in = 0.1 : the first 10% of
-records will be removed from the result.}
+\item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
+first records that should be removed.}
 
 \item{keep}{character vector. What params should be kept. Can also be
 `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all

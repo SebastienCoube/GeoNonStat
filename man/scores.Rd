@@ -4,10 +4,10 @@
 \alias{scores}
 \title{Model scoring for train and test data}
 \usage{
-scores(geo_non_stat = NULL, prediction = NULL, test_y = NULL)
+scores(object = NULL, prediction = NULL, new_y = NULL)
 }
 \arguments{
-\item{geo_non_stat, }{an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL}
+\item{object, }{an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL}
 
 \item{prediction, }{a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL}
 

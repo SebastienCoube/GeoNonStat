@@ -9,7 +9,8 @@ tracePlots(object, burn_in = 0.1, keep = "all")
 \arguments{
 \item{object}{a processed GeoNonStat object}
 
-\item{burn_in}{percentage of first records to remove}
+\item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
+first records that should be removed. Default to 0.1}
 
 \item{keep}{names of pramaters to plot}
 }

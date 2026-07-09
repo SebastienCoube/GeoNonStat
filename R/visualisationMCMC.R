@@ -1,7 +1,8 @@
 #' summary of MCMC diagnostics
 #'
 #' @param object a GeoNonStat object
-#' @param burn_in numeric, between 0 and 1. Default to 0.1
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @return a list of two data.frames
 #' 
 #' @export
@@ -9,7 +10,7 @@
 #' @examples
 #' MCMC_diags <- mcmcDiags(processedGnsDemo)
 #' # TODO - quid des NA ? 
-mcmcDiags <- function(object, burn_in = .1, verbose=TRUE) {
+mcmcDiags <- function(object, burn_in = 0.1, verbose=TRUE) {
   # only two significant digits are kept
   records <- aggregateRecords(object, burn_in = burn_in, keep = "all", keep_separate_chains = TRUE)
   ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
@@ -95,7 +96,8 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #' Trace the records of a processed GeoNonStat object
 #'
 #' @param object a processed GeoNonStat object
-#' @param burn_in percentage of first records to remove
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @param keep names of pramaters to plot
 #'
 #' @returns NULL

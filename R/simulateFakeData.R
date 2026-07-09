@@ -94,7 +94,6 @@ createGnsSimulator <- function(vecchia_approx,
 #' @param noise_PP_log_var TODO
 #' @param field_log_var TODO
 #' @param verbose logical, default to TRUE. Active verbose mode ?
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
 #' @returns a list
 #' @export
@@ -432,7 +431,7 @@ simulateGnsData <- function(gns_simulator,
     "latent_field" = latent_field
   )
   res <- c(res, gns_simulator)
-  res$true_parameters <- coeff_list
+  res$true_parameters <- gns_params
   res$true_PP_ranges <- c(
     "noise_PP" = gns_simulator$noise_PP$matern_range, 
     "range_PP" = gns_simulator$range_PP$matern_range)
@@ -447,3 +446,4 @@ simulateGnsData <- function(gns_simulator,
   )
   return(res)
 }
+

@@ -44,7 +44,8 @@ knotsFromKmeans <- function(knots_number, locs) {
 #' @param reorder_knots logical, default to FALSE. Should knots be reordered ?
 #' If so, the knots will be reordered using `GpGp::order_maxmin`
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
-#' @param plot Logical, whether to produce diagnostic plots (default `TRUE`).
+#' @param plot logical, whether to produce diagnostic plots (default `TRUE`).
+#' @param verbose logical, default to TRUE. print the diagnostic of var loss ?
 #'
 #' @rdname PP
 #' @aliases PP
@@ -104,14 +105,13 @@ knotsFromKmeans <- function(knots_number, locs) {
 #'   matern_range = .05
 #' )
 #' }
-
-
 createPP <- function(vecchia_approx,
                      matern_range = NULL,
                      knots = NULL,
                      reorder_knots = TRUE,
                      seed = 1234,
-                     plot = TRUE, verbose = T) {
+                     plot = TRUE, 
+                     verbose = TRUE) {
   # Sanity checks
   if (!is.list(vecchia_approx)) {
     stop("Argument 'vecchia_approx' must be a list.")
@@ -131,9 +131,13 @@ createPP <- function(vecchia_approx,
       knots <- 2*knots 
       message(paste("Trying", knots, "knots"))
       res <- createPP(vecchia_approx = vecchia_approx, 
-                     plot = F, seed = seed, reorder_knots = T, 
-                     knots = knots, matern_range = matern_range, verbose = F)
-      variance_loss <- mean(varLossPP(res, verbose = F))
+                     plot = FALSE, 
+                     seed = seed, 
+                     reorder_knots = TRUE, 
+                     knots = knots, 
+                     matern_range = matern_range, 
+                     verbose = FALSE)
+      variance_loss <- mean(varLossPP(res, verbose = FALSE))
     }
     if(plot)plot(res)
     return(res)  
@@ -265,6 +269,7 @@ summary.PP <- function(object, ...) {
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @param x an object of class PP, create with `createPP`
+#' @param verbose logical, 
 #' @return a numeric vector
 #' @export
 #' @keywords internal
@@ -272,7 +277,7 @@ summary.PP <- function(object, ...) {
 #' vecchia <- createVecchia(cbind(runif(1000), runif(1000)))
 #' pepito <- createPP(vecchia, plot = FALSE)
 #' varLossPP(pepito)
-varLossPP <- function(x, verbose = T) {
+varLossPP <- function(x, verbose = TRUE) {
   if (is.null(x$knots | is.null(x$sparse_chol))) {
     stop("x must contains 'knots' and 'sparse_chol'")
   }
@@ -283,15 +288,15 @@ varLossPP <- function(x, verbose = T) {
   })
   # max(0) because of tiny numerical errors
   PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var) / 1.000001) * 100
-  mean_mar_var <- mean(PP_mar_var)
-  msg <- if (mean_mar_var > 10) {
-    "quite a bit of loss, and may be fixed by adding more knots or increasing the Matern range."
-  } else if (mean_mar_var > 3) {
-    "fairly good, but it might be improved by adding more knots or increasing the Matern range."
-  } else {
-    "great !"
-  }
   if(verbose){
+    mean_mar_var <- mean(PP_mar_var)
+    msg <- if (mean_mar_var > 10) {
+      "quite a bit of loss, and may be fixed by adding more knots or increasing the Matern range."
+    } else if (mean_mar_var > 3) {
+      "fairly good, but it might be improved by adding more knots or increasing the Matern range."
+    } else {
+      "great !"
+    }
     message(
       round(mean_mar_var, 1),
       "% of marginal variance on average is lost with the use of a PP.\nThis is ",

@@ -65,7 +65,6 @@ plotPointillistPainting(vecchia_approx$locs, res3,
 #                           main = "PP + covariates,\n  one covariate for each observation")
 
 # multiplying
-X_by_obs <- cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
 res5 <- xPPMultRight(
   X = NULL, PP = PP,
   Y = diag(1, PP$n_knots),

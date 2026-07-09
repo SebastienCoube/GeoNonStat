@@ -14,7 +14,7 @@ createPP(
   reorder_knots = TRUE,
   seed = 1234,
   plot = TRUE,
-  verbose = T
+  verbose = TRUE
 )
 
 \method{summary}{PP}(object, ...)
@@ -37,7 +37,9 @@ If so, the knots will be reordered using `GpGp::order_maxmin`}
 
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 
-\item{plot}{Logical, whether to produce diagnostic plots (default `TRUE`).}
+\item{plot}{logical, whether to produce diagnostic plots (default `TRUE`).}
+
+\item{verbose}{logical, default to TRUE. print the diagnostic of var loss ?}
 
 \item{object}{an object of class \code{PP}}
 
@@ -46,6 +48,8 @@ If so, the knots will be reordered using `GpGp::order_maxmin`}
 \item{x}{an object of class PP, create with `createPP`}
 
 \item{mar_var_loss}{boolean, default to TRUE. Should loss of margine variance be computed and plotted ?}
+
+\item{samples}{logical, default to TRUE. Also show samples that could be produced by the PP ?}
 
 \item{separate}{logical(default to FALSE). Should the plots be printed separatly ?}
 }

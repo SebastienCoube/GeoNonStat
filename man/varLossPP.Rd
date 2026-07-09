@@ -4,10 +4,12 @@
 \alias{varLossPP}
 \title{Compute the percentage of marginal variance who is lost because of the use of a PP}
 \usage{
-varLossPP(x, verbose = T)
+varLossPP(x, verbose = TRUE)
 }
 \arguments{
 \item{x}{an object of class PP, create with `createPP`}
+
+\item{verbose}{logical,}
 }
 \value{
 a numeric vector
