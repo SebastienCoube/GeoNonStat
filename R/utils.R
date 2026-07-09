@@ -38,10 +38,10 @@ inBounds <- function(bounds, x, includeBounds = FALSE) {
 #' @keywords internal
 subsetData <- function(data, idx) {
   lapply(data, function(x) {
-      if (is.null(x)) return(NULL) 
-      if(is.data.frame(x)) return(x[idx, , drop=FALSE])
-      if(is.vector(x)) return(x[idx])
-      return(stop("subsetData only works on data.frame or vector"))
+    if (is.null(x)) return(NULL) 
+    if(is.data.frame(x)) return(x[idx, , drop=FALSE])
+    if(is.vector(x)) return(x[idx])
+    return(stop("subsetData only works on data.frame or vector"))
   })
 }
 
@@ -569,4 +569,28 @@ xPPCrossprod <- function(X,
     res <- as.matrix(res)
   }
   return(res)
+}
+
+
+#' Transpose a list
+#'
+#' @param list a list containing sublists (all having the same structure).
+#'
+#' @returns a list, transposed
+#' @export
+#' @keywords internal
+#'
+#' @examples
+#' A <- list("R1" = "a1", "R2" = "a2", "R3" = "a3")
+#' B <- list("R1" = "b1", "R2" = "b2", "R3" = "b3")
+#' C <- list("R1" = "c1", "R2" = "c2", "R3" = "c3")
+#' transposeList(list("A" = A, "B" = B, "C" = C))
+transposeList <- function(list) {
+  nameslist <- names(list[[1]])
+  tl <- lapply(
+    seq_along(list[[1]]),
+    function(i) lapply(list, `[[`, i)
+  )
+  names(tl) <- nameslist
+  return(tl)
 }
