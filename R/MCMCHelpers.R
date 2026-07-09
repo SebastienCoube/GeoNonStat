@@ -1247,3 +1247,71 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
 }
 
 
+convertBetaAncillary <- function(PP, old_log_scale, new_log_scale, beta){
+  if(length(old_log_scale)==1){
+    mult_mat <- matrix(exp(new_log_scale-old_log_scale))
+  }
+  if(length(old_log_scale)==2){
+    mult_mat <- diag(exp(new_log_scale-old_log_scale)[c(1,2,2)])
+  }
+  beta[-seq(nrow(beta)-PP$n_knots),] =
+    beta[-seq(nrow(beta)-PP$n_knots),] %*% mult_mat
+  return(beta)
+}
+
+
+updateVarPPAncillaryXSufficient <- function(state, hierarchical_model, vecchia_approx, range_X, iter, iter_start, num_threads){
+  new_range_log_scale <- state$params$range_log_scale + rnorm(length(state$params$range_log_scale), 0, exp(state$ker_var$range_log_scale_sufficient))
+      state$ker_var$range_log_scale_sufficient <- updateKernel(
+        iter = iter, iter_start = iter_start,
+        kernel_value = state$ker_var$range_log_scale_sufficient, mult = -1
+      )
+  if (all(inBounds(hierarchical_model$range$log_scale_bounds, new_range_log_scale))) {
+    new_range_beta <- convertBetaAncillary(
+      beta = state$params$range_beta, new_log_scale = new_range_log_scale, 
+      old_log_scale = state$params$range_log_scale, 
+      PP = hierarchical_model$range$PP
+    )
+    log_range <- computeLogRange(
+      range_beta = new_range_beta,
+      PP = hierarchical_model$range$PP,
+      vecchia_approx = vecchia_approx,
+      range_X = range_X
+    )
+    vecchia_(start_idx = 1,
+             log_range = t(log_range), locs = vecchia_approx$t_locs,
+             NNarray = vecchia_approx$NNarray,
+             smoothness = hierarchical_model$matern_smoothness,
+             compute_derivative = TRUE, num_threads = num_threads, result = state$stuff$proposed_compressed_chol
+    )
+    state$stuff$proposed_sparse_chol@x <- state$stuff$proposed_compressed_chol[,,1][vecchia_approx$sparse_chol_x_reorder]
+    
+    current_U <-       (
+      + .5 * sum((state$stuff$sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1, 1])))^2)
+      - sum(log(Matrix::diag(state$stuff$sparse_chol)))
+    )
+    proposed_U <-       (
+      + .5 * sum((state$stuff$proposed_sparse_chol %*% (state$params$field / exp(.5 * state$params$field_log_var[1,1])))^2)
+      - sum(log(Matrix::diag(state$stuff$proposed_sparse_chol)))
+    )
+    
+    if (log(runif(1)) < current_U - proposed_U) {
+      state$ker_var$range_log_scale_sufficient <- updateKernel(
+        iter = iter, iter_start = iter_start,
+        kernel_value = state$ker_var$range_log_scale_sufficient, mult = 3
+      )
+      # invert positions of proposed and current matrix to avoid recreating objects.
+      stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
+      stuff_compressed <- stuff_compressed[!is.na(stuff_compressed)]
+      names(state$stuff)[stuff_compressed] = names(state$stuff)[rev(stuff_compressed)]
+      stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
+      stuff_sparse <- stuff_sparse[!is.na(stuff_sparse)]
+      names(state$stuff)[stuff_sparse] = names(state$stuff)[rev(stuff_sparse)]
+      state$params$range_beta[] <- new_range_beta
+      state$params$range_log_scale[] <- new_range_log_scale
+    }
+  }
+  return(state)
+}
+
+

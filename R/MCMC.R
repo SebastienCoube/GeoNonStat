@@ -80,6 +80,15 @@ runOneChainMcmc <- function(
          state$params$range_log_scale = updateVarPPSuff(
            hm4params = hierarchical_model$range, 
            beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+         
+         #state <- updateVarPPAncillaryXSufficient(
+         #  state, 
+         #  hierarchical_model, 
+         #  vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
+         
+         state$params$range_log_scale = updateVarPPSuff(
+           hm4params = hierarchical_model$range, 
+           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
        }
     }
     

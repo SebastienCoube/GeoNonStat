@@ -22,7 +22,13 @@ knitr::opts_chunk$set(
 options(warn=-1)
 ```
 
-# Introduction
+# Small working example
+
+
+
+
+
+# Model structure
 
 The aim of GeoNonStat is to perform Bayesian non-stationary geostatistical modeling. 
 
@@ -266,9 +272,10 @@ Contrary to the range, $\tau^2$ does not need to be spatially coherent. Any expl
 Putting all the elements together, we get the following model architecture. 
 
 ![](Vignette_Figures/Architecture.png)
+
 #### Russian doll structure
 
-The Modeler can choose simpler models who are encompassed in the ``full monty'' model above. 
+The Modeler can choose simpler models who are encompassed in the "full monty'' model above. 
 
 - The Modeler can cancel $w_\theta$ and/or $w_{\tau^2}$. 
 - The Modeler can provide no variable for $x_\theta$ and/or $x_{\tau^2}$. 
@@ -318,3 +325,6 @@ If a new spatial coordinate $s'$ is given, and that the explanatory variables $x
 - The variance of the heteroskedastic noise $\tau^2(s')$.
 - The interest variable $y(s')$ can then be computed from all the above. 
 
+
+
+# Full workflow
