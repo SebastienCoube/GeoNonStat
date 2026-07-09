@@ -110,7 +110,7 @@ createPP <- function(vecchia_approx,
                      knots = NULL,
                      reorder_knots = TRUE,
                      seed = 1234,
-                     plot = TRUE, 
+                     plot = TRUE,
                      verbose = TRUE) {
   # Sanity checks
   if (!is.list(vecchia_approx)) {
@@ -120,29 +120,31 @@ createPP <- function(vecchia_approx,
     matern_range <= 0) {
     stop("'matern_range' must be positive.")
   }
-  
-  
+
+
   # Automatic if no knots
   if (is.null(knots)) {
     message(paste("Finding knots number using marginal variance loss criterion", knots))
     knots <- 4
     variance_loss <- 100
-    while(variance_loss>3){
-      knots <- 2*knots 
+    while (variance_loss > 3) {
+      knots <- 2 * knots
       message(paste("Trying", knots, "knots"))
-      res <- createPP(vecchia_approx = vecchia_approx, 
-                     plot = FALSE, 
-                     seed = seed, 
-                     reorder_knots = TRUE, 
-                     knots = knots, 
-                     matern_range = matern_range, 
-                     verbose = FALSE)
+      res <- createPP(
+        vecchia_approx = vecchia_approx,
+        plot = FALSE,
+        seed = seed,
+        reorder_knots = TRUE,
+        knots = knots,
+        matern_range = matern_range,
+        verbose = FALSE
+      )
       variance_loss <- mean(varLossPP(res, verbose = FALSE))
     }
-    if(plot)plot(res)
-    return(res)  
+    if (plot) plot(res)
+    return(res)
   }
-  
+
   # If knots
   if (!is.null(knots) &&
     is.numeric(knots) && is.vector(knots) == 1 && any(knots <= 0)) {
@@ -174,7 +176,7 @@ createPP <- function(vecchia_approx,
   if (is.null(rownames(knots))) {
     rownames(knots) <- seq_len(nrow(knots))
   }
-  if(reorder_knots) knots <- knots[GpGp::order_maxmin(knots), ]
+  if (reorder_knots) knots <- knots[GpGp::order_maxmin(knots), ]
 
   additional <- NULL
   if (nrow(vecchia_approx$NNarray) - 1 - nrow(knots) > 0) {
@@ -269,7 +271,7 @@ summary.PP <- function(object, ...) {
 
 #' @title Compute the percentage of marginal variance who is lost because of the use of a PP
 #' @param x an object of class PP, create with `createPP`
-#' @param verbose logical, 
+#' @param verbose logical,
 #' @return a numeric vector
 #' @export
 #' @keywords internal
@@ -288,7 +290,7 @@ varLossPP <- function(x, verbose = TRUE) {
   })
   # max(0) because of tiny numerical errors
   PP_mar_var <- (pmax(0, 1.000001 - PP_mar_var) / 1.000001) * 100
-  if(verbose){
+  if (verbose) {
     mean_mar_var <- mean(PP_mar_var)
     msg <- if (mean_mar_var > 10) {
       "quite a bit of loss, and may be fixed by adding more knots or increasing the Matern range."
@@ -306,5 +308,3 @@ varLossPP <- function(x, verbose = TRUE) {
 
   return(PP_mar_var)
 }
-
-

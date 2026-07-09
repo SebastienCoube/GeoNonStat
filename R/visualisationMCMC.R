@@ -4,13 +4,13 @@
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
 #' @return a list of two data.frames
-#' 
+#'
 #' @export
 #' @keywords internal
 #' @examples
 #' MCMC_diags <- mcmcDiags(processedGnsDemo)
-#' # TODO - quid des NA ? 
-mcmcDiags <- function(object, burn_in = 0.1, verbose=TRUE) {
+#' # TODO - quid des NA ?
+mcmcDiags <- function(object, burn_in = 0.1, verbose = TRUE) {
   # only two significant digits are kept
   records <- aggregateRecords(object, burn_in = burn_in, keep = "all", keep_separate_chains = TRUE)
   ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
@@ -26,13 +26,15 @@ mcmcDiags <- function(object, burn_in = 0.1, verbose=TRUE) {
   res <- t(rbind(ess, gelman_diags))
   res <- data.frame(res)
   colnames(res) <- c("ess", "Point est. Gelman", "Upper C.I. Gelman")
-  if(anyNA(res)) {
-    warning("Some parameters haven't been updated yet by the MCMC.",
-    "You should increase n_iterations and re-run MCMC before requesting diags.")
+  if (anyNA(res)) {
+    warning(
+      "Some parameters haven't been updated yet by the MCMC.",
+      "You should increase n_iterations and re-run MCMC before requesting diags."
+    )
     return(res)
   }
-  
-  
+
+
   regle <- c("min", "max", "max")
   worst <- data.frame(
     criterium = colnames(res),
@@ -46,7 +48,7 @@ mcmcDiags <- function(object, burn_in = 0.1, verbose=TRUE) {
     }, res, regle, USE.NAMES = FALSE)
   )
 
-  if(verbose){
+  if (verbose) {
     cat("Summary of diagnostics\n")
     print(summary(res))
     cat("----------------------\n")

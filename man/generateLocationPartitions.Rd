@@ -18,7 +18,7 @@ a numeric array
 Partition spatial locations using parallel k-means
 }
 \examples{
-locs <- matrix(rnorm(4000), ncol=2)
+locs <- matrix(rnorm(4000), ncol = 2)
 locspart <- generateLocationPartitions(locs, 1000)
 }
 \keyword{internal}

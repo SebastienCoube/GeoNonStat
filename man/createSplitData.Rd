@@ -22,11 +22,11 @@ Split a GeoNonStat object between test and train samples
 }
 \examples{
 n <- 10000
-observed_locs <- round(cbind(runif(n), runif(n)),3)
-X <-       as.data.frame(matrix(rnorm(n*4), ncol=4))
-range_X <- as.data.frame(matrix(rnorm(n*4), ncol=4))
-noise_X <- as.data.frame(matrix(rnorm(n*4), ncol=4))
+observed_locs <- round(cbind(runif(n), runif(n)), 3)
+X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
+range_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
+noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 y <- rnorm(n)
-datalist <- list("X" = X, "range_X"=range_X, "noise_X"=noise_X, "y" = y)
-traintest <- createSplitData(observed_locs, datalist, prop_test=c(0.1, 0.01))
+datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
+traintest <- createSplitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
 }

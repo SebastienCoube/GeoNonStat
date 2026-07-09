@@ -1,6 +1,6 @@
-#' Ingredients needed to simulate observations from a GeoNonStat model: 
-#' explanatory variables, spatial process, and noise process. 
-#' 
+#' Ingredients needed to simulate observations from a GeoNonStat model:
+#' explanatory variables, spatial process, and noise process.
+#'
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param X a data.frame of covariates explaining the interest variable
 #' through fixed linear effects
@@ -397,7 +397,8 @@ simulateGnsData <- function(gns_simulator,
       gns_simulator$vecchia_approx$n_locs, 1
     )
   )
-  vecchia_(start_idx = 1,
+  vecchia_(
+    start_idx = 1,
     log_range = t(log_range_field),
     locs = gns_simulator$vecchia_approx$t_locs,
     NNarray = gns_simulator$vecchia_approx$NNarray,
@@ -433,17 +434,17 @@ simulateGnsData <- function(gns_simulator,
   res <- c(res, gns_simulator)
   res$true_parameters <- gns_params
   res$true_PP_ranges <- c(
-    "noise_PP" = gns_simulator$noise_PP$matern_range, 
-    "range_PP" = gns_simulator$range_PP$matern_range)
+    "noise_PP" = gns_simulator$noise_PP$matern_range,
+    "range_PP" = gns_simulator$range_PP$matern_range
+  )
   res$observed <- list(
     locs = gns_simulator$vecchia_approx$observed_locs,
     data = list(
-      observed_field = observed_field, 
-      X = gns_simulator$covariates$X$arg, 
-      noise_X = gns_simulator$covariates$noise_X$arg, 
-      range_X = gns_simulator$covariates$range_X$arg 
+      observed_field = observed_field,
+      X = gns_simulator$covariates$X$arg,
+      noise_X = gns_simulator$covariates$noise_X$arg,
+      range_X = gns_simulator$covariates$range_X$arg
     )
   )
   return(res)
 }
-

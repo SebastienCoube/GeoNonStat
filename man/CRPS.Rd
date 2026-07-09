@@ -19,7 +19,7 @@ A CRPS for each true observation
 }
 \examples{
 true_y <- rnorm(100)
-y_samples <- matrix(rnorm(1000*length(true_y)), length(true_y))
+y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
 CRPS(true_y, y_samples)
 }
 \keyword{internal}

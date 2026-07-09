@@ -18,8 +18,8 @@ Return averaged and per-observation model scoring
 }
 \examples{
 true_y <- rnorm(100)
-mean_samples <- matrix(rep(0, 1000*length(true_y)), length(true_y))
-sd_samples <- matrix(rep(1, 1000*length(true_y)), length(true_y))
+mean_samples <- matrix(rep(0, 1000 * length(true_y)), length(true_y))
+sd_samples <- matrix(rep(1, 1000 * length(true_y)), length(true_y))
 score(true_y, mean_samples, sd_samples)
 }
 \keyword{internal}

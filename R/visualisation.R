@@ -156,11 +156,7 @@ plotKnotsPP <- function(x,
   }
   # Plot knots
   if (show_knots) {
-    points(x$knots,
-      pch = 10,
-      cex = 1,
-      col = 1
-    )
+    points(x$knots,, pch = 10, cex = 1, col = 1)
     legend(
       x = "topright",
       legend = "knots",

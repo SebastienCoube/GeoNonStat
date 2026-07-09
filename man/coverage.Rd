@@ -18,8 +18,8 @@ a vector of Booleans indicating if each true observation is within the predicted
 Coverage intervals of the response variable
 }
 \examples{
-true_y = rnorm(100)
-y_samples = matrix(rnorm(1000*length(true_y)), length(true_y))
+true_y <- rnorm(100)
+y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
 coverage(true_y, y_samples)
 }
 \keyword{internal}

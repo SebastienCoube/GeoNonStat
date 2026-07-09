@@ -19,7 +19,7 @@ Squared prediction error
 }
 \examples{
 true_y <- rnorm(100)
-mean_samples <- matrix(rep(0, 1000*length(true_y)), length(true_y))
-squaredError(true_y, mean_samples) 
+mean_samples <- matrix(rep(0, 1000 * length(true_y)), length(true_y))
+squaredError(true_y, mean_samples)
 }
 \keyword{internal}

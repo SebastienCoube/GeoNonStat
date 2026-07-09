@@ -2,8 +2,8 @@
 % Please edit documentation in R/Scores.R
 \name{getIndexesFar}
 \alias{getIndexesFar}
-\title{Find scattered spatial locations for train-test partition and remove 
-train locations who are too close to test locations in order to assess long 
+\title{Find scattered spatial locations for train-test partition and remove
+train locations who are too close to test locations in order to assess long
 range prediction.}
 \usage{
 getIndexesFar(locs, n_clust = NULL, prop_test = 0.1)
@@ -21,15 +21,15 @@ A list of train and test indices
 }
 \description{
 A K-means algorithm is run in order to parition the spatial locations into
- clusters. A max-min heuristic is used on the clusters to scatter the 
- test clusters across space, so that test clusters are independent-ish from 
- each other, and surrounded by training locations. The observation that is 
+ clusters. A max-min heuristic is used on the clusters to scatter the
+ test clusters across space, so that test clusters are independent-ish from
+ each other, and surrounded by training locations. The observation that is
  closest to the center of each cluster is kept for validation and the rest of
- the cluster is discarded, in order to forbid immediate interpolation of 
+ the cluster is discarded, in order to forbid immediate interpolation of
  the test data.
 }
 \examples{
-observed_locs <- round(cbind(runif(10000), runif(10000)),3)
+observed_locs <- round(cbind(runif(10000), runif(10000)), 3)
 idx <- getIndexesFar(observed_locs)
 plotSplit(observed_locs, idx)
 }

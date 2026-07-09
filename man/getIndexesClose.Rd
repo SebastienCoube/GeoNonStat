@@ -9,8 +9,8 @@ getIndexesClose(locs, prop_test = 0.1)
 \arguments{
 \item{locs}{a matrix of spatial locations.}
 
-\item{prop_test}{the proportion of test locations. Some locations can 
-be observed several times, so the proportion of test indices can be 
+\item{prop_test}{the proportion of test locations. Some locations can
+be observed several times, so the proportion of test indices can be
 greater than prop_test. If NULL, set to 0.1.}
 }
 \value{
@@ -22,9 +22,9 @@ A max-min heuristic is used to scatter the test locations across space,
  by training locations.
 }
 \examples{
-# duplicated observed locations  
+# duplicated observed locations
 observed_locs <- cbind(runif(2000), runif(2000))
-observed_locs <- rbind(observed_locs, observed_locs[1:1000,])
+observed_locs <- rbind(observed_locs, observed_locs[1:1000, ])
 idx <- getIndexesClose(observed_locs, prop_test = 0.1)
 plotSplit(observed_locs, idx)
 }

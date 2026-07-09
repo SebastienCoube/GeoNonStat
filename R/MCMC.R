@@ -51,7 +51,7 @@ runOneChainMcmc <- function(
       initStateParams(state$params)
     }
   )
-  
+
   for (iter in seq_len(n_iterations)) {
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
@@ -61,16 +61,17 @@ runOneChainMcmc <- function(
     # Latent field ###############################
     res <- updateLatentField(
       state = state, hierarchical_model = hierarchical_model,
-      vecchia_approx = vecchia_approx, observed_field = observed_field, 
-      iter = iter, num_threads = num_threads)
-    state$params$field = res$field
+      vecchia_approx = vecchia_approx, observed_field = observed_field,
+      iter = iter, num_threads = num_threads
+    )
+    state$params$field <- res$field
     if (iter + iter_start > 30) {
       res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
       state$params$field <- res$params$field
       state$params$field_log_var <- res$params$field_log_var
       state$ker_var <- res$ker_var
     }
-    
+
     if (iter + iter_start > 60) {
        # Range beta ###############################
        res <- updateRangeBetaAndLogVarMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
@@ -91,16 +92,16 @@ runOneChainMcmc <- function(
            beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
        }
     }
-    
+
     # Noise ###############################
     # Noise beta ###############################
-    
+
     res <- updateNoiseBetaFisher(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
     state <- res[["state"]]
-    
+
     # Noise log scale ###############################
-    if(!is.null(hierarchical_model$noise$PP)){
-      state$params$noise_log_scale = updateVarPPSuff(
+    if (!is.null(hierarchical_model$noise$PP)) {
+      state$params$noise_log_scale <- updateVarPPSuff(
         hm4params = hierarchical_model$noise,
         beta4params = state$params$noise_beta,
         current_range_log_scale = state$params$noise_log_scale
@@ -155,12 +156,13 @@ GeoNonStatMcmc <- function(
   n_iterations = 100,
   seed = 1
 ) {
-  
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
-  if(n_iterations + iter_start < 60) {
-    warning("The algorithm is implemented to update the spatial range parameters ",
-    "after at least 60 iterations. You should increase n_iterations.")
+  if (n_iterations + iter_start < 60) {
+    warning(
+      "The algorithm is implemented to update the spatial range parameters ",
+      "after at least 60 iterations. You should increase n_iterations."
+    )
   }
   usedPlan <- utils::capture.output({
     print(future::plan())

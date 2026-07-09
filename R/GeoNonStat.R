@@ -34,7 +34,7 @@
 #' res <- createVecchia(observed_locs, m = 10)
 createVecchia <- function(observed_locs,
                           m = 6,
-                          ncores = 1, 
+                          ncores = 1,
                           round_locs = 0) {
   # message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
@@ -45,46 +45,46 @@ createVecchia <- function(observed_locs,
   if (ncol(observed_locs) != 2) {
     stop("observed_locs should have 2 columns")
   }
-  
-  if(round_locs>0)observed_locs = round_locs * round(observed_locs / round_locs)
-  
+
+  if (round_locs > 0) observed_locs <- round_locs * round(observed_locs / round_locs)
+
   # remove duplicates
   locs <- unique(observed_locs)
-  
+
   # storing numbers
   n_locs <- nrow(locs)
   n_obs <- nrow(observed_locs)
-  
+
   # re-ordering spatial locations (random then maxmin on subset)
   max_locs <- min(n_locs, 10000)
   neworder <- order(runif(n_locs))
   neworder[seq_len(max_locs)] <- neworder[GpGp::order_maxmin(locs[neworder[seq_len(max_locs)], ])]
   locs <- locs[neworder, ]
-  
+
   # matching observed locations with reordered, unrepeated locations
   locs_match <- match(split(observed_locs, row(observed_locs)), split(locs, row(locs)))
-  
+
   locs_match_matrix <- Matrix::sparseMatrix(i = locs_match, j = seq_len(n_obs), x = 1)
-  
+
   # doing reversed operation : for a given unrepeated location, tell which observations correspond
   hctam_scol <- split(seq_len(n_obs), locs_match)
-  
+
   # extracting NNarray =  nearest neighbours for Vecchia approximation
   NNarray <- t(GpGp::find_ordered_nn(locs, m))
   NNNoNA <- !is.na(NNarray)
-  
+
   sparse_mat <- Matrix::sparseMatrix(
     x = seq_len(sum(NNNoNA)),
     i = col(NNarray)[NNNoNA],
     j = NNarray[NNNoNA],
     triangular = TRUE
   )
-  
+
   sparse_chol_x_reorder <- seq_along(NNarray)[NNNoNA][match(sparse_mat@x, seq_len(sum(NNNoNA)))]
-  
+
   # Partitioning locations using parallel kmeans for field update
   locs_partition <- generateLocationPartitions(locs, n_locs)
-  
+
   markov_mat <- Matrix::crossprod(sparse_mat)
   markov_mat@x[] <- 1
   locs_partition_coloring <- lapply(split(locs_partition, col(locs_partition)), function(x) {
@@ -95,11 +95,11 @@ createVecchia <- function(observed_locs,
     )
     return(naiveGreedyColoring(Matrix::t(M) %*% markov_mat %*% M))
   })
-  
+
   for (i in seq_len(ncol(locs_partition))) {
     locs_partition[, i] <- locs_partition_coloring[[i]][locs_partition[, i]]
   }
-  
+
   return(
     list(
       n_locs = n_locs,
@@ -134,19 +134,19 @@ createVecchia <- function(observed_locs,
 #' @keywords internal
 #' @return a numeric array
 #' @examples
-#' locs <- matrix(rnorm(4000), ncol=2)
+#' locs <- matrix(rnorm(4000), ncol = 2)
 #' locspart <- generateLocationPartitions(locs, 1000)
 generateLocationPartitions <- function(locs, n) {
   clust_size <- 10000
   n_clusters <- ceiling(n / clust_size)
   centers_seq <- round(seq(n_clusters,
-     max(5, 2 * (n_clusters)),
-     length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)
-   ))
-  
+    max(5, 2 * (n_clusters)),
+    length.out = min(10, max(5, 2 * (n_clusters)) - (n_clusters) + 1)
+  ))
+
   locs_partition <- sapply(
-    centers_seq, 
-    function(k) { 
+    centers_seq,
+    function(k) {
       kmeans(
         locs,
         centers = k,
@@ -155,7 +155,7 @@ generateLocationPartitions <- function(locs, n) {
       )$cluster
     }
   )
-  
+
   colnames(locs_partition) <- paste0(centers_seq, "_clust")
   return(locs_partition)
 }
@@ -216,7 +216,7 @@ processCovariates <- function(X,
     covariate_name <- X
   }
   res <- list()
-  
+
   # covariates in the observed field #
   if (!is.null(X)) {
     if (!is.data.frame(X)) {
@@ -230,13 +230,13 @@ processCovariates <- function(X,
         )
       )
     }
-    
+
     # creating model matrix
     # extracting a model matrix and storing the original argument
     res$arg <- X
     res$X <- model.matrix(~., X)
   }
-  
+
   # extracting a model matrix with only intercept and storing a message about the lack of original argument if no X is provided
   if (is.null(X)) {
     res$arg <- NULL
@@ -244,7 +244,7 @@ processCovariates <- function(X,
   }
   colnames(res$X)[1] <- "(Intercept)"
   res$X <- as(res$X, "sparseMatrix")
-  
+
   if (det(as.matrix(crossprod(res$X))) < 1e-10) {
     stop(
       covariate_name,
@@ -287,13 +287,13 @@ processCovariates <- function(X,
       )
     }
   }
-  
+
   res$X_locs <- matrix(
     res$X[vecchia_approx$hctam_scol_1, res$which_locs],
     ncol = length(res$which_locs)
   )
   res$X_locs <- as(res$X_locs, "sparseMatrix")
-  
+
   colnames(res$X_locs) <- colnames(res$X)[res$which_locs]
   X_locs_ <- res$X_locs
   if (!is.null(PP)) {
@@ -307,7 +307,7 @@ processCovariates <- function(X,
       )
     )
   }
-  
+
   # conditioning matrix for HMC
   if (!one_obs_per_locs) {
     crossprod_X <- crossprod(X_)
@@ -389,10 +389,10 @@ processPPPrior <- function(PP = NULL,
 #' Initialize hierarchical model
 #'
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param noise_PP either an object of class PP used to model the field 
+#' @param noise_PP either an object of class PP used to model the field
 #' of log-noise parameters, or NULL in which case the model is stationary
-#' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
-#' uniform prior for the log-marginal variance of the noise's PP, 
+#' @param noise_log_scale_bounds either a length 2 numeric vector bounding
+#' uniform prior for the log-marginal variance of the noise's PP,
 #' or NULL in which case the bounds are set automatically.
 #' @param range_PP TODO
 #' @param range_log_scale_bounds TODO
@@ -436,14 +436,14 @@ processHierarchicalModel <- function(vecchia_approx,
                                      matern_smoothness,
                                      observed_field,
                                      covariates,
-                                     anisotropic=FALSE) {
+                                     anisotropic = FALSE) {
   if (!matern_smoothness %in% c(1.5, .5)) {
     stop("only matern_smoothness = 1.5 or matern_smoothness = 0.5")
   }
   # Processing PP priors
   noise_log_scale_bounds <- processPPPrior(noise_PP, noise_log_scale_bounds, "noise")
   range_log_scale_bounds <- processPPPrior(range_PP, range_log_scale_bounds, "range")
-  
+
   # Making a guess for maximum and minimum reasonable values for the range intercept
   # using as upper bound the geographic space size
   # and as lower bound the minimal distance between two space points
@@ -469,7 +469,7 @@ processHierarchicalModel <- function(vecchia_approx,
     ),
     scale = list(
       beta0_mean = (sigma_max + sigma_min) / 2,
-      beta0_sd = (sigma_max - sigma_min) / 8, 
+      beta0_sd = (sigma_max - sigma_min) / 8,
       sigma_bounds = c(sigma_min, sigma_max)
     ),
     range = list(
@@ -578,8 +578,8 @@ processStates <- function(hm,
   momenta <- list()
   # Useful stuff pre-computed from the parameters
   stuff <- list()
-  
-  
+
+
   # Linear regression coefficients  ############################################
   # starting points for regression coeffs
   perturb <- t(chol(vcov(hm$naive_ols))) %*%
@@ -600,10 +600,10 @@ processStates <- function(hm,
     ) # random starting values
     row.names(params$range_beta) <- colnames(covariates$range_X$X_locs)
   }
-  
+
   if (!is.null(hm$range$PP)) {
-    momenta$range_log_scale_sufficient = rnorm(1 + hm$anisotropic)
-    momenta$range_log_scale_ancillary  = rnorm(1 + hm$anisotropic)
+    momenta$range_log_scale_sufficient <- rnorm(1 + hm$anisotropic)
+    momenta$range_log_scale_ancillary <- rnorm(1 + hm$anisotropic)
     params$range_beta <- matrix(
       data = 0,
       nrow = ncol(covariates$range_X$X_locs) + hm$range$PP$n_knots,
@@ -613,20 +613,20 @@ processStates <- function(hm,
       colnames(covariates$range_X$X_locs),
       paste("PP", seq_len(hm$range$PP$n_knots), sep = "_")
     )
-    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1] , hm$range$log_scale_bounds[1]+ .05 * (hm$range$log_scale_bounds[2]-hm$range$log_scale_bounds[1])))
+    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1] + .05 * (hm$range$log_scale_bounds[2] - hm$range$log_scale_bounds[1])))
     row.names(params$range_log_scale) <- c("range", "aniso")[seq_len(1 + hm$anisotropic)]
   }
   # params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
   colnames(params$range_beta) <- c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
   # row.names(params$range_beta) = c(colnames(covariates$range_X$X))
   params$range_beta[1, 1] <- hm$range$beta0_mean + hm$range$beta0_sd * rnorm(1)
-  
+
   # momenta
   momenta$field_log_var_sufficient <- rnorm(1)
-  momenta$field_log_var_ancillary <-  rnorm(1)
+  momenta$field_log_var_ancillary <- rnorm(1)
   momenta$field_log_var_sufficient_grouped <- rnorm(1)
-  momenta$field_log_var_ancillary_grouped <-  rnorm(1)
-  
+  momenta$field_log_var_ancillary_grouped <- rnorm(1)
+
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   # cholesky factors of precision matrices
@@ -635,7 +635,8 @@ processStates <- function(hm,
     vecchia_approx$n_locs,
     1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
   ))
-  vecchia_(start_idx = 1,
+  vecchia_(
+    start_idx = 1,
     log_range = t(computeLogRange(
       range_beta = params$range_beta,
       vecchia_approx = vecchia_approx,
@@ -654,21 +655,21 @@ processStates <- function(hm,
     vecchia_approx$n_locs,
     1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
   ))
-  
+
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
   stuff$range_beta_conditioning_s <-
-    diag(1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_s[-1,-1] <-
-    diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  stuff$range_beta_conditioning_a <- 
-    diag(1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) *(1 + 2*hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_a[-1,-1] <- 
-    diag(rep(1, 1 + 2*hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+    diag(1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1)
+  stuff$range_beta_conditioning_s[-1, -1] <-
+    diag(rep(1, 1 + 2 * hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
+  stuff$range_beta_conditioning_a <-
+    diag(1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1)
+  stuff$range_beta_conditioning_a[-1, -1] <-
+    diag(rep(1, 1 + 2 * hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
   stuff$noise_beta_conditioning <- as.matrix(covariates$noise_X$crossprod_X)
   # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
-  
+
   # Noise variance  and stuff depending on it ##################################
   # parameter format and value
   if (is.null(hm$noise$PP)) {
@@ -687,7 +688,7 @@ processStates <- function(hm,
       )
     params$noise_log_scale <- hm$noise$log_scale_bounds[1]
   }
-  
+
   if (!is.null(hm$noise$PP)) {
     params$noise_beta <- matrix(rep(0, ncol(covariates$noise_X$X) + hm$noise$PP$n_knots), ncol = 1) # random starting values
     row.names(params$noise_beta) <- c(
@@ -699,7 +700,7 @@ processStates <- function(hm,
   }
   params$noise_beta[1] <- hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
   params$noise_beta[-1] <- rnorm(length(params$noise_beta[-1]), 0, .2)
-  
+
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
@@ -708,15 +709,15 @@ processStates <- function(hm,
     vecchia_approx = vecchia_approx, Y = params$noise_beta,
     permutate_PP_to_obs = T
   )))
-  
+
   # Marginal variance of the NNGP and stuff depending on it ####################
   params$field_log_var <- matrix(hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1))
   row.names(params$field_log_var) <- " "
-  
+
   # Latent field ###############################################################
   params$field <- c(exp(.5 * params$field_log_var)) *
     as.vector(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
-  
+
   return(list(
     "params" = params,
     # parameters of interest to the model
@@ -731,30 +732,30 @@ processStates <- function(hm,
 # S3 class GeoNonStat
 #' Create an object of class GeoNonStat
 #'
-#' @param vecchia_approx an object created by `vecchia_approx()` from the 
-#' N spatial coordinates of the observations 
+#' @param vecchia_approx an object created by `vecchia_approx()` from the
+#' N spatial coordinates of the observations
 #' @param observed_field a vector of N observations of the interest variable
-#' @param X a data.frame of N observations from covariates explaining the 
+#' @param X a data.frame of N observations from covariates explaining the
 #' interest variable through fixed linear effects
 #' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
-#' @param range_X a data.frame of N observations from covariates explaining the 
-#' Gaussian process range through fixed linear effects, or NULL in which case 
+#' @param range_X a data.frame of N observations from covariates explaining the
+#' Gaussian process range through fixed linear effects, or NULL in which case
 #' the range is constant (i.e. the field is stationary).
-#' @param range_PP an object of class `PP` used to model spatial variations of 
-#' the range of the latent field, or NULL. 
-#' The Intercept is automatically added even if X_range is NULL. 
-#' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds 
+#' @param range_PP an object of class `PP` used to model spatial variations of
+#' the range of the latent field, or NULL.
+#' The Intercept is automatically added even if X_range is NULL.
+#' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds
 #' for the uniform prior of the latent field marginal variance
-#' @param noise_X a data.frame of N observations from covariates explaining the 
+#' @param noise_X a data.frame of N observations from covariates explaining the
 #' Gaussian noise variance through fixed linear effects, or NULL.
-#' The Intercept is automatically added even if X_noise is NULL. 
+#' The Intercept is automatically added even if X_noise is NULL.
 #' @param noise_PP either an object of class PP used to model the field of
-#' log-noise parameters, or NULL. 
-#' @param noise_log_scale_bounds either a length 2 numeric vector bounding 
-#' uniform prior for the log-marginal variance of the noise's PP, 
+#' log-noise parameters, or NULL.
+#' @param noise_log_scale_bounds either a length 2 numeric vector bounding
+#' uniform prior for the log-marginal variance of the noise's PP,
 #' or NULL in which case the bounds are set automatically.
 #' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #'
@@ -768,30 +769,30 @@ processStates <- function(hm,
 #'  }
 #'  \item{\strong{Fixed effects}}{Link linearly the interest variable from observed_field with
 #'  explanatory variables from \code{X} using the matrix of regression coefficients beta}
-#'  \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance 
-#' being specified through \code{noise_X} and \code{noise_PP}} 
+#'  \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance
+#' being specified through \code{noise_X} and \code{noise_PP}}
 #'   \itemize{
-#'    \item \code{noise_X} captures fixed effects of explanatory covariates. 
-#'    \item \code{noise_PP} captures random spatial variations. 
-#'    \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic. 
+#'    \item \code{noise_X} captures fixed effects of explanatory covariates.
+#'    \item \code{noise_PP} captures random spatial variations.
+#'    \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic.
 #'   }
 #' \item{\strong{Field range model}}{Can be isotropic or anisotropic, and stationary or nonstationary.}
 #' \itemize{
-#'  \item Anisotropy means that the correlation changes with the direction, 
+#'  \item Anisotropy means that the correlation changes with the direction,
 #'  and is specified through the Boolean argument \code{anisotropic}
-#'  \item Nonstationarity is specified through \code{range_X} and \code{range_PP} 
+#'  \item Nonstationarity is specified through \code{range_X} and \code{range_PP}
 #'  \itemize{
-#'  \item \code{range_X} captures fixed effects of explanatory covariates. 
-#'  \item \code{range_PP} captures random spatial variations. 
-#'  \item If both are \code{NULL} then the model depends only on an intercept, and is stationary. 
+#'  \item \code{range_X} captures fixed effects of explanatory covariates.
+#'  \item \code{range_PP} captures random spatial variations.
+#'  \item If both are \code{NULL} then the model depends only on an intercept, and is stationary.
 #'  }
 #' }
 #' \item{\strong{Notes}}{
-#' 
-#' The latent field can be anisotropic and stationary, in which case there will 
+#'
+#' The latent field can be anisotropic and stationary, in which case there will
 #' be a constant direction in the field correlation.
-#' 
-#' When the field is specified as isotropic but nonstationary, it actually is 
+#'
+#' When the field is specified as isotropic but nonstationary, it actually is
 #' just locally isotropic.
 #' }
 #' }
@@ -855,9 +856,9 @@ GeoNonStat <- function(vecchia_approx,
   set.seed(seed)
   # cleansing RAM
   gc()
-  
+
   # Sanity checks #####################################################################
-  
+
   # covariates #########################################################
   covariates <- list()
   # fixed effects for response
@@ -881,7 +882,7 @@ GeoNonStat <- function(vecchia_approx,
     PP = noise_PP,
     one_obs_per_locs = FALSE
   )
-  
+
   # Info about hierarchical model ##############################################################
   hierarchical_model <- processHierarchicalModel(
     vecchia_approx = vecchia_approx,
@@ -895,7 +896,7 @@ GeoNonStat <- function(vecchia_approx,
     covariates = covariates,
     anisotropic = anisotropic
   )
-  
+
   # Chain states #################################################################
   # cl = parallel::makeCluster(min(parallel::detectCores()-1, n_chains))
   # parallel::clusterExport(cl, c("hierarchical_model", "covariates",
@@ -916,7 +917,7 @@ GeoNonStat <- function(vecchia_approx,
     )
   names(states) <- paste("chain", seq_len(n_chains), sep = "_")
   # parallel::stopCluster(cl)
-  
+
   # Chain records setup #######################################################
   # records is a list that stocks the recorded parameters of the model,
   # including covariance parameters, the value of the sampled field, etc.
@@ -927,7 +928,7 @@ GeoNonStat <- function(vecchia_approx,
   )
   # iteration is a 2-colums matrix that records the iteration at the end of
   # each chains join and the associated CPU time
-  
+
   # Result ####################################################################
   res <- structure(
     list(
@@ -957,7 +958,7 @@ GeoNonStat <- function(vecchia_approx,
 #' @export
 #' @method print GeoNonStat
 print.GeoNonStat <- function(x, ...) {
-  summary(x, burn_in=NA)
+  summary(x, burn_in = NA)
   return(invisible(NULL))
 }
 
@@ -970,41 +971,51 @@ print.GeoNonStat <- function(x, ...) {
 #' @rdname GeoNonStat
 #' @export
 #' @method summary GeoNonStat
-summary.GeoNonStat <- function(object, burn_in=0.1, ...) {
-  res <- list("info"=list(), 
-              "noise_model" = list(),
-              "range_model" = list(),
-              "mcmc" = list())
-  
+summary.GeoNonStat <- function(object, burn_in = 0.1, ...) {
+  res <- list(
+    "info" = list(),
+    "noise_model" = list(),
+    "range_model" = list(),
+    "mcmc" = list()
+  )
+
   #### General infos #####
-  res$info <- list("n_obs" = object$vecchia_approx$n_obs,
-                   "n_locs" = object$vecchia_approx$n_locs,
-                   "n_vars_X" = ncol(object$covariates$X$X)-1)
-  cat("GeoNonStat object with:\n", 
-      res$info$n_obs, "observations on", 
-      res$info$n_locs, "distinct locations\nand", 
-      res$info$n_vars_X,
-      "variable(s) (+ intercept) who explain the interest variable through linear effects.\n")
-  
-    # The noise model is 
+  res$info <- list(
+    "n_obs" = object$vecchia_approx$n_obs,
+    "n_locs" = object$vecchia_approx$n_locs,
+    "n_vars_X" = ncol(object$covariates$X$X) - 1
+  )
+  cat(
+    "GeoNonStat object with:\n",
+    res$info$n_obs, "observations on",
+    res$info$n_locs, "distinct locations\nand",
+    res$info$n_vars_X,
+    "variable(s) (+ intercept) who explain the interest variable through linear effects.\n"
+  )
+
+  # The noise model is
   cat("\n### Noise model ###\n")
   res$noise_model <- list(
-    "n_var_noise" = ncol(object$covariates$noise_X$X)-1,
+    "n_var_noise" = ncol(object$covariates$noise_X$X) - 1,
     "noise_PP" = !is.null(object$hierarchical_model$noise$PP)
   )
   if (res$noise_model$n_var_noise == 0 && !res$noise_model$noise_PP) {
     cat("Stationary\n")
   } else if (!res$noise_model$noise_PP) {
-    cat("Non stationary with", res$noise_model$n_var_noise, 
-        "explanatory variable(s) (+ intercept)\n")
+    cat(
+      "Non stationary with", res$noise_model$n_var_noise,
+      "explanatory variable(s) (+ intercept)\n"
+    )
   } else {
-    cat("Non stationary with", res$noise_model$n_var_noise, 
-        "explanatory variable(s) (+ intercept) and a PP\n")
+    cat(
+      "Non stationary with", res$noise_model$n_var_noise,
+      "explanatory variable(s) (+ intercept) and a PP\n"
+    )
   }
-  
+
   cat("\n### Gaussian Process range model ###\n")
   res$range_model <- list(
-    "n_var_range" = ncol(object$covariates$range_X$X)-1,
+    "n_var_range" = ncol(object$covariates$range_X$X) - 1,
     "range_PP" = !is.null(object$hierarchical_model$range$PP),
     "anisotropic" = object$hierarchical_model$anisotropic
   )
@@ -1012,39 +1023,47 @@ summary.GeoNonStat <- function(object, burn_in=0.1, ...) {
   if (res$range_model$n_var_range == 0 && !res$range_model$range_PP) {
     "Stationary\n"
   } else if (!res$range_model$range_PP) {
-    cat("Non stationary with", res$range_model$n_var_range, 
-        "explanatory variable(s) (+ intercept)\n")
+    cat(
+      "Non stationary with", res$range_model$n_var_range,
+      "explanatory variable(s) (+ intercept)\n"
+    )
   } else {
-    cat("Non stationary with", res$range_model$n_var_range, 
-        "explanatory variable(s) (+ intercept) and a PP\n")
+    cat(
+      "Non stationary with", res$range_model$n_var_range,
+      "explanatory variable(s) (+ intercept) and a PP\n"
+    )
   }
-  
+
   cat("\n### MCMC ###\n")
   res$mcmc <- list(
-    "n_iter" = length(object$records$chain_1)-1
+    "n_iter" = length(object$records$chain_1) - 1
   )
-  
+
   cat(res$mcmc$n_iter, "MCMC iterations already run.\n")
-  if(res$mcmc$n_iter>0 & !is.na(burn_in)) {
+  if (res$mcmc$n_iter > 0 & !is.na(burn_in)) {
     diags <- mcmcDiags(object, burn_in = burn_in, verbose = FALSE)
     res$mcmc$burn_in <- burn_in
     res$mcmc$diags <- diags
-    
-    res$mcmc$min_ess <- diags$worst[diags$worst$criterium=="ess","value"]
-    cat(paste0("With burn_in=", burn_in), ":\n  -the minimal ESS is", 
-        res$mcmc$min_ess, "which is ")
-    if(res$mcmc$min_ess>100) {
+
+    res$mcmc$min_ess <- diags$worst[diags$worst$criterium == "ess", "value"]
+    cat(
+      paste0("With burn_in=", burn_in), ":\n  -the minimal ESS is",
+      res$mcmc$min_ess, "which is "
+    )
+    if (res$mcmc$min_ess > 100) {
       cat("sufficient but can always be improved with more iterations\n")
-    } else { 
+    } else {
       cat("not sufficient\n")
     }
-    
-    res$mcmc$max_grup <- diags$worst[diags$worst$criterium=="Upper C.I. Gelman","value"]
-    cat("  -the worst Gelman-Rubin upper bound is", 
-        res$mcmc$max_grup, " which is ")
-    if(res$mcmc$max_grup <= 1.1) {
+
+    res$mcmc$max_grup <- diags$worst[diags$worst$criterium == "Upper C.I. Gelman", "value"]
+    cat(
+      "  -the worst Gelman-Rubin upper bound is",
+      res$mcmc$max_grup, " which is "
+    )
+    if (res$mcmc$max_grup <= 1.1) {
       cat("good enough\n")
-    } else { 
+    } else {
       cat("not good enough\n")
     }
     cat("\nSee more detailed diagnostics with `mcmcDiags` function.\n")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{subsetData}
 \alias{subsetData}
-\title{Subset a list containing matrices or a data.frames objects. 
+\title{Subset a list containing matrices or a data.frames objects.
 If NULL, return NULL}
 \usage{
 subsetData(data, idx)
@@ -16,7 +16,7 @@ subsetData(data, idx)
 a list
 }
 \description{
-Subset a list containing matrices or a data.frames objects. 
+Subset a list containing matrices or a data.frames objects.
 If NULL, return NULL
 }
 \keyword{internal}

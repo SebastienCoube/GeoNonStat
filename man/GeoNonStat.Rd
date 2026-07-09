@@ -42,12 +42,12 @@ GeoNonStat(
 )
 }
 \arguments{
-\item{vecchia_approx}{an object created by `vecchia_approx()` from the 
+\item{vecchia_approx}{an object created by `vecchia_approx()` from the
 N spatial coordinates of the observations}
 
 \item{observed_field}{a vector of N observations of the interest variable}
 
-\item{X}{a data.frame of N observations from covariates explaining the 
+\item{X}{a data.frame of N observations from covariates explaining the
 interest variable through fixed linear effects}
 
 \item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
@@ -57,26 +57,26 @@ either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{n_chains}{number of MCMC chains}
 
-\item{range_X}{a data.frame of N observations from covariates explaining the 
-Gaussian process range through fixed linear effects, or NULL in which case 
+\item{range_X}{a data.frame of N observations from covariates explaining the
+Gaussian process range through fixed linear effects, or NULL in which case
 the range is constant (i.e. the field is stationary).}
 
-\item{range_PP}{an object of class `PP` used to model spatial variations of 
-the range of the latent field, or NULL. 
+\item{range_PP}{an object of class `PP` used to model spatial variations of
+the range of the latent field, or NULL.
 The Intercept is automatically added even if X_range is NULL.}
 
-\item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds 
+\item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds
 for the uniform prior of the latent field marginal variance}
 
-\item{noise_X}{a data.frame of N observations from covariates explaining the 
+\item{noise_X}{a data.frame of N observations from covariates explaining the
 Gaussian noise variance through fixed linear effects, or NULL.
 The Intercept is automatically added even if X_noise is NULL.}
 
 \item{noise_PP}{either an object of class PP used to model the field of
 log-noise parameters, or NULL.}
 
-\item{noise_log_scale_bounds}{either a length 2 numeric vector bounding 
-uniform prior for the log-marginal variance of the noise's PP, 
+\item{noise_log_scale_bounds}{either a length 2 numeric vector bounding
+uniform prior for the log-marginal variance of the noise's PP,
 or NULL in which case the bounds are set automatically.}
 
 \item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
@@ -103,16 +103,16 @@ or NULL in which case the bounds are set automatically.}
 An object of class `GeoNonStat`
 }
 \description{
-Hierarchical Nonstationary Nearest Neighbor Gaussian Process. 
-This package allows to model observations with point coordinates in a 2D, 
-geographic space. 
-Explanatory variable impact on the interest variable is modeled using a 
-linear model.  
-Spatial auto-correlation of the data is captured using a possibly 
-non-stationary Nearest Neighbor Gaussian process. 
-Independent observation noise is captured using a possibly heteroskedastic 
-Gaussian noise.   
-The complexity levels of the Gaussian Process and the observation noise are 
+Hierarchical Nonstationary Nearest Neighbor Gaussian Process.
+This package allows to model observations with point coordinates in a 2D,
+geographic space.
+Explanatory variable impact on the interest variable is modeled using a
+linear model.
+Spatial auto-correlation of the data is captured using a possibly
+non-stationary Nearest Neighbor Gaussian process.
+Independent observation noise is captured using a possibly heteroskedastic
+Gaussian noise.
+The complexity levels of the Gaussian Process and the observation noise are
 specified by the user through an interpretable parametrization.
 }
 \details{
@@ -125,30 +125,30 @@ specified by the user through an interpretable parametrization.
  }
  \item{\strong{Fixed effects}}{Link linearly the interest variable from observed_field with
  explanatory variables from \code{X} using the matrix of regression coefficients beta}
- \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance 
-being specified through \code{noise_X} and \code{noise_PP}} 
+ \item{\strong{Noise model}}{The noise can be \strong{heteroskedastic}, the variance
+being specified through \code{noise_X} and \code{noise_PP}}
   \itemize{
-   \item \code{noise_X} captures fixed effects of explanatory covariates. 
-   \item \code{noise_PP} captures random spatial variations. 
-   \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic. 
+   \item \code{noise_X} captures fixed effects of explanatory covariates.
+   \item \code{noise_PP} captures random spatial variations.
+   \item If both are \code{NULL} then the model depends only on an intercept, and is homoskedastic.
   }
 \item{\strong{Field range model}}{Can be isotropic or anisotropic, and stationary or nonstationary.}
 \itemize{
- \item Anisotropy means that the correlation changes with the direction, 
+ \item Anisotropy means that the correlation changes with the direction,
  and is specified through the Boolean argument \code{anisotropic}
- \item Nonstationarity is specified through \code{range_X} and \code{range_PP} 
+ \item Nonstationarity is specified through \code{range_X} and \code{range_PP}
  \itemize{
- \item \code{range_X} captures fixed effects of explanatory covariates. 
- \item \code{range_PP} captures random spatial variations. 
- \item If both are \code{NULL} then the model depends only on an intercept, and is stationary. 
+ \item \code{range_X} captures fixed effects of explanatory covariates.
+ \item \code{range_PP} captures random spatial variations.
+ \item If both are \code{NULL} then the model depends only on an intercept, and is stationary.
  }
 }
 \item{\strong{Notes}}{
 
-The latent field can be anisotropic and stationary, in which case there will 
+The latent field can be anisotropic and stationary, in which case there will
 be a constant direction in the field correlation.
 
-When the field is specified as isotropic but nonstationary, it actually is 
+When the field is specified as isotropic but nonstationary, it actually is
 just locally isotropic.
 }
 }

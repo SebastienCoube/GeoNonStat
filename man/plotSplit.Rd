@@ -13,7 +13,7 @@ plotSplit(
 )
 }
 \arguments{
-\item{locs}{a matrix (or data.frame or array) with 2 columns containing 
+\item{locs}{a matrix (or data.frame or array) with 2 columns containing
 spatial locations}
 
 \item{indexes}{a list of length n, containing usually train and test indices,
