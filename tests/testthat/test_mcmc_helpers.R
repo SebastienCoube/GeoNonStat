@@ -175,10 +175,8 @@ test_that("updateRangeBetaAndLogVarMALA is reproducible for a fixed seed", {
   obj2 <- make_small_geononstat(2032)
   expect_equal(obj1$states$chain_1, obj2$states$chain_1)
   set.seed(23)
-  state = obj1$states$chain_1
-  statekeep <- rlang::duplicate(state, shallow = FALSE)
   res1 <- updateRangeBetaAndLogVarMALA(
-    state = state,
+    state = obj1$states$chain_1,
     hierarchical_model = obj1$hierarchical_model,
     vecchia_approx = obj1$vecchia_approx,
     range_X = obj1$covariates$range_X,
@@ -188,10 +186,10 @@ test_that("updateRangeBetaAndLogVarMALA is reproducible for a fixed seed", {
   )
   set.seed(23)
   res2 <- updateRangeBetaAndLogVarMALA(
-    state = statekeep,
-    hierarchical_model = obj1$hierarchical_model,
-    vecchia_approx = obj1$vecchia_approx,
-    range_X = obj1$covariates$range_X,
+    state = obj2$states$chain_1,
+    hierarchical_model = obj2$hierarchical_model,
+    vecchia_approx = obj2$vecchia_approx,
+    range_X = obj2$covariates$range_X,
     iter = 1,
     iter_start = 0,
     num_threads = 1
