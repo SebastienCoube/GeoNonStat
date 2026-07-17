@@ -2,35 +2,26 @@
 % Please edit documentation in R/GeoNonStat.R
 \name{processStates}
 \alias{processStates}
-\title{Title}
+\title{Process states to create GeoNonStat object}
 \usage{
-processStates(
-  hm,
-  covariates,
-  observed_field,
-  vecchia_approx,
-  init_tk,
-  seed = 1
-)
+processStates(hm, covariates, observed_field, vecchia_approx, init_tk)
 }
 \arguments{
 \item{hm}{a hierarchical model (obtained with `processHierarchicalModel()`)}
 
 \item{covariates}{The list of covariates obtained with `processCovariates`}
 
-\item{observed_field}{TODO}
+\item{observed_field}{a vector of observations}
 
 \item{vecchia_approx}{an object created by `vecchia_approx()`}
 
 \item{init_tk}{numerical value to initialize transition kernels}
-
-\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
 a list
 }
 \description{
-Title
+Process states to create GeoNonStat object
 }
 \examples{
 set.seed(100)

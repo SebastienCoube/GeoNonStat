@@ -12,28 +12,26 @@ runOneChainMcmc(
   state,
   n_iterations = 100,
   num_threads = 1,
-  iter_start,
-  seed = 123
+  iter_start
 )
 }
 \arguments{
 \item{covariates}{The list of covariates obtained with `processCovariates()`}
 
-\item{observed_field}{TODO}
+\item{observed_field}{a vector of observations of the interest variable}
 
 \item{hierarchical_model}{a hierarchical model (obtained with `processHierarchicalModel()`)}
 
 \item{vecchia_approx}{an object created by `vecchiaApprox()`}
 
-\item{state}{TODO}
+\item{state}{state (from a chain of GeoNonstat object) to update}
 
 \item{n_iterations}{numeric value, number of iterations of MCMC. Default to 100}
 
-\item{num_threads}{TODO}
+\item{num_threads}{number of threads. Integer.}
 
-\item{iter_start}{TODO}
-
-\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
+\item{iter_start}{integer, iteration where to start (if some iterations are 
+already computed, begin after the last one)}
 }
 \value{
 a list containaing last state and records of parameters for each
@@ -44,7 +42,6 @@ Run the MCMC on one chain of a `GeoNonStat` object
 }
 \examples{
 chain_id <- 1
-seed <- 1
 iter_start <- length(gnsDemo$records$chain_1)
 processedChain <-
   runOneChainMcmc(
@@ -55,8 +52,7 @@ processedChain <-
     state = gnsDemo$states[[chain_id]],
     n_iterations = 20,
     num_threads = 1,
-    iter_start = iter_start,
-    seed = iter_start + seed + chain_id
+    iter_start = iter_start
   )
 names(processedChain)
 }

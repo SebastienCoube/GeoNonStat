@@ -17,15 +17,16 @@ createGnsSimulatorParameters(
 \arguments{
 \item{gns_simulator}{an object created by `createGnsSimulator()`}
 
-\item{range_intercept}{TODO}
+\item{range_intercept}{numeric value, for the intercept of range. Default to NULL (set to 0)}
 
-\item{range_PP_log_var}{TODO}
+\item{range_PP_log_var}{log var for PP range. Default to NULL (0). Numeric value of 
+length `1 + gns_simulator$anisotropic`.}
 
-\item{noise_intercept}{TODO}
+\item{noise_intercept}{numeric value, for the intercept of noise. Default to NULL (set to 0)}
 
-\item{noise_PP_log_var}{TODO}
+\item{noise_PP_log_var}{numeric value, for the log variance of noise PP. Default to NULL (set to -6)}
 
-\item{field_log_var}{TODO}
+\item{field_log_var}{numeric value, log variance of the field. Default to NULL (set to 0)}
 
 \item{verbose}{logical, default to TRUE. Active verbose mode ?}
 }

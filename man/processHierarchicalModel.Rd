@@ -27,11 +27,13 @@ of log-noise parameters, or NULL in which case the model is stationary}
 uniform prior for the log-marginal variance of the noise's PP,
 or NULL in which case the bounds are set automatically.}
 
-\item{range_PP}{TODO}
+\item{range_PP}{an object of class `PP` used to model spatial variations of
+the range of the latent field, or NULL.}
 
-\item{range_log_scale_bounds}{TODO}
+\item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds
+for the uniform prior of the latent field marginal variance}
 
-\item{observed_locs}{TODO}
+\item{observed_locs}{a matrix of spatial coordinates where observations are done}
 
 \item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}

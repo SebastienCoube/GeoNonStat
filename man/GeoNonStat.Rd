@@ -22,8 +22,7 @@ GeoNonStat(
   range_log_scale_bounds = NULL,
   noise_X = NULL,
   noise_PP = NULL,
-  noise_log_scale_bounds = NULL,
-  seed = 1
+  noise_log_scale_bounds = NULL
 )
 
 \method{print}{GeoNonStat}(x, ...)
@@ -79,15 +78,14 @@ log-noise parameters, or NULL.}
 uniform prior for the log-marginal variance of the noise's PP,
 or NULL in which case the bounds are set automatically.}
 
-\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
-
 \item{x}{an object of class \code{GeoNonStat}}
 
 \item{...}{additional arguments (unused)}
 
 \item{object}{an object of class \code{GeoNonStat}}
 
-\item{burn_in}{numeric value,}
+\item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
+first records that should be removed. Default to 0.1}
 
 \item{new_locs}{new locations}
 
@@ -183,8 +181,7 @@ myobj <- GeoNonStat(
   noise_PP = noise_PP,
   noise_log_scale_bounds = noise_log_scale_bounds,
   range_X = range_X,
-  range_PP = NULL,
-  seed = 1
+  range_PP = NULL
 )
 summary(myobj)
 myobj

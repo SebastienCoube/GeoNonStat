@@ -34,7 +34,9 @@ log-noise parameters, or NULL in which case the model is stationary}
 \item{range_X}{a data.frame of covariates explaining the Gaussian process
 range through fixed linear effects}
 
-\item{range_PP}{TODO}
+\item{range_PP}{an object of class `PP` used to model spatial variations of
+the range of the latent field, or NULL.
+The Intercept is automatically added even if X_range is NULL.}
 
 \item{anisotropic}{logical, default to FALSE. Is the covariance anisotropic ?}
 }

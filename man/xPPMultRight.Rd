@@ -21,7 +21,7 @@ xPPMultRight(
 
 \item{Y}{the matrix who multiplies the covariates and the PP}
 
-\item{permutate_PP_to_obs}{TODO}
+\item{permutate_PP_to_obs}{logical, default to FALSE. TODO}
 }
 \value{
 a matrix

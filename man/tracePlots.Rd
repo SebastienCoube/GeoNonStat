@@ -12,7 +12,7 @@ tracePlots(object, burn_in = 0.1, keep = "all")
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed. Default to 0.1}
 
-\item{keep}{names of pramaters to plot}
+\item{keep}{names of paramaters to plot}
 }
 \description{
 Trace the records of a processed GeoNonStat object

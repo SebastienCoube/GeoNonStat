@@ -8,8 +8,7 @@ GeoNonStatMcmc(
   object,
   n_chains_in_parallel = NULL,
   n_threads_per_chain = 5,
-  n_iterations = 100,
-  seed = 1
+  n_iterations = 100
 )
 }
 \arguments{
@@ -20,8 +19,6 @@ GeoNonStatMcmc(
 \item{n_threads_per_chain}{numeric, number of threads by markov chain, default to 5}
 
 \item{n_iterations}{numeric value, number of iterations of MCMC. Default to 100}
-
-\item{seed}{integer value, seed used for reproducibility purposes. Default to 1}
 }
 \value{
 a GeoNonStat object, with updated state (last state by chain)

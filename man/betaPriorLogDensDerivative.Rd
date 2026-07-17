@@ -15,7 +15,8 @@ betaPriorLogDensDerivative(beta, n_PP, beta0_mean, beta0_var, log_scale)
 
 \item{beta0_var}{numeric value, mean of beta_0}
 
-\item{log_scale}{TODO}
+\item{log_scale}{numeric vector of length 1 for a 1 column beta matrix
+and length 2 for a 3 column beta matrix}
 }
 \value{
 an array
