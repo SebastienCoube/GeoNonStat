@@ -43,7 +43,6 @@ knotsFromKmeans <- function(knots_number, locs) {
 #'   * `NULL` (default) - in which case a default number and placement of knots is used.
 #' @param reorder_knots logical, default to FALSE. Should knots be reordered ?
 #' If so, the knots will be reordered using `GpGp::order_maxmin`
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @param plot logical, whether to produce diagnostic plots (default `TRUE`).
 #' @param verbose logical, default to TRUE. print the diagnostic of var loss ?
 #'
@@ -109,7 +108,6 @@ createPP <- function(vecchia_approx,
                      matern_range = NULL,
                      knots = NULL,
                      reorder_knots = TRUE,
-                     seed = 1234,
                      plot = TRUE,
                      verbose = TRUE) {
   # Sanity checks
@@ -120,8 +118,6 @@ createPP <- function(vecchia_approx,
     matern_range <= 0) {
     stop("'matern_range' must be positive.")
   }
-
-
   # Automatic if no knots
   if (is.null(knots)) {
     message(paste("Finding knots number using marginal variance loss criterion", knots))
@@ -133,7 +129,6 @@ createPP <- function(vecchia_approx,
       res <- createPP(
         vecchia_approx = vecchia_approx,
         plot = FALSE,
-        seed = seed,
         reorder_knots = TRUE,
         knots = knots,
         matern_range = matern_range,

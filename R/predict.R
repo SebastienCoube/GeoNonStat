@@ -155,7 +155,8 @@ predict1Field <- function(range_beta,
 #' @param new_X new X
 #' @param new_noise_X new X for noise parameters
 #' @param new_range_X new X for range parameters
-#' @param burn_in numeric value,
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @param num_threads number of threads. Integer.
 #' @param ... additional arguments (unused)
 #' @rdname GeoNonStat

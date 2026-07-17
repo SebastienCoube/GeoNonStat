@@ -12,7 +12,9 @@
 #' log-noise parameters, or NULL in which case the model is stationary
 #' @param range_X a data.frame of covariates explaining the Gaussian process
 #' range through fixed linear effects
-#' @param range_PP TODO
+#' @param range_PP an object of class `PP` used to model spatial variations of
+#' the range of the latent field, or NULL.
+#' The Intercept is automatically added even if X_range is NULL.
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #'
 #' @returns a list
@@ -88,11 +90,12 @@ createGnsSimulator <- function(vecchia_approx,
 #' @title From a GeoNonStatSimulator object, creates parameters at the right format
 #'
 #' @param gns_simulator an object created by `createGnsSimulator()`
-#' @param range_intercept TODO
-#' @param range_PP_log_var TODO
-#' @param noise_intercept TODO
-#' @param noise_PP_log_var TODO
-#' @param field_log_var TODO
+#' @param range_intercept numeric value, for the intercept of range. Default to NULL (set to 0)
+#' @param range_PP_log_var log var for PP range. Default to NULL (0). Numeric value of 
+#' length `1 + gns_simulator$anisotropic`. 
+#' @param noise_intercept numeric value, for the intercept of noise. Default to NULL (set to 0)
+#' @param noise_PP_log_var numeric value, for the log variance of noise PP. Default to NULL (set to -6)
+#' @param field_log_var numeric value, log variance of the field. Default to NULL (set to 0)
 #' @param verbose logical, default to TRUE. Active verbose mode ?
 #'
 #' @returns a list

@@ -234,7 +234,6 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 #' @param pch a vector of pch for points shape of length 1 or 2. Passed to `plot`
 #' @param cex a numeric vector for points size of length 1 or 2. Passed to `plot`
 #' @param col a vector for points color of length 1 or 2. Passed to `plot`
-
 #' @returns a plot
 #' @export
 #'

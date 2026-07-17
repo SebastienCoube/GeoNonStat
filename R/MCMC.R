@@ -1,14 +1,14 @@
 #' Run the MCMC on one chain of a `GeoNonStat` object
 #'
 #' @param covariates  The list of covariates obtained with `processCovariates()`
-#' @param observed_field TODO
+#' @param observed_field a vector of observations of the interest variable
 #' @param hierarchical_model a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @param vecchia_approx an object created by `vecchiaApprox()`
-#' @param state TODO
+#' @param state state (from a chain of GeoNonstat object) to update
 #' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
-#' @param num_threads TODO
-#' @param iter_start TODO
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
+#' @param num_threads number of threads. Integer.
+#' @param iter_start integer, iteration where to start (if some iterations are 
+#' already computed, begin after the last one)
 #'
 #' @returns a list containaing last state and records of parameters for each
 #' MCMC iteration
@@ -17,7 +17,6 @@
 #'
 #' @examples
 #' chain_id <- 1
-#' seed <- 1
 #' iter_start <- length(gnsDemo$records$chain_1)
 #' processedChain <-
 #'   runOneChainMcmc(
@@ -28,8 +27,7 @@
 #'     state = gnsDemo$states[[chain_id]],
 #'     n_iterations = 20,
 #'     num_threads = 1,
-#'     iter_start = iter_start,
-#'     seed = iter_start + seed + chain_id
+#'     iter_start = iter_start
 #'   )
 #' names(processedChain)
 runOneChainMcmc <- function(
@@ -40,10 +38,8 @@ runOneChainMcmc <- function(
   state,
   n_iterations = 100,
   num_threads = 1,
-  iter_start,
-  seed = 123
+  iter_start
 ) {
-  set.seed(seed)
   # Initialization of parameters (empty whith right structure)
   params_records <- lapply(
     seq_len(n_iterations),
@@ -120,7 +116,6 @@ runOneChainMcmc <- function(
 #' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
 #' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{
@@ -153,8 +148,7 @@ GeoNonStatMcmc <- function(
   object,
   n_chains_in_parallel = NULL,
   n_threads_per_chain = 5,
-  n_iterations = 100,
-  seed = 1
+  n_iterations = 100
 ) {
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
@@ -182,10 +176,9 @@ GeoNonStatMcmc <- function(
   states_local <- object$states
 
   res <- future.apply::future_mapply(
-    FUN = function(states_local, seed_for_chain) {
+    FUN = function(states_local) {
       runOneChainMcmc(
         state = states_local,
-        seed = seed_for_chain,
         covariates = covariates_local,
         observed_field = observed_field_local,
         hierarchical_model = hierarchical_model_local,
@@ -196,7 +189,6 @@ GeoNonStatMcmc <- function(
       )
     },
     object$states,
-    iter_start + seed + chains,
     SIMPLIFY = FALSE,
     future.seed = TRUE,
     future.globals = list(

@@ -394,9 +394,11 @@ processPPPrior <- function(PP = NULL,
 #' @param noise_log_scale_bounds either a length 2 numeric vector bounding
 #' uniform prior for the log-marginal variance of the noise's PP,
 #' or NULL in which case the bounds are set automatically.
-#' @param range_PP TODO
-#' @param range_log_scale_bounds TODO
-#' @param observed_locs TODO
+#' @param range_PP an object of class `PP` used to model spatial variations of
+#' the range of the latent field, or NULL.
+#' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds
+#' for the uniform prior of the latent field marginal variance
+#' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param observed_field a vector of observations.
@@ -517,14 +519,13 @@ processTransitionKernels <- function(init = -4) {
   )
 }
 
-#' Title
+#' Process states to create GeoNonStat object
 #'
 #' @param hm a hierarchical model (obtained with `processHierarchicalModel()`)
 #' @param covariates The list of covariates obtained with `processCovariates`
-#' @param observed_field TODO
+#' @param observed_field a vector of observations
 #' @param vecchia_approx an object created by `vecchia_approx()`
 #' @param init_tk numerical value to initialize transition kernels
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
 #' @export
 #' @keywords internal
 #'
@@ -566,10 +567,8 @@ processStates <- function(hm,
                           covariates,
                           observed_field,
                           vecchia_approx,
-                          init_tk,
-                          seed = 1) {
-  set.seed(seed)
-  # initializing sub-lisits in the state
+                          init_tk
+                          ) {
   # Actual parameters
   params <- list()
   # Metropolis proposal distribution width for MCMC
@@ -757,8 +756,7 @@ processStates <- function(hm,
 #' @param noise_log_scale_bounds either a length 2 numeric vector bounding
 #' uniform prior for the log-marginal variance of the noise's PP,
 #' or NULL in which case the bounds are set automatically.
-#' @param seed integer value, seed used for reproducibility purposes. Default to 1
-#'
+#' 
 #' @details
 #' \describe{
 #'  \item{\strong{Decomposition of the observations}}{Each of the N observation from observed_field is decomposed into 3 components:}
@@ -829,8 +827,7 @@ processStates <- function(hm,
 #'   noise_PP = noise_PP,
 #'   noise_log_scale_bounds = noise_log_scale_bounds,
 #'   range_X = range_X,
-#'   range_PP = NULL,
-#'   seed = 1
+#'   range_PP = NULL
 #' )
 #' summary(myobj)
 #' myobj
@@ -848,12 +845,10 @@ GeoNonStat <- function(vecchia_approx,
                        range_log_scale_bounds = NULL,
                        noise_X = NULL,
                        noise_PP = NULL,
-                       noise_log_scale_bounds = NULL,
-                       seed = 1) {
+                       noise_log_scale_bounds = NULL
+                       ) {
   # time
   t_begin <- Sys.time()
-  # seed
-  set.seed(seed)
   # cleansing RAM
   gc()
 
@@ -906,8 +901,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -6,
-          seed = chain_number + seed
+          init_tk = -6
         )
       }
     )
@@ -931,8 +925,7 @@ GeoNonStat <- function(vecchia_approx,
       "hierarchical_model" = hierarchical_model,
       "vecchia_approx" = vecchia_approx,
       "states" = states,
-      "records" = records,
-      "seed" = seed
+      "records" = records
     ),
     class = "GeoNonStat"
   )

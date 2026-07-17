@@ -221,7 +221,7 @@ computeLogRange <- function(range_beta,
 #' @param beta0_mean numeric value, mean of beta_0
 #' @param beta0_var numeric value, mean of beta_0
 #' @param log_scale numeric vector of length 1 for a 1 column beta matrix
-#' and length 2 for a 1 column beta matrix
+#' and length 2 for a 3 column beta matrix
 #' @description
 #' beta follows a Normal distribution, with independent components.
 #'
@@ -330,7 +330,8 @@ betaPriorLogDens <- function(beta,
 #' @param n_PP number of prediction points.
 #' @param beta0_mean numeric value, mean of beta_0
 #' @param beta0_var numeric value, mean of beta_0
-#' @param log_scale TODO
+#' @param log_scale numeric vector of length 1 for a 1 column beta matrix
+#' and length 2 for a 3 column beta matrix
 #'
 #' @returns an array
 #' @export
@@ -382,7 +383,7 @@ betaPriorLogDensDerivative <- function(beta,
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param Y the matrix who multiplies the covariates and the PP
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param permutate_PP_to_obs TODO
+#' @param permutate_PP_to_obs logical, default to FALSE. TODO
 #'
 #' @returns a matrix
 #' @export

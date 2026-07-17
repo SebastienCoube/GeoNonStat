@@ -100,7 +100,7 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #' @param object a processed GeoNonStat object
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
-#' @param keep names of pramaters to plot
+#' @param keep names of paramaters to plot
 #'
 #' @returns NULL
 #' @export
@@ -135,7 +135,7 @@ tracePlots <- function(object, burn_in = .1, keep = "all") {
 
   xlim <- c(min(plotted_iters), max(plotted_iters))
   color_lines <- getColorsCat(3)
-
+  nplots <- 0
   for (name in names_params) {
     refparams <- records[[name]][[1]]
     n <- dim(refparams)[2]
@@ -162,9 +162,10 @@ tracePlots <- function(object, burn_in = .1, keep = "all") {
         xlim = xlim,
         color_lines = color_lines
       )
+      nplots <- nplots + 1
     }
   }
-
+  cat("...", nplots, "plots produced. ")
   # Resetting original parameters mfrow
   par("mfrow" = ormfrow)
   par("mar" = omar)
