@@ -219,6 +219,7 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
   ##########################
   # Range beta (ancillary) #
   ##########################
+  
   # computing gradient
   dens_grad <- c(
     # log var
@@ -774,18 +775,6 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
       ) %*% range_reparam_mat
   )
   
-  cond_mat <- solve(
-    as(
-      (1 - min(1, max((500 - (iter + iter_start)) / 200, .05))) *
-        state$stuff$range_beta_conditioning_s / sqrt(sum(state$stuff$range_beta_conditioning_s^2))
-        + Matrix::bdiag(
-          1,
-          min(1, max((500 - (iter + iter_start)) / 200, .05)) *
-            (diag(rep(1, 1 + 2 * hierarchical_model$anisotropic)) %x% as.matrix(range_X$crossprod_X)) /
-            sqrt(3 * sum(as.matrix(range_X$crossprod_X)^2))
-        ),
-      "sparseMatrix"
-    ))
     #if(iter %/% 1 == iter / 1
     #   ){
     # empirical_grad = c()
@@ -864,12 +853,15 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
     q_proposal <- -.5 * sum(c(
       state$momenta$field_log_var_sufficient_grouped, 
       state$momenta$range_beta_sufficient)^2)
+    # computing backward proposal
     innov_back <- solve(
-      sqrt(stepsize) * cond_mat, 
+      sqrt(stepsize) * cond_mat,
       c(state$params$field_log_var, state$params$range_beta)
-      - c(new_field_log_var, new_range_beta) 
-      - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize/2
+      - c(new_field_log_var, new_range_beta)
+      - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2
     )
+    # backward proposal density
+    q_back <- -.5 * sum(innov_back^2)
     vecchia_(
       start_idx = 1,
       log_range = t(log_range), locs = vecchia_approx$t_locs,
@@ -971,7 +963,6 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
       iter = iter, iter_start = iter_start,
       kernel_value = state$ker_var$range_beta_sufficient[1], mult = -2
     )
-  
     if (!is.nan(current_U - proposed_U - q_proposal + q_back)) {
       if (log(runif(1)) < current_U - proposed_U - q_proposal + q_back) {
         state$ker_var$range_beta_sufficient[1] <- updateKernel(
@@ -990,7 +981,7 @@ updateRangeBetaAndLogVarMALA <- function(state, hierarchical_model, vecchia_appr
         names(state$stuff)[stuff_sparse] <- names(state$stuff)[rev(stuff_sparse)]
         state$params$range_beta[] <- new_range_beta
         state$params$field_log_var[] <- new_field_log_var
-        # print("SUFFICIEEEENT")
+        #print("SUFFICIEEEENT")
       }
     }
     # negating momentum
