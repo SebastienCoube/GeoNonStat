@@ -176,7 +176,7 @@ plotKnotsPP <- function(x,
 #' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
 #' @param add logical, default to FALSE. Add on existing plot ?
 #' @param shrink numeric, shrinks or inflates the ellipses. shrink = 1 gives the
-#' Mahalanobis distance = 1. Shrink = sqrt(8*nu) gives the ellipses corresponding to
+#' Mahalanobis distance = 1. Shrink = sqrt(8*matern_smoothness) gives the ellipses corresponding to
 #' correlation  = .1 (rho following INLA's terminology)
 #' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
 #'
@@ -191,10 +191,11 @@ plotKnotsPP <- function(x,
 #' locs <- matrix(rnorm(20), ncol = 2)
 #' log_range <- matrix(rnorm(10), ncol = 1)
 #' plotEllipses(locs, log_range, shrink = 0.1)
-plotEllipses <- function(locs,
+plotRangeEllipses <- function(locs,
                          log_range,
-                         shrink = .1,
+                         shrink = NULL,
                          add = FALSE,
+                         matern_smoothness = NULL, 
                          ...) {
   if (ncol(log_range) == 3) {
     # to match parametrization in compute sparse chol

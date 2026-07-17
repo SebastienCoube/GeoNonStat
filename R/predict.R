@@ -1,7 +1,8 @@
 extendVecchia <- function(vecchia_approx, new_locs) {
   observed_locs <- rbind(vecchia_approx$observed_locs, new_locs)
   locs <- unique(rbind(vecchia_approx$locs, new_locs))
-  n_obs <- nrow(observed_locs)
+  n_obs  <- nrow(observed_locs)
+  new_n_obs  <- nrow(new_locs)
   n_locs <- nrow(locs)
 
   new_locs_unique <- locs[-seq_len(vecchia_approx$n_locs), , drop = FALSE]
@@ -30,11 +31,14 @@ extendVecchia <- function(vecchia_approx, new_locs) {
     query = new_locs_unique,
     k     = nrow(vecchia_approx$NNarray) - 1
   )$nn.index
-
-  NNarray <- cbind(
-    vecchia_approx$NNarray,
-    t(cbind(seq(vecchia_approx$n_locs + 1, n_locs), nn_new))
-  )
+  
+  NNarray <- vecchia_approx$NNarray
+  if(length(nn_new)>0){
+    NNarray <- cbind(
+      vecchia_approx$NNarray,
+      t(cbind(seq(vecchia_approx$n_locs + 1, n_locs), nn_new))
+    )
+  }
   NNNoNA <- !is.na(NNarray)
   sparse_mat <- Matrix::sparseMatrix(
     x = seq_len(sum(NNNoNA)),
@@ -54,6 +58,7 @@ extendVecchia <- function(vecchia_approx, new_locs) {
     previous_n_locs       = vecchia_approx$n_locs,
     new_locs_match        = new_locs_match,
     n_obs                 = n_obs,
+    new_n_obs             = new_n_obs,
     locs                  = locs,
     new_locs              = new_locs_unique,
     n_locs                = n_locs,
@@ -162,16 +167,25 @@ predict1Field <- function(range_beta,
 #' @rdname GeoNonStat
 #' @export
 #' @method predict GeoNonStat
-predict.GeoNonStat <- function(
-  object,
-  new_locs,
-  new_X = NULL,
-  new_noise_X = NULL,
-  new_range_X = NULL,
-  burn_in = 0.2,
-  num_threads = 5,
-  ...
-) {
+predict.GeoNonStat <-  function(
+    object, 
+    new_locs = NULL, 
+    new_X = NULL, 
+    new_noise_X = NULL, 
+    new_range_X = NULL, 
+    burn_in=0.2, 
+    num_threads = 5,
+    ...
+    ) {
+  
+  if(is.null(new_range_X) & is.null(new_noise_X) & is.null(new_X) & is.null(new_locs)){
+    message("No new data was provided so inference at observed locations is done")
+    new_range_X <- object$covariates$range_X$arg
+    new_noise_X <- object$covariates$noise_X$arg
+    new_X <- object$covariates$X$arg
+    new_locs <- object$vecchia_approx$observed_locs
+  }
+  
   # extending Vecchia approx and new PP
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
@@ -223,55 +237,68 @@ predict.GeoNonStat <- function(
   )
 
   # getting MCMC samples
-  estimates <- aggregateRecords(object,
-    keep = c("beta", "noise_beta"),
-    keep_separate_chains = FALSE,
-    burn_in = burn_in
+  estimates <- aggregateRecords(object, 
+                          keep=c("beta", "noise_beta"),
+                          keep_separate_chains = FALSE, 
+                          burn_in = burn_in)
+  
+  predicted_log_variance_noise <- matrix(
+    NA,
+    nrow = extended_vecchia_approx$new_n_obs,
+    ncol = nrow(estimates$noise_beta)
   )
-  predicted_log_variance_noise <- apply(estimates$noise_beta, 1, function(x) {
-    predict1LogVarNoise(
+  for (i in seq_len(nrow(estimates$noise_beta))) {
+    x <- estimates$noise_beta[i, ]
+    
+    predicted_log_variance_noise[, i] <- predict1LogVarNoise(
       x,
       extended_PP_noise,
       extended_vecchia_approx,
       new_noise_X
     )
-  })
-  gc()
-
-  # field + range
-  latent_samples <- filterRecords(object$records,
-    keep = c("range_beta", "field"),
-    burn_in = burn_in
-  )
-  latent_samples <- unlist(latent_samples, recursive = FALSE)
-  predicted_latent <- lapply(
-    latent_samples, function(x) {
-      predict1Field(
-        range_beta = x$range_beta, field = x$field,
-        extended_PP_range = extended_PP_range,
-        extended_vecchia_approx = extended_vecchia_approx,
-        complete_range_X_locs = complete_range_X_locs,
-        object$hierarchical_model,
-        num_threads = num_threads
-      )
-    }
-  )
-  gc()
-  pred_log_range <- lapply(predicted_latent, function(x) x$log_range)
-
-  samples <- list(
-    noise_log_var = predicted_log_variance_noise,
-    fixed_effects = new_X %*% t(estimates$beta),
-    field = sapply(predicted_latent, function(x) x$field),
-    range = sapply(pred_log_range, function(x) x[, 1])
-  )
-  if (object$hierarchical_model$anisotropic) {
-    samples$pred_log_range_aniso1 <- sapply(pred_log_range, function(x) x[, 2])
-    samples$pred_log_range_aniso2 <- sapply(pred_log_range, function(x) x[, 3])
   }
-  gc()
-  return(list(
-    samples = samples,
-    summaries = lapply(samples, function(x) t(summarizeRecords(t(x))))
-  ))
+  
+  # field + range
+ latent_samples <- filterRecords(object$records, 
+                         keep=c("range_beta", "field"),
+                         burn_in = burn_in)
+ latent_samples <- unlist(latent_samples, recursive = FALSE)
+ predicted_latent <- vector("list", length(latent_samples))
+ for (i in seq_along(latent_samples)) {
+   x <- latent_samples[[i]]
+   
+   predicted_latent[[i]] <- predict1Field(
+     range_beta = x$range_beta,
+     field = x$field,
+     extended_PP_range = extended_PP_range,
+     extended_vecchia_approx = extended_vecchia_approx,
+     complete_range_X_locs = complete_range_X_locs,
+     hierarchical_model = object$hierarchical_model,
+     num_threads = num_threads
+   )
+ }
+  pred_log_range <- lapply(predicted_latent, function(x)x$log_range)
+  
+  res = list(
+    noise_log_var = t(summarizeRecords(t(predicted_log_variance_noise))), 
+    fixed_effects = t(summarizeRecords(t(new_X %*% t(estimates$beta)))), 
+    field         = t(summarizeRecords(t(sapply(predicted_latent, function(x)x$field))))
+  )
+  
+  if(!object$hierarchical_model$anisotropic){
+    res$range         = t(summarizeRecords(t(sapply(pred_log_range, function(x)x))))
+  }
+  if(object$hierarchical_model$anisotropic){
+    res$range         = t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,1]))))
+    res$pred_log_range_aniso1 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,2]))))
+    res$pred_log_range_aniso2 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,3]))))
+  }
+  
+ rm(predicted_latent)
+ rm(latent_samples)
+ rm(predicted_log_variance_noise)
+ rm(complete_range_X_locs)
+ rm(pred_log_range)
+ invisible(gc())
+  return(res)
 }

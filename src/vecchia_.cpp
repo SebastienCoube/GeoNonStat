@@ -62,7 +62,7 @@ void vecchia_(
   bool smoothness15 = false; 
   if (smoothness == 1.5)smoothness15 = true;
   double diag_term = 1.001;
-  double diff_term = 0.001;
+  double diff_term = 0.0001;
   double sqrt2 = sqrt(2); 
   // initializing stuff
   int n = locs.n_cols;

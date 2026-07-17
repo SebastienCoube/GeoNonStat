@@ -142,14 +142,20 @@ aggregateRecords <- function(object, burn_in = 0.1, keep = "all", keep_separate_
 #' tt <- matrix(rnorm(200), ncol = 20)
 #' summarizeRecords(tt)
 summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)) {
-  matstat <- apply(mat, 2, FUN = function(v) {
+  n_stats <- 2 + length(quant)
+  matstat <- matrix(NA, nrow = n_stats, ncol = ncol(mat))
+  
+  for (j in seq_len(ncol(mat))) {
+    v <- mat[, j]
     vstat <- c(
       mean(v),
       sd(v),
       quantile(v, quant, names = FALSE)
     )
-    return(signif(vstat, 3))
-  })
+    matstat[, j] <- signif(vstat, 3)
+  }
+  
+  colnames(matstat) <- colnames(mat)
   rownames(matstat) <- c("mean", "sd", names(quant))
   return(matstat)
 }
