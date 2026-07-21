@@ -119,7 +119,7 @@ for(nu in c(.5, 1.5)){
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste("w with", c("small", "big")[match(beta0, rangevalues)], "range,", c("small", "big")[match(nu, c(.5, 1.5))], "smoothness"), legend = F, override_layout = F)
+      pch= 15, main = paste("w with", c("small", "big")[match(beta0, rangevalues)], "range,", c("small", "big")[match(nu, c(.5, 1.5))], "smoothness"), legend = F)
     print(nu)
     print(beta0)
   }
@@ -169,7 +169,7 @@ par(mfrow  =c(1,2))
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste("w when the range is", c("stationary", "nonstationary")[1+nonstationary]), legend = F, override_layout = F)
+      pch= 15, main = paste("w when the range is", c("stationary", "nonstationary")[1+nonstationary]), legend = F)
     print(nu)
     print(beta0)
   }
@@ -198,7 +198,7 @@ for(aniso in c(FALSE, TRUE)){
     fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex= .5, 
-      pch= 15, main = paste("w when the range is", c("isotropic", "anisotropic")[1+aniso]), legend = F, override_layout = F)
+      pch= 15, main = paste("w when the range is", c("isotropic", "anisotropic")[1+aniso]), legend = F)
     print(nu)
     print(beta0)
   }
@@ -243,7 +243,7 @@ for(sigma_range in c(.01, 1)){
     
     plotPointillistPainting(
       vecchia_approx$locs, fake_data$latent_field, cex = .5, 
-      pch = 15, legend = F, override_layout = F, main = plot_main)
+      pch = 15, legend = F, main = plot_main)
   }
   }
 `````  

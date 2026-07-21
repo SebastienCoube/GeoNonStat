@@ -338,8 +338,8 @@ plotRangeEllipses <- function(locs,
 getColors <- function(x, alpha = FALSE) {
   colors <- rep(1, length(x))
   xnoNA <- x[!is.na(x)]
-  col1 <- "#FFFFB2"
-  col2 <- "#B10026"
+  col1 <- "#B10026"
+  col2 <- "#FFFFB2"
   if (alpha) {
     col1 <- paste0(col1, "CC")
     col2 <- paste0(col2, "CC")

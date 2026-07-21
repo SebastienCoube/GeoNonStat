@@ -61,16 +61,20 @@ runOneChainMcmc <- function(
       iter = iter, num_threads = num_threads
     )
     state$params$field <- res$field
+
     if (iter + iter_start > 30) {
+       # Field variance ###############################
       res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
       state$params$field <- res$params$field
       state$params$field_log_var <- res$params$field_log_var
       state$ker_var <- res$ker_var
     }
-
     if (iter + iter_start > 60) {
        # Range beta ###############################
-       res <- updateRangeBetaAndLogVarMALA(state, hierarchical_model, vecchia_approx, range_X = covariates$range_X, iter, iter_start, num_threads)
+       res <- updateRangeBetaAndLogVarMALA(
+         state, hierarchical_model, vecchia_approx, 
+         range_X = covariates$range_X, iter, 
+         iter_start, num_threads)
        state <- res[["state"]]
        # Variance of the  range PP ###############################
        if(!is.null(hierarchical_model$range$PP)){

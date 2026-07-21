@@ -34,8 +34,7 @@
 #' res <- createVecchia(observed_locs, m = 10)
 createVecchia <- function(observed_locs,
                           m = 6,
-                          ncores = 1,
-                          round_locs = 0) {
+                          ncores = 1) {
   # message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
@@ -45,8 +44,6 @@ createVecchia <- function(observed_locs,
   if (ncol(observed_locs) != 2) {
     stop("observed_locs should have 2 columns")
   }
-
-  if (round_locs > 0) observed_locs <- round_locs * round(observed_locs / round_locs)
 
   # remove duplicates
   locs <- unique(observed_locs)

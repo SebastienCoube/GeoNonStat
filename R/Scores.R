@@ -149,8 +149,10 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
     stop("prop_clust and prop_test must be >0 and <1")
   }
   ulocs <- unique(locs)
+  ulocs <- ulocs[order(runif(nrow(ulocs))),]
+  ulocs[seq(10000),] <- ulocs[GpGp::order_maxmin(ulocs[seq(10000),]),]
   n_test <- floor(nrow(ulocs) * prop_test)
-  test <- GpGp::order_maxmin(ulocs)[seq(n_test)]
+  test <- seq(n_test)
   locs_match <- match(
     split(locs, row(locs)),
     split(ulocs, row(ulocs))
@@ -298,8 +300,10 @@ plotSplit <- function(locs, indexes,
 #' traintest <- createSplitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
 createSplitData <- function(locs, data,
                             n_clust = NULL,
-                            prop_test = 0.1) {
+                            prop_test = 0.1, 
+                            round_locs = 0){
   if (length(prop_test) == 1) prop_test <- rep(prop_test, 2)
+  if (round_locs > 0) locs <- round_locs * round(locs / round_locs)
   # Create indexes for train, test far and test close
   idx_far <- getIndexesFar(locs, n_clust = n_clust, prop_test = prop_test[1])
   idx_close <- getIndexesClose(locs[idx_far$train, ], prop_test = prop_test[2])

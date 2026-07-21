@@ -126,7 +126,7 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
 
 
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
-  for (i in seq(2)) {
+  
     # ancillary
     for (field_log_var_idx in seq_len(2)) {
       new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
@@ -166,8 +166,9 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
 
     # Sufficient
     fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
+    for(repp in seq(5)){
     for (field_log_var_idx in seq_len(5)) {
-      new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(2 + field_log_var_idx %% 5) # exp(state$ker_var$field_log_var_sufficient)
+      new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(field_log_var_idx ) # exp(state$ker_var$field_log_var_sufficient)
       current_U <-
         (
           -betaPriorLogDens(
@@ -201,7 +202,8 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
         state$params$field_log_var[1, 1] <- new_field_log_var
       }
     }
-  }
+    }
+  
   return(state)
 }
 
@@ -1021,118 +1023,6 @@ updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
   return(current_range_log_scale)
 }
 
-updateNoiseBeta <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
-  # VEWY IMPOWTANT don't remove or comment
-  squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
-  dens_grad <- (
-    -betaPriorLogDensDerivative(
-      beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
-      beta0_mean = noise$beta0_mean,
-      beta0_var = noise$beta0_sd^2,
-      log_scale = state$params$noise_log_scale
-    ) # normal prior
-    + xPPCrossprod(
-        X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE,
-        Y =
-          (
-            +.5 # determinant part of normal likelihood
-            - (squared_residuals / state$stuff$noise_var) / 2 # exponential part of normal likelihood
-          )
-      )
-  )
-  for (asdf in seq(25)) {
-    # HMC update
-    q <- noise_X$L_minus_one %*% state$params$noise_beta
-    state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)
-    p <- state$momenta$noise_beta
-    # Make a half step for momentum at the beginning
-    exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
-    p <- p - exp_noise_mala * crossprod(noise_X$L, dens_grad) / 2
-
-    n_hmc_steps <- 1
-    for (hmc_step in seq_len(n_hmc_steps)) {
-      # Make a full step for the position
-      q <- q + exp_noise_mala * p
-      new_noise_beta <- noise_X$L %*% q
-      new_noise_var <- as.vector(exp(xPPMultRight(
-        X = noise_X$X, PP = noise$PP,
-        vecchia_approx = vecchia_approx, Y = new_noise_beta,
-        permutate_PP_to_obs = TRUE
-      )))
-      # Make a half step for momentum at the end
-      new_dens_grad <- (
-        -betaPriorLogDensDerivative(
-          beta = new_noise_beta, n_PP = noise$PP$n_knots,
-          beta0_mean = noise$beta0_mean,
-          beta0_var = noise$beta0_sd^2,
-          log_scale = state$params$noise_log_scale
-        ) # normal prior
-        + xPPCrossprod(
-            X = noise_X$X,
-            noise$PP,
-            vecchia_approx = vecchia_approx,
-            permutate_PP_to_obs = TRUE,
-            Y = (+.5 # determinant part of normal likelihood
-            - (squared_residuals / new_noise_var) / 2 # exponential part of normal likelihood
-            )
-          )
-      )
-      p <- p - exp_noise_mala * crossprod(noise_X$L, new_dens_grad) / (1 + (hmc_step == n_hmc_steps))
-    }
-
-    # Evaluate potential and kinetic energies at start and end of trajectory
-    current_U <- (
-      -betaPriorLogDens(
-        beta = state$params$noise_beta,
-        n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + .5 * sum(log(state$stuff$noise_var)) # det
-        + .5 * sum(squared_residuals / state$stuff$noise_var) # observations
-    )
-    current_K <- sum(state$momenta$noise_beta^2) / 2
-    proposed_U <- (
-      -betaPriorLogDens(
-        beta = new_noise_beta,
-        n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + .5 * sum(log(new_noise_var)) # det
-        + .5 * sum(squared_residuals / new_noise_var) # observations
-    )
-    proposed_K <- sum(p^2) / 2
-
-    state$ker_var$noise_beta_mala <- updateKernel(
-      iter = iter,
-      iter_start = iter_start,
-      kernel_value = state$ker_var$noise_beta_mala,
-      mult = -.8
-    )
-    if (!is.nan(current_U - proposed_U + current_K - proposed_K)) {
-      if (log(runif(1)) < current_U - proposed_U + current_K - proposed_K) {
-        state$ker_var$noise_beta_mala <- updateKernel(
-          iter = iter,
-          iter_start = iter_start,
-          kernel_value = state$ker_var$noise_beta_mala,
-          mult = 1
-        )
-        dens_grad <- new_dens_grad
-        state$momenta$noise_beta <- -p
-        state$params$noise_beta[] <- new_noise_beta
-        state$stuff$noise_var <- new_noise_var
-      }
-    }
-    # negating momentum
-    state$momenta$noise_beta <- -state$momenta$noise_beta
-  }
-
-  return(list("state" = state, "squared_residuals" = squared_residuals))
-}
-
 
 updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
   # VEWY IMPOWTANT don't remove or comment
@@ -1171,7 +1061,7 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
   # for conditioning matrix update
   grad_record_for_Fisher <- list()
 
-  n_mala <- 30
+  n_mala <- 5 + 5 * (iter+ iter_start < 500)
   for (asdf in seq(n_mala)) {
     # for conditioning matrix update
     grad_record_for_Fisher[[length(grad_record_for_Fisher) + 1]] <- as.vector(dens_grad)
