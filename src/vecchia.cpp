@@ -38,7 +38,7 @@ arma::cube vecchia(
   omp_set_num_threads(num_threads);
 #endif
   double diag_term = 1.0001;
-  double diff_term = 0.0000001;
+  double diff_term = 1e-6;
   
   // initializing stuff
   int n = locs.n_cols;

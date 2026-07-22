@@ -150,7 +150,7 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
   }
   ulocs <- unique(locs)
   ulocs <- ulocs[order(runif(nrow(ulocs))),]
-  ulocs[seq(10000),] <- ulocs[GpGp::order_maxmin(ulocs[seq(10000),]),]
+  ulocs[seq(min(10000, nrow(ulocs))),] <- ulocs[GpGp::order_maxmin(ulocs[seq(min(10000, nrow(ulocs))),]),]
   n_test <- floor(nrow(ulocs) * prop_test)
   test <- seq(n_test)
   locs_match <- match(
@@ -160,7 +160,7 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
   idx_test <- which(locs_match %in% test)
   if (length(idx_test) > n_test) {
     message(
-      "Due to duplicates, ", round(100 * length(idx_test) / nrow(ulocs), 2),
+      "Due to duplicates, ", round(100 * length(idx_test) / nrow(locs), 2),
       "% indices returned for 'close' test sample"
     )
   }

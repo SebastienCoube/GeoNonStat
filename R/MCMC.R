@@ -71,11 +71,10 @@ runOneChainMcmc <- function(
     }
     if (iter + iter_start > 60) {
        # Range beta ###############################
-       res <- updateRangeBetaAndLogVarMALA(
+      state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, 
          iter_start, num_threads)
-       state <- res[["state"]]
        # Variance of the  range PP ###############################
        if(!is.null(hierarchical_model$range$PP)){
          state$params$range_log_scale = updateVarPPSuff(
