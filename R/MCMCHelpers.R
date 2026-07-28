@@ -13,7 +13,7 @@ updateKernel <- function(iter,
   kernel_value <-
     kernel_value +
     length(kernel_value) * mult / sqrt(10 + iter + iter_start)
-  kernel_value <- max(kernel_value, -12)
+  kernel_value <- max(kernel_value, -14)
   kernel_value <- min(kernel_value, 2)
   kernel_value
 }
@@ -273,14 +273,14 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
   # for conditioning matrix update
   grad_record_for_Fisher <- list()
 
-  n_mala <- 5 + 5 * (iter+ iter_start < 500)
+  n_mala <- 10
   for (asdf in seq(n_mala)) {
     # for conditioning matrix update
     grad_record_for_Fisher[[length(grad_record_for_Fisher) + 1]] <- as.vector(dens_grad)
 
     # HMC update
     q <- solve(cond_mat, state$params$noise_beta)
-    state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta)
+    state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta, .9)
     p <- state$momenta$noise_beta
     # Make a half step for momentum at the beginning
     exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
@@ -368,11 +368,11 @@ updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, i
   }
 
   # updating conditioning matrix
-  if (iter + iter_start > 150) {
-    state$stuff$noise_beta_conditioning[] <-
-      ((iter + iter_start) / (iter + iter_start - 1)) * state$stuff$noise_beta_conditioning[] +
-      tcrossprod(do.call(cbind, grad_record_for_Fisher))[] / (iter + iter_start)
-  }
+  #if (iter + iter_start > 150) {
+  #  state$stuff$noise_beta_conditioning[] <-
+  #    ((iter + iter_start) / (iter + iter_start - 1)) * state$stuff$noise_beta_conditioning[] +
+  #    tcrossprod(do.call(cbind, grad_record_for_Fisher))[] / (iter + iter_start)
+  #}
 
   return(list("state" = state, "squared_residuals" = squared_residuals))
 }
