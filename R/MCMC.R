@@ -88,7 +88,8 @@ runOneChainMcmc <- function(
     # Noise ###############################
     # Noise beta ###############################
 
-    res <- updateNoiseBetaFisher(state, hierarchical_model$noise, covariates$noise_X, vecchia_approx, iter, iter_start)
+    res <- updateNoiseBetaFisher(state, hm_noise = hierarchical_model$noise, 
+                                 noise_X = covariates$noise_X, vecchia_approx, iter, iter_start)
     state <- res[["state"]]
 
     # Noise log scale ###############################

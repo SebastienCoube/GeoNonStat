@@ -13,7 +13,7 @@ updateKernel <- function(iter,
   kernel_value <-
     kernel_value +
     length(kernel_value) * mult / sqrt(10 + iter + iter_start)
-  kernel_value <- max(kernel_value, -14)
+  kernel_value <- max(kernel_value, -30)
   kernel_value <- min(kernel_value, 2)
   kernel_value
 }
@@ -126,7 +126,6 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
 
 
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
-  
     # ancillary
     for (field_log_var_idx in seq_len(2)) {
       new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
@@ -235,147 +234,76 @@ updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
   return(current_range_log_scale)
 }
 
-
-updateNoiseBetaFisher <- function(state, noise, noise_X, vecchia_approx, iter, iter_start) {
-  # VEWY IMPOWTANT don't remove or comment
-  squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
-  dens_grad <- (
-    -betaPriorLogDensDerivative(
-      beta = state$params$noise_beta, n_PP = noise$PP$n_knots,
-      beta0_mean = noise$beta0_mean,
-      beta0_var = noise$beta0_sd^2,
-      log_scale = state$params$noise_log_scale
-    ) # normal prior
-    + xPPCrossprod(
-        X = noise_X$X, noise$PP, vecchia_approx = vecchia_approx, permutate_PP_to_obs = TRUE,
-        Y =
-          (
-            +.5 # determinant part of normal likelihood
-            - (squared_residuals / state$stuff$noise_var) / 2 # exponential part of normal likelihood
-          )
-      )
-  )
-
-  cond_mat <- solve(
+condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
+  mix <- min(1, max((500 - (iter + iter_start)) / 200, .05))
+  renorm <- function(M)M/(sqrt(sum(M^2))+1e-6) # Frobenius norm
+  t(chol(solve(
     as(
-      (1 - min(1, max((500 - (iter + iter_start)) / 200, .05))) *
-        state$stuff$noise_beta_conditioning / sqrt(sum(state$stuff$noise_beta_conditioning^2))
-        +
-        min(1, max((500 - (iter + iter_start)) / 200, .05)) *
-          as.matrix(noise_X$crossprod_X) /
-          sqrt(3 * sum(as.matrix(noise_X$crossprod_X)^2)),
+      #(1 - mix) * renorm(empirical_fisher) +
+      #(mix) * 
+        renorm(prior_fisher),
       "sparseMatrix"
     )
-  )
-  cond_mat <- cond_mat / sqrt(sum(cond_mat^2))
-  cond_mat <- t(chol(cond_mat))
-
-  # for conditioning matrix update
-  grad_record_for_Fisher <- list()
-
-  n_mala <- 10
-  for (asdf in seq(n_mala)) {
-    # for conditioning matrix update
-    grad_record_for_Fisher[[length(grad_record_for_Fisher) + 1]] <- as.vector(dens_grad)
-
-    # HMC update
-    q <- solve(cond_mat, state$params$noise_beta)
-    state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta, .9)
-    p <- state$momenta$noise_beta
-    # Make a half step for momentum at the beginning
-    exp_noise_mala <- exp(state$ker_var$noise_beta_mala)
-    p <- p - exp_noise_mala * crossprod(cond_mat, dens_grad) / 2
-
-    n_hmc_steps <- 1
-    for (hmc_step in seq_len(n_hmc_steps)) {
-      # Make a full step for the position
-      q <- q + exp_noise_mala * p
-      new_noise_beta <- cond_mat %*% q
-      new_noise_var <- as.vector(exp(xPPMultRight(
-        X = noise_X$X, PP = noise$PP,
-        vecchia_approx = vecchia_approx, Y = new_noise_beta,
-        permutate_PP_to_obs = TRUE
-      )))
-      # Make a half step for momentum at the end
-      new_dens_grad <- (
-        -betaPriorLogDensDerivative(
-          beta = new_noise_beta, n_PP = noise$PP$n_knots,
-          beta0_mean = noise$beta0_mean,
-          beta0_var = noise$beta0_sd^2,
-          log_scale = state$params$noise_log_scale
-        ) # normal prior
-        + xPPCrossprod(
-            X = noise_X$X,
-            noise$PP,
-            vecchia_approx = vecchia_approx,
-            permutate_PP_to_obs = TRUE,
-            Y = (+.5 # determinant part of normal likelihood
-            - (squared_residuals / new_noise_var) / 2 # exponential part of normal likelihood
-            )
-          )
-      )
-      p <- p - exp_noise_mala * crossprod(cond_mat, new_dens_grad) / (1 + (hmc_step == n_hmc_steps))
-    }
-
-    # Evaluate potential and kinetic energies at start and end of trajectory
-    current_U <- (
-      -betaPriorLogDens(
-        beta = state$params$noise_beta,
-        n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + .5 * sum(log(state$stuff$noise_var)) # det
-        + .5 * sum(squared_residuals / state$stuff$noise_var) # observations
-    )
-    current_K <- sum(state$momenta$noise_beta^2) / 2
-    proposed_U <- (
-      -betaPriorLogDens(
-        beta = new_noise_beta,
-        n_PP = noise$PP$n_knots,
-        beta0_mean = noise$beta0_mean,
-        beta0_var = noise$beta0_sd^2,
-        log_scale = state$params$noise_log_scale
-      ) # normal prior
-      + .5 * sum(log(new_noise_var)) # det
-        + .5 * sum(squared_residuals / new_noise_var) # observations
-    )
-    proposed_K <- sum(p^2) / 2
-
-    state$ker_var$noise_beta_mala <- updateKernel(
-      iter = iter,
-      iter_start = iter_start,
-      kernel_value = state$ker_var$noise_beta_mala,
-      mult = -.8
-    )
-    if (!is.nan(current_U - proposed_U + current_K - proposed_K)) {
-      if (log(runif(1)) < current_U - proposed_U + current_K - proposed_K) {
-        state$ker_var$noise_beta_mala <- updateKernel(
-          iter = iter,
-          iter_start = iter_start,
-          kernel_value = state$ker_var$noise_beta_mala,
-          mult = 1
-        )
-        dens_grad <- new_dens_grad
-        state$momenta$noise_beta <- -p
-        state$params$noise_beta[] <- new_noise_beta
-        state$stuff$noise_var <- new_noise_var
-      }
-    }
-    # negating momentum
-    state$momenta$noise_beta <- -state$momenta$noise_beta
-  }
-
-  # updating conditioning matrix
-  #if (iter + iter_start > 150) {
-  #  state$stuff$noise_beta_conditioning[] <-
-  #    ((iter + iter_start) / (iter + iter_start - 1)) * state$stuff$noise_beta_conditioning[] +
-  #    tcrossprod(do.call(cbind, grad_record_for_Fisher))[] / (iter + iter_start)
-  #}
-
-  return(list("state" = state, "squared_residuals" = squared_residuals))
+  )))
 }
 
 
+# update a Fisher information matrix using gradients
+updateFisher <- function(iter, iter_start, dens_grad, empirical_fisher){
+  if(iter + iter_start >200){
+    empirical_fisher <-
+      ((iter+iter_start)/(iter+iter_start-1)) * empirical_fisher +
+      tcrossprod(c(dens_grad)) / (iter+iter_start)
+  }
+  empirical_fisher
+}
+
+
+# density of a momentum
+momentumDens <- function(momentum)-.5*sum(momentum^2)
+
+# MALA forward step
+moveForward <- function(stepsize, cond_mat, dens_grad,
+                        position, momentum){
+  position +
+    stepsize/2 *     as.vector((cond_mat %*% (crossprod(cond_mat, c(dens_grad))))) +
+    sqrt(stepsize) * as.vector( cond_mat %*% c(momentum))
+}
+
+#' position <- rnorm(10)
+#' momentum <- rnorm(10)
+#' dens_grad <- rnorm(10)
+#' dens_grad_back <- rnorm(10)
+#' cond_mat <- t(chol(crossprod(as(matrix(rnorm(1000), 100), "sparseMatrix"))))
+#' stepsize <- .0001
+#' new_position <- moveForward(
+#'   momentum = momentum, stepsize = stepsize, cond_mat = cond_mat,
+#'   position = position, dens_grad = dens_grad)
+#' plot(
+#'   solve(
+#'    sqrt(stepsize) * cond_mat,
+#'   position - moveForward(
+#'     momentum = 0*momentum, stepsize = stepsize, cond_mat = cond_mat,
+#'     position = new_position, dens_grad = dens_grad_back)
+#'   ),
+#'   momentumBack(
+#'     stepsize = stepsize, cond_mat = cond_mat, current_params = position,
+#'     proposed_params = new_position, dens_grad_back = dens_grad_back
+#'   ))
+#' abline(a = 0, b = 1)
+
+# Finding reverse momentum from a MALA step
+
+momentumBack <- function(
+    current_params, proposed_params,
+    dens_grad_back,
+    cond_mat, stepsize
+){
+  solve(
+    cond_mat,
+    current_params
+    - proposed_params
+    - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2
+  )/sqrt(stepsize)
+}
 

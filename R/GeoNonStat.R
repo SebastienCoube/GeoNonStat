@@ -308,19 +308,11 @@ processCovariates <- function(X,
   # conditioning matrix for HMC
   if (!one_obs_per_locs) {
     crossprod_X <- crossprod(X_)
-    res$L <- t(chol(
-      solve(crossprod_X) / max(solve(crossprod_X))
-    ))
-    res$L_minus_one <- solve(res$L)
     res$crossprod_X <- crossprod_X
   }
   if (one_obs_per_locs) {
     res$X <- NULL
     crossprod_X <- crossprod(X_locs_)
-    res$L <- t(chol(
-      solve(crossprod_X) / max(solve(crossprod_X))
-    ))
-    res$L_minus_one <- solve(res$L)
     res$crossprod_X <- crossprod_X
   }
   return(res)
@@ -655,16 +647,9 @@ processStates <- function(hm,
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
-  stuff$range_beta_conditioning_s <-
-    diag(1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_s[-1, -1] <-
-    diag(rep(1, 1 + 2 * hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  stuff$range_beta_conditioning_a <-
-    diag(1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1, nrow(covariates$range_X$crossprod_X) * (1 + 2 * hm$anisotropic) + 1)
-  stuff$range_beta_conditioning_a[-1, -1] <-
-    diag(rep(1, 1 + 2 * hm$anisotropic)) %x% as.matrix(covariates$range_X$crossprod_X)
-  stuff$noise_beta_conditioning <- as.matrix(covariates$noise_X$crossprod_X)
-  # plotPointillistPainting(vecchia_approx$locs, as.vector(Matrix::solve(stuff$sparse_chol, rnorm(nrow(vecchia_approx$locs)))))
+  matdim = (1 + 2 * hm$anisotropic) * ncol(covariates$range_X$crossprod_X) + 1
+  stuff$range_beta_empirical_fisher_s <- matrix(0,  matdim, matdim)
+  stuff$range_beta_empirical_fisher_a <- matrix(0,  matdim, matdim)
 
   # Noise variance  and stuff depending on it ##################################
   # parameter format and value
@@ -705,6 +690,9 @@ processStates <- function(hm,
     vecchia_approx = vecchia_approx, Y = params$noise_beta,
     permutate_PP_to_obs = T
   )))
+  
+  # fisher mat
+  stuff$noise_beta_empirical_fisher <- matrix(0, length(params$noise_beta), length(params$noise_beta))
 
   # Marginal variance of the NNGP and stuff depending on it ####################
   params$field_log_var <- matrix(hm$scale$beta0_mean + hm$scale$beta0_sd * rnorm(1))
