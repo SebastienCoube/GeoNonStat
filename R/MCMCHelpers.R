@@ -239,25 +239,21 @@ condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
   renorm <- function(M)M/(sqrt(sum(M^2))+1e-6) # Frobenius norm
   t(chol(solve(
     as(
-      #(1 - mix) * renorm(empirical_fisher) +
-      #(mix) * 
+      (1 - mix) * renorm(empirical_fisher) +
+      (mix) * 
         renorm(prior_fisher),
       "sparseMatrix"
     )
   )))
 }
 
-
 # update a Fisher information matrix using gradients
 updateFisher <- function(iter, iter_start, dens_grad, empirical_fisher){
-  if(iter + iter_start >200){
-    empirical_fisher <-
-      ((iter+iter_start)/(iter+iter_start-1)) * empirical_fisher +
-      tcrossprod(c(dens_grad)) / (iter+iter_start)
-  }
+  empirical_fisher <-
+    ((iter+iter_start-1)/(iter+iter_start)) * empirical_fisher +
+    tcrossprod((dens_grad)) / (iter+iter_start)
   empirical_fisher
 }
-
 
 # density of a momentum
 momentumDens <- function(momentum)-.5*sum(momentum^2)
@@ -301,9 +297,10 @@ momentumBack <- function(
 ){
   solve(
     cond_mat,
-    current_params
-    - proposed_params
-    - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2
+    c(
+    c(current_params)
+    - c(proposed_params)
+    - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2)
   )/sqrt(stepsize)
 }
 

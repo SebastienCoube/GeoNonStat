@@ -647,7 +647,7 @@ processStates <- function(hm,
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
-  matdim = (1 + 2 * hm$anisotropic) * ncol(covariates$range_X$crossprod_X) + 1
+  matdim = (1 + 2 * hm$anisotropic) * ncol(covariates$range_X$crossprod_X) #+ 1
   stuff$range_beta_empirical_fisher_s <- matrix(0,  matdim, matdim)
   stuff$range_beta_empirical_fisher_a <- matrix(0,  matdim, matdim)
 

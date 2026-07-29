@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 11000
-nlocs = 5000
+nobs = 20000
+nlocs = 15000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
@@ -33,9 +33,9 @@ coeff_list = createGnsSimulatorParameters(
   gns_simulator, range_PP_log_var =range_log_scale, 
   noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, 
   field_log_var = field_log_var)
-coeff_list$range_PP_coeff[] = 0
 coeff_list$range_X_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -4
+coeff_list$range_PP_coeff[] = 0
+coeff_list$range_X_coeff[1,1] = -3
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
@@ -58,37 +58,25 @@ geo_non_stat = GeoNonStat(
 
 summary(geo_non_stat)
 
- ## # #Run MCMC chain for 40 iterations
-   list2env(geo_non_stat, environment())
-   state = geo_non_stat$states$chain_1
-   #state$params$range_log_scale[1] = 0
-   #state$params$range_log_scale[2] = -3
-   num_threads = 10
-   n_iterations = 300
-   iter_start = 1
-   iter = 1
-   seed=  1
-   range_X = covariates$range_X
-   
-   samples = runOneChainMcmc(
-    covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
-    hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-    state = state, n_iterations = 59, num_threads = 8, iter_start = 100
-   )
-   
-#  state = samples$state
-#  samples = runOneChainMcmc(
-#   covariates = geo_non_stat$covariates, observed_field = geo_non_stat$observed_field, 
-#   hierarchical_model = geo_non_stat$hierarchical_model, vecchia_approx = geo_non_stat$vecchia_approx, 
-#   state = state, n_iterations = 200, num_threads = 8, iter_start = 60, seed = 1
-#  )
-#  
-#  state = samples$state
-#  params = samples$state$params
-#  params_records = samples$params_records
-#  iter = length(samples$params_records)
-#
-# 
+### # #Run MCMC chain for 40 iterations
+ list2env(geo_non_stat, environment())
+ state = geo_non_stat$states$chain_1
+ #state$params$range_log_scale[1] = 0
+ #state$params$range_log_scale[2] = -3
+ num_threads = 10
+ n_iterations = 300
+ iter_start = 1
+ iter = 1
+ seed=  1
+ range_X = covariates$range_X
+ 
+ samples = runOneChainMcmc(
+  covariates = covariates, observed_field = observed_field, 
+  hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx, 
+  state = state, n_iterations = 59, num_threads = 8, iter_start = 100
+ )
+
+ 
 # plotPointillistPainting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
 # plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)
 # plotPointillistPainting(vecchia_approx$observed_locs, log(samples$state$stuff$noise_var), main = "sampled log noise var", pch = 16, cex=  1)
@@ -135,17 +123,16 @@ geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
   n_threads_per_chain = 7, n_iterations = 100)
 
-tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .1)
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
+tracePlots(geo_non_stat, keep = "range_beta", burn_in = .1)
 print("DOOOONE")
 
 
-priorFisherRange(hierarchical_model = geo_non_stat$hierarchical_model, range_X = geo_non_stat$covariates$range_X)
 
-
+tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
 # plotting and diagnostics
 tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, burn_in = .3)
@@ -172,15 +159,15 @@ MCMC_diags$diags["field_log_var. ",]
 # par(mfrow = c(2,3))
 # 
 # 
-# plotPointillistPainting(
-#   vecchia_approx$observed_locs, fake_data$log_noise_var_field, 
-#   main = "true log noise var", pch = 16, cex=  1)
-# 
-# plotPointillistPainting(
-#   vecchia_approx$observed_locs, 
-#   log(geo_non_stat$states$chain_1$stuff$noise_var), 
-#   main = "sampled log noise var", pch = 16, cex=  1)
-# 
+ plotPointillistPainting(
+   vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field, 
+   main = "true log noise var", pch = 16, cex=  1)
+ 
+ plotPointillistPainting(
+   vecchia_approx$observed_locs, 
+   log(geo_non_stat$states$chain_1$stuff$noise_var), 
+   main = "sampled log noise var", pch = 16, cex=  1)
+ 
 # plotPointillistPainting(
 #   extended_vecchia_approx$new_locs, predicted_noise, 
 #   main = "predicted log noise variance")
