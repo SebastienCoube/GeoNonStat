@@ -360,7 +360,7 @@ processPPPrior <- function(PP = NULL,
         "parameters were automatically set to (-4, 3)"
       )
     )
-    log_scale_bounds <- c(-4, 3)
+    log_scale_bounds <- c(-6, 3)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2) {
     stop(
@@ -612,8 +612,6 @@ processStates <- function(hm,
   # momenta
   momenta$field_log_var_sufficient <- rnorm(1)
   momenta$field_log_var_ancillary <- rnorm(1)
-  momenta$field_log_var_sufficient_grouped <- rnorm(1)
-  momenta$field_log_var_ancillary_grouped <- rnorm(1)
 
   momenta$range_beta_ancillary <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
   momenta$range_beta_sufficient <- matrix(rnorm(length(params$range_beta)), nrow(params$range_beta))
@@ -647,7 +645,7 @@ processStates <- function(hm,
   stuff$sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   stuff$proposed_sparse_chol <- decompressChol(vecchia_approx, stuff$compressed_chol)
   # conditioning matrix for range beta MALA
-  matdim = (1 + 2 * hm$anisotropic) * ncol(covariates$range_X$crossprod_X) #+ 1
+  matdim = (1 + 2 * hm$anisotropic) * ncol(covariates$range_X$crossprod_X) + 1
   stuff$range_beta_empirical_fisher_s <- matrix(0,  matdim, matdim)
   stuff$range_beta_empirical_fisher_a <- matrix(0,  matdim, matdim)
 

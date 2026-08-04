@@ -34,8 +34,8 @@ coeff_list = createGnsSimulatorParameters(
   noise_intercept = noise_intercept, noise_PP_log_var = noise_PP_log_var, 
   field_log_var = field_log_var)
 coeff_list$range_X_coeff[] = 0
-coeff_list$range_PP_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -3
+#coeff_list$range_PP_coeff[] = 0
+coeff_list$range_X_coeff[1,1] = -4
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
@@ -48,17 +48,17 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$lo
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   observed_field = fake_data$observed$data$observed_field, X = X, 
-  matern_smoothness = 1.5, anisotropic = F, 
+  matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
   noise_X = X, range_X = NULL,
   noise_PP = PP_noise,
-  range_PP = NULL
+  range_PP = PP_range
 )
 
 
 summary(geo_non_stat)
 
-### # #Run MCMC chain for 40 iterations
+# ### # #Run MCMC chain for 40 iterations
  list2env(geo_non_stat, environment())
  state = geo_non_stat$states$chain_1
  #state$params$range_log_scale[1] = 0
@@ -70,10 +70,12 @@ summary(geo_non_stat)
  seed=  1
  range_X = covariates$range_X
  
+ state$ker_var$range_beta_sufficient <- -15
+ 
  samples = runOneChainMcmc(
   covariates = covariates, observed_field = observed_field, 
   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx, 
-  state = state, n_iterations = 59, num_threads = 8, iter_start = 100
+  state = state, n_iterations = 500, num_threads = 8, iter_start = 100
  )
 
  
@@ -121,22 +123,23 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 100)
+  n_threads_per_chain = 7, n_iterations = 600)
 
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .1)
+tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .1)
 print("DOOOONE")
 
 
 
-tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
+tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .1)
 # plotting and diagnostics
 tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, burn_in = .3)
-MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .2)
+MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .3)
 MCMC_diags$diags["field_log_var. ",] 
 
 # prediction

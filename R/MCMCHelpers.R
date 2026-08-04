@@ -240,8 +240,7 @@ condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
   t(chol(solve(
     as(
       (1 - mix) * renorm(empirical_fisher) +
-      (mix) * 
-        renorm(prior_fisher),
+      (mix) *     renorm(prior_fisher),
       "sparseMatrix"
     )
   )))

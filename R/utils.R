@@ -533,19 +533,19 @@ xPPCrossprod <- function(X,
                          Y,
                          vecchia_approx = NULL,
                          permutate_PP_to_obs = FALSE) {
-  if (nrow(X) != nrow(Y)) {
+  if(!is.null(X)){if (nrow(X) != nrow(Y)) {
     stop("X and Y should have the same number of rows")
-  }
+  }}
   if (permutate_PP_to_obs && is.null(vecchia_approx)) {
     stop("To permutate PP to observed values vecchia_approx needs to be provided.")
   }
   if (!is.null(PP)) {
-    if ((nrow(X) != nrow(PP$vecchia_locs)) & (!permutate_PP_to_obs)) {
+    if(!is.null(X)){if ((nrow(X) != nrow(PP$vecchia_locs)) & (!permutate_PP_to_obs)) {
       stop("X should have the same number of rows as locations in vecchia (permutate_PP_to_obs = FALSE)")
-    }
-    if ((nrow(X) != vecchia_approx$n_obs) & (permutate_PP_to_obs)) {
+    }}
+    if(!is.null(X)){if ((nrow(X) != vecchia_approx$n_obs) & (permutate_PP_to_obs)) {
       stop("X should have the same number of rows as observations in vecchia (permutate_PP_to_obs = TRUE)")
-    }
+    }}
     if (is.null(vecchia_approx)) {
       stop("PP provided, vecchia_approx should be provided too")
     }
@@ -556,7 +556,8 @@ xPPCrossprod <- function(X,
   if (!is.matrix(Y)) {
     Y <- as.matrix(Y)
   }
-  res <- crossprod(x = X, y = Y)
+  res <- NULL
+  if(!is.null(X)){res <- crossprod(x = X, y = Y)}
   if (!is.null(PP)) {
     if (permutate_PP_to_obs) {
       Y <- vecchia_approx$locs_match_matrix %*% Y

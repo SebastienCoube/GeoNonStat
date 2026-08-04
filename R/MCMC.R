@@ -51,16 +51,14 @@ runOneChainMcmc <- function(
   for (iter in seq_len(n_iterations)) {
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
-    state$params <- res[["params"]]
-    state$stuff$lm_fit <- res[["stuff"]]$lm_fit
-    state$stuff$lm_residuals <- res[["stuff"]]$lm_residuals
+    state$params <- res$params
+    state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     # Latent field ###############################
-    res <- updateLatentField(
+    state$params$field <- updateLatentField(
       state = state, hierarchical_model = hierarchical_model,
       vecchia_approx = vecchia_approx, observed_field = observed_field,
       iter = iter, num_threads = num_threads
-    )
-    state$params$field <- res$field
+    )$field
 
     if (iter + iter_start > 30) {
        # Field variance ###############################
