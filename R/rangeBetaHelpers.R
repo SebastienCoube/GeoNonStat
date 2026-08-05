@@ -5,7 +5,7 @@
  
    range_reparam_mat <- rangeReparamMat(hierarchical_model)
    # initial density gradient ####
-   dens_grad <- rangeDensGradS(
+   dens_grad <- rangeBetaDensGradS(
      field_log_var = state$params$field_log_var, range_beta = state$params$range_beta,
      compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol,
      field = state$params$field, range_log_scale = state$params$range_log_scale,
@@ -49,7 +49,7 @@
      state$stuff$proposed_sparse_chol@x <-
        state$stuff$proposed_compressed_chol[, , 1][vecchia_approx$sparse_chol_x_reorder]
      # computing gradient at proposed parameters ####
-     dens_grad_back <- rangeDensGradS(
+     dens_grad_back <- rangeBetaDensGradS(
        field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
        compressed_chol = state$stuff$proposed_compressed_chol, #changed
        sparse_chol = state$stuff$proposed_sparse_chol,  # changed
@@ -71,18 +71,16 @@
        c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient))
      proposed_momentum_dens <- momentumDens(new_momentum)
      # target densities ####
-     current_dens <- rangeDensS(
+     current_dens <- rangeBetaDensS(
        field_log_var = state$params$field_log_var, range_beta = state$params$range_beta, # changed
        compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol, # changed
        range_log_scale = state$params$range_log_scale, field = state$params$field,
-       lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var,
        hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
-     proposed_dens <- rangeDensS(
+     proposed_dens <- rangeBetaDensS(
        field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
        compressed_chol = state$stuff$proposed_compressed_chol, # changed
        sparse_chol = state$stuff$proposed_sparse_chol, # changed
        range_log_scale = state$params$range_log_scale, field = state$params$field,
-       lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var,
        hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
  
     #if(iter %/% 10 == iter / 10){
@@ -121,7 +119,6 @@
      ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
      if (!is.nan(ratio)) {
        if (log(runif(1)) < ratio) {
-         print("Sufficient!!!")
          # increasing stepsize if acceptance
          state$ker_var$range_beta_sufficient[1] <- updateKernel(
            iter = iter, iter_start = iter_start,
@@ -155,7 +152,7 @@
                         range_X, iter, iter_start, num_threads){
    range_reparam_mat <- rangeReparamMat(hierarchical_model)
    # initial density gradient ####
-   dens_grad <- rangeDensGradA(
+   dens_grad <- rangeBetaDensGradA(
      field_log_var = state$params$field_log_var
      , range_beta = state$params$range_beta,
      compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol,
@@ -209,7 +206,7 @@
        as.vector(Matrix::solve(state$stuff$proposed_sparse_chol,
                                state$stuff$sparse_chol %*% (state$params$field)))
      # computing gradient at proposed parameters ####
-     dens_grad_back <- rangeDensGradA(
+     dens_grad_back <- rangeBetaDensGradA(
        field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
        compressed_chol = state$stuff$proposed_compressed_chol, # changed
        sparse_chol = state$stuff$proposed_sparse_chol,  # changed
@@ -232,7 +229,7 @@
        c(state$momenta$field_log_var_ancillary, state$momenta$range_beta_ancillary))
      proposed_momentum_dens <- momentumDens(new_momentum)
      # target densities ####
-     current_dens <- rangeDensA(
+     current_dens <- rangeBetaDensA(
        field_log_var = state$params$field_log_var, range_beta = state$params$range_beta, # changed
        compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol, # changed
        field = state$params$field,
@@ -241,7 +238,7 @@
        noise_var = state$stuff$noise_var,
        hierarchical_model = hierarchical_model,
        vecchia_approx = vecchia_approx)
-     proposed_dens <- rangeDensA(
+     proposed_dens <- rangeBetaDensA(
        field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
        compressed_chol = state$stuff$proposed_compressed_chol, # changed
        sparse_chol = state$stuff$proposed_sparse_chol, # changed
@@ -334,7 +331,7 @@
  
  
  # sufficient gradient of the density of the range and field log var
- rangeDensGradS <- function(
+ rangeBetaDensGradS <- function(
      field_log_var, range_beta, field,
      range_log_scale,
      compressed_chol, sparse_chol,
@@ -379,10 +376,9 @@
  }
  
  # sufficient density of the range and field log var
- rangeDensS <- function(
+ rangeBetaDensS <- function(
      field_log_var, range_beta, field, range_log_scale,
      compressed_chol, sparse_chol,
-     lm_residuals, noise_var,
      hierarchical_model, vecchia_approx){
    (
      # field log var prior
@@ -408,7 +404,7 @@
  }
  
  # ancillary gradient of the density of the range and field log var
- rangeDensGradA <- function(
+ rangeBetaDensGradA <- function(
      field_log_var, range_beta, field, compressed_chol, sparse_chol,
      range_log_scale, lm_residuals, noise_var,
      vecchia_approx, hierarchical_model, range_X,
@@ -457,7 +453,7 @@
  }
  
  # ancillary density of the range and field log var
- rangeDensA <- function(
+ rangeBetaDensA <- function(
      field_log_var, range_beta, field, compressed_chol, sparse_chol,
      range_log_scale, lm_residuals, noise_var,
      vecchia_approx, hierarchical_model, range_X,
@@ -516,7 +512,7 @@
      )
      sparse_chol_grad_test@x <- compressed_chol_grad_test[,,1][vecchia_approx$sparse_chol_x_reorder]
  
-     test_dens <- rangeDensS(
+     test_dens <- rangeBetaDensS(
        field_log_var = field_log_var_grad_test, range_beta = range_beta_grad_test, # changed
        compressed_chol = compressed_chol_grad_test, # changed
        sparse_chol = sparse_chol_grad_test, # changed
@@ -569,7 +565,7 @@
      field_grad_test <-
        exp(.5*(field_log_var_grad_test[1,1] - field_log_var[1,1])) *
        as.vector(Matrix::solve(sparse_chol_grad_test, sparse_chol %*% field))
-     test_dens <- rangeDensA(
+     test_dens <- rangeBetaDensA(
        field_log_var = field_log_var_grad_test,
        range_beta = range_beta_grad_test, # changed
        compressed_chol = compressed_chol_grad_test, # changed

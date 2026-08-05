@@ -601,8 +601,14 @@ processStates <- function(hm,
       colnames(covariates$range_X$X_locs),
       paste("PP", seq_len(hm$range$PP$n_knots), sep = "_")
     )
-    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1] + .05 * (hm$range$log_scale_bounds[2] - hm$range$log_scale_bounds[1])))
+    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1] + (hm$range$log_scale_bounds[2]-hm$range$log_scale_bounds[1])*.3))
     row.names(params$range_log_scale) <- c("range", "aniso")[seq_len(1 + hm$anisotropic)]
+    params$range_beta[-seq(ncol(covariates$range_X$X_locs)),1] <- 
+      exp(.5*params$range_log_scale[1]) * rnorm(hm$range$PP$n_knots)
+    if(hm$anisotropic){
+      params$range_beta[-seq(ncol(covariates$range_X$X_locs)),-1] <- 
+        exp(.5*params$range_log_scale[2]) * rnorm(2*hm$range$PP$n_knots)
+    }
   }
   # params$range_beta[-1] = rnorm(length(params$range_beta)-1, 0, .2)
   colnames(params$range_beta) <- c("range", "aniso1", "aniso2")[seq_len(1 + 2 * hm$anisotropic)]
@@ -884,7 +890,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -6
+          init_tk = -10
         )
       }
     )

@@ -70,7 +70,7 @@ summary(geo_non_stat)
  seed=  1
  range_X = covariates$range_X
  
- state$ker_var$range_beta_sufficient <- -15
+ state$ker_var$range_log_scale_sufficient <- -5
  
  samples = runOneChainMcmc(
   covariates = covariates, observed_field = observed_field, 
@@ -123,11 +123,13 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
-  n_threads_per_chain = 7, n_iterations = 600)
+  n_threads_per_chain = 7, n_iterations = 300)
 
-tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .1)
-tracePlots(geo_non_stat, keep = "range_beta", burn_in = .1)
-tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .1)
+pdf("testInterweaving.pdf")
+tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
+tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
+tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
+dev.off()
 print("DOOOONE")
 
 
