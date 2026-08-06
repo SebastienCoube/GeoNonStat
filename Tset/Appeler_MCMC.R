@@ -70,8 +70,6 @@ summary(geo_non_stat)
  seed=  1
  range_X = covariates$range_X
  
- state$ker_var$range_log_scale_sufficient <- -5
- 
  samples = runOneChainMcmc(
   covariates = covariates, observed_field = observed_field, 
   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx, 
