@@ -309,6 +309,7 @@ processCovariates <- function(X,
   if (!one_obs_per_locs) {
     crossprod_X <- crossprod(X_)
     res$crossprod_X <- crossprod_X
+    res$t_chol_solve_crossprod_X <- t(chol(solve(crossprod_X)))
   }
   if (one_obs_per_locs) {
     res$X <- NULL
@@ -360,7 +361,7 @@ processPPPrior <- function(PP = NULL,
         "parameters were automatically set to (-4, 3)"
       )
     )
-    log_scale_bounds <- c(-6, 3)
+    log_scale_bounds <- c(-8, 6)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2) {
     stop(
@@ -601,7 +602,7 @@ processStates <- function(hm,
       colnames(covariates$range_X$X_locs),
       paste("PP", seq_len(hm$range$PP$n_knots), sep = "_")
     )
-    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1] + (hm$range$log_scale_bounds[2]-hm$range$log_scale_bounds[1])*.3))
+    params$range_log_scale <- matrix(runif(1 + hm$anisotropic, hm$range$log_scale_bounds[1], hm$range$log_scale_bounds[1] + .3*(hm$range$log_scale_bounds[2]-hm$range$log_scale_bounds[1])))
     row.names(params$range_log_scale) <- c("range", "aniso")[seq_len(1 + hm$anisotropic)]
     params$range_beta[-seq(ncol(covariates$range_X$X_locs)),1] <- 
       exp(.5*params$range_log_scale[1]) * rnorm(hm$range$PP$n_knots)
@@ -682,6 +683,7 @@ processStates <- function(hm,
     )
     params$noise_log_scale <- matrix(runif(1, hm$noise$log_scale_bounds[1], hm$noise$log_scale_bounds[2]))
     row.names(params$noise_log_scale) <- " "
+    momenta$noise_log_scale <- rnorm(1)
   }
   params$noise_beta[1] <- hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
   params$noise_beta[-1] <- rnorm(length(params$noise_beta[-1]), 0, .2)
@@ -890,7 +892,7 @@ GeoNonStat <- function(vecchia_approx,
           covariates = covariates,
           observed_field = observed_field,
           vecchia_approx = vecchia_approx,
-          init_tk = -10
+          init_tk = -15
         )
       }
     )

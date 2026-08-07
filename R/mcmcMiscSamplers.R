@@ -11,6 +11,7 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
   centered_field <- as.vector(params$field + X$X_locs %*% matrix(params$beta[X$which_locs], ncol = 1))
   sparse_chol_X <- as.matrix(stuff$sparse_chol %*% (X$X_locs)) / exp(.5 * params$field_log_var[1, 1])
   beta_precision <- crossprod(x = sparse_chol_X, y = sparse_chol_X)
+  diag(beta_precision) <- diag(beta_precision) + 1e-6
   beta_covmat <- solve(beta_precision, tol = min(rcond(beta_precision), .Machine$double.eps))
   if (all(!is.infinite(beta_covmat) & !is.nan(beta_covmat))) {
     if (all(eigen(beta_covmat)$d > 0)) {
@@ -25,7 +26,7 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
   return(list("params" = params, "stuff" = stuff))
 }
 
-
+# Update the latent field using analytical GMRF formulae
 updateLatentField <- function(state, vecchia_approx, hierarchical_model, observed_field, iter, num_threads) {
   # Field log var ###############################
   cluster_idx <- 1
@@ -81,7 +82,7 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
   return(list(field = state$params$field))
 }
 
-
+# Update the log variance of the field, using ancillary-sufficient Interweaving
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
   # ancillary
   for (field_log_var_idx in seq_len(2)) {
@@ -163,6 +164,7 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
   return(state)
 }
 
+# Updating the log variance of a PP, using sufficient parametrization of the PP
 updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
   for (i in seq_len(10))
   {

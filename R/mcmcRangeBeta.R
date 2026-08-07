@@ -1,11 +1,10 @@
-
-#' samples the range and variance of the latent field 
+#' Samples the range and variance of the latent field 
 #' using sufficient parametrization of the latent field 
 rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads){
   
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
   # initial density gradient ####
+  range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradS(
     field_log_var = state$params$field_log_var, range_beta = state$params$range_beta,
     compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol,
@@ -26,7 +25,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   # renewing momenta ####
   state$momenta$range_beta_sufficient <-
     renewMomentum(state$momenta$range_beta_sufficient)
-  state$momenta$field_log_var_sufficient =
+  state$momenta$field_log_var_sufficient <- 
     renewMomentum(state$momenta$field_log_var_sufficient)
   # proposing new parameters ####
   move_forward <- moveForward(
@@ -83,7 +82,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     sparse_chol = state$stuff$proposed_sparse_chol, # changed
     range_log_scale = state$params$range_log_scale, field = state$params$field,
     hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
-  
+  # debug ####
   #if(iter %/% 10 == iter / 10){
   #  par(mfrow = c(2, 2))
   #  plot(c(state$params$field_log_var, state$params$range_beta), c(new_field_log_var,new_range_beta), 
@@ -147,13 +146,12 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   return(state)
 }
 
-
-#' samples the range and variance of the latent field 
+#' Samples the range and variance of the latent field 
 #' using ancillary parametrization of the latent field 
 rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads){
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
   # initial density gradient ####
+  range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
     field_log_var = state$params$field_log_var
     , range_beta = state$params$range_beta,
@@ -248,7 +246,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
     lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var,
     hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
   
-  
+  # debug ####
   #if(iter %/% 10 == iter / 10){
   #  par(mfrow = c(2, 1))
   #  testGradientRangeBetaA(dens_to_test = current_dens,
@@ -305,9 +303,8 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   return(state)
 }
 
-
-#'Log likelihood of the latent field with sufficient parametrization
-logLikS <- function(field, sparse_chol, field_log_var){
+#' Log likelihood of the latent field with sufficient parametrization
+rangeLogLikS <- function(field, sparse_chol, field_log_var){
   return(
     - .5 * sum((sparse_chol %*% (field / exp(.5 * field_log_var[1, 1])))^2)
     + sum(log(Matrix::diag(sparse_chol))) 
@@ -316,8 +313,7 @@ logLikS <- function(field, sparse_chol, field_log_var){
 }
 
 #'Log likelihood of the latent field with ancillary parametrization
-logLikA <- function(
-    field, lm_residuals, noise_var, vecchia_approx){
+rangeLogLikA <- function(field, lm_residuals, noise_var, vecchia_approx){
   - .5 * sum((lm_residuals - field[vecchia_approx$locs_match])^2 / noise_var) # observation ll
 }
 
@@ -338,11 +334,10 @@ rangeReparamMat <- function(hierarchical_model){
 priorFisherRange <- function(range_X, hierarchical_model){
   # Prior Fisher information is XTX like in OLS
   Matrix::bdiag(
-    range_X$crossprod_X[1,1]*10, 
+    range_X$crossprod_X[1,1]*4, 
     (diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% range_X$crossprod_X)
   )
 }
-
 
 #' Gradient of the posterior density of the range and field log variance
 #' using sufficient parametrization of the latent field
@@ -412,7 +407,7 @@ rangeBetaDensS <- function(
       log_scale = range_log_scale
     )
     # data ll
-    + logLikS(field, sparse_chol, field_log_var = field_log_var)
+    + rangeLogLikS(field, sparse_chol, field_log_var = field_log_var)
   )
 }
 
@@ -489,11 +484,10 @@ rangeBetaDensA <- function(
       range_log_scale
     )
     # data ll
-    + logLikA(field, lm_residuals, noise_var, vecchia_approx)
+    + rangeLogLikA(field, lm_residuals, noise_var, vecchia_approx)
   )
   
 }
-
 
 #' Testing function for the gradient of the density of the range and field log variance,
 #' sufficient case
@@ -542,8 +536,6 @@ testGradientRangeBetaS <- function(
   abline(h=0)
   abline(v=0)
 }
-
-
 
 #' Testing function for the gradient of the density of the range and field log var, 
 #' ancillary case

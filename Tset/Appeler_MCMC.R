@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 20000
-nlocs = 15000
+nobs = 30000
+nlocs = 20000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
@@ -35,11 +35,11 @@ coeff_list = createGnsSimulatorParameters(
   field_log_var = field_log_var)
 coeff_list$range_X_coeff[] = 0
 #coeff_list$range_PP_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -4
+coeff_list$range_X_coeff[1,1] = -4.5
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
-plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex= .5, pch= 15)
+plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex= .7, pch= 15)
 
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed$data$observed_field, cex= 1, pch= 15)
 
@@ -69,6 +69,7 @@ summary(geo_non_stat)
  iter = 1
  seed=  1
  range_X = covariates$range_X
+ noise_X = covariates$noise_X
  
  samples = runOneChainMcmc(
   covariates = covariates, observed_field = observed_field, 
@@ -123,24 +124,20 @@ geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, n_chains_in_parallel = 3, 
   n_threads_per_chain = 7, n_iterations = 300)
 
-pdf("testInterweaving.pdf")
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
-dev.off()
 print("DOOOONE")
 
 
 
-tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .1)
 # plotting and diagnostics
+tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-tracePlots(geo_non_stat, burn_in = .3)
 MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .3)
-MCMC_diags$diags["field_log_var. ",] 
 
 # prediction
 # new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 

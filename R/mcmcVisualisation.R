@@ -136,6 +136,8 @@ tracePlots <- function(object, burn_in = .1, keep = "all") {
   xlim <- c(min(plotted_iters), max(plotted_iters))
   color_lines <- getColorsCat(3)
   nplots <- 0
+  # putting log scale at end to plot them last 
+  names_params <- c(names_params[!grepl("log_scale", names_params)], names_params[grepl("log_scale", names_params)]) 
   for (name in names_params) {
     refparams <- records[[name]][[1]]
     n <- dim(refparams)[2]

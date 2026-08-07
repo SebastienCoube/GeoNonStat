@@ -31,7 +31,9 @@ filterRecords <- function(records, burn_in = 0, keep = "all") {
 
   # Reduce iterations
   n_iter <- length(records[[1]])
-  start_iter <- max(0, floor(n_iter * burn_in))
+  burn_in <- max(0, burn_in)
+  if(burn_in>1)start_iter <- round(burn_in)
+  if(burn_in<1)start_iter <- floor(n_iter * burn_in)
   if (n_iter - start_iter <= 0) {
     stop("Not enough iterations, reduce burn_in if necessary")
   }
@@ -112,7 +114,7 @@ aggregateRecordsChain <- function(chain) {
 #'
 #' @examples
 #' GeoNonStat:::aggregateRecords(processedGnsDemo)
-aggregateRecords <- function(object, burn_in = 0.1, keep = "all", keep_separate_chains = FALSE) {
+aggregateRecords <- function(object, burn_in = 0.25, keep = "all", keep_separate_chains = FALSE) {
   res <- filterRecords(object$records, burn_in = burn_in, keep = keep)
   namesparams <- names(res[[1]][[1]])
   res <- lapply(res, transposeList)

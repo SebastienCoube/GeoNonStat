@@ -43,15 +43,13 @@ initStateParams <- function(stateParams) {
 
 #' Creates a conditioning matrix from a default prior Fisher and an empirical Fisher matrix 
 condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
-  mix <- min(1, max((500 - (iter + iter_start)) / 200, .05))
-  renorm <- function(M)M/(sqrt(sum(M^2))+1e-6) # Frobenius norm
-  t(chol(solve(
-    as(
-      (1 - mix) * renorm(empirical_fisher) +
+  mix <- min(1, max((500 - (iter + iter_start)) / 200, .3))
+  renorm <- function(M)M/(sum(Matrix::diag(M))+1e-6) # Trace Norm
+  t(chol(solve(as(
+    (1 - mix) * renorm(empirical_fisher) +
       (mix) *     renorm(prior_fisher),
-      "sparseMatrix"
-    )
-  )))
+    "sparseMatrix"
+  ))))
 }
 
 # update a Fisher information matrix using gradients
@@ -121,7 +119,7 @@ logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
 
 #' Extracts PP coefficients from regression coefficients
 getPPCoeff <- function(range_beta, n_knots){
-  return(range_beta[-seq_len(nrow(range_beta) - n_knots),])
+  return(range_beta[-seq_len(nrow(range_beta) - n_knots),,drop=F])
 }
 
 
@@ -137,9 +135,10 @@ getPPCoeff <- function(range_beta, n_knots){
 #' .5*range_beta[-1,]
 #' )
 movePPCoeff <- function(beta, log_scale, new_log_scale, n_knots){
+  log_scale_change <- c(exp(.5*(new_log_scale - log_scale)) [c(1, rep(2, 2*(ncol(beta)==3)))])
   beta[-seq_len(nrow(beta) - n_knots),] <-
-    beta[-seq_len(nrow(beta) - n_knots),] %*% 
-    diag(exp(.5*(new_log_scale - log_scale)) [c(1, rep(2, 2*(ncol(beta)==3)))])
+    beta[-seq_len(nrow(beta) - n_knots),,drop=F] %*% 
+    diag(log_scale_change, length(log_scale_change), length(log_scale_change))
   return(beta)
 }
 

@@ -83,16 +83,22 @@ runOneChainMcmc <- function(
          state$params$range_log_scale <- updateVarPPSuff(
            hm4params = hierarchical_model$range, 
            beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+         state <- rangeLogScaleA(
+           state, hierarchical_model, vecchia_approx, 
+           range_X = covariates$range_X, iter, iter_start, num_threads)
+         state$params$range_log_scale <- updateVarPPSuff(
+           hm4params = hierarchical_model$range, 
+           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
        }
     }
 
     # Noise ###############################
     # Noise beta ###############################
-
-    res <- updateNoiseBetaFisher(state, hm_noise = hierarchical_model$noise, 
-                                 noise_X = covariates$noise_X, vecchia_approx, iter, iter_start)
-    state <- res[["state"]]
-
+    
+    state <- noiseBeta(state, hm_noise = hierarchical_model$noise, 
+                       noise_X = covariates$noise_X, 
+                       vecchia_approx, iter, iter_start)
+    
     # Noise log scale ###############################
     if (!is.null(hierarchical_model$noise$PP)) {
       state$params$noise_log_scale <- updateVarPPSuff(
@@ -100,6 +106,9 @@ runOneChainMcmc <- function(
         beta4params = state$params$noise_beta,
         current_range_log_scale = state$params$noise_log_scale
       )
+      state <- noiseLogScale(
+        state, hierarchical_model, vecchia_approx, 
+        noise_X = covariates$noise_X, iter, iter_start)
     }
     # Storing the samples ###############################
     params_records[[iter]] <- state$params
