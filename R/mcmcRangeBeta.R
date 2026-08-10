@@ -14,11 +14,8 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     num_threads = num_threads
   )
   # conditioning matrix and stepsize ####
-  state$stuff$range_beta_empirical_fisher_s <-
-    updateFisher(iter = iter, iter_start = iter_start, dens_grad = dens_grad,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_s)
   cond_mat <-
-    condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model),
+    condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model, "sufficient"),
             iter_start = iter_start, iter = iter,
             empirical_fisher = state$stuff$range_beta_empirical_fisher_s)
   stepsize <- exp(state$ker_var$range_beta_sufficient[1])
@@ -114,7 +111,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_sufficient[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_sufficient[1], mult = -2
+    kernel_value = state$ker_var$range_beta_sufficient[1], mult = -4
   )
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
   if (!is.nan(ratio)) {
@@ -122,7 +119,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_sufficient[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_sufficient[1], mult = 3
+        kernel_value = state$ker_var$range_beta_sufficient[1], mult = 6
       )
       # updating momenta
       state$momenta$range_beta_sufficient <- new_momentum[-1]
@@ -142,6 +139,11 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   # negating momentum to induce "slippery slope" behavior
   state$momenta$range_beta_sufficient <- -state$momenta$range_beta_sufficient
   state$momenta$field_log_var_sufficient <- -state$momenta$field_log_var_sufficient
+  # updating ratio
+  state$stuff$range_beta_empirical_fisher_s <-
+    updateFisher(iter = iter, iter_start = iter_start, 
+                 dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
+                 empirical_fisher = state$stuff$range_beta_empirical_fisher_s)
   
   return(state)
 }
@@ -163,11 +165,8 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
     noise_var = state$stuff$noise_var, lm_residuals = state$stuff$lm_residuals
   )
   # conditioning matrix and stepsize ####
-  state$stuff$range_beta_empirical_fisher_a <-
-    updateFisher(iter = iter, iter_start = iter_start, dens_grad = dens_grad,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a)
   cond_mat <-
-    condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model),
+    condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model, "ancillary"),
             iter_start = iter_start, iter = iter,
             empirical_fisher = state$stuff$range_beta_empirical_fisher_a)
   stepsize <- exp(state$ker_var$range_beta_ancillary[1]) 
@@ -270,7 +269,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_ancillary[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -2
+    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -4
   )
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
   if (!is.nan(ratio )) {
@@ -278,7 +277,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 3
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 6
       )
       # updating momenta
       state$momenta$range_beta_ancillary <- new_momentum[-1]
@@ -299,7 +298,11 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # negating momentum to induce "slippery slope" behavior
   state$momenta$range_beta_ancillary <- -state$momenta$range_beta_ancillary
   state$momenta$field_log_var_ancillary <- -state$momenta$field_log_var_ancillary
-  
+  # updating ratio
+  state$stuff$range_beta_empirical_fisher_a <-
+    updateFisher(iter = iter, iter_start = iter_start, 
+                 dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
+                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a)
   return(state)
 }
 
@@ -331,12 +334,18 @@ rangeReparamMat <- function(hierarchical_model){
 }
 
 #' Default Fisher information matrix for range beta and field log var
-priorFisherRange <- function(range_X, hierarchical_model){
+priorFisherRange <- function(range_X, hierarchical_model, type){
+  if(type=="sufficient")cross_fisher_mult <- -.9
+  if(type=="ancillary")cross_fisher_mult <-   .9
+  fisher_var_factor <- 1
   # Prior Fisher information is XTX like in OLS
-  Matrix::bdiag(
-    range_X$crossprod_X[1,1]*4, 
+  res <- Matrix::bdiag(
+    range_X$crossprod_X[1,1] * fisher_var_factor, 
     (diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% range_X$crossprod_X)
   )
+  res[1,-1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
+  res[-1,1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
+  res
 }
 
 #' Gradient of the posterior density of the range and field log variance

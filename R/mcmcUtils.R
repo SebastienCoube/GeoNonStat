@@ -13,7 +13,7 @@ updateKernel <- function(iter,
   kernel_value <-
     kernel_value +
     length(kernel_value) * mult / sqrt(10 + iter + iter_start)
-  kernel_value <- max(kernel_value, -30)
+  kernel_value <- max(kernel_value, -20)
   kernel_value <- min(kernel_value, 2)
   kernel_value
 }
@@ -43,20 +43,23 @@ initStateParams <- function(stateParams) {
 
 #' Creates a conditioning matrix from a default prior Fisher and an empirical Fisher matrix 
 condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
-  mix <- min(1, max((500 - (iter + iter_start)) / 200, .3))
+  begin <- 300
+  end <- 500
+  mix <- 1-min(.95, max((end - (iter + iter_start)) / begin, 0))
   renorm <- function(M)M/(sum(Matrix::diag(M))+1e-6) # Trace Norm
   t(chol(solve(as(
-    (1 - mix) * renorm(empirical_fisher) +
-      (mix) *     renorm(prior_fisher),
+    (mix) * renorm(empirical_fisher) +
+    (1 - mix) *     renorm(prior_fisher),
     "sparseMatrix"
   ))))
 }
 
 # update a Fisher information matrix using gradients
-updateFisher <- function(iter, iter_start, dens_grad, empirical_fisher){
+updateFisher <- function(iter, iter_start, dens_grad, dens_grad_back, ratio, empirical_fisher){
+  if(iter + iter_start > 200){
   empirical_fisher <-
     ((iter+iter_start-1)/(iter+iter_start)) * empirical_fisher +
-    tcrossprod((dens_grad)) / (iter+iter_start)
+    tcrossprod((dens_grad_back-dens_grad)*min(1, exp(.5*ratio)) / sqrt(iter+iter_start)) }
   empirical_fisher
 }
 

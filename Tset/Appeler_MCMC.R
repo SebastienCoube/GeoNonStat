@@ -24,7 +24,7 @@ gns_simulator = createGnsSimulator(
 field_log_var=  0
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(0, 0)
-noise_intercept = 0
+noise_intercept = 2
 noise_PP_log_var = -.5
 # case with no non-stationarity and little noise. 
 # case with nice non-stationarity and crazy noise. 
@@ -35,7 +35,7 @@ coeff_list = createGnsSimulatorParameters(
   field_log_var = field_log_var)
 coeff_list$range_X_coeff[] = 0
 #coeff_list$range_PP_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -4.5
+coeff_list$range_X_coeff[1,1] = -5
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)

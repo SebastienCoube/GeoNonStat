@@ -28,31 +28,26 @@ geo_non_stat_full_monty <- GeoNonStat(
  run_time = run_time - Sys.time()
  
  
-tracePlots(geo_non_stat_full_monty) 
-tracePlots(geo_non_stat_full_monty, keep = "range_log_scale") 
 tracePlots(geo_non_stat_full_monty, keep = "range_beta") 
+tracePlots(geo_non_stat_full_monty, keep = "range_log_scale") 
 tracePlots(geo_non_stat_full_monty, keep = "field_log_var") 
-mcmcDiags(geo_non_stat_full_monty, .2)
+mcmcDiags(geo_non_stat_full_monty, .5)
 
-
-geo_non_stat_full_monty$states$chain_1$ker_var
-geo_non_stat_full_monty$states$chain_2$ker_var
-geo_non_stat_full_monty$states$chain_3$ker_var
-
-solve(geo_non_stat_full_monty$states$chain_1$stuff$range_beta_empirical_fisher_s)
-
-
-samples = runOneChainMcmc(
- covariates = geo_non_stat_full_monty$covariates, observed_field = geo_non_stat_full_monty$observed_field, 
- hierarchical_model = geo_non_stat_full_monty$hierarchical_model, vecchia_approx = geo_non_stat_full_monty$vecchia_approx, 
- state = geo_non_stat_full_monty$states$chain_1, n_iterations = 300, num_threads = 5, iter_start = 30
-)
-
-
-list2env(list(
-  covariates = geo_non_stat_full_monty$covariates, observed_field = geo_non_stat_full_monty$observed_field, 
-  hierarchical_model = geo_non_stat_full_monty$hierarchical_model, vecchia_approx = geo_non_stat_full_monty$vecchia_approx, 
-  state = geo_non_stat_full_monty$states$chain_1, n_iterations = 300, num_threads = 5, iter_start = 30
-), envir = environment())
-iter = 1
-condMatNoise
+# 
+# geo_non_stat_full_monty$states$chain_1$ker_var$range_beta_sufficient
+# geo_non_stat_full_monty$states$chain_1$ker_var$range_beta_ancillary
+# 
+# geo_non_stat_full_monty$states$chain_1$ker_var
+# geo_non_stat_full_monty$states$chain_2$ker_var
+# geo_non_stat_full_monty$states$chain_3$ker_var
+# 
+# solve(geo_non_stat_full_monty$states$chain_1$stuff$range_beta_empirical_fisher_s)
+# 
+# 
+# samples = runOneChainMcmc(
+#  covariates = geo_non_stat_full_monty$covariates, observed_field = geo_non_stat_full_monty$observed_field, 
+#  hierarchical_model = geo_non_stat_full_monty$hierarchical_model, vecchia_approx = geo_non_stat_full_monty$vecchia_approx, 
+#  state = geo_non_stat_full_monty$states$chain_1, n_iterations = 300, num_threads = 5, iter_start = 70
+# )
+# 
+# 

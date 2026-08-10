@@ -197,14 +197,6 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
     state$momenta$noise_beta[] <- -state$momenta$noise_beta[]
   }
   
-  # updating conditioning matrix ####
-  if (iter + iter_start > 50) {
-    state$stuff$noise_beta_empirical_fisher[] <-
-      updateFisher(empirical_fisher = state$stuff$noise_beta_empirical_fisher, 
-                   dens_grad = do.call(cbind, grad_record_for_Fisher), 
-                   iter = iter, iter_start = iter_start)
-      
-  }
   
   return(state)
 }
