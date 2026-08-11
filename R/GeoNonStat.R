@@ -309,7 +309,7 @@ processCovariates <- function(X,
   if (!one_obs_per_locs) {
     crossprod_X <- crossprod(X_)
     res$crossprod_X <- crossprod_X
-    res$t_chol_solve_crossprod_X <- t(chol(solve(crossprod_X)))
+    #res$t_chol_solve_crossprod_X <- t(chol(solve(crossprod_X)))
   }
   if (one_obs_per_locs) {
     res$X <- NULL
@@ -687,7 +687,7 @@ processStates <- function(hm,
   }
   params$noise_beta[1] <- hm$noise$beta0_mean + hm$noise$beta0_sd * rnorm(1)
   params$noise_beta[-1] <- rnorm(length(params$noise_beta[-1]), 0, .2)
-
+  stuff$noise_beta_empirical_fisher <- matrix(0, length(params$noise_beta), length(params$noise_beta))
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations

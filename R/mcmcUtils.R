@@ -93,7 +93,7 @@ updateFisher <- function(iter, iter_start, dens_grad, dens_grad_back, ratio, emp
   if(iter + iter_start > begin){
   empirical_fisher <-
     ((iter+iter_start-1)/(iter+iter_start)) * empirical_fisher +
-    tcrossprod((dens_grad_back-dens_grad)*min(1, exp(.5*ratio)) / sqrt(iter+iter_start)) }
+    tcrossprod(as.matrix(dens_grad_back-dens_grad)%*%diag(nrow = length(ratio), ncol = length(ratio), x = pmin(1, exp(.5*ratio))) / sqrt(iter+iter_start)) }
   empirical_fisher
 }
 

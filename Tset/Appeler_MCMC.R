@@ -59,23 +59,23 @@ geo_non_stat = GeoNonStat(
 summary(geo_non_stat)
 
 # # ### # #Run MCMC chain for 40 iterations
-#  list2env(geo_non_stat, environment())
-#  state = geo_non_stat$states$chain_1
-#  #state$params$range_log_scale[1] = 0
-#  #state$params$range_log_scale[2] = -3
-#  num_threads = 10
-#  n_iterations = 300
-#  iter_start = 1
-#  iter = 1
-#  seed=  1
-#  range_X = covariates$range_X
-#  noise_X = covariates$noise_X
-#  
-#  samples = runOneChainMcmc(
-#   covariates = covariates, observed_field = observed_field, 
-#   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx, 
-#   state = state, n_iterations = 500, num_threads = 8, iter_start = 100
-#  )
+  list2env(geo_non_stat, environment())
+  state = geo_non_stat$states$chain_1
+  #state$params$range_log_scale[1] = 0
+  #state$params$range_log_scale[2] = -3
+  num_threads = 10
+  n_iterations = 300
+  iter_start = 1
+  iter = 1
+  seed=  1
+  range_X = covariates$range_X
+  noise_X = covariates$noise_X
+  
+  samples = runOneChainMcmc(
+   covariates = covariates, observed_field = observed_field, 
+   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx, 
+   state = state, n_iterations = 500, num_threads = 8, iter_start = 300
+  )
 #  
 # plotPointillistPainting(vecchia_approx$locs, params$field, main = "sampled", pch = 16, cex=  1)
 # plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true", pch = 16, cex=  1)

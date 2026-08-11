@@ -47,7 +47,8 @@ runOneChainMcmc <- function(
       initStateParams(state$params)
     }
   )
-
+  # settings for Fisher matrix MCMC 
+  fisher = list(begin_learn = 300, begin_introduce = 400, end_introduce = 500)
   for (iter in seq_len(n_iterations)) {
     # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
@@ -69,7 +70,6 @@ runOneChainMcmc <- function(
     }
     if (iter + iter_start > 60) {
        # Range beta ###############################
-      fisher = list(begin_learn = 300, begin_introduce = 400, end_introduce = 500)
       state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
@@ -102,7 +102,8 @@ runOneChainMcmc <- function(
     
     state <- noiseBeta(state, hm_noise = hierarchical_model$noise, 
                        noise_X = covariates$noise_X, 
-                       vecchia_approx, iter, iter_start)
+                       vecchia_approx, iter, iter_start, 
+                       fisher = fisher)
     
     # Noise log scale ###############################
     if (!is.null(hierarchical_model$noise$PP)) {

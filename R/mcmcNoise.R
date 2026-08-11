@@ -91,7 +91,7 @@ testGradientNoise <- function(
 
 
 
-noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start) {
+noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start, fisher) {
   stepsize <- exp(state$ker_var$noise_beta)
   # residuals 
   squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
@@ -104,7 +104,13 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
     squared_residuals = squared_residuals, 
     noise_log_scale = state$params$noise_log_scale)
   # conditioning matrix update
-  cond_mat <- noise_X$t_chol_solve_crossprod_X
+  #cond_mat <- noise_X$t_chol_solve_crossprod_X
+  fisher_record <- list(dens_grad = NULL, dens_grad_back = NULL, ratio = NULL)
+  cond_mat <-
+    condMat(prior_fisher =noise_X$crossprod_X,
+            iter_start = iter_start, iter = iter,
+            empirical_fisher = state$stuff$noise_beta_empirical_fisher, 
+            end = fisher$end_introduce, begin = fisher$begin_introduce)
   grad_record_for_Fisher <- list()
   # pre-allocation
   new_noise_var <- state$stuff$noise_var
@@ -179,6 +185,10 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
     
     # Metropolis ####
     ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
+    # updating Fisher
+    fisher_record$ratio <- c(fisher_record$ratio, ratio)
+    fisher_record$dens_grad <- cbind(fisher_record$dens_grad, dens_grad)
+    fisher_record$dens_grad_back <- cbind(fisher_record$dens_grad_back, new_dens_grad)
     if (!is.nan(ratio)) {
       if (log(runif(1)) < ratio) {
         state$ker_var$noise_beta_mala <- updateKernel(
@@ -192,10 +202,18 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
         state$params$noise_beta[] <- new_noise_beta
         state$stuff$noise_var[] <- new_noise_var[]
       }
-    }
     # negating momentum ####
     state$momenta$noise_beta[] <- -state$momenta$noise_beta[]
+    }
   }
+    # updating Fisher ####
+    state$stuff$noise_beta_empirical_fisher <-
+      updateFisher(iter = iter, iter_start = iter_start, 
+                   dens_grad = fisher_record$dens_grad, 
+                   dens_grad_back = fisher_record$dens_grad_back, 
+                   ratio = fisher_record$ratio,
+                   empirical_fisher = state$stuff$noise_beta_empirical_fisher, 
+                   begin = fisher$begin_learn)
   
   
   return(state)
