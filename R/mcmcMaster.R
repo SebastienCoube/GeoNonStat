@@ -69,12 +69,17 @@ runOneChainMcmc <- function(
     }
     if (iter + iter_start > 60) {
        # Range beta ###############################
+      fisher = list(begin_learn = 300, begin_introduce = 400, end_introduce = 500)
       state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
-         range_X = covariates$range_X, iter, iter_start, num_threads)
+         range_X = covariates$range_X, iter, iter_start, num_threads,
+         fisher = fisher
+         )
       state <- rangeBetaA(
          state, hierarchical_model, vecchia_approx, 
-         range_X = covariates$range_X, iter, iter_start, num_threads)
+         range_X = covariates$range_X, iter, iter_start, num_threads,
+         fisher = fisher
+         )
        # Variance of the  range PP ###############################
        if(!is.null(hierarchical_model$range$PP)){
          state <- rangeLogScaleS(
@@ -106,7 +111,7 @@ runOneChainMcmc <- function(
         beta4params = state$params$noise_beta,
         current_range_log_scale = state$params$noise_log_scale
       )
-      state <- noiseLogScale(
+      state <- noiseLogScaleAncillary(
         state, hierarchical_model, vecchia_approx, 
         noise_X = covariates$noise_X, iter, iter_start)
     }
@@ -159,12 +164,6 @@ GeoNonStatMcmc <- function(
 ) {
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
-  if (n_iterations + iter_start < 60) {
-    warning(
-      "The algorithm is implemented to update the spatial range parameters ",
-      "after at least 60 iterations. You should increase n_iterations."
-    )
-  }
   usedPlan <- utils::capture.output({
     print(future::plan())
   })[1]

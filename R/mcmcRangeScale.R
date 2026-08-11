@@ -31,7 +31,7 @@ rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
     renewMomentum(state$momenta$range_log_scale_sufficient)
   # proposing new parameters ####
   new_range_log_scale <- moveForward(
-    position= state$params$range_log_scale,
+    current_params= state$params$range_log_scale,
     dens_grad = dens_grad,
     momentum =state$momenta$range_log_scale_sufficient,
     stepsize = stepsize, cond_mat = cond_mat)
@@ -200,7 +200,7 @@ rangeLogScaleA <- function(state, hierarchical_model, vecchia_approx,
     renewMomentum(state$momenta$range_log_scale_ancillary)
   # proposing new parameters ####
   new_range_log_scale <- moveForward(
-    position= state$params$range_log_scale,
+    current_params= state$params$range_log_scale,
     dens_grad = dens_grad,
     momentum =state$momenta$range_log_scale_ancillary,
     stepsize = stepsize, cond_mat = cond_mat)

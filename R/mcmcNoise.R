@@ -109,14 +109,14 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
   # pre-allocation
   new_noise_var <- state$stuff$noise_var
   
-  for (mala_rep in seq(2)) {
+  for (mala_rep in seq(4)) {
     # for conditioning matrix update
     grad_record_for_Fisher[[mala_rep]] <- as.vector(dens_grad)
     # updating momentum
     state$momenta$noise_beta <- renewMomentum(state$momenta$noise_beta, .9)
     # proposing parameter ####
     new_noise_beta <- moveForward(
-      position = state$params$noise_beta, momentum = state$momenta$noise_beta, 
+      current_params = state$params$noise_beta, momentum = state$momenta$noise_beta, 
       dens_grad = dens_grad, cond_mat = cond_mat, stepsize = stepsize)
     new_noise_var[] <- exp(xPPMultRight(
       X = noise_X$X, PP = hm_noise$PP,
@@ -206,7 +206,7 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
 #' Samples the log-scale parameter of the noise variance PP coeffs, using 
 #' ancillary parametrization of the PP coeffs 
 #' (interweaving)
-noiseLogScale <- function(state, hierarchical_model, vecchia_approx,
+noiseLogScaleAncillary <- function(state, hierarchical_model, vecchia_approx,
                            noise_X, iter, iter_start){
   # residuals 
   squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
@@ -229,7 +229,7 @@ noiseLogScale <- function(state, hierarchical_model, vecchia_approx,
     renewMomentum(state$momenta$noise_log_scale)
   # proposing new parameters ####
   new_noise_log_scale <- moveForward(
-    position= state$params$noise_log_scale,
+    current_params= state$params$noise_log_scale,
     dens_grad = dens_grad,
     momentum =state$momenta$noise_log_scale,
     stepsize = stepsize, cond_mat = cond_mat)

@@ -1,7 +1,8 @@
 #' Samples the range and variance of the latent field 
 #' using sufficient parametrization of the latent field 
 rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
-                       range_X, iter, iter_start, num_threads){
+                       range_X, iter, iter_start, num_threads, 
+                       fisher){
   
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
@@ -17,7 +18,8 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   cond_mat <-
     condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model, "sufficient"),
             iter_start = iter_start, iter = iter,
-            empirical_fisher = state$stuff$range_beta_empirical_fisher_s)
+            empirical_fisher = state$stuff$range_beta_empirical_fisher_s, 
+            end = fisher$end_introduce, begin = fisher$begin_introduce)
   stepsize <- exp(state$ker_var$range_beta_sufficient[1])
   # renewing momenta ####
   state$momenta$range_beta_sufficient <-
@@ -26,7 +28,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     renewMomentum(state$momenta$field_log_var_sufficient)
   # proposing new parameters ####
   move_forward <- moveForward(
-    position= c(state$params$field_log_var, state$params$range_beta),
+    current_params= c(state$params$field_log_var, state$params$range_beta),
     dens_grad = dens_grad,
     momentum = c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient),
     stepsize = stepsize, cond_mat = cond_mat)
@@ -91,7 +93,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   #  print(new_range_beta)
   #  plot(
   #    c(state$params$field_log_var, state$params$range_beta), 
-  #    moveForward(stepsize, position = c(new_field_log_var,new_range_beta), 
+  #    moveForward(stepsize, current_params = c(new_field_log_var,new_range_beta), 
   #                momentum = new_momentum, dens_grad = dens_grad_back, cond_mat = cond_mat) , 
   #    xlab = "old params", ylab = "Move back from new params ")
   #  abline(a = 0, b= 1)
@@ -111,15 +113,15 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_sufficient[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_sufficient[1], mult = -4
-  )
+    kernel_value = state$ker_var$range_beta_sufficient[1], mult = -5)  
+  # computing ratio
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
   if (!is.nan(ratio)) {
     if (log(runif(1)) < ratio) {
       # increasing stepsize if acceptance
       state$ker_var$range_beta_sufficient[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_sufficient[1], mult = 6
+        kernel_value = state$ker_var$range_beta_sufficient[1], mult = 8
       )
       # updating momenta
       state$momenta$range_beta_sufficient <- new_momentum[-1]
@@ -143,7 +145,8 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   state$stuff$range_beta_empirical_fisher_s <-
     updateFisher(iter = iter, iter_start = iter_start, 
                  dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_s)
+                 empirical_fisher = state$stuff$range_beta_empirical_fisher_s, 
+                 begin = fisher$begin_learn)
   
   return(state)
 }
@@ -151,7 +154,8 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
 #' Samples the range and variance of the latent field 
 #' using ancillary parametrization of the latent field 
 rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
-                       range_X, iter, iter_start, num_threads){
+                       range_X, iter, iter_start, num_threads, 
+                       fisher){
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
@@ -168,7 +172,8 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   cond_mat <-
     condMat(prior_fisher = priorFisherRange(range_X, hierarchical_model, "ancillary"),
             iter_start = iter_start, iter = iter,
-            empirical_fisher = state$stuff$range_beta_empirical_fisher_a)
+            empirical_fisher = state$stuff$range_beta_empirical_fisher_a, 
+            end = fisher$end_introduce, begin = fisher$begin_introduce)
   stepsize <- exp(state$ker_var$range_beta_ancillary[1]) 
   
   # renewing momenta ####
@@ -178,7 +183,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
     renewMomentum(state$momenta$field_log_var_ancillary)
   # proposing new parameters ####
   move_forward <- moveForward(
-    position = c(state$params$field_log_var, state$params$range_beta),
+    current_params = c(state$params$field_log_var, state$params$range_beta),
     momentum = c(state$momenta$field_log_var_ancillary, state$momenta$range_beta_ancillary),
     dens_grad = dens_grad,
     stepsize = stepsize, cond_mat = cond_mat)
@@ -269,15 +274,16 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_ancillary[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -4
+    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -5
   )
+  # computing ratio
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
   if (!is.nan(ratio )) {
     if (log(runif(1)) < ratio) {
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 6
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 8
       )
       # updating momenta
       state$momenta$range_beta_ancillary <- new_momentum[-1]
@@ -302,7 +308,8 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   state$stuff$range_beta_empirical_fisher_a <-
     updateFisher(iter = iter, iter_start = iter_start, 
                  dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a)
+                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a, 
+                 begin = fisher$begin_learn)
   return(state)
 }
 
@@ -336,7 +343,7 @@ rangeReparamMat <- function(hierarchical_model){
 #' Default Fisher information matrix for range beta and field log var
 priorFisherRange <- function(range_X, hierarchical_model, type){
   if(type=="sufficient")cross_fisher_mult <- -.9
-  if(type=="ancillary")cross_fisher_mult <-   .9
+  if(type=="ancillary")cross_fisher_mult <-   0
   fisher_var_factor <- 1
   # Prior Fisher information is XTX like in OLS
   res <- Matrix::bdiag(

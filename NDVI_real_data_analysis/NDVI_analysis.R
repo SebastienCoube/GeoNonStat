@@ -5,7 +5,7 @@ train_test_split <- createSplitData(
   locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y), 
   n_clust = 1000, 
   prop_test = c(.15, .02), 
-  round_locs = .005)
+  round_locs = .004)
 
 plotPointillistPainting(
   train_test_split$train$locs, 
@@ -13,8 +13,8 @@ plotPointillistPainting(
 
 # creating model
 vecchia_approx <- createVecchia(train_test_split$train$locs, m = 6)
-range_PP <- createPP(vecchia_approx, .2)
-noise_PP <- createPP(vecchia_approx, .08)
+range_PP <- createPP(vecchia_approx, .15)
+noise_PP <- createPP(vecchia_approx, .04)
 geo_non_stat_full_monty <- GeoNonStat(
   vecchia_approx = vecchia_approx, observed_field = train_test_split$train$y,
   noise_PP = noise_PP, range_PP = range_PP, n_chains = 3, anisotropic = T)
@@ -23,14 +23,14 @@ geo_non_stat_full_monty <- GeoNonStat(
  run_time = Sys.time()
  future::plan(strategy = "multisession", workers = 3)
  geo_non_stat_full_monty <- GeoNonStatMcmc(
-   geo_non_stat_full_monty, n_iterations = 300, 
+   geo_non_stat_full_monty, n_iterations = 600, 
    n_chains_in_parallel = 3, n_threads_per_chain = 8)
  run_time = run_time - Sys.time()
  
  
-tracePlots(geo_non_stat_full_monty, keep = "range_beta") 
-tracePlots(geo_non_stat_full_monty, keep = "range_log_scale") 
-tracePlots(geo_non_stat_full_monty, keep = "field_log_var") 
+tracePlots(geo_non_stat_full_monty, keep = "range_beta", burn_in = 0) 
+tracePlots(geo_non_stat_full_monty, keep = "range_log_scale", burn_in = 0) 
+tracePlots(geo_non_stat_full_monty, keep = "field_log_var", burn_in = 0) 
 mcmcDiags(geo_non_stat_full_monty, .5)
 
 # 

@@ -442,12 +442,10 @@ simulateGnsData <- function(gns_simulator,
   )
   res$observed <- list(
     locs = gns_simulator$vecchia_approx$observed_locs,
-    data = list(
-      observed_field = observed_field,
-      X = gns_simulator$covariates$X$arg,
-      noise_X = gns_simulator$covariates$noise_X$arg,
-      range_X = gns_simulator$covariates$range_X$arg
-    )
+    observed_field = observed_field,
+    X = gns_simulator$covariates$X$arg,
+    noise_X = gns_simulator$covariates$noise_X$arg,
+    range_X = gns_simulator$covariates$range_X$arg
   )
   return(res)
 }

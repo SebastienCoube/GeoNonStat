@@ -1,3 +1,14 @@
+
+#' Partial momentum renewal for MALA 
+#' @param momentum a vector or matrix of momentum variables
+#'
+#' @returns a vector or a matrix of momentum variables
+#' @export
+#' @keywords internal
+#' @examples
+#' renewMomentum(rnorm(100), 1)
+#' renewMomentum(rnorm(100), 0)
+#' renewMomentum(rnorm(100), .5)
 renewMomentum <- function(momentum, kept_momentum = .9) {
   if (!inBounds(c(0, 1), kept_momentum, includeBounds = TRUE)) {
     stop("kept_momentum must be between 0 and 1")
@@ -6,6 +17,7 @@ renewMomentum <- function(momentum, kept_momentum = .9) {
   momentum
 }
 
+#' MCMC kernel update
 updateKernel <- function(iter,
                          iter_start,
                          kernel_value,
@@ -42,61 +54,87 @@ initStateParams <- function(stateParams) {
 }
 
 #' Creates a conditioning matrix from a default prior Fisher and an empirical Fisher matrix 
-condMat <- function(empirical_fisher, prior_fisher, iter, iter_start){
-  begin <- 300
-  end <- 500
-  mix <- 1-min(.95, max((end - (iter + iter_start)) / begin, 0))
+#' @param empirical_fisher an empirical Fisher matrix
+#' @param prior_fisher a prior Fisher matrix
+#' @param iter current iteration  
+#' @param iter_start starting iteration 
+#' @param  begin beginning of transition from prior to empirical
+#' @param  end end of transition from prior to empirical
+#' @returns a triangular conditioning matrix
+#' @export
+#' @keywords internal
+#' @examples
+#' 
+#' condMat(diag(runif(10)), diag(runif(10)), 300, 1, 50, 400)
+condMat <- function(empirical_fisher, prior_fisher, iter, iter_start, begin = 400, end = 600){
+  mix <- pmax(0, pmin(.98, (iter+iter_start - begin)/(end-begin)))
   renorm <- function(M)M/(sum(Matrix::diag(M))+1e-6) # Trace Norm
   t(chol(solve(as(
-    (mix) * renorm(empirical_fisher) +
-    (1 - mix) *     renorm(prior_fisher),
+    (mix) *     renorm(empirical_fisher) +
+    (1 - mix) * renorm(prior_fisher),
     "sparseMatrix"
   ))))
 }
 
-# update a Fisher information matrix using gradients
-updateFisher <- function(iter, iter_start, dens_grad, dens_grad_back, ratio, empirical_fisher){
-  if(iter + iter_start > 200){
+#' Update a Fisher information matrix using gradients and a Metropolis ratio
+#' @param empirical_fisher an empirical Fisher matrix
+#' @param iter current iteration  
+#' @param iter_start starting iteration 
+#' @param  begin beginning of updates
+#' @param  dens_grad MALA gradient of current parameters
+#' @param  dens_grad_back MALA gradient of proposed parameters
+#' @param  ratio log Metropolis ratio
+#' @returns an updated Fisher matrix
+#' @export
+#' @keywords internal
+#' @examples
+#' updateFisher(400, 1, rnorm(4), rnorm(4), 0, diag(c(1,1,1,1)), 200)
+updateFisher <- function(iter, iter_start, dens_grad, dens_grad_back, ratio, empirical_fisher, begin = 250){
+  if(iter + iter_start > begin){
   empirical_fisher <-
     ((iter+iter_start-1)/(iter+iter_start)) * empirical_fisher +
     tcrossprod((dens_grad_back-dens_grad)*min(1, exp(.5*ratio)) / sqrt(iter+iter_start)) }
   empirical_fisher
 }
 
-# density of a momentum
+#' Computes momentum log-density (standardized normal)
+#' @param momentum a vector of momentum variables
+#' @returns a real-valued, negative, momentum log density
+#' @export
+#' @keywords internal
+#' @examples
+#' momentumDens(rnorm(3))
 momentumDens <- function(momentum)-.5*sum(momentum^2)
 
 # MALA forward step
+#' @param stepsize a positive numeric for the step size
+#' @param cond_mat a conditioning matrix
+#' @param current_params a vector of current value of the parameters
+#' @param dens_grad a vector of density of the gradient at the current value of the parameters
+#' @param momentum a vector of momentum variables
+#' @returns a vector of updated value of the parameters
+#' @export
+#' @keywords internal
+#' @examples
+#' moveForward(1, diag(c(1,1,1,1)), rnorm(4), rnorm(4), rnorm(4))
 moveForward <- function(stepsize, cond_mat, dens_grad,
-                        position, momentum){
-  position +
+                        current_params, momentum){
+  current_params +
     stepsize/2 *     as.vector((cond_mat %*% (crossprod(cond_mat, c(dens_grad))))) +
     sqrt(stepsize) * as.vector( cond_mat %*% c(momentum))
 }
 
-#' position <- rnorm(10)
-#' momentum <- rnorm(10)
-#' dens_grad <- rnorm(10)
-#' dens_grad_back <- rnorm(10)
-#' cond_mat <- t(chol(crossprod(as(matrix(rnorm(1000), 100), "sparseMatrix"))))
-#' stepsize <- .0001
-#' new_position <- moveForward(
-#'   momentum = momentum, stepsize = stepsize, cond_mat = cond_mat,
-#'   position = position, dens_grad = dens_grad)
-#' plot(
-#'   solve(
-#'    sqrt(stepsize) * cond_mat,
-#'   position - moveForward(
-#'     momentum = 0*momentum, stepsize = stepsize, cond_mat = cond_mat,
-#'     position = new_position, dens_grad = dens_grad_back)
-#'   ),
-#'   momentumBack(
-#'     stepsize = stepsize, cond_mat = cond_mat, current_params = position,
-#'     proposed_params = new_position, dens_grad_back = dens_grad_back
-#'   ))
-#' abline(a = 0, b = 1)
-
-# Finding reverse momentum from a MALA step
+#' Finding reverse momentum from a MALA step
+#' @param stepsize a positive numeric for the step size
+#' @param cond_mat a conditioning matrix
+#' @param current_params a vector of current value of the parameters
+#' @param proposed_params a vector of proposed value of the parameters
+#' @param dens_grad_back a vector of density of the gradient at the proposed value of the parameters
+#' @returns a vector of momentum variables
+#' @export
+#' @keywords internal
+#' @examples
+#' momentumBack(rnorm(4), rnorm(4), rnorm(4), diag(c(1,1,1,1)), 1)
 momentumBack <- function(
     current_params, proposed_params,
     dens_grad_back,
@@ -111,9 +149,13 @@ momentumBack <- function(
   )/sqrt(stepsize)
 }
 
-
-
 #' Computes density gradient of a log scale parameter using the Chain Rule
+#' @param PP_coeff value of the PP coefficient
+#' @param grad_PP_coeff gradient of the density evaluated at the PP coefficients
+#' @returns a vector of momentum variables
+#' @export
+#' @keywords internal
+#' @examples
 logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
   res <- .5 * PP_coeff * grad_PP_coeff
   if(ncol(PP_coeff)==3)return(c(sum(res[,1]), sum(res[,-1])))
@@ -121,8 +163,13 @@ logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
 }
 
 #' Extracts PP coefficients from regression coefficients
-getPPCoeff <- function(range_beta, n_knots){
-  return(range_beta[-seq_len(nrow(range_beta) - n_knots),,drop=F])
+#' 
+#' x <- matrix(rnorm(10), 10)
+#' getPPCoeff(x, 8)
+#' x <- matrix(rnorm(30), 10)
+#' getPPCoeff(x, 8)
+getPPCoeff <- function(x, n_knots){
+  return(x[-seq_len(nrow(x) - n_knots),,drop=F])
 }
 
 
@@ -146,7 +193,7 @@ movePPCoeff <- function(beta, log_scale, new_log_scale, n_knots){
 }
 
 
-#' Is a numeric include in an interval ?
+#' Is a numeric included in an interval ?
 #'
 #' @param bounds Numeric of length 2, bounds of the interval.
 #' @param x a numeric value to test (or a vector)
