@@ -16,12 +16,12 @@
 filterRecords <- function(records, burn_in = 0, keep = "all") {
   # Reduce paramaters
   namesparam <- names(records[[1]][[1]])
-  if (length(keep) == 1 && keep == "all_even_the_field") keep <- namesparam
-  if (length(keep) == 1 && keep == "all") keep <- setdiff(namesparam, "field")
+  if (length(keep) == 1 && keep == "all") keep <- namesparam
+  if (length(keep) == 1 && keep == "nofield") keep <- setdiff(namesparam, "field")
   if (any(sapply(keep, function(x) !(x %in% namesparam)))) {
     stop(
       "Try to keep a parameter that doesn't exists. Acceptable values for",
-      "`keep` are 'all', 'all_even_the_field' or a character vector with ",
+      "`keep` are 'all', 'nofield' or a character vector with ",
       "parameters to keep"
     )
   }
@@ -177,8 +177,21 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #'
 #' @examples
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = 0.1, keep = "all") {
-  res <- aggregateRecords(object, burn_in = burn_in, keep = "all")
-  res <- sapply(res, summarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
+estimate <- function(object, burn_in = 0.3, keep = "all") {
+  records <- aggregateRecords(object, burn_in = burn_in, keep = keep)
+  records <- c(records, mean = meanSamples(records, object$covariates$X$X, object$vecchia_approx$locs_match))
+  records <- c(records, noise_var =
+                 apply(records$noise_beta, 1, function(noise_beta){
+                   as.vector(exp(xPPMultRight(
+                     X = object$covariates$noise_X$X, PP = object$hierarchical_model$noise$PP,
+                     vecchia_approx = object$vecchia_approx, Y = noise_beta,
+                     permutate_PP_to_obs = TRUE
+                   )))})
+  )
+  res <- sapply(records, summarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
   return(res)
+}
+
+meanSamples <- function(records, X, locs_match){
+  records$field[,locs_match] + records$beta %*% t(X)
 }

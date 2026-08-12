@@ -13,8 +13,8 @@ plotPointillistPainting(
 
 # creating model
 vecchia_approx <- createVecchia(train_test_split$train$locs, m = 6)
-range_PP <- createPP(vecchia_approx, .15)
-noise_PP <- createPP(vecchia_approx, .04)
+range_PP <- createPP(vecchia_approx, .16)
+noise_PP <- createPP(vecchia_approx, .08)
 geo_non_stat_full_monty <- GeoNonStat(
   vecchia_approx = vecchia_approx, observed_field = train_test_split$train$y,
   noise_PP = noise_PP, range_PP = range_PP, n_chains = 3, anisotropic = T)
@@ -28,10 +28,12 @@ geo_non_stat_full_monty <- GeoNonStat(
  run_time = run_time - Sys.time()
  
  
+tracePlots(geo_non_stat_full_monty, keep = "beta", burn_in = 0) 
 tracePlots(geo_non_stat_full_monty, keep = "range_beta", burn_in = 0) 
 tracePlots(geo_non_stat_full_monty, keep = "range_log_scale", burn_in = 0) 
 tracePlots(geo_non_stat_full_monty, keep = "field_log_var", burn_in = 0) 
-mcmcDiags(geo_non_stat_full_monty, .5)
+tracePlots(geo_non_stat_full_monty, keep = "noise_log_scale", burn_in = 0) 
+mcmcDiags(geo_non_stat_full_monty, .3)
 
 # 
 # geo_non_stat_full_monty$states$chain_1$ker_var$range_beta_sufficient

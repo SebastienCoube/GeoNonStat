@@ -261,7 +261,7 @@ noiseLogScaleAncillary <- function(state, hierarchical_model, vecchia_approx,
       new_log_scale = new_noise_log_scale, 
       n_knots = hierarchical_model$noise$PP$n_knots)
     # computing new noise var from new parameters ####
-    new_noise_var <- as.vector(exp(xPPMultRight(
+    new_noise_var[] <- as.vector(exp(xPPMultRight(
       X = noise_X$X, PP = hierarchical_model$noise$PP,
       vecchia_approx = vecchia_approx, Y = new_noise_beta,
       permutate_PP_to_obs = TRUE

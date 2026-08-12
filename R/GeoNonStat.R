@@ -361,7 +361,7 @@ processPPPrior <- function(PP = NULL,
         "parameters were automatically set to (-4, 3)"
       )
     )
-    log_scale_bounds <- c(-8, 6)
+    log_scale_bounds <- c(-5, 6)
   }
   if (!is.numeric(log_scale_bounds) || length(log_scale_bounds) != 2) {
     stop(
@@ -940,6 +940,11 @@ print.GeoNonStat <- function(x, ...) {
   return(invisible(NULL))
 }
 
+
+mcmcCount <- function(object){
+  length(object$records[[1]]) - 1
+}
+
 #' Summary of a 'GeoNonStat' object
 #'
 #' @param object an object of class \code{GeoNonStat}
@@ -1014,7 +1019,7 @@ summary.GeoNonStat <- function(object, burn_in = 0.1, ...) {
 
   cat("\n### MCMC ###\n")
   res$mcmc <- list(
-    "n_iter" = length(object$records$chain_1) - 1
+    "n_iter" = mcmcCount(object)
   )
 
   cat(res$mcmc$n_iter, "MCMC iterations already run.\n")

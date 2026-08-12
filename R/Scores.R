@@ -20,28 +20,6 @@ coverage <- function(true_y, y_samples) {
   return(per_obs)
 }
 
-#' \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS)
-#' @param true_y a vector of true observations of the response variable
-#' @param y_samples a matrix of pseudo-observations sampled following the model
-#' @returns A CRPS for each true observation
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' true_y <- rnorm(100)
-#' y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
-#' CRPS(true_y, y_samples)
-CRPS <- function(true_y, y_samples) {
-  ecdfs <- apply(y_samples, 1, stats::ecdf)
-  per_obs <- mapply(
-    function(f, x) f(x),
-    x = true_y,
-    f = ecdfs
-  )
-  return(per_obs)
-}
-
-
 #' Predictive Density
 #' @param true_y a vector of true observations of the response variable
 #' @param mean_samples a matrix of samples of mean from the model
@@ -75,7 +53,6 @@ squaredError <- function(true_y, mean_samples) {
   return(per_obs)
 }
 
-
 #' Return averaged and per-observation model scoring
 #' @param true_y a vector of true observations of the response variable
 #' @param mean_samples a matrix of samples of mean from the model
@@ -87,14 +64,14 @@ squaredError <- function(true_y, mean_samples) {
 #' mean_samples <- matrix(rep(0, 1000 * length(true_y)), length(true_y))
 #' sd_samples <- matrix(rep(1, 1000 * length(true_y)), length(true_y))
 #' score(true_y, mean_samples, sd_samples)
-score <- function(true_y, mean_samples, sd_samples) {
+allScores <- function(true_y, mean_samples, sd_samples) {
   y_samples <- mean_samples + sd_samples * rnorm(length(sd_samples))
   per_obs <- matrix(0, length(true_y), 4)
   colnames(per_obs) <- c("95% coverage", "CRPS", "predictive density", "squared error")
   per_obs[, "95% coverage"] <- coverage(true_y, y_samples)
-  per_obs[, "CRPS"] <- CRPS(true_y, y_samples)
-  per_obs[, "predictive density"] <- predictiveDensity(true_y, mean_samples, sd_samples)
-  per_obs[, "squared error"] <- squaredError(true_y, mean_samples)
+  per_obs[, "CRPS"] <- scoringRules::crps_sample(true_y, y_samples)
+  per_obs[, "ELPPD"] <- predictiveDensity(true_y, mean_samples, sd_samples)
+  per_obs[, "MSE"] <- squaredError(true_y, mean_samples)
   res <- list()
   res$criteria <- signif(apply(per_obs, 2, mean), 2)
   names(res$criteria) <- c("95% coverage", "CRPS", "ELPPD", "MSE")
@@ -103,30 +80,26 @@ score <- function(true_y, mean_samples, sd_samples) {
 }
 
 
-#' Model scoring for train and test data
+
+
+#' Model scoring for train data
 #' @description
 #'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
 #'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
 #'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-#' @param object, an object of class GeoNonStat in order to evaluate the scores on the training data set, or NULL
-#' @param prediction, a prediction from a GeoNonStat object in order to evaluate the scores on the test data set, or NULL
-#' @param new_y a vector on new observations from the interest variable in order to evaluate the scores on the test data set, or NULL
-#' @export
-scores <- function(object = NULL, prediction = NULL, new_y = NULL) {
-  train <- !is.null(object) & is.null(prediction) & is.null(new_y) & (class(object) == "GeoNonStat")
-  test <- is.null(object) & !is.null(prediction) & !is.null(new_y)
-  if (!(train | test)) {
-    stop(
-      "Either: object must be from class GeoNonStat, prediction be NULL,",
-      "and new_y be NULL; or geo_non_stat must be NULL, ",
-      "prediction be a prediction from a GeoNonStat model, ",
-      "and y be test observations"
-    )
-  }
-  # TODO check new_y and prediction same length
-}
+trainScores <- function(object, burn_in)
+
+#' Model scoring for test data
+#' @description
+#'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
+#'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
+#'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
+#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
+#'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
+testScores <- function(object, test_observations)
+  
 
 #' @title Find scattered spatial locations for train-test partition
 #' @description A max-min heuristic is used to scatter the test locations across space,
@@ -298,7 +271,7 @@ plotSplit <- function(locs, indexes,
 #' y <- rnorm(n)
 #' datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
 #' traintest <- createSplitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
-createSplitData <- function(locs, data,
+splitData <- function(locs, data,
                             n_clust = NULL,
                             prop_test = 0.1, 
                             round_locs = 0){

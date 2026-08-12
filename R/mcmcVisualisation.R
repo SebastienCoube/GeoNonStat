@@ -12,7 +12,7 @@
 #' # TODO - quid des NA ?
 mcmcDiags <- function(object, burn_in = 0.1, verbose = TRUE) {
   # only two significant digits are kept
-  records <- aggregateRecords(object, burn_in = burn_in, keep = "all", keep_separate_chains = TRUE)
+  records <- aggregateRecords(object, burn_in = burn_in, keep = "nofield", keep_separate_chains = TRUE)
   ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
   ess <- lapply(ess, unlist)
   ess <- Reduce("+", ess)
@@ -107,7 +107,7 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #'
 #' @examples
 #' tracePlots(processedGnsDemo)
-tracePlots <- function(object, burn_in = .1, keep = "all") {
+tracePlots <- function(object, burn_in = .1, keep = "nofield") {
   # Checks
   if (length(object$records[[1]]) <= 1) {
     warning(

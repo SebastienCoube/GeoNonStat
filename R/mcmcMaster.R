@@ -81,7 +81,7 @@ runOneChainMcmc <- function(
          fisher = fisher
          )
        # Variance of the  range PP ###############################
-       if(!is.null(hierarchical_model$range$PP)){
+       if(!is.null(hierarchical_model$range$PP) & (iter + iter_start > 200)){
          state <- rangeLogScaleS(
            state, hierarchical_model, vecchia_approx, 
            range_X = covariates$range_X, iter, iter_start, num_threads)
@@ -161,19 +161,22 @@ GeoNonStatMcmc <- function(
   object,
   n_chains_in_parallel = NULL,
   n_threads_per_chain = 5,
-  n_iterations = 100
+  n_iterations = 100, 
+  verbose = T
 ) {
   if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
   usedPlan <- utils::capture.output({
     print(future::plan())
   })[1]
+  if(verbose){
   cat("-------- The parallelism on chains is", usedPlan, "--------\n")
   cat("         you can change it by using                        \n")
   cat("         future::plan(multicore, workers=x)    # if supported \n")
   cat("         future::plan(multisession, workers=x) # on Windows or RStudio\n")
   cat("         future::plan(sequential)              # no parallelism\n")
   cat("-------- MCMC Running..... --------\n")
+  }
   chains <- seq_along(object$states)
 
   covariates_local <- object$covariates
@@ -216,4 +219,46 @@ GeoNonStatMcmc <- function(
   newrecords <- lapply(res, function(x) x[["params_records"]])
   new_object$records <- mapply(function(x1, x2) c(x1, x2), object$records, newrecords, SIMPLIFY = FALSE)
   return(new_object)
+}
+
+
+
+
+automaticMcmc <- function(
+    object,
+    n_chains_in_parallel = NULL,
+    n_threads_per_chain = 5, 
+    satisfying_ESS = 100,
+    satisfying_Gelman_Rubin = 1.0, 
+    iter_per_step = 500,
+    burn_in = .3, 
+    verbose = T
+){
+  if(mcmcCount(object)>0){
+    mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
+    worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
+    worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
+  }
+  if(mcmcCount(object)==0){
+    worst_ess <- 0 
+    worst_gr <- Inf 
+  }
+  if(verbose)cat("Starting auto MCMC... ")
+  while(worst_gr > satisfying_Gelman_Rubin | worst_ess < satisfying_ESS){
+    cat(paste(mcmcCount(object), "iterations already done, worst Gelman Rubin R-hat =", 
+                  worst_gr, ", worst ESS =", worst_ess, ", going on for", iter_per_step, "more MCMC iterations."))
+    object <- GeoNonStatMcmc(
+      object,
+      n_chains_in_parallel = NULL,
+      n_threads_per_chain = 5,
+      n_iterations = iter_per_step, 
+    )
+    MCMC_diags <- mcmcDiags(object, burn_in, verbose = F)
+    mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
+    worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
+    worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
+  }
+  cat(paste("Stopping at", mcmcCount(object), "iterations, worst Gelman Rubin R-hat =", 
+                worst_gr, ", worst ESS =", worst_ess))
+  return(object)
 }
