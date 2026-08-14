@@ -43,13 +43,14 @@ geo_non_stat = GeoNonStat(
   noise_X = dataset$noise_X, noise_PP = PP_noise,  # explanatory variables and PP for the nonstationary noise variance 
   range_PP = PP_range # PP for the nonstationary range 
 )
-# Running the model 
+# Running the model (with very low ESS and Gelman Rubin targets)
 future::plan(strategy = "multisession", workers = 2)
 geo_non_stat <- automaticMcmc(
-  geo_non_stat, n_chains_in_parallel = 2, n_threads_per_chain = 3)
-# Investigating MCMC (100 iterations is not enough)
+  geo_non_stat, n_chains_in_parallel = 2, n_threads_per_chain = 3, satisfying_ESS = 10, satisfying_Gelman_Rubin = 10)
+# Investigating MCMC 
 tracePlots(geo_non_stat, keep = "field_log_var")
-mcmcDiags(geo_non_stat, burn_in = .5)
+mcmcDiags(geo_non_stat)
+
 ```
 
 # Model structure
