@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 30000
-nlocs = 20000
+nobs = 10000
+nlocs = 10000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
@@ -35,19 +35,19 @@ coeff_list = createGnsSimulatorParameters(
   field_log_var = field_log_var)
 coeff_list$range_X_coeff[] = 0
 #coeff_list$range_PP_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -5
+coeff_list$range_X_coeff[1,1] = -2
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
 plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex= .7, pch= 15)
 
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed$data$observed_field, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed$observed_field, cex= 1, pch= 15)
 
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field, cex= 1, pch= 15)
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
-  observed_field = fake_data$observed$data$observed_field, X = X, 
+  observed_field = fake_data$observed$observed_field, X = X, 
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
   noise_X = X, range_X = NULL,
@@ -125,7 +125,9 @@ geo_non_stat = GeoNonStatMcmc(
 
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
+tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
+tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .0)
 print("DOOOONE")
 
 
@@ -136,7 +138,7 @@ tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .4)
+MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .3)
 
 # prediction
 # new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 
@@ -211,6 +213,10 @@ new_X = as.data.frame(
   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
               rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
 
+new_noise_X = new_X
+new_range_X = NULL
+burn_in = .3
+num_threads = 5
 
 prediction <- predict.GeoNonStat(
   object = geo_non_stat, new_locs = new_locs, new_X = new_X, 

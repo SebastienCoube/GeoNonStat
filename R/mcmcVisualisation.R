@@ -1,3 +1,5 @@
+getRecordVarNames <- function(records)unname(sapply(unlist(mapply(paste, names(records[[1]]), sapply(records[[1]], colnames))), trimws))
+
 #' summary of MCMC diagnostics
 #'
 #' @param object a GeoNonStat object
@@ -10,22 +12,27 @@
 #' @examples
 #' MCMC_diags <- mcmcDiags(processedGnsDemo)
 #' # TODO - quid des NA ?
-mcmcDiags <- function(object, burn_in = 0.1, verbose = TRUE) {
+mcmcDiags <- function(object, burn_in = 0.3, verbose = TRUE, keep = "nofield") {
   # only two significant digits are kept
-  records <- aggregateRecords(object, burn_in = burn_in, keep = "nofield", keep_separate_chains = TRUE)
-  ess <- lapply(records, function(x) lapply(x, function(x) coda::effectiveSize(x)))
-  ess <- lapply(ess, unlist)
-  ess <- Reduce("+", ess)
-  ess <- signif(ess, 2)
-
-  records <- lapply(records, function(x) do.call("cbind", x))
-  records <- lapply(records, coda::as.mcmc)
-  records <- coda::as.mcmc.list(records)
-  gelman_diags <- t(coda::gelman.diag(records, multivariate = F)[[1]])
-  gelman_diags <- signif(gelman_diags, 2)
-  res <- t(rbind(ess, gelman_diags))
-  res <- data.frame(res)
+  records <- aggregateRecords(object$records, burn_in = burn_in, keep = keep, keep_separate_chains = TRUE)
+  res <- matrix(0, sum(sapply(records[[1]], ncol)), 3)
   colnames(res) <- c("ess", "Point est. Gelman", "Upper C.I. Gelman")
+  row.names(res) <- getRecordVarNames(records)
+  i <- 1 
+  for(var_name in names(records[[1]])){
+    for (var_num in seq(ncol(records[[1]][[var_name]]))){
+      samples <- list() 
+      for(j in seq_len(length(records))){
+        samples[[j]] <- coda::mcmc(records[[j]][[var_name]][,var_num,drop=F])
+        res[i,1] <- res[i,1] + coda::effectiveSize(samples[[j]])
+      }
+      res[i,c(2,3)] <- coda::gelman.diag(coda::mcmc.list(samples))$psrf
+      i <- i+1
+    }
+  }
+  
+  res <- signif(res, 3)
+  res <- data.frame(res)
   if (anyNA(res)) {
     warning(
       "Some parameters haven't been updated yet by the MCMC.",
@@ -33,7 +40,6 @@ mcmcDiags <- function(object, burn_in = 0.1, verbose = TRUE) {
     )
     return(res)
   }
-
 
   regle <- c("min", "max", "max")
   worst <- data.frame(
@@ -57,14 +63,18 @@ mcmcDiags <- function(object, burn_in = 0.1, verbose = TRUE) {
   return(list("diags" = res, "worst" = worst))
 }
 
-traceOneParam <- function(name, param, start, end, nrow, ncol, xlim, color_lines) {
+traceOneParam <- function(name, records, start, end, nrow, ncol, xlim, color_lines) {
   par(mfrow = c(nrow, ncol))
 
+  to_be_plotted <- matrix(0, nrow(records[[1]][[1]]), length(records))
   # Iterate over columns
   for (col in seq(start, end)) {
-    namecol <- colnames(param[[1]])[col]
-    to_be_plotted <- do.call("cbind", lapply(param, function(x) x[, col]))
-    graphics::matplot(to_be_plotted,
+    namecol <- colnames(records[[1]][[name]])[col]
+    for(i in seq(length(records))){
+      to_be_plotted[,i] <- records[[i]][[name]][,col]
+    }
+    graphics::matplot(
+      to_be_plotted,
       type = "l",
       lty = 1,
       lwd = 2,
@@ -107,7 +117,7 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #'
 #' @examples
 #' tracePlots(processedGnsDemo)
-tracePlots <- function(object, burn_in = .1, keep = "nofield") {
+tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   # Checks
   if (length(object$records[[1]]) <= 1) {
     warning(
@@ -118,28 +128,25 @@ tracePlots <- function(object, burn_in = .1, keep = "nofield") {
     return(NULL)
   }
   # Prepare data
-  records <- aggregateRecords(object,
+  records <- aggregateRecords(object$records,
     burn_in,
     keep = keep,
     keep_separate_chains = TRUE
   )
-  records <- transposeList(records)
 
   # How to plot
   ormfrow <- par("mfrow")
   omar <- par("mar")
   par(mar = c(2.1, 3.1, 3.1, 1.1))
   n_iters <- length(object$records[[1]])
-  names_params <- names(records)
+  names_params <- names(records[[1]])
   plotted_iters <- seq(max(0, floor(n_iters * burn_in)) + 1, n_iters)
 
   xlim <- c(min(plotted_iters), max(plotted_iters))
   color_lines <- getColorsCat(3)
   nplots <- 0
-  # putting log scale at end to plot them last 
-  names_params <- c(names_params[!grepl("log_scale", names_params)], names_params[grepl("log_scale", names_params)]) 
   for (name in names_params) {
-    refparams <- records[[name]][[1]]
+    refparams <- records[[1]][[name]]
     n <- dim(refparams)[2]
 
     # For params with several intercepts, split representation !
@@ -155,12 +162,13 @@ tracePlots <- function(object, burn_in = .1, keep = "nofield") {
     if (length(columns) > 1) cat(" (on", length(columns), "plots)")
     cat("\n")
     for (i in 1:length(columns)) {
-      traceOneParam(name,
-        records[[name]],
-        columns[[i]][1],
-        columns[[i]][2],
-        columns[[i]][3],
-        columns[[i]][4],
+      traceOneParam(
+        name,
+        records, 
+        start = columns[[i]][1],
+        end =   columns[[i]][2],
+        nrow =  columns[[i]][3],
+        ncol =  columns[[i]][4],
         xlim = xlim,
         color_lines = color_lines
       )

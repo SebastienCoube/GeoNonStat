@@ -398,12 +398,26 @@ xPPCrossprod <- function(X,
 #' B <- list("R1" = "b1", "R2" = "b2", "R3" = "b3")
 #' C <- list("R1" = "c1", "R2" = "c2", "R3" = "c3")
 #' transposeList(list("A" = A, "B" = B, "C" = C))
-transposeList <- function(list) {
-  nameslist <- names(list[[1]])
-  tl <- lapply(
-    seq_along(list[[1]]),
-    function(i) lapply(list, `[[`, i)
-  )
-  names(tl) <- nameslist
-  return(tl)
+transposeList <- function(a_list) {
+  res <- callr::r(
+    args = list(a_list), 
+    function(a_list){
+      nameslist <- names(a_list[[1]])
+      tl <- lapply(
+        seq_along(a_list[[1]]),
+        function(i) lapply(a_list, `[[`, i)
+      )
+      names(tl) <- nameslist
+      return(tl)
+    })
+  return(res)
+}
+
+
+noiseVar <- function(X, PP, vecchia_approx, noise_beta){
+  return(exp(as.vector(xPPMultRight(
+    X = X, PP = PP,
+    vecchia_approx = vecchia_approx, Y = noise_beta,
+    permutate_PP_to_obs = TRUE
+  ))))
 }

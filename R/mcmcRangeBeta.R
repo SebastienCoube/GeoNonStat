@@ -2,8 +2,12 @@
 #' using sufficient parametrization of the latent field 
 rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
-                       fisher){
-  
+                       fisher, n_MALA){
+  # renewing momenta ####
+  state$momenta$range_beta_sufficient <-
+    renewMomentum(state$momenta$range_beta_sufficient, .7)
+  state$momenta$field_log_var_sufficient <- 
+    renewMomentum(state$momenta$field_log_var_sufficient, .7)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradS(
@@ -21,132 +25,136 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
             empirical_fisher = state$stuff$range_beta_empirical_fisher_s, 
             end = fisher$end_introduce, begin = fisher$begin_introduce)
   stepsize <- exp(state$ker_var$range_beta_sufficient[1])
-  # renewing momenta ####
-  state$momenta$range_beta_sufficient <-
-    renewMomentum(state$momenta$range_beta_sufficient)
-  state$momenta$field_log_var_sufficient <- 
-    renewMomentum(state$momenta$field_log_var_sufficient)
-  # proposing new parameters ####
-  move_forward <- moveForward(
-    current_params= c(state$params$field_log_var, state$params$range_beta),
-    dens_grad = dens_grad,
-    momentum = c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient),
-    stepsize = stepsize, cond_mat = cond_mat)
-  new_range_beta <- state$params$range_beta; new_range_beta[] <- move_forward[-1] 
-  new_field_log_var <- state$params$field_log_var; new_field_log_var[] <- move_forward[1]
-  # computing new Vecchia from new parameters ####
-  vecchia_(
-    start_idx = 1,
-    log_range = t(computeLogRange(
-      range_beta = new_range_beta, PP = hierarchical_model$range$PP,
-      vecchia_approx = vecchia_approx, range_X = range_X)),
-    locs = vecchia_approx$t_locs, NNarray = vecchia_approx$NNarray,
-    smoothness = hierarchical_model$matern_smoothness,
-    compute_derivative = TRUE, num_threads = num_threads,
-    result = state$stuff$proposed_compressed_chol
-  )
-  state$stuff$proposed_sparse_chol@x <-
-    state$stuff$proposed_compressed_chol[, , 1][vecchia_approx$sparse_chol_x_reorder]
-  # computing gradient at proposed parameters ####
-  dens_grad_back <- rangeBetaDensGradS(
-    field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
-    compressed_chol = state$stuff$proposed_compressed_chol, #changed
-    sparse_chol = state$stuff$proposed_sparse_chol,  # changed
-    field = state$params$field, range_log_scale = state$params$range_log_scale,
-    range_reparam_mat = range_reparam_mat,
-    range_X = range_X, vecchia_approx = vecchia_approx,
-    hierarchical_model = hierarchical_model, num_threads = num_threads
-  )
-  # deducing proposed momentum  ####
-  new_momentum <- momentumBack(
-    current_params = c(state$params$field_log_var, state$params$range_beta),
-    proposed_params =  c(new_field_log_var, new_range_beta),
-    dens_grad_back = dens_grad_back,
-    stepsize = stepsize, cond_mat = cond_mat
-  )
-  
-  # kinetic energies of momenta  ####
-  current_momentum_dens <- momentumDens(
-    c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient))
-  proposed_momentum_dens <- momentumDens(new_momentum)
-  # target densities ####
-  current_dens <- rangeBetaDensS(
-    field_log_var = state$params$field_log_var, range_beta = state$params$range_beta, # changed
-    compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol, # changed
-    range_log_scale = state$params$range_log_scale, field = state$params$field,
-    hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
-  proposed_dens <- rangeBetaDensS(
-    field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
-    compressed_chol = state$stuff$proposed_compressed_chol, # changed
-    sparse_chol = state$stuff$proposed_sparse_chol, # changed
-    range_log_scale = state$params$range_log_scale, field = state$params$field,
-    hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
-  # debug ####
-  #if(iter %/% 10 == iter / 10){
-  #  par(mfrow = c(2, 2))
-  #  plot(c(state$params$field_log_var, state$params$range_beta), c(new_field_log_var,new_range_beta), 
-  #       xlab = "old params", ylab = "new params"
-  #       )
-  #  text(state$params$field_log_var, new_field_log_var, labels = "var")
-  #  abline(a=0, b=1)
-  #  print(new_field_log_var)
-  #  print(new_range_beta)
-  #  plot(
-  #    c(state$params$field_log_var, state$params$range_beta), 
-  #    moveForward(stepsize, current_params = c(new_field_log_var,new_range_beta), 
-  #                momentum = new_momentum, dens_grad = dens_grad_back, cond_mat = cond_mat) , 
-  #    xlab = "old params", ylab = "Move back from new params ")
-  #  abline(a = 0, b= 1)
-  #  testGradientRangeBetaS(dens_to_test = current_dens, range_beta = state$params$range_beta,
-  #                field_log_var = state$params$field_log_var, compressed_chol = state$stuff$compressed_chol,
-  #                grad_to_test = dens_grad, sparse_chol = state$stuff$sparse_chol,
-  #                num_threads = num_threads,
-  #                range_X, hierarchical_model, vecchia_approx, state = state)
-  #  testGradientRangeBetaS(dens_to_test = proposed_dens, range_beta = new_range_beta,
-  #               field_log_var = new_field_log_var, compressed_chol = state$stuff$proposed_compressed_chol,
-  #               grad_to_test = dens_grad_back, sparse_chol = state$stuff$proposed_sparse_chol,
-  #               num_threads = num_threads,
-  #               range_X, hierarchical_model, vecchia_approx, state = state)
-  #}
-  
-  # Metropolis ####
-  # always lowering stepsize
-  state$ker_var$range_beta_sufficient[1] <- updateKernel(
-    iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_sufficient[1], mult = -5)  
-  # computing ratio
-  ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
-  if (!is.nan(ratio)) {
-    if (log(runif(1)) < ratio) {
-      # increasing stepsize if acceptance
-      state$ker_var$range_beta_sufficient[1] <- updateKernel(
-        iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_sufficient[1], mult = 8
-      )
-      # updating momenta
-      state$momenta$range_beta_sufficient <- new_momentum[-1]
-      state$momenta$field_log_var_sufficient <- new_momentum[1]
-      # updating parameters
-      state$params$range_beta[] <- new_range_beta
-      state$params$field_log_var[] <- new_field_log_var
-      # invert positions of proposed and current matrix to avoid recreating objects.
-      stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
-      stuff_compressed <- stuff_compressed[!is.na(stuff_compressed)]
-      names(state$stuff)[stuff_compressed] <- names(state$stuff)[rev(stuff_compressed)]
-      stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
-      stuff_sparse <- stuff_sparse[!is.na(stuff_sparse)]
-      names(state$stuff)[stuff_sparse] <- names(state$stuff)[rev(stuff_sparse)]
+  for(mala_step in seq(n_MALA)){
+    # renewing momenta ####
+    state$momenta$range_beta_sufficient <-
+      renewMomentum(state$momenta$range_beta_sufficient, .99)
+    state$momenta$field_log_var_sufficient <- 
+      renewMomentum(state$momenta$field_log_var_sufficient, .99)
+    # proposing new parameters ####
+    move_forward <- moveForward(
+      current_params= c(state$params$field_log_var, state$params$range_beta),
+      dens_grad = dens_grad,
+      momentum = c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient),
+      stepsize = stepsize, cond_mat = cond_mat)
+    new_range_beta <- state$params$range_beta; new_range_beta[] <- move_forward[-1] 
+    new_field_log_var <- state$params$field_log_var; new_field_log_var[] <- move_forward[1]
+    # computing new Vecchia from new parameters ####
+    vecchia_(
+      start_idx = 1,
+      log_range = t(computeLogRange(
+        range_beta = new_range_beta, PP = hierarchical_model$range$PP,
+        vecchia_approx = vecchia_approx, range_X = range_X)),
+      locs = vecchia_approx$t_locs, NNarray = vecchia_approx$NNarray,
+      smoothness = hierarchical_model$matern_smoothness,
+      compute_derivative = TRUE, num_threads = num_threads,
+      result = state$stuff$proposed_compressed_chol
+    )
+    state$stuff$proposed_sparse_chol@x <-
+      state$stuff$proposed_compressed_chol[, , 1][vecchia_approx$sparse_chol_x_reorder]
+    # computing gradient at proposed parameters ####
+    dens_grad_back <- rangeBetaDensGradS(
+      field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
+      compressed_chol = state$stuff$proposed_compressed_chol, #changed
+      sparse_chol = state$stuff$proposed_sparse_chol,  # changed
+      field = state$params$field, range_log_scale = state$params$range_log_scale,
+      range_reparam_mat = range_reparam_mat,
+      range_X = range_X, vecchia_approx = vecchia_approx,
+      hierarchical_model = hierarchical_model, num_threads = num_threads
+    )
+    # deducing proposed momentum  ####
+    new_momentum <- momentumBack(
+      current_params = c(state$params$field_log_var, state$params$range_beta),
+      proposed_params =  c(new_field_log_var, new_range_beta),
+      dens_grad_back = dens_grad_back,
+      stepsize = stepsize, cond_mat = cond_mat
+    )
+    
+    # kinetic energies of momenta  ####
+    current_momentum_dens <- momentumDens(
+      c(state$momenta$field_log_var_sufficient, state$momenta$range_beta_sufficient))
+    proposed_momentum_dens <- momentumDens(new_momentum)
+    # target densities ####
+    current_dens <- rangeBetaDensS(
+      field_log_var = state$params$field_log_var, range_beta = state$params$range_beta, # changed
+      compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol, # changed
+      range_log_scale = state$params$range_log_scale, field = state$params$field,
+      hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
+    proposed_dens <- rangeBetaDensS(
+      field_log_var = new_field_log_var, range_beta = new_range_beta, # changed
+      compressed_chol = state$stuff$proposed_compressed_chol, # changed
+      sparse_chol = state$stuff$proposed_sparse_chol, # changed
+      range_log_scale = state$params$range_log_scale, field = state$params$field,
+      hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
+    # debug ####
+    #if(iter %/% 10 == iter / 10){
+    #  par(mfrow = c(2, 2))
+    #  plot(c(state$params$field_log_var, state$params$range_beta), c(new_field_log_var,new_range_beta), 
+    #       xlab = "old params", ylab = "new params"
+    #       )
+    #  text(state$params$field_log_var, new_field_log_var, labels = "var")
+    #  abline(a=0, b=1)
+    #  print(new_field_log_var)
+    #  print(new_range_beta)
+    #  plot(
+    #    c(state$params$field_log_var, state$params$range_beta), 
+    #    moveForward(stepsize, current_params = c(new_field_log_var,new_range_beta), 
+    #                momentum = new_momentum, dens_grad = dens_grad_back, cond_mat = cond_mat) , 
+    #    xlab = "old params", ylab = "Move back from new params ")
+    #  abline(a = 0, b= 1)
+    #  testGradientRangeBetaS(dens_to_test = current_dens, range_beta = state$params$range_beta,
+    #                field_log_var = state$params$field_log_var, compressed_chol = state$stuff$compressed_chol,
+    #                grad_to_test = dens_grad, sparse_chol = state$stuff$sparse_chol,
+    #                num_threads = num_threads,
+    #                range_X, hierarchical_model, vecchia_approx, state = state)
+    #  testGradientRangeBetaS(dens_to_test = proposed_dens, range_beta = new_range_beta,
+    #               field_log_var = new_field_log_var, compressed_chol = state$stuff$proposed_compressed_chol,
+    #               grad_to_test = dens_grad_back, sparse_chol = state$stuff$proposed_sparse_chol,
+    #               num_threads = num_threads,
+    #               range_X, hierarchical_model, vecchia_approx, state = state)
+    #}
+    
+    # Metropolis ####
+    # always lowering stepsize
+    state$ker_var$range_beta_sufficient[1] <- updateKernel(
+      iter = iter, iter_start = iter_start,
+      kernel_value = state$ker_var$range_beta_sufficient[1], mult = -5)  
+    # computing ratio
+    ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
+    # updating fisher matrix
+    state$stuff$range_beta_empirical_fisher_s <-
+      updateFisher(iter = iter, iter_start = iter_start, 
+                   dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
+                   empirical_fisher = state$stuff$range_beta_empirical_fisher_s, 
+                   begin = fisher$begin_learn)
+    if (!is.nan(ratio)) {
+      if (log(runif(1)) < ratio) {
+        # increasing stepsize if acceptance
+        state$ker_var$range_beta_sufficient[1] <- updateKernel(
+          iter = iter, iter_start = iter_start,
+          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 8
+        )
+        # updating gradient
+        dens_grad[] <- dens_grad_back
+        # updating momenta
+        state$momenta$range_beta_sufficient <- new_momentum[-1]
+        state$momenta$field_log_var_sufficient <- new_momentum[1]
+        # updating parameters
+        state$params$range_beta[] <- new_range_beta
+        state$params$field_log_var[] <- new_field_log_var
+        # invert positions of proposed and current matrix to avoid recreating objects.
+        stuff_compressed <- match(c("compressed_chol", "proposed_compressed_chol"), names(state$stuff))
+        stuff_compressed <- stuff_compressed[!is.na(stuff_compressed)]
+        names(state$stuff)[stuff_compressed] <- names(state$stuff)[rev(stuff_compressed)]
+        stuff_sparse <- match(c("sparse_chol", "proposed_sparse_chol"), names(state$stuff))
+        stuff_sparse <- stuff_sparse[!is.na(stuff_sparse)]
+        names(state$stuff)[stuff_sparse] <- names(state$stuff)[rev(stuff_sparse)]
+      }
     }
+    # negating momentum to induce "slippery slope" behavior
+    state$momenta$range_beta_sufficient <- -state$momenta$range_beta_sufficient
+    state$momenta$field_log_var_sufficient <- -state$momenta$field_log_var_sufficient
   }
-  # negating momentum to induce "slippery slope" behavior
-  state$momenta$range_beta_sufficient <- -state$momenta$range_beta_sufficient
-  state$momenta$field_log_var_sufficient <- -state$momenta$field_log_var_sufficient
-  # updating ratio
-  state$stuff$range_beta_empirical_fisher_s <-
-    updateFisher(iter = iter, iter_start = iter_start, 
-                 dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_s, 
-                 begin = fisher$begin_learn)
   
   return(state)
 }
@@ -155,7 +163,12 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
 #' using ancillary parametrization of the latent field 
 rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
-                       fisher){
+                       fisher, n_MALA){
+  # renewing momenta ####
+  state$momenta$range_beta_ancillary =
+    renewMomentum(state$momenta$range_beta_ancillary, .7)
+  state$momenta$field_log_var_ancillary =
+    renewMomentum(state$momenta$field_log_var_ancillary, .7)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
@@ -176,11 +189,12 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
             end = fisher$end_introduce, begin = fisher$begin_introduce)
   stepsize <- exp(state$ker_var$range_beta_ancillary[1]) 
   
+  for(mala_step in seq(n_MALA)){
   # renewing momenta ####
   state$momenta$range_beta_ancillary =
-    renewMomentum(state$momenta$range_beta_ancillary)
+    renewMomentum(state$momenta$range_beta_ancillary, .99)
   state$momenta$field_log_var_ancillary =
-    renewMomentum(state$momenta$field_log_var_ancillary)
+    renewMomentum(state$momenta$field_log_var_ancillary, .99)
   # proposing new parameters ####
   move_forward <- moveForward(
     current_params = c(state$params$field_log_var, state$params$range_beta),
@@ -207,7 +221,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # computing new latent field ####
   new_field <-
     exp(.5 * (new_field_log_var[1,1] - state$params$field_log_var[1,1])) *
-    as.vector(Matrix::solve(state$stuff$proposed_sparse_chol,
+    as.matrix(Matrix::solve(state$stuff$proposed_sparse_chol,
                             state$stuff$sparse_chol %*% (state$params$field)))
   # computing gradient at proposed parameters ####
   dens_grad_back <- rangeBetaDensGradA(
@@ -278,6 +292,12 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   )
   # computing ratio
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
+  # updating fisher
+  state$stuff$range_beta_empirical_fisher_a <-
+    updateFisher(iter = iter, iter_start = iter_start, 
+                 dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
+                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a, 
+                 begin = fisher$begin_learn)
   if (!is.nan(ratio )) {
     if (log(runif(1)) < ratio) {
       # increasing stepsize if acceptance
@@ -285,6 +305,8 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
         iter = iter, iter_start = iter_start,
         kernel_value = state$ker_var$range_beta_ancillary[1], mult = 8
       )
+      # updating gradient 
+      dens_grad[] <- dens_grad_back[]
       # updating momenta
       state$momenta$range_beta_ancillary <- new_momentum[-1]
       state$momenta$field_log_var_ancillary <- new_momentum[1]
@@ -304,12 +326,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # negating momentum to induce "slippery slope" behavior
   state$momenta$range_beta_ancillary <- -state$momenta$range_beta_ancillary
   state$momenta$field_log_var_ancillary <- -state$momenta$field_log_var_ancillary
-  # updating ratio
-  state$stuff$range_beta_empirical_fisher_a <-
-    updateFisher(iter = iter, iter_start = iter_start, 
-                 dens_grad = dens_grad, dens_grad_back = dens_grad_back, ratio = ratio,
-                 empirical_fisher = state$stuff$range_beta_empirical_fisher_a, 
-                 begin = fisher$begin_learn)
+  }
   return(state)
 }
 

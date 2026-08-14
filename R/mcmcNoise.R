@@ -69,11 +69,10 @@ testGradientNoise <- function(
     noise_beta_grad_test[i] = noise_beta_grad_test[i] + 1e-6
     
     # re-computing Vecchia approx
-    noise_var_test <- exp(xPPMultRight(
+    noise_var_test <- noiseVar(
       X = noise_X$X, PP = hm_noise$PP,
-      vecchia_approx = vecchia_approx, Y = noise_beta_grad_test,
-      permutate_PP_to_obs = TRUE
-    ))[]
+      vecchia_approx = vecchia_approx, noise_beta = noise_beta_grad_test
+    )
     
     test_dens <- noiseBetaDens(
       noise_beta = noise_beta_grad_test, noise_var = noise_var_test, 
@@ -124,11 +123,10 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
     new_noise_beta <- moveForward(
       current_params = state$params$noise_beta, momentum = state$momenta$noise_beta, 
       dens_grad = dens_grad, cond_mat = cond_mat, stepsize = stepsize)
-    new_noise_var[] <- exp(xPPMultRight(
+    new_noise_var[] <- noiseVar(
       X = noise_X$X, PP = hm_noise$PP,
-      vecchia_approx = vecchia_approx, Y = new_noise_beta,
-      permutate_PP_to_obs = TRUE
-    ))[]
+      vecchia_approx = vecchia_approx, noise_beta = new_noise_beta
+    )
     # caculating new gradient ####
     new_dens_grad <- noiseBetaDensGrad(
       noise_var = new_noise_var, noise_beta = new_noise_beta, 
@@ -261,11 +259,10 @@ noiseLogScaleAncillary <- function(state, hierarchical_model, vecchia_approx,
       new_log_scale = new_noise_log_scale, 
       n_knots = hierarchical_model$noise$PP$n_knots)
     # computing new noise var from new parameters ####
-    new_noise_var[] <- as.vector(exp(xPPMultRight(
+    new_noise_var <- noiseVar(
       X = noise_X$X, PP = hierarchical_model$noise$PP,
-      vecchia_approx = vecchia_approx, Y = new_noise_beta,
-      permutate_PP_to_obs = TRUE
-    )))
+      vecchia_approx = vecchia_approx, noise_beta = new_noise_beta
+    )
     # computing gradient at proposed parameters ####
     grad_PP_back <- noisePPLogLikGrad(
       noise_var = new_noise_var,
@@ -361,11 +358,10 @@ testNoisePPLogLikGrad <- function(
       noise_beta_test <- noise_beta
       noise_beta_test[i] <- noise_beta_test[i]+1e-6
       # re-computing noise_var
-      noise_var_grad_test <- exp(xPPMultRight(
+      noise_var_grad_test <- noiseVar(
         X = noise_X$X, PP = hierarchical_model$noise$PP,
-        vecchia_approx = vecchia_approx, Y = noise_beta_test,
-        permutate_PP_to_obs = TRUE
-      ))
+        vecchia_approx = vecchia_approx, noise_beta = noise_beta_test
+      )
       # re-computing density
       test_dens <- noiseLogLik(noise_var_grad_test, squared_residuals)
       # empitical gradient

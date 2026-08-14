@@ -228,7 +228,7 @@ rangeLogScaleA <- function(state, hierarchical_model, vecchia_approx,
       state$stuff$proposed_compressed_chol[, , 1][vecchia_approx$sparse_chol_x_reorder]
     # computing new field ####
     new_field <- 
-      as.vector(Matrix::solve(state$stuff$proposed_sparse_chol,
+      as.matrix(Matrix::solve(state$stuff$proposed_sparse_chol,
                               state$stuff$sparse_chol %*% (state$params$field)))
     # computing gradient at proposed parameters ####
     grad_PP_back <-rangePPLogLikGradA(

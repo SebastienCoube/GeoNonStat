@@ -8,7 +8,7 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
     }
   }
   # un-centered parametrization of latent field
-  centered_field <- as.vector(params$field + X$X_locs %*% matrix(params$beta[X$which_locs], ncol = 1))
+  centered_field <- as.matrix(params$field + X$X_locs %*% matrix(params$beta[X$which_locs], ncol = 1))
   sparse_chol_X <- as.matrix(stuff$sparse_chol %*% (X$X_locs)) / exp(.5 * params$field_log_var[1, 1])
   beta_precision <- crossprod(x = sparse_chol_X, y = sparse_chol_X)
   diag(beta_precision) <- diag(beta_precision) + 1e-6
@@ -17,7 +17,7 @@ updateBeta <- function(params, stuff, X, vecchia_approx, observed_field) {
     if (all(eigen(beta_covmat)$d > 0)) {
       beta_mean <- c(as.vector(stuff$sparse_chol %*% (centered_field / exp(.5 * params$field_log_var[1, 1]))) %*% sparse_chol_X %*% beta_covmat)
       params$beta[X$which_locs] <- as.vector(beta_mean + t(chol(beta_covmat)) %*% rnorm(length(beta_mean)))
-      params$field <- centered_field - as.vector(X$X_locs %*% matrix(params$beta[X$which_locs], ncol = 1))
+      params$field[] <- centered_field - as.matrix(X$X_locs %*% matrix(params$beta[X$which_locs], ncol = 1))
     }
   }
   # updating state$stuff
@@ -50,7 +50,7 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
     }
   )
   
-  for (asdf in seq_len(1)) {
+  for (pass in seq_len(1)) {
     # field itself
     for (cluster_idx in unique(locs_partition)) {
       selected_idx <- which(locs_partition == cluster_idx)
@@ -85,47 +85,46 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
 # Update the log variance of the field, using ancillary-sufficient Interweaving
 updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
   # ancillary
-  for (field_log_var_idx in seq_len(2)) {
-    new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
-    new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
-    current_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-      )
-    
-    proposed_U <-
-      (
-        -betaPriorLogDens(
-          beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
-          beta0_mean = scale$beta0_mean,
-          beta0_var = scale$beta0_sd^2
-        ) # normal prior
-        + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
-      )
-    state$ker_var$field_log_var_ancillary <- updateKernel(
-      iter_start = iter_start,
-      kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25
-    )
-    if (current_U - proposed_U > log(runif(1))) {
-      state$ker_var$field_log_var_ancillary <- updateKernel(
-        iter_start = iter_start,
-        kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
-      )
-      state$params$field_log_var[1, 1] <- new_field_log_var
-      state$params$field <- new_field
-    }
-  }
+  for (field_log_var_idx in seq_len(3)) {
+   new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
+   new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
+   current_U <-
+     (
+       -betaPriorLogDens(
+         beta = as.matrix(state$params$field_log_var[1, 1]), n_PP = 0, log_scale = 0,
+         beta0_mean = scale$beta0_mean,
+         beta0_var = scale$beta0_sd^2
+       ) # normal prior
+       + .5 * sum((state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+     )
   
+   proposed_U <-
+     (
+       -betaPriorLogDens(
+         beta = as.matrix(new_field_log_var), n_PP = 0, log_scale = 0,
+         beta0_mean = scale$beta0_mean,
+         beta0_var = scale$beta0_sd^2
+       ) # normal prior
+       + .5 * sum((state$stuff$lm_residuals - new_field[vecchia_approx$locs_match])^2 / state$stuff$noise_var) # observation ll
+     )
+   state$ker_var$field_log_var_ancillary <- updateKernel(
+     iter_start = iter_start,
+     kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = -.25
+   )
+   if (current_U - proposed_U > log(runif(1))) {
+     state$ker_var$field_log_var_ancillary <- updateKernel(
+       iter_start = iter_start,
+       kernel_value = state$ker_var$field_log_var_ancillary, iter = iter, mult = 1
+     )
+     state$params$field_log_var[1, 1] <- new_field_log_var
+     state$params$field[] <- new_field[]
+   }
+  }
+
   # Sufficient
   fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
-  for(repp in seq(5)){
-    for (field_log_var_idx in seq_len(5)) {
-      new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(field_log_var_idx ) # exp(state$ker_var$field_log_var_sufficient)
+    for (field_log_var_idx in seq_len(40)) {
+      new_field_log_var <- state$params$field_log_var[1, 1] + rnorm(1) * .5^(field_log_var_idx%/%10) 
       current_U <-
         (
           -betaPriorLogDens(
@@ -159,16 +158,15 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
         state$params$field_log_var[1, 1] <- new_field_log_var
       }
     }
-  }
   
   return(state)
 }
 
 # Updating the log variance of a PP, using sufficient parametrization of the PP
 updateVarPPSuff <- function(hm4params, beta4params, current_range_log_scale) {
-  for (i in seq_len(10))
+  for (i in seq_len(20))
   {
-    q <- current_range_log_scale + rnorm(length(current_range_log_scale), 0, .05)
+    q <- current_range_log_scale + rnorm(length(current_range_log_scale), 0, .5^(i%/%5))
     if (all(inBounds(hm4params$log_scale_bounds, q)) &
         (
           +betaPriorLogDens(

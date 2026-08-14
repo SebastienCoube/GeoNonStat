@@ -47,41 +47,51 @@ runOneChainMcmc <- function(
       initStateParams(state$params)
     }
   )
-  # settings for Fisher matrix MCMC 
-  fisher = list(begin_learn = 300, begin_introduce = 400, end_introduce = 500)
+  # settings for MCMC 
+  MALA_range_beta <- 3
+  begin_range_update <- 50
+  fisher = list(begin_learn = 100, begin_introduce = 150, end_introduce = 180)
+  begin_var_update <- 30
+  end_var_update <- 250
   for (iter in seq_len(n_iterations)) {
-    # Regression coefficients #################################
-    res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
-    state$params <- res$params
-    state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     # Latent field ###############################
     state$params$field <- updateLatentField(
       state = state, hierarchical_model = hierarchical_model,
       vecchia_approx = vecchia_approx, observed_field = observed_field,
       iter = iter, num_threads = num_threads
     )$field
-
-    if (iter + iter_start > 30) {
+    # Regression coefficients #################################
+    res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
+    state$params <- res$params
+    state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
+    
+    # Latent field ###############################
+    state$params$field <- updateLatentField(
+      state = state, hierarchical_model = hierarchical_model,
+      vecchia_approx = vecchia_approx, observed_field = observed_field,
+      iter = iter, num_threads = num_threads
+    )$field
+    if ((iter + iter_start > begin_var_update) & (iter + iter_start > end_var_update)) {
        # Field variance ###############################
       res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-      state$params$field <- res$params$field
+      state$params$field[] <- res$params$field[]
       state$params$field_log_var <- res$params$field_log_var
       state$ker_var <- res$ker_var
     }
-    if (iter + iter_start > 60) {
+    if (iter + iter_start > begin_range_update) {
        # Range beta ###############################
       state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher
+         fisher = fisher, n_MALA = MALA_range_beta
          )
       state <- rangeBetaA(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher
+         fisher = fisher, n_MALA = MALA_range_beta
          )
        # Variance of the  range PP ###############################
-       if(!is.null(hierarchical_model$range$PP) & (iter + iter_start > 200)){
+       if(!is.null(hierarchical_model$range$PP)){
          state <- rangeLogScaleS(
            state, hierarchical_model, vecchia_approx, 
            range_X = covariates$range_X, iter, iter_start, num_threads)
@@ -97,9 +107,15 @@ runOneChainMcmc <- function(
        }
     }
 
+    # Latent field ###############################
+    state$params$field <- updateLatentField(
+      state = state, hierarchical_model = hierarchical_model,
+      vecchia_approx = vecchia_approx, observed_field = observed_field,
+      iter = iter, num_threads = num_threads
+    )$field
+    
     # Noise ###############################
     # Noise beta ###############################
-    
     state <- noiseBeta(state, hm_noise = hierarchical_model$noise, 
                        noise_X = covariates$noise_X, 
                        vecchia_approx, iter, iter_start, 
@@ -223,17 +239,19 @@ GeoNonStatMcmc <- function(
 
 
 
-
+#' @export
 automaticMcmc <- function(
     object,
     n_chains_in_parallel = NULL,
     n_threads_per_chain = 5, 
     satisfying_ESS = 100,
-    satisfying_Gelman_Rubin = 1.0, 
+    satisfying_Gelman_Rubin = 1.1, 
     iter_per_step = 500,
     burn_in = .3, 
     verbose = T
 ){
+  satisfying_ESS <- max(satisfying_ESS, 0)
+  satisfying_Gelman_Rubin <- max(satisfying_Gelman_Rubin, 1.01)
   if(mcmcCount(object)>0){
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
     worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
@@ -253,7 +271,6 @@ automaticMcmc <- function(
       n_threads_per_chain = 5,
       n_iterations = iter_per_step, 
     )
-    MCMC_diags <- mcmcDiags(object, burn_in, verbose = F)
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
     worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]

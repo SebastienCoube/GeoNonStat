@@ -1,100 +1,3 @@
-#' Filter records of a GeoNonStat object
-#'
-#' @param records a list containing records from a `GeoNonStat` object.
-#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
-#' first records that should be removed.
-#' @param keep character vector. What params should be kept. Can also be
-#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
-#' parameters, event the `field.`
-#'
-#' @returns a filtered list or records
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' redCords <- filterRecords(processedGnsDemo$records, burn_in = 0.2)
-filterRecords <- function(records, burn_in = 0, keep = "all") {
-  # Reduce paramaters
-  namesparam <- names(records[[1]][[1]])
-  if (length(keep) == 1 && keep == "all") keep <- namesparam
-  if (length(keep) == 1 && keep == "nofield") keep <- setdiff(namesparam, "field")
-  if (any(sapply(keep, function(x) !(x %in% namesparam)))) {
-    stop(
-      "Try to keep a parameter that doesn't exists. Acceptable values for",
-      "`keep` are 'all', 'nofield' or a character vector with ",
-      "parameters to keep"
-    )
-  }
-  records <- lapply(records, function(x) {
-    lapply(x, function(y) y[keep])
-  })
-
-  # Reduce iterations
-  n_iter <- length(records[[1]])
-  burn_in <- max(0, burn_in)
-  if(burn_in>1)start_iter <- round(burn_in)
-  if(burn_in<1)start_iter <- floor(n_iter * burn_in)
-  if (n_iter - start_iter <= 0) {
-    stop("Not enough iterations, reduce burn_in if necessary")
-  }
-  if (!all(lengths(records) == n_iter)) {
-    stop(
-      "Something is wrong with your object, ",
-      "all the MCMC chains should have the same number of iterations"
-    )
-  }
-  keep_iters <- (start_iter + 1):n_iter
-
-  return(
-    lapply(records, function(x) {
-      return(x[keep_iters])
-    })
-  )
-}
-
-#' Aggregate records of a GeoNonStat object, for 1 chain
-#'
-#' @param chain a list of records containing for each iteration,
-#' a list of parameters
-#' @returns a list containing matrices of parameters,
-#' aggregated over the iterations.
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' tmp <- transposeList(processedGnsDemo$records[[1]])
-#' agg <- aggregateRecordsChain(tmp)
-aggregateRecordsChain <- function(chain) {
-  res <- lapply(chain, function(param) {
-    # Numeric case
-    if (!is.matrix(param[[1]])) {
-      param <- lapply(param, function(x) {
-        dim(x) <- c(length(x), 1)
-        return(x)
-      })
-    }
-
-    if (ncol(param[[1]]) == 1) {
-      bindres <- do.call(rbind, lapply(param, as.numeric))
-      colnames(bindres) <- rownames(param[[1]])
-    } else {
-      bindres <- do.call(
-        rbind,
-        lapply(param, function(m) {
-          v <- as.vector(m)
-          names(v) <- paste(
-            rep(rownames(m), times = ncol(m)),
-            rep(colnames(m), each = nrow(m)),
-            sep = "_"
-          )
-          v
-        })
-      )
-    }
-    return(bindres)
-  })
-  return(res)
-}
 
 
 #' Aggregate records of a GeoNonStat object, for 1 chain
@@ -114,19 +17,47 @@ aggregateRecordsChain <- function(chain) {
 #'
 #' @examples
 #' GeoNonStat:::aggregateRecords(processedGnsDemo)
-aggregateRecords <- function(object, burn_in = 0.25, keep = "all", keep_separate_chains = FALSE) {
-  res <- filterRecords(object$records, burn_in = burn_in, keep = keep)
-  namesparams <- names(res[[1]][[1]])
-  res <- lapply(res, transposeList)
-  res <- lapply(res, aggregateRecordsChain)
-  if (keep_separate_chains) {
-    res <- lapply(res, function(x) {
-      names(x) <- namesparams
-      return(x)
-    })
-  } else {
-    res <- do.call(Map, c(list(rbind), res))
-    names(res) <- namesparams
+aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_chains = FALSE){
+  # separate chains
+   if(keep_separate_chains){
+     res <- list()
+     for(i in seq(length(records))){
+       res[[i]] <- aggregateRecords(records[i], burn_in, keep)
+     }
+     names(res) <- names(records)
+     return(res)
+   }
+  # pooling chains
+  n_chains <- length(records)
+  n_iter <- length(records[[1]])
+  n_iter_kept <- ceiling(n_iter*(1-burn_in))
+  iter_start <- n_iter - n_iter_kept 
+  res = list()
+  
+  params_to_aggregate <- names(records[[1]][[1]])
+  if(keep[1] == "nofield") keep <- setdiff(params_to_aggregate, "field")
+  if(keep[1] == "all") keep <- names(records[[1]][[1]])
+  params_to_aggregate <- intersect(keep, params_to_aggregate)
+  # putting log scales at end
+  params_to_aggregate <- c(params_to_aggregate[!grepl("log_scale", params_to_aggregate)], params_to_aggregate[grepl("log_scale", params_to_aggregate)]) 
+  
+  for(param_name in  params_to_aggregate){
+    for(aniso_dim in seq(dim(records[[1]][[1]][[param_name]])[2])){
+      param_dim <- dim(records[[1]][[1]][[param_name]])[1]
+      param_dimnames <- row.names((records[[1]][[1]][[param_name]]))
+      resname <- trimws(paste(param_name, dimnames(records[[1]][[1]][[param_name]])[[2]][aniso_dim]))
+      res[[resname]] <- matrix(
+        0, nrow = n_iter_kept * n_chains, 
+        ncol = param_dim, 
+        dimnames = list(NULL, param_dimnames)
+      )
+      for(chain_idx in seq_len(n_chains)){
+       for(iter in seq_len(n_iter_kept)){
+         res[[resname]][(chain_idx-1)*n_iter_kept + iter,] <-
+           records[[chain_idx]][[iter + iter_start]][[param_name]][,aniso_dim]
+       }
+      }
+    }
   }
   return(res)
 }
@@ -177,21 +108,24 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #'
 #' @examples
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = 0.3, keep = "all") {
-  records <- aggregateRecords(object, burn_in = burn_in, keep = keep)
-  records <- c(records, mean = meanSamples(records, object$covariates$X$X, object$vecchia_approx$locs_match))
-  records <- c(records, noise_var =
-                 apply(records$noise_beta, 1, function(noise_beta){
-                   as.vector(exp(xPPMultRight(
-                     X = object$covariates$noise_X$X, PP = object$hierarchical_model$noise$PP,
-                     vecchia_approx = object$vecchia_approx, Y = noise_beta,
-                     permutate_PP_to_obs = TRUE
-                   )))})
-  )
-  res <- sapply(records, summarizeRecords, simplify = FALSE, USE.NAMES = TRUE)
-  return(res)
+estimate <- function(object, burn_in = 0.3, keep = "all", return_samples = F) {
+  records <- aggregateRecords(object$records, burn_in = burn_in, keep = keep)
+  if(keep == "all"){
+    records$denoised_obs <- as.matrix(records$field[, object$vecchia_approx$locs_match] + records$beta %*% t(object$covariates$X$X))
+    records$noise_var <- records$denoised_obs
+    for(i in seq_len(nrow(records$noise_beta))){
+      records$noise_var[i,] <- noiseVar(
+        X = object$covariates$noise_X$X, 
+        PP = object$hierarchical_model$noise$PP, 
+        vecchia_approx = object$vecchia_approx, 
+        noise_beta = records$noise_beta[i,])
+    }
+  }
+  
+  summaries <- list()
+  for(name in names(records)) summaries[[name]] <- GeoNonStat::summarizeRecords(records[[name]])
+  if(return_samples)return(list(samples = samples, summaries = summaries))
+  if(!return_samples)return(list(samples = samples))
 }
 
-meanSamples <- function(records, X, locs_match){
-  records$field[,locs_match] + records$beta %*% t(X)
-}
+

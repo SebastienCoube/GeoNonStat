@@ -85,29 +85,6 @@ extendPP <- function(PP, extended_vecchia_approx) {
   )
 }
 
-
-predict1LogVarNoise <- function(noise_beta, extended_PP_noise, extended_vecchia_approx, new_noise_X) {
-  PP_effect <- xPPMultRight(
-    X = NULL, PP = extended_PP_noise,
-    vecchia_approx = extended_vecchia_approx,
-    permutate_PP_to_obs = T,
-    Y = noise_beta[-seq_len(ncol(new_noise_X))]
-  )
-
-  PP_effect <- PP_effect[-seq_len(extended_vecchia_approx$previous_n_obs)]
-  X_effect <- new_noise_X %*% noise_beta[seq_len(ncol(new_noise_X))]
-  res <- PP_effect + X_effect
-  return(res)
-}
-
-# predictNoise <- function(geo_non_stat, extended_vecchia_approx, new_noise_X, burn_in){
-#   extended_PP_noise <- extendPP(geo_non_stat$hierarchical_model$noise$PP)
-#   new_noise_X <- cbind(rep(1, extended_vecchia_approx$n_obs -
-#                              extended_vecchia_approx$previous_n_obs),
-#                        new_noise_X)
-#   # apply to MCMC samples of noise_beta from geo_non_stat
-# }
-
 predict1Field <- function(range_beta,
                           field,
                           extended_PP_range,
@@ -152,6 +129,28 @@ predict1Field <- function(range_beta,
 }
 
 
+extendCovariate <- function(
+    existing_covariate, new_X, new_X_name, one_obs_per_locs, 
+    extended_vecchia_approx, extended_PP){
+  if (!is.null(new_X) & !is.data.frame(new_X)) {
+    stop(paste(new_X_name, "must be a data.frame or NULL"))
+  }
+  if (!identical(
+    colnames(new_X),
+    colnames(existing_covariate$arg)
+  )) {
+    stop(paste(c(
+      paste("The variables names of", new_X_name, "must match those of noise_X used to train the model, who are"),
+      colnames(existing_covariate$arg)
+    ), collapse = ", "))
+  }
+  return(
+    processCovariates(
+    X = rbind(existing_covariate$arg, new_X), one_obs_per_locs = one_obs_per_locs,
+    PP = extended_PP_range, vecchia_approx = extended_vecchia_approx)
+  )
+}
+
 # TODO a paralleliser  (noise semble déjà marcher ??)
 #' Predict a 'GeoNonStat' object on new locations
 #'
@@ -175,130 +174,86 @@ predict.GeoNonStat <-  function(
     new_range_X = NULL, 
     burn_in=0.2, 
     num_threads = 5,
+    return_samples = T,
     ...
     ) {
-  
-  if(is.null(new_range_X) & is.null(new_noise_X) & is.null(new_X) & is.null(new_locs)){
-    message("No new data was provided so inference at observed locations is done")
-    new_range_X <- object$covariates$range_X$arg
-    new_noise_X <- object$covariates$noise_X$arg
-    new_X <- object$covariates$X$arg
-    new_locs <- object$vecchia_approx$observed_locs
-  }
-  
   # extending Vecchia approx and new PP
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
   extended_PP_range <- extendPP(object$hierarchical_model$range$PP, extended_vecchia_approx)
-
-  # setup for new_noise_X
-  if (!is.null(new_noise_X) & !is.data.frame(new_noise_X)) {
-    stop("new_noise_X must be a data.frame or NULL")
-  }
-  if (!identical(
-    colnames(new_noise_X),
-    colnames(object$covariates$noise_X$arg)
-  )) {
-    stop(paste(c(
-      "The variables names of new_noise_X must match those of noise_X used to train the model, who are",
-      colnames(object$covariates$noise_X$arg)
-    ), collapse = ", "))
-  }
-  new_noise_X <- model.matrix(rep(1, nrow(new_locs)) ~ ., new_noise_X)
-
-  # setup for new_X
-  if (!is.null(new_X) & !is.data.frame(new_X)) {
-    stop("new_X must be a data.frame or NULL")
-  }
-  if (!identical(
-    colnames(new_X),
-    colnames(object$covariates$X$arg)
-  )) {
-    stop(paste(c(
-      "The variables names of new_X must match those of X used to train the model, who are",
-      colnames(object$covariates$X$arg)
-    ), collapse = ", "))
-  }
-  new_X <- model.matrix(rep(1, nrow(new_locs)) ~ ., new_X)
-
-  # setup for new_range_X
-  if (!identical(
-    colnames(new_range_X),
-    colnames(object$covariates$range_X$arg)
-  )) {
-    stop(paste(c(
-      "The variables names of new_range_X must match those of range_X, who are",
-      colnames(object$covariates$range_X$arg)
-    ), collapse = ", "))
-  }
-  complete_range_X_locs <- processCovariates(
-    X = rbind(object$covariates$range_X$arg, new_range_X), one_obs_per_locs = T,
-    PP = extended_PP_range, vecchia_approx = extended_vecchia_approx
-  )
-
-  # getting MCMC samples
-  estimates <- aggregateRecords(object, 
-                          keep=c("beta", "noise_beta"),
-                          keep_separate_chains = FALSE, 
-                          burn_in = burn_in)
-  
-  predicted_log_variance_noise <- matrix(
+  # Extending covariates
+  extended_X <- extendCovariate(
+    new_X = new_X, extended_PP = NULL, 
+    new_X_name = "new_X", existing_covariate = object$covariates$X,
+    one_obs_per_locs = F,
+    extended_vecchia_approx = extended_vecchia_approx)
+  extended_noise_X <- extendCovariate(
+    new_X = new_noise_X, extended_PP = extended_PP_noise, 
+    new_X_name = "new_noise_X", existing_covariate = object$covariates$noise_X,
+    one_obs_per_locs = F,
+    extended_vecchia_approx = extended_vecchia_approx)
+  extended_range_X <- extendCovariate(
+    new_X = new_range_X, extended_PP = extended_PP_range, 
+    new_X_name = "new_range_X", existing_covariate = object$covariates$range_X,
+    one_obs_per_locs = T,
+    extended_vecchia_approx = extended_vecchia_approx)
+  # relevant MCMC samples
+  records <- aggregateRecords(
+    object$records, 
+    keep=c("all"),
+    keep_separate_chains = FALSE, 
+    burn_in = burn_in)
+  # predicting new noise
+  pred_noise_var <- matrix(
     NA,
     nrow = extended_vecchia_approx$new_n_obs,
-    ncol = nrow(estimates$noise_beta)
+    ncol = nrow(records$noise_beta)
   )
-  for (i in seq_len(nrow(estimates$noise_beta))) {
-    x <- estimates$noise_beta[i, ]
-    
-    predicted_log_variance_noise[, i] <- predict1LogVarNoise(
-      x,
-      extended_PP_noise,
-      extended_vecchia_approx,
-      new_noise_X
-    )
+  for (i in seq_len(nrow(records$noise_beta))) {
+    pred_noise_var[, i] <- noiseVar(
+      X = extended_noise_X$X, noise_beta = records$noise_beta[i,], 
+      vecchia_approx = extended_vecchia_approx, PP = extended_PP_noise
+    )[-seq_len(extended_vecchia_approx$previous_n_obs)]
   }
-  
-  # field + range
- latent_samples <- filterRecords(object$records, 
-                         keep=c("range_beta", "field"),
-                         burn_in = burn_in)
- latent_samples <- unlist(latent_samples, recursive = FALSE)
- predicted_latent <- vector("list", length(latent_samples))
- for (i in seq_along(latent_samples)) {
-   x <- latent_samples[[i]]
-   
-   predicted_latent[[i]] <- predict1Field(
-     range_beta = x$range_beta,
-     field = x$field,
-     extended_PP_range = extended_PP_range,
-     extended_vecchia_approx = extended_vecchia_approx,
-     complete_range_X_locs = complete_range_X_locs,
-     hierarchical_model = object$hierarchical_model,
-     num_threads = num_threads
-   )
- }
-  pred_log_range <- lapply(predicted_latent, function(x)x$log_range)
-  
-  res = list(
-    noise_log_var = t(summarizeRecords(t(predicted_log_variance_noise))), 
-    fixed_effects = t(summarizeRecords(t(new_X %*% t(estimates$beta)))), 
-    field         = t(summarizeRecords(t(sapply(predicted_latent, function(x)x$field))))
+  # predicting new field, and new range
+  predicted_field <- matrix(
+    NA,
+    nrow = extended_vecchia_approx$new_n_obs,
+    ncol = nrow(records$noise_beta)
   )
-  
-  if(!object$hierarchical_model$anisotropic){
-    res$range         = t(summarizeRecords(t(sapply(pred_log_range, function(x)x))))
-  }
+  predicted_range <- predicted_field
   if(object$hierarchical_model$anisotropic){
-    res$range         = t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,1]))))
-    res$pred_log_range_aniso1 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,2]))))
-    res$pred_log_range_aniso2 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,3]))))
+    predicted_aniso1 <- predicted_field
+    predicted_aniso2 <- predicted_field
   }
   
- rm(predicted_latent)
- rm(latent_samples)
- rm(predicted_log_variance_noise)
- rm(complete_range_X_locs)
- rm(pred_log_range)
- invisible(gc())
-  return(res)
+  for (i in seq_len(nrow(records$noise_beta))) {
+    pred_noise_var[, i] <- noiseVar(
+      X = extended_noise_X$X, noise_beta = records$noise_beta[i,], 
+      vecchia_approx = extended_vecchia_approx, PP = extended_PP_noise
+    )[-seq_len(extended_vecchia_approx$previous_n_obs)]
+  }
+  
+   pred_log_range <- lapply(predicted_latent, function(x)x$log_range)
+   
+   res = list(
+     noise_log_var = t(summarizeRecords(t(predicted_log_variance_noise))), 
+     fixed_effects = t(summarizeRecords(t(new_X %*% t(estimates$beta)))), 
+     field         = t(summarizeRecords(t(sapply(predicted_latent, function(x)x$field))))
+   )
+   
+
+   res$range         = summarizeRecords()
+   if(object$hierarchical_model$anisotropic){
+     res$pred_log_range_aniso1 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,2]))))
+     res$pred_log_range_aniso2 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,3]))))
+   }
+   
+  rm(predicted_latent)
+  rm(latent_samples)
+  rm(predicted_log_variance_noise)
+  rm(complete_range_X_locs)
+  rm(pred_log_range)
+  invisible(gc())
+   return(res)
 }

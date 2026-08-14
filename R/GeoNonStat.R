@@ -691,11 +691,9 @@ processStates <- function(hm,
   # momenta
   momenta$noise_beta <- rnorm(length(params$noise_beta))
   # effective variance field, shall be used in density computations
-  stuff$noise_var <- as.vector(exp(xPPMultRight(
+  stuff$noise_var <- noiseVar(
     X = covariates$noise_X$X, PP = hm$noise$PP,
-    vecchia_approx = vecchia_approx, Y = params$noise_beta,
-    permutate_PP_to_obs = T
-  )))
+    vecchia_approx = vecchia_approx, noise_beta = params$noise_beta)
   
   # fisher mat
   stuff$noise_beta_empirical_fisher <- matrix(0, length(params$noise_beta), length(params$noise_beta))
@@ -706,7 +704,7 @@ processStates <- function(hm,
 
   # Latent field ###############################################################
   params$field <- c(exp(.5 * params$field_log_var)) *
-    as.vector(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
+    as.matrix(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
 
   return(list(
     "params" = params,
