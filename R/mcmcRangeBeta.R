@@ -5,9 +5,9 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        fisher, n_MALA){
   # renewing momenta ####
   state$momenta$range_beta_sufficient <-
-    renewMomentum(state$momenta$range_beta_sufficient, .7)
+    renewMomentum(state$momenta$range_beta_sufficient, .6)
   state$momenta$field_log_var_sufficient <- 
-    renewMomentum(state$momenta$field_log_var_sufficient, .7)
+    renewMomentum(state$momenta$field_log_var_sufficient, .6)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradS(
@@ -118,7 +118,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     # always lowering stepsize
     state$ker_var$range_beta_sufficient[1] <- updateKernel(
       iter = iter, iter_start = iter_start,
-      kernel_value = state$ker_var$range_beta_sufficient[1], mult = -5)  
+      kernel_value = state$ker_var$range_beta_sufficient[1], mult = -1)  
     # computing ratio
     ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
     # updating fisher matrix
@@ -132,7 +132,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
         # increasing stepsize if acceptance
         state$ker_var$range_beta_sufficient[1] <- updateKernel(
           iter = iter, iter_start = iter_start,
-          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 8
+          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 0.6 ^ (-1 / n_MALA)
         )
         # updating gradient
         dens_grad[] <- dens_grad_back
@@ -166,9 +166,9 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        fisher, n_MALA){
   # renewing momenta ####
   state$momenta$range_beta_ancillary =
-    renewMomentum(state$momenta$range_beta_ancillary, .7)
+    renewMomentum(state$momenta$range_beta_ancillary, .6)
   state$momenta$field_log_var_ancillary =
-    renewMomentum(state$momenta$field_log_var_ancillary, .7)
+    renewMomentum(state$momenta$field_log_var_ancillary, .6)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
@@ -288,7 +288,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_ancillary[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -5
+    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -1
   )
   # computing ratio
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
@@ -303,7 +303,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 8
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 0.6 ^ (-1 / n_MALA)
       )
       # updating gradient 
       dens_grad[] <- dens_grad_back[]
@@ -359,7 +359,7 @@ rangeReparamMat <- function(hierarchical_model){
 
 #' Default Fisher information matrix for range beta and field log var
 priorFisherRange <- function(range_X, hierarchical_model, type){
-  if(type=="sufficient")cross_fisher_mult <- -.9
+  if(type=="sufficient")cross_fisher_mult <- -.5
   if(type=="ancillary")cross_fisher_mult <-   0
   fisher_var_factor <- 1
   # Prior Fisher information is XTX like in OLS
@@ -560,7 +560,7 @@ testGradientRangeBetaS <- function(
       compressed_chol = compressed_chol_grad_test, # changed
       sparse_chol = sparse_chol_grad_test, # changed
       range_log_scale = state$params$range_log_scale, field = state$params$field,
-      lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var,
+      noise_var = state$stuff$noise_var,
       hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
     empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
   }

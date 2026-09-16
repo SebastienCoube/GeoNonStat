@@ -48,81 +48,91 @@ runOneChainMcmc <- function(
     }
   )
   # settings for MCMC 
-  MALA_range_beta <- 3
-  begin_range_update <- 50
-  fisher = list(begin_learn = 100, begin_introduce = 150, end_introduce = 180)
-  begin_var_update <- 30
-  end_var_update <- 250
+  fisher_noise = list(begin_learn = 20, begin_introduce = 40, end_introduce = 60)
+  begin_range_update <- 60
+  fisher_range = list(begin_learn = begin_range_update, begin_introduce = begin_range_update + 20, end_introduce = begin_range_update + 40)
+    MALA_range_beta <- 4
   for (iter in seq_len(n_iterations)) {
-    # Latent field ###############################
+    # Regression coefficients #################################
     state$params$field <- updateLatentField(
       state = state, hierarchical_model = hierarchical_model,
       vecchia_approx = vecchia_approx, observed_field = observed_field,
       iter = iter, num_threads = num_threads
     )$field
-    # Regression coefficients #################################
     res <- updateBeta(state$params, state$stuff, covariates$X, vecchia_approx, observed_field)
     state$params <- res$params
     state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     
-    # Latent field ###############################
-    state$params$field <- updateLatentField(
-      state = state, hierarchical_model = hierarchical_model,
-      vecchia_approx = vecchia_approx, observed_field = observed_field,
-      iter = iter, num_threads = num_threads
-    )$field
-    if ((iter + iter_start > begin_var_update) & (iter + iter_start > end_var_update)) {
-       # Field variance ###############################
+    # Range beta ###############################
+    if (iter + iter_start < begin_range_update) {
+      # Just field variance
+      state$params$field <- updateLatentField(
+        state = state, hierarchical_model = hierarchical_model,
+        vecchia_approx = vecchia_approx, observed_field = observed_field,
+        iter = iter, num_threads = num_threads
+      )$field
       res <- updateFieldLogVar(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
       state$params$field[] <- res$params$field[]
       state$params$field_log_var <- res$params$field_log_var
       state$ker_var <- res$ker_var
     }
     if (iter + iter_start > begin_range_update) {
-       # Range beta ###############################
+      state$params$field <- updateLatentField(
+        state = state, hierarchical_model = hierarchical_model,
+        vecchia_approx = vecchia_approx, observed_field = observed_field,
+        iter = iter, num_threads = num_threads
+      )$field
       state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher, n_MALA = MALA_range_beta
+         fisher = fisher_range, n_MALA = MALA_range_beta
          )
       state <- rangeBetaA(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher, n_MALA = MALA_range_beta
+         fisher = fisher_range, n_MALA = MALA_range_beta
          )
-       # Variance of the  range PP ###############################
-       if(!is.null(hierarchical_model$range$PP)){
-         state <- rangeLogScaleS(
-           state, hierarchical_model, vecchia_approx, 
-           range_X = covariates$range_X, iter, iter_start, num_threads)
-         state$params$range_log_scale <- updateVarPPSuff(
-           hm4params = hierarchical_model$range, 
-           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
-         state <- rangeLogScaleA(
-           state, hierarchical_model, vecchia_approx, 
-           range_X = covariates$range_X, iter, iter_start, num_threads)
-         state$params$range_log_scale <- updateVarPPSuff(
-           hm4params = hierarchical_model$range, 
-           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
-       }
     }
-
-    # Latent field ###############################
+    # Variance of the  range PP ###############################
+    if (iter + iter_start > begin_range_update) {
+      if(!is.null(hierarchical_model$range$PP)){
+        state$params$field <- updateLatentField(
+          state = state, hierarchical_model = hierarchical_model,
+          vecchia_approx = vecchia_approx, observed_field = observed_field,
+          iter = iter, num_threads = num_threads
+        )$field
+        state <- rangeLogScaleS(
+          state, hierarchical_model, vecchia_approx, 
+          range_X = covariates$range_X, iter, iter_start, num_threads)
+        state$params$range_log_scale <- updateVarPPSuff(
+          hm4params = hierarchical_model$range, 
+          beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+        state <- rangeLogScaleA(
+          state, hierarchical_model, vecchia_approx, 
+          range_X = covariates$range_X, iter, iter_start, num_threads)
+        state$params$range_log_scale <- updateVarPPSuff(
+          hm4params = hierarchical_model$range, 
+          beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+      }
+    }
+    # Noise beta ###############################
     state$params$field <- updateLatentField(
       state = state, hierarchical_model = hierarchical_model,
       vecchia_approx = vecchia_approx, observed_field = observed_field,
       iter = iter, num_threads = num_threads
     )$field
-    
-    # Noise ###############################
-    # Noise beta ###############################
     state <- noiseBeta(state, hm_noise = hierarchical_model$noise, 
                        noise_X = covariates$noise_X, 
                        vecchia_approx, iter, iter_start, 
-                       fisher = fisher)
+                       fisher = fisher_noise)
     
     # Noise log scale ###############################
     if (!is.null(hierarchical_model$noise$PP)) {
+      state$params$field <- updateLatentField(
+        state = state, hierarchical_model = hierarchical_model,
+        vecchia_approx = vecchia_approx, observed_field = observed_field,
+        iter = iter, num_threads = num_threads
+      )$field
       state$params$noise_log_scale <- updateVarPPSuff(
         hm4params = hierarchical_model$noise,
         beta4params = state$params$noise_beta,
