@@ -174,7 +174,6 @@ predict.GeoNonStat <-  function(
     new_range_X = NULL, 
     burn_in=0.2, 
     num_threads = 5,
-    return_samples = T,
     ...
     ) {
   # setup ########

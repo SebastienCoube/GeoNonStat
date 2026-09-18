@@ -11,7 +11,7 @@
 #' y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
 #' coverage(true_y, y_samples)
 coverage <- function(true_y, y_samples) {
-  quantiles <- apply(y_samples, 1, function(x) quantile(x, c(.025, .975)))
+  quantiles <- apply(y_samples, 2, function(x) quantile(x, c(.025, .975)))
   per_obs <- mapply(
     inBounds,
     x = true_y,
@@ -70,12 +70,11 @@ allScores <- function(true_y, mean_samples, sd_samples) {
   colnames(per_obs) <- c("95% coverage", "CRPS", "predictive density", "squared error")
   per_obs[, "95% coverage"] <- coverage(true_y, y_samples)
   per_obs[, "CRPS"] <- scoringRules::crps_sample(true_y, y_samples)
-  per_obs[, "ELPPD"] <- predictiveDensity(true_y, mean_samples, sd_samples)
-  per_obs[, "MSE"] <- squaredError(true_y, mean_samples)
+  per_obs[, "predictive density"] <- predictiveDensity(true_y, mean_samples, sd_samples)
+  per_obs[, "squared error"] <- squaredError(true_y, mean_samples)
   res <- list()
-  res$criteria <- signif(apply(per_obs, 2, mean), 2)
-  names(res$criteria) <- c("95% coverage", "CRPS", "ELPPD", "MSE")
-  res$criteria_per_obs <- per_obs
+  res$scores <- signif(apply(per_obs, 2, mean), 2)
+  res$scores_per_obs <- per_obs
   return(res)
 }
 
@@ -89,7 +88,13 @@ allScores <- function(true_y, mean_samples, sd_samples) {
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
 #'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-trainScores <- function(object, burn_in)
+trainScores <- function(object, burn_in){
+  estimates <- estimate(object)
+  allScores(
+    true_y = object$observed_field, 
+    mean_samples = t(estimates$samples$denoised), 
+    sd_samples = t(exp(.5*estimates$samples$noise_log_var)))
+}
 
 #' Model scoring for test data
 #' @description
@@ -98,7 +103,17 @@ trainScores <- function(object, burn_in)
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
 #'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-testScores <- function(object, test_observations)
+testScores <- function(object, burn_in, test_locs, test_observed_field, 
+                       test_X, test_range_X, test_noise_X, num_threads){
+  prediction <- predict.GeoNonStat(
+    object = object, new_locs = test_locs, new_X = test_X, 
+    new_noise_X = test_noise_X, new_range_X = test_range_X, burn_in = burn_in, 
+    num_threads = num_threads)
+  allScores(
+    true_y = test_observed_field, 
+    mean_samples = t(prediction$samples$denoised), 
+    sd_samples = t(exp(.5*prediction$samples$noise_log_var)))
+}
   
 
 #' @title Find scattered spatial locations for train-test partition
