@@ -108,24 +108,23 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #'
 #' @examples
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = 0.3, keep = "all", return_samples = F) {
-  records <- aggregateRecords(object$records, burn_in = burn_in, keep = keep)
-  if(keep == "all"){
-    records$denoised_obs <- as.matrix(records$field[, object$vecchia_approx$locs_match] + records$beta %*% t(object$covariates$X$X))
-    records$noise_var <- records$denoised_obs
-    for(i in seq_len(nrow(records$noise_beta))){
-      records$noise_var[i,] <- noiseVar(
-        X = object$covariates$noise_X$X, 
-        PP = object$hierarchical_model$noise$PP, 
-        vecchia_approx = object$vecchia_approx, 
-        noise_beta = records$noise_beta[i,])
-    }
+estimate <- function(object, burn_in = 0.2) {
+  samples <- aggregateRecords(object$records, burn_in = burn_in, keep ="all")
+  samples$field <- samples$field[, object$vecchia_approx$locs_match]
+  samples$fixed_effects <- as.matrix(samples$beta %*% t(object$covariates$X$X))
+  samples$denoised <- samples$field + samples$fixed_effects
+  samples$noise_log_var <- samples$denoised
+  for(i in seq_len(nrow(samples$noise_beta))){
+    samples$noise_log_var[i,] <- log(noiseVar(
+      X = object$covariates$noise_X$X, 
+      PP = object$hierarchical_model$noise$PP, 
+      vecchia_approx = object$vecchia_approx, 
+      noise_beta = samples$noise_beta[i,]))
   }
   
   summaries <- list()
-  for(name in names(records)) summaries[[name]] <- GeoNonStat::summarizeRecords(records[[name]])
-  if(return_samples)return(list(samples = samples, summaries = summaries))
-  if(!return_samples)return(list(samples = samples))
+  for(name in names(samples)) summaries[[name]] <- GeoNonStat::summarizeRecords(samples[[name]])
+  return(list(samples = samples, summaries = summaries))
 }
 
 

@@ -177,6 +177,8 @@ predict.GeoNonStat <-  function(
     return_samples = T,
     ...
     ) {
+  # setup ########
+  samples <- list()
   # extending Vecchia approx and new PP
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
@@ -203,57 +205,76 @@ predict.GeoNonStat <-  function(
     keep=c("all"),
     keep_separate_chains = FALSE, 
     burn_in = burn_in)
-  # predicting new noise
-  pred_noise_var <- matrix(
+  # predicting new noise ########
+  samples$noise_log_var <- matrix(
     NA,
-    nrow = extended_vecchia_approx$new_n_obs,
-    ncol = nrow(records$noise_beta)
+    ncol = extended_vecchia_approx$new_n_obs,
+    nrow = nrow(records$noise_beta)
   )
   for (i in seq_len(nrow(records$noise_beta))) {
-    pred_noise_var[, i] <- noiseVar(
+    samples$noise_log_var[i,] <- log(noiseVar(
       X = extended_noise_X$X, noise_beta = records$noise_beta[i,], 
       vecchia_approx = extended_vecchia_approx, PP = extended_PP_noise
-    )[-seq_len(extended_vecchia_approx$previous_n_obs)]
+    )[-seq_len(extended_vecchia_approx$previous_n_obs)])
   }
-  # predicting new field, and new range
-  predicted_field <- matrix(
-    NA,
-    nrow = extended_vecchia_approx$new_n_obs,
-    ncol = nrow(records$noise_beta)
-  )
-  predicted_range <- predicted_field
+  gc()
+  # predicting new field, and new range ########
+  samples$field <- samples$noise_log_var
+  samples$`range_beta range` <- samples$noise_log_var
   if(object$hierarchical_model$anisotropic){
-    predicted_aniso1 <- predicted_field
-    predicted_aniso2 <- predicted_field
+    samples$`range_beta aniso1` <- samples$noise_log_var
+    samples$`range_beta aniso2` <- samples$noise_log_var
   }
-  
-  for (i in seq_len(nrow(records$noise_beta))) {
-    pred_noise_var[, i] <- noiseVar(
-      X = extended_noise_X$X, noise_beta = records$noise_beta[i,], 
-      vecchia_approx = extended_vecchia_approx, PP = extended_PP_noise
-    )[-seq_len(extended_vecchia_approx$previous_n_obs)]
+  prediction_vecchia <- array(0, c(nrow(extended_vecchia_approx$NNarray), extended_vecchia_approx$n_locs, 1))
+  prediction_chol <- Matrix::sparseMatrix(
+    i = col(extended_vecchia_approx$NNarray)[!is.na(extended_vecchia_approx$NNarray)],
+    j = extended_vecchia_approx$NNarray[!is.na(extended_vecchia_approx$NNarray)], 
+    triangular = T, x = 1.0
+  )
+  log_range <- matrix(0, ncol(extended_vecchia_approx$NNarray), 1 + 2*object$hierarchical_model$anisotropic)
+  range_beta <- object$records$chain_1[[1]]$range_beta
+  for (i in seq_len(nrow(records$field))) {
+    # getting range high level parameters
+    range_beta[,1] <- (records$`range_beta range`[i,])
+    if(object$hierarchical_model$anisotropic){
+      range_beta[,2] <- records$`range_beta aniso1`[i,]
+      range_beta[,3] <- records$`range_beta aniso2`[i,]
+    }
+    # getting spatial range 
+    log_range[] <- computeLogRange(
+      range_beta = range_beta,
+      PP = extended_PP_range,
+      vecchia_approx = extended_vecchia_approx,
+      range_X = extended_range_X
+    )
+    # range at predicted locations
+    samples$`range_beta range`[i,] <-  log_range[extended_vecchia_approx$new_locs_match,1]
+    if(object$hierarchical_model$anisotropic){
+      samples$`range_beta aniso1`[i,] <- log_range[extended_vecchia_approx$new_locs_match,2]
+      samples$`range_beta aniso2`[i,] <- log_range[extended_vecchia_approx$new_locs_match,3]
+    }
+    # computing Vecchia at both observed and new observations
+    vecchia_(
+      start_idx = 1, 
+      log_range = t(log_range), locs = extended_vecchia_approx$t_locs, 
+      NNarray = extended_vecchia_approx$NNarray, 
+      smoothness = object$hierarchical_model$matern_smoothness, 
+      compute_derivative = F,
+      num_threads = num_threads, 
+      result = prediction_vecchia
+    )
+    prediction_chol@x <- prediction_vecchia[,,1][extended_vecchia_approx$sparse_chol_x_reorder]
+    # predicting field
+    field_pred <- c(records$field[i,], rep(0, extended_vecchia_approx$n_locs - extended_vecchia_approx$previous_n_locs))
+    field_pred <- prediction_chol %*% field_pred
+    field_pred[-seq(extended_vecchia_approx$previous_n_locs)] <- rnorm(extended_vecchia_approx$n_locs - extended_vecchia_approx$previous_n_locs)
+    field_pred <- Matrix::solve(prediction_chol, field_pred)
+    samples$field[i,] <- field_pred[extended_vecchia_approx$new_locs_match]
   }
-  
-   pred_log_range <- lapply(predicted_latent, function(x)x$log_range)
-   
-   res = list(
-     noise_log_var = t(summarizeRecords(t(predicted_log_variance_noise))), 
-     fixed_effects = t(summarizeRecords(t(new_X %*% t(estimates$beta)))), 
-     field         = t(summarizeRecords(t(sapply(predicted_latent, function(x)x$field))))
-   )
-   
-
-   res$range         = summarizeRecords()
-   if(object$hierarchical_model$anisotropic){
-     res$pred_log_range_aniso1 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,2]))))
-     res$pred_log_range_aniso2 <- t(summarizeRecords(t(sapply(pred_log_range, function(x)x[,3]))))
-   }
-   
-  rm(predicted_latent)
-  rm(latent_samples)
-  rm(predicted_log_variance_noise)
-  rm(complete_range_X_locs)
-  rm(pred_log_range)
-  invisible(gc())
-   return(res)
+  gc()
+  # getting summaries
+  summaries <- list()
+  for(name in names(samples)) summaries[[name]] <- GeoNonStat::summarizeRecords(samples[[name]])
+  res <- list(samples = samples, summaries = summaries)
+  return(res)
 }

@@ -1,6 +1,6 @@
 library(GeoNonStat)
 set.seed(2)
-nobs = 15000
+nobs = 30000
 nlocs = 15000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
@@ -205,6 +205,23 @@ MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .1)
 # plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,3], main = "true log aniso 2", pch = 16, cex=  1)
 # plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,3], main = "predicted log aniso 2")
 
+estimates <- estimate(object = geo_non_stat)
+plot(estimates$summaries$beta["mean",], coeff_list$X_coeff); abline(a=0, b=1)
+
+plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$field[1,], cex= 1, pch= 15)
+plot(fake_data$hidden_fields$latent_field[vecchia_approx$locs_match], estimates$summaries$field[1,], xlab = "true latent field", ylab = "estimated latent field");abline(a=0, b=1)
+
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$latent_field[vecchia_approx$locs_match] + fake_data$hidden_fields$fixed_effects, cex= 1, pch= 15)
+plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$denoised[1,], cex= 1, pch= 15)
+plot(fake_data$hidden_fields$latent_field[vecchia_approx$locs_match] + fake_data$hidden_fields$fixed_effects, 
+     estimates$summaries$denoised[1,], xlab = "true denoised field", ylab = "estimated denoised field")
+abline(a=0, b=1)
+
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field)
+plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$noise_log_var[1,])
+plot(fake_data$hidden_fields$log_noise_var_field, estimates$summaries$noise_log_var[1,], xlab = "true log noise variance", ylab = "estimated log noise variance");abline(a=0, b=1)
+
 
 new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 
 new_locs = rbind(new_locs, new_locs[rev(seq_len(nrow(new_locs))),])
@@ -224,15 +241,15 @@ prediction <- predict.GeoNonStat(
 )
 
 # plotting latent field predictions
-plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field)
-plotPointillistPainting(new_locs, prediction$samples$field[,1])
-plotPointillistPainting(new_locs, prediction$summaries$field[,"mean"])
+plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex=  5)
+plotPointillistPainting(new_locs, prediction$samples$field[100,], cex=  10)
+plotPointillistPainting(new_locs, prediction$summaries$field[1,], cex=  10)
 
 
 # plotting noise variance predictions
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$log_noise_var_field)
-plotPointillistPainting(new_locs, prediction$samples$noise_log_var[,1])
-plotPointillistPainting(new_locs, prediction$summaries$noise_log_var[,"mean"])
+plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field)
+plotPointillistPainting(new_locs, prediction$samples$noise_log_var[100,])
+plotPointillistPainting(new_locs, prediction$summaries$noise_log_var["mean",])
 
 
 
