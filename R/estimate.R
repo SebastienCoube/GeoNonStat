@@ -116,6 +116,7 @@ estimate <- function(object, burn_in = 0.2) {
   samples$fixed_effects <- as.matrix(samples$beta %*% t(object$covariates$X$X))
   samples$denoised <- samples$field + samples$fixed_effects
   samples$noise_log_var <- samples$denoised
+  # TODO tenter de paralleliser avec future. 
   for(i in seq_len(nrow(samples$noise_beta))){
     samples$noise_log_var[i,] <- log(noiseVar(
       X = object$covariates$noise_X$X, 

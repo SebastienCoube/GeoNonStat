@@ -97,14 +97,39 @@ trainScores <- function(object, burn_in){
 }
 
 #' Model scoring for test data
+#'
+#' @param object a GeoNonStat object
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
+#' @param test_datalist TODO 
+#' @param num_threads 
+#'
 #' @description
 #'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
 #'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
 #'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-testScores <- function(object, burn_in, test_locs, test_observed_field, 
-                       test_X, test_range_X, test_noise_X, num_threads){
+testScores <- function(object, 
+                       burn_in = 0.1, 
+                       test_datalist,
+                       num_threads=5){
+  
+  # getting elements
+  if(!("observed_field" %in% names(test_datalist))) {
+    stop("test_datalist should have a 'observed_field' element.")
+  }
+  test_observed_field <- test_datalist$observed_field
+  if(!("locs" %in% names(test_datalist))) {
+    stop("test_datalist should have a 'locs' element.")
+  }
+  test_locs <- test_datalist$locs
+  
+  test_X <- test_noise_X <- test_range_X <- NULL
+  if("X" %in% names(data_list))  test_X <- data_list$X
+  if("range_X" %in% names(data_list))  test_range_X <- data_list$range_X
+  if("noise_X" %in% names(data_list))  test_noise_X <- data_list$noise_X
+  
   prediction <- predict.GeoNonStat(
     object = object, new_locs = test_locs, new_X = test_X, 
     new_noise_X = test_noise_X, new_range_X = test_range_X, burn_in = burn_in, 
