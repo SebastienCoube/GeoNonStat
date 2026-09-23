@@ -264,6 +264,30 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 }
 
 
+#' Plot the summary of a data split
+#'
+#' @param list_locs a list of length n, each entries having a 'locs' component
+#' that should be a matrix (or data.frame or array) with 2 columns containing
+#' spatial locations
+#' @return a list
+#' @export
+#' 
+#' @examples
+#' locs <- cbind(runif(2000), runif(2000))
+#' locslist <- list("train" = list("locs"=locs[1:1900,]), 
+#'                  "test" = list(locs=locs[1901:2000,]))
+#' splitSummary(locslist)
+splitSummary <- function(list_locs) {
+  n_obs <- vapply(list_locs, function(x) nrow(x$locs), integer(1))
+  total <- sum(n_obs)
+  data.frame(
+    Group = names(list_locs),
+    Observations = n_obs,
+    Proportion = n_obs / total,
+    row.names = NULL
+  )
+}
+
 #' Plot the locations of a data split
 #'
 #' @param list_locs a list of length n, each entries having a 'locs' component
@@ -276,18 +300,7 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 #' @param col a vector for points color of length n. Passed to `plot`
 #' @returns a plot
 #' @export
-#'
-splitSummary <- function(list_locs) {
-  n_obs <- vapply(list_locs, function(x) nrow(x$locs), integer(1))
-  total <- sum(n_obs)
-  data.frame(
-    groupe = names(list_locs),
-    observations = n_obs,
-    proportion = n_obs / total,
-    row.names = NULL
-  )
-}
-
+#' 
 #' @examples
 #' locs <- cbind(runif(2000), runif(2000))
 #' locslist <- list("train" = list("locs"=locs[1:1900,]), 

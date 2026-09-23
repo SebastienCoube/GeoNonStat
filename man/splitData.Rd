@@ -15,7 +15,8 @@ train/test}
 \item{n_clust}{the number of clusters. If NULL, will be set to 1\% of the data.}
 
 \item{prop_test}{the proportion of clusters used as test locations.
-Default to 0.01.}
+Default to 0.01. Can be of length 2 to change proportions between far 
+and close test locations (far first, then close)}
 }
 \description{
 Split a GeoNonStat object between test and train samples

@@ -32,16 +32,20 @@ GeoNonStat(
 \item{vecchia_approx}{an object created by `vecchia_approx()` from the
 N spatial coordinates of the observations}
 
-\item{data_list}{a list of elements of oberved data with :
-`observed_field` a vector of N observations of the interest variable,
-`X` (optional) a data.frame of N observations from covariates explaining the
-interest variable through fixed linear effects
-`range_X` (optional) a data.frame of N observations from covariates explaining the
-Gaussian process range through fixed linear effects, if not provided
-the range is constant (i.e. the field is stationary).
-`noise_X` (optional) a data.frame of N observations from covariates explaining the
-Gaussian noise variance through fixed linear effects, or NULL.
-The Intercept is automatically added even if X_noise is not provided.}
+\item{data_list}{a list containing the observed data. It must contain
+\code{observed_field} and may contain the following optional components:
+\describe{
+  \item{\code{observed_field}}{A numeric vector of N observations of the
+  response variable.}
+  \item{\code{X}}{A data.frame of N observations of covariates explaining
+  the response variable through fixed linear effects.}
+  \item{\code{range_X}}{A data.frame of N observations of covariates
+  explaining the Gaussian process range through fixed linear effects. If it
+  is not provided, the range is constant and the field is stationary.}
+  \item{\code{noise_X}}{A data.frame of N observations of covariates
+  explaining the Gaussian noise variance through fixed linear effects. If it
+  is not provided, the noise model uses an intercept only.}
+}}
 
 \item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}
