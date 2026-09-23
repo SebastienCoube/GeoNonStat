@@ -722,24 +722,25 @@ processStates <- function(hm,
 #'
 #' @param vecchia_approx an object created by `vecchia_approx()` from the
 #' N spatial coordinates of the observations
-#' @param observed_field a vector of N observations of the interest variable
-#' @param X a data.frame of N observations from covariates explaining the
+#' @param data_list a list of elements of oberved data with :
+#' `observed_field` a vector of N observations of the interest variable,
+#' `X` (optional) a data.frame of N observations from covariates explaining the
 #' interest variable through fixed linear effects
+#' `range_X` (optional) a data.frame of N observations from covariates explaining the
+#' Gaussian process range through fixed linear effects, if not provided
+#' the range is constant (i.e. the field is stationary).
+#' `noise_X` (optional) a data.frame of N observations from covariates explaining the
+#' Gaussian noise variance through fixed linear effects, or NULL.
+#' The Intercept is automatically added even if X_noise is not provided.
 #' @param matern_smoothness numerical value, a Matérn smoothness parameter,
 #' either 0.5 (aka ``exponential kernel'') or 1.5
 #' @param anisotropic logical, default to FALSE. Is the covariance anisotropic ?
 #' @param n_chains number of MCMC chains
-#' @param range_X a data.frame of N observations from covariates explaining the
-#' Gaussian process range through fixed linear effects, or NULL in which case
-#' the range is constant (i.e. the field is stationary).
 #' @param range_PP an object of class `PP` used to model spatial variations of
 #' the range of the latent field, or NULL.
 #' The Intercept is automatically added even if X_range is NULL.
 #' @param range_log_scale_bounds numeric vector of size 2. Real valued bounds
 #' for the uniform prior of the latent field marginal variance
-#' @param noise_X a data.frame of N observations from covariates explaining the
-#' Gaussian noise variance through fixed linear effects, or NULL.
-#' The Intercept is automatically added even if X_noise is NULL.
 #' @param noise_PP either an object of class PP used to model the field of
 #' log-noise parameters, or NULL.
 #' @param noise_log_scale_bounds either a length 2 numeric vector bounding
@@ -802,45 +803,53 @@ processStates <- function(hm,
 #' noise_log_scale_bounds <- c(-8, 3)
 #'
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
-#' range_X <- as.data.frame(observed_locs)
-#' noise_X <- X
-#'
+#' my_data <- list(
+#' observed_field = observed_field,
+#' X = X,
+#' range_X = as.data.frame(observed_locs),
+#' noise_X  = X
+#' )
 #' myobj <- GeoNonStat(
 #'   vecchia_approx = vecchia_approx,
-#'   observed_field = observed_field, # spatial locations
-#'   X = X, # Response variable
+#'   data_list = my_data,
 #'   matern_smoothness = 1.5, # Matern smoothness
 #'   anisotropic = FALSE,
 #'   n_chains = 3,
-#'   noise_X = X,
 #'   noise_PP = noise_PP,
 #'   noise_log_scale_bounds = noise_log_scale_bounds,
-#'   range_X = range_X,
 #'   range_PP = NULL
 #' )
 #' summary(myobj)
 #' myobj
 GeoNonStat <- function(vecchia_approx,
                        # spatial locations
-                       observed_field,
-                       # Covariates per observation
-                       X = NULL,
+                       data_list,
                        matern_smoothness = 1.5,
                        # Matern smoothness
                        anisotropic = FALSE,
                        n_chains = 2,
-                       range_X = NULL,
                        range_PP = NULL,
                        range_log_scale_bounds = NULL,
-                       noise_X = NULL,
                        noise_PP = NULL,
                        noise_log_scale_bounds = NULL
                        ) {
   # time
   t_begin <- Sys.time()
+  
+  # getting elements
+  if(!("observed_field" %in% names(data_list))) {
+    stop("data_list should have a 'observed_field' element.")
+  }
+  observed_field <- data_list$observed_field
+  X <- range_X <- noise_X <- NULL
+  if("X" %in% names(data_list))  X <- data_list$X
+  if("range_X" %in% names(data_list))  range_X <- data_list$range_X
+  if("noise_X" %in% names(data_list))  noise_X <- data_list$noise_X
+  
   # cleansing RAM
   gc()
 
+  
   # Sanity checks #####################################################################
 
   # covariates #########################################################
