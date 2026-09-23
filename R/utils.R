@@ -422,3 +422,18 @@ noiseVar <- function(X, PP, vecchia_approx, noise_beta){
     permutate_PP_to_obs = TRUE
   ))))
 }
+
+
+printFuturePlan <- function(verbose=TRUE) {
+  usedPlan <- utils::capture.output({
+    print(future::plan())
+  })[1]
+  if(verbose){
+    cat("-------- The parallelism on chains is", usedPlan, "--------\n")
+    cat("         you can change it by using                        \n")
+    cat("         future::plan(multicore, workers=x)    # if supported \n")
+    cat("         future::plan(multisession, workers=x) # on Windows or RStudio\n")
+    cat("         future::plan(sequential)              # no parallelism\n")
+    cat("-------- MCMC Running..... --------\n")
+  }
+}
