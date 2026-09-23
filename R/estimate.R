@@ -18,6 +18,9 @@
 #' @examples
 #' GeoNonStat:::aggregateRecords(processedGnsDemo)
 aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_chains = FALSE){
+  n_iter <- length(records[[1]])
+  if(burn_in<0)stop("burn_in must either be a proportion between 0 and 1 or a number of iterations greater than 1")
+  if(burn_in>1)burn_in <- burn_in/n_iter
   # separate chains
    if(keep_separate_chains){
      res <- list()
@@ -29,7 +32,6 @@ aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_
    }
   # pooling chains
   n_chains <- length(records)
-  n_iter <- length(records[[1]])
   n_iter_kept <- ceiling(n_iter*(1-burn_in))
   iter_start <- n_iter - n_iter_kept 
   res = list()

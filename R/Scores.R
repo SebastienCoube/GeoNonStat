@@ -11,7 +11,7 @@
 #' y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
 #' coverage(true_y, y_samples)
 coverage <- function(true_y, y_samples) {
-  quantiles <- apply(y_samples, 2, function(x) quantile(x, c(.025, .975)))
+  quantiles <- apply(y_samples, 1, function(x) quantile(x, c(.025, .975)))
   per_obs <- mapply(
     inBounds,
     x = true_y,

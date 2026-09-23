@@ -147,7 +147,7 @@ extendCovariate <- function(
   return(
     processCovariates(
     X = rbind(existing_covariate$arg, new_X), one_obs_per_locs = one_obs_per_locs,
-    PP = extended_PP_range, vecchia_approx = extended_vecchia_approx)
+    PP = extended_PP, vecchia_approx = extended_vecchia_approx)
   )
 }
 
@@ -183,11 +183,6 @@ predict.GeoNonStat <-  function(
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
   extended_PP_range <- extendPP(object$hierarchical_model$range$PP, extended_vecchia_approx)
   # Extending covariates
-  extended_X <- extendCovariate(
-    new_X = new_X, extended_PP = NULL, 
-    new_X_name = "new_X", existing_covariate = object$covariates$X,
-    one_obs_per_locs = F,
-    extended_vecchia_approx = extended_vecchia_approx)
   extended_noise_X <- extendCovariate(
     new_X = new_noise_X, extended_PP = extended_PP_noise, 
     new_X_name = "new_noise_X", existing_covariate = object$covariates$noise_X,
@@ -271,6 +266,9 @@ predict.GeoNonStat <-  function(
     samples$field[i,] <- field_pred[extended_vecchia_approx$new_locs_match]
   }
   gc()
+  # getting denoised signal at locations
+  samples$fixed_effects <- as.matrix(records$beta %*% t(cbind(rep(1, nrow(new_locs)), new_X)))
+  samples$denoised <- samples$field + samples$fixed_effects
   # getting summaries
   summaries <- list()
   for(name in names(samples)) summaries[[name]] <- GeoNonStat::summarizeRecords(samples[[name]])

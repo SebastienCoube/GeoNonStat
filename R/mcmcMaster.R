@@ -152,7 +152,6 @@ runOneChainMcmc <- function(
 #' Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
 #'
 #' @param object an object of class `GeoNonStat`
-#' @param n_chains_in_parallel numeric, number of chains in parallel, default to NULL
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
 #' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
 #' @details The MCMC is run using [future::plan()].
@@ -179,18 +178,15 @@ runOneChainMcmc <- function(
 #' @examples
 #' processedGns <- GeoNonStatMcmc(
 #'   gnsDemo,
-#'   n_chains_in_parallel = 1,
 #'   n_threads_per_chain = 1, # example in sequential
 #'   n_iterations = 15
 #' )
 GeoNonStatMcmc <- function(
   object,
-  n_chains_in_parallel = NULL,
-  n_threads_per_chain = 5,
+  n_threads_per_chain = 1,
   n_iterations = 100, 
   verbose = T
 ) {
-  if (is.null(n_chains_in_parallel)) n_chains_in_parallel <- length(object$states)
   iter_start <- length(object$records$chain_1)
   usedPlan <- utils::capture.output({
     print(future::plan())
@@ -252,7 +248,6 @@ GeoNonStatMcmc <- function(
 #' @export
 automaticMcmc <- function(
     object,
-    n_chains_in_parallel = NULL,
     n_threads_per_chain = 5, 
     satisfying_ESS = 100,
     satisfying_Gelman_Rubin = 1.1, 
@@ -277,12 +272,11 @@ automaticMcmc <- function(
                   worst_gr, ", worst ESS =", worst_ess, ", going on for", iter_per_step, "more MCMC iterations."))
     object <- GeoNonStatMcmc(
       object,
-      n_chains_in_parallel = NULL,
-      n_threads_per_chain = 5,
+      n_threads_per_chain = n_threads_per_chain,
       n_iterations = iter_per_step, 
     )
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
-    worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
+    worst_gr <- mcmc_diags$worst$value[match("Point.est..Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
   }
   cat(paste("Stopping at", mcmcCount(object), "iterations, worst Gelman Rubin R-hat =", 

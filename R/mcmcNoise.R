@@ -114,7 +114,7 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
   # pre-allocation
   new_noise_var <- state$stuff$noise_var
   
-  for (mala_rep in seq(4)) {
+  for (mala_rep in seq(8)) {
     # for conditioning matrix update
     grad_record_for_Fisher[[mala_rep]] <- as.vector(dens_grad)
     # updating momentum

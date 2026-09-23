@@ -11,8 +11,9 @@ subsetData <- function(data, idx) {
   lapply(data, function(x) {
     if (is.null(x)) return(NULL) 
     if(is.data.frame(x)) return(x[idx, , drop=FALSE])
+    if(is.matrix(x)) return(x[idx, , drop=FALSE])
     if(is.vector(x)) return(x[idx])
-    return(stop("subsetData only works on data.frame or vector"))
+    return(stop("subsetData only works on data.frame, matrix or vector"))
   })
 }
 
