@@ -181,7 +181,7 @@ predict.GeoNonStat <-  function(
     num_threads = 5,
     ...
     ) {
-  if(length(object$records[[1]])<=1) {
+  if(mcmcCount(object)<=0) {
     objname <- deparse(substitute(object))
     stop(paste0("MCMC doesn't seem to have run on '", 
                 objname, 
