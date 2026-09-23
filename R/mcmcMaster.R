@@ -269,9 +269,10 @@ GeoNonStatMcmc <- function(
 #'
 #' @examples
 #' processedGns <- automaticMcmc(
-#'   gnsDemo,
+#'   object = gnsDemo,
 #'   n_threads_per_chain = 1, # example in sequential
-#'   iter_per_step=10
+#'   iter_per_step=10, 
+#'       satisfying_ESS = 4, satisfying_Gelman_Rubin = 30, 
 #' )
 automaticMcmc <- function(
     object,
@@ -279,14 +280,14 @@ automaticMcmc <- function(
     satisfying_ESS = 100,
     satisfying_Gelman_Rubin = 1.1, 
     iter_per_step = 500,
-    burn_in = .1, 
+    burn_in = .3, 
     verbose = T
 ){
   satisfying_ESS <- max(satisfying_ESS, 0)
   satisfying_Gelman_Rubin <- max(satisfying_Gelman_Rubin, 1.01)
   if(mcmcCount(object)>0){
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
-    worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
+    worst_gr <- mcmc_diags$worst$value[match("Point.est..Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
   } else {
     worst_ess <- 0 
