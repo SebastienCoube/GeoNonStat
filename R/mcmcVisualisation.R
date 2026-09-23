@@ -119,9 +119,10 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #' tracePlots(processedGnsDemo)
 tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   # Checks
-  if (length(object$records[[1]]) <= 1) {
+  nMcmc <- mcmcCount(object)
+  if (nMcmc <= 0) {
     warning(
-      length(object$records[[1]]),
+      nMcmc,
       " record found, has the MCMC been executed on this object ?",
       " No plot produced."
     )
@@ -138,7 +139,7 @@ tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   ormfrow <- par("mfrow")
   omar <- par("mar")
   par(mar = c(2.1, 3.1, 3.1, 1.1))
-  n_iters <- length(object$records[[1]])
+  n_iters <- nMcmc
   names_params <- names(records[[1]])
   plotted_iters <- seq(max(0, floor(n_iters * burn_in)) + 1, n_iters)
 

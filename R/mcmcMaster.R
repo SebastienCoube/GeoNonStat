@@ -188,7 +188,7 @@ GeoNonStatMcmc <- function(
   n_iterations = 100, 
   verbose = T
 ) {
-  iter_start <- length(object$records$chain_1)
+  iter_start <- mcmcCount(object) + 1
   printFuturePlan(verbose)
   chains <- seq_along(object$states)
 
