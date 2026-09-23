@@ -149,11 +149,12 @@ runOneChainMcmc <- function(
 }
 
 
-#' Run the MCMC on a `GeoNonStat` object, with parallel execution on chains
+#' Run the MCMC on a `GeoNonStat` object
 #'
 #' @param object an object of class `GeoNonStat`
 #' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
 #' @param n_iterations numeric value, number of iterations of MCMC. Default to 100
+#' @param verbose logical, default to TRUE. Should additional informations be printed ?
 #' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{
@@ -188,17 +189,7 @@ GeoNonStatMcmc <- function(
   verbose = T
 ) {
   iter_start <- length(object$records$chain_1)
-  usedPlan <- utils::capture.output({
-    print(future::plan())
-  })[1]
-  if(verbose){
-  cat("-------- The parallelism on chains is", usedPlan, "--------\n")
-  cat("         you can change it by using                        \n")
-  cat("         future::plan(multicore, workers=x)    # if supported \n")
-  cat("         future::plan(multisession, workers=x) # on Windows or RStudio\n")
-  cat("         future::plan(sequential)              # no parallelism\n")
-  cat("-------- MCMC Running..... --------\n")
-  }
+  printFuturePlan(verbose)
   chains <- seq_along(object$states)
 
   covariates_local <- object$covariates
@@ -245,14 +236,50 @@ GeoNonStatMcmc <- function(
 
 
 
+#' Run the MCMC on a `GeoNonStat` object, but will stop automatically if required contitions are statisfied
+#'
+#' @param object an object of class `GeoNonStat`
+#' @param n_threads_per_chain numeric, number of threads by markov chain, default to 5
+#' @param satisfying_ESS numeric, ESS to statisfy, default to 100
+#' @param satisfying_Gelman_Rubin numeric, Gelman_Rubin criteria to satisfy, default to 1.1, 
+#' @param iter_per_step numeric, iterations per step before recomputing the criteriums. Default to 500.
+#' @param burn_in  numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed before computing diagnostics. Default to 0.1
+#' @param verbose logical, default to TRUE. Should additional informations be printed ?
+#' @details The MCMC is run using [future::plan()].
+#'
+#' \preformatted{
+#'  if (n_chains_in_parallel == 1) {
+#'    # For no parallelisation
+#'    future::plan(future::sequential)
+#'  } else {
+#'    # For multisession or multicore (prefered):
+#'    if (parallelly::supportsMulticore()) {
+#'      future::plan(future::multicore, workers = n_chains_in_parallel)
+#'    } else {
+#'      future::plan(future::multisession, workers = n_chains_in_parallel)
+#'    }
+#'  }
+#' }
+#' You can see `?future::plan` to define your plan more precisely.
+#'
+#' @returns a GeoNonStat object, with updated state (last state by chain)
+#' and records (params records for all iterations, by chain)
 #' @export
+#'
+#' @examples
+#' processedGns <- automaticMcmc(
+#'   gnsDemo,
+#'   n_threads_per_chain = 1, # example in sequential
+#'   iter_per_step=10
+#' )
 automaticMcmc <- function(
     object,
     n_threads_per_chain = 5, 
     satisfying_ESS = 100,
     satisfying_Gelman_Rubin = 1.1, 
     iter_per_step = 500,
-    burn_in = .3, 
+    burn_in = .1, 
     verbose = T
 ){
   satisfying_ESS <- max(satisfying_ESS, 0)
@@ -261,12 +288,12 @@ automaticMcmc <- function(
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
     worst_gr <- mcmc_diags$worst$value[match("Point est. Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
-  }
-  if(mcmcCount(object)==0){
+  } else {
     worst_ess <- 0 
     worst_gr <- Inf 
   }
-  if(verbose)cat("Starting auto MCMC... ")
+  printFuturePlan(verbose)
+  if(verbose) cat("Starting auto MCMC... ")
   while(worst_gr > satisfying_Gelman_Rubin | worst_ess < satisfying_ESS){
     cat(paste(mcmcCount(object), "iterations already done, worst Gelman Rubin R-hat =", 
                   worst_gr, ", worst ESS =", worst_ess, ", going on for", iter_per_step, "more MCMC iterations."))
@@ -274,6 +301,7 @@ automaticMcmc <- function(
       object,
       n_threads_per_chain = n_threads_per_chain,
       n_iterations = iter_per_step, 
+      verbose=FALSE
     )
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
     worst_gr <- mcmc_diags$worst$value[match("Point.est..Gelman", mcmc_diags$worst$criterium)]
