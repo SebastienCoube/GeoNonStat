@@ -217,53 +217,69 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 
 #' Plot the locations of a data split
 #'
-#' @param locs a matrix (or data.frame or array) with 2 columns containing
+#' @param list_locs a list of length n, each entries having a 'locs' component
+#' that should be a matrix (or data.frame or array) with 2 columns containing
 #' spatial locations
-#' @param indexes a list of length n, containing usually train and test indices,
-#' among row indexes of `locs`
-#' @param pch a vector of pch for points shape of length 1 or 2. Passed to `plot`
-#' @param cex a numeric vector for points size of length 1 or 2. Passed to `plot`
-#' @param col a vector for points color of length 1 or 2. Passed to `plot`
+#' @param pch a vector of pch for points shape of length 1 (will be repeated) or n. 
+#' Passed to `plot`
+#' @param cex a numeric vector for points size of length 1 (will be repeated) or n. 
+#' Passed to `plot`
+#' @param col a vector for points color of length n. Passed to `plot`
 #' @returns a plot
 #' @export
 #'
 #' @examples
-#' locs <- cbind(runif(220), runif(220))
-#' idx <- list("train" = 1:200, "test" = 201:220)
-#' plotSplit(locs, idx)
-plotSplit <- function(locs, indexes,
+#' locs <- cbind(runif(2000), runif(2000))
+#' locslist <- list("train" = list("locs"=locs[1:1900,]), 
+#'                  "test" = list(locs=locs[1901:2000,]))
+#' plotSplit(locslist)
+plotSplit <- function(list_locs,
                       pch = c(16, 16),
                       cex = c(0.3, 1),
-                      col = c("blue", "red")) {
-  locs_name <- deparse(substitute(locs))
-  n <- length(indexes)
+                      col = c("black", "red")) {
+  if(!is.list(list_locs)) stop("list_locs should be a list")
+  if(!all(sapply(list_locs, function(x) "locs" %in% names(x)))) 
+    stop("all list_locs entries should have a 'locs' element")
+  
+  n <- length(list_locs)
   if (length(pch) != n) pch <- rep(pch[1], n)
   if (length(cex) != n) cex <- rep(cex[1], n)
-  if (length(col) != n) col <- grDevices::rainbow(n)
+  if (length(col) != n) col <- c("black", grDevices::rainbow(n-1))
   # plot locations
-  plot(locs[indexes[[1]], ],
-    pch = pch[1], cex = cex[1], col = col[1],
-    xlab = paste0(locs_name, "[,1]"),
-    ylab = paste0(locs_name, "[,2]")
-  )
-  for (i in 2:length(indexes)) {
-    points(locs[indexes[[i]], ],
-      pch = pch[i], cex = cex[i], col = col[i],
-      xlab = "", ylab = ""
-    )
+  def.par <- par(no.readonly = TRUE)
+  if(def.par$mar[3]<=0) {
+    par(mar = def.par$mar + c(0, 0, 0.5, 0), xpd = NA)
   }
-  if (!is.null(names(indexes))) {
+  plot(list_locs[[1]]$locs,
+       pch = pch[1], cex = cex[1], col = col[1],
+       xlab = "locs[,1]",
+       ylab = "locs[,2]"
+  )
+  if(n>1) {
+    for (i in 2:n) {
+      points(list_locs[[i]]$locs,
+             pch = pch[i], cex = cex[i], col = col[i],
+             xlab = "", ylab = ""
+      )
+    }
+  }
+  if (!is.null(names(list_locs))) {
+    u <- par("usr")
     legend(
-      x = "topleft",
-      legend = names(indexes),
-      pt.cex = 0,
-      inset = c(0, -0.2),
-      xpd = TRUE,
+      x = u[1],
+      y = u[4],
+      legend = names(list_locs),
+      pt.cex = 0, 
+      y.intersp = 1,
+      yjust=0,
+      xpd = NA,
       text.col = col,
+      text.width = 0.1,
       horiz = TRUE,
       bty = "n"
     )
   }
+  par(def.par)
 }
 
 #' Split data between train and test
@@ -285,7 +301,7 @@ plotSplit <- function(locs, indexes,
 #' noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 #' y <- rnorm(n)
 #' datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
-#' traintest <- createSplitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
+#' traintest <- splitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
 splitData <- function(locs, data,
                             n_clust = NULL,
                             prop_test = 0.1, 
@@ -300,11 +316,8 @@ splitData <- function(locs, data,
     "test_far" = idx_far$test,
     "test_close" = idx_far$train[idx_close$test]
   )
-  plotSplit(locs, final_split,
-    col = c("black", "red", "orange"),
-    cex = c(0.1, 0.5, 0.5)
-  )
-  return(list(
+  
+  output <- list(
     "train" = c(
       list(locs = locs[final_split$train, ]),
       subsetData(data, final_split$train)
@@ -317,5 +330,11 @@ splitData <- function(locs, data,
       list(locs = locs[final_split$test_close, ]),
       subsetData(data, final_split$test_close)
     )
-  ))
+  )
+  plotSplit(output,
+    col = c("black", "red", "orange"),
+    cex = c(0.3, 0.8, 0.8)
+  )
+  # TODO print summary. 
+  return(output)
 }
