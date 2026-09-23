@@ -155,10 +155,11 @@ extendCovariate <- function(
 #' Predict a 'GeoNonStat' object on new locations
 #'
 #' @param object an object of class \code{GeoNonStat}
-#' @param new_locs new locations
-#' @param new_X new X
-#' @param new_noise_X new X for noise parameters
-#' @param new_range_X new X for range parameters
+#' @param new_data_list a list of new data. The list should have 
+#' a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
+#' a 'X' entry, for new covariates
+#' a 'noise_X' entry (optional) for new X noise parameters
+#' a 'range_X' entry (optional) for new X range parameters
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
 #' @param num_threads number of threads. Integer.
@@ -166,18 +167,40 @@ extendCovariate <- function(
 #' @rdname GeoNonStat
 #' @export
 #' @method predict GeoNonStat
+#' @examples
+#' # Recreating new data with less observations but same structure as example data
+#' locs <- cbind(rnorm(200), rnorm(200))
+#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
+#' colnames(X) <- paste0("V", 1:4)
+#' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+#' predict(processedGnsDemo, new_data_list=testdata)
 predict.GeoNonStat <-  function(
     object, 
-    new_locs = NULL, 
-    new_X = NULL, 
-    new_noise_X = NULL, 
-    new_range_X = NULL, 
+    new_data_list,
     burn_in=0.2, 
     num_threads = 5,
     ...
     ) {
+  if(length(object$records[[1]])<=1) {
+    objname <- deparse(substitute(object))
+    stop(paste0("MCMC doesn't seem to have run on '", 
+                objname, 
+                "',\ntry again after a call to ",
+                "'GeoNonStatMcmc' or 'automaticMcmc' function"))
+  }
+  
   # setup ########
   samples <- list()
+  # getting elements
+  if(!("locs" %in% names(new_data_list))) {
+    stop("new_data_list should have a 'locs' element.")
+  }
+  new_locs <- new_data_list$locs
+  new_X <- new_noise_X <- new_range_X <- NULL
+  if("X" %in% names(new_data_list))  new_X <- new_data_list$X
+  if("range_X" %in% names(new_data_list))  new_range_X <- new_data_list$range_X
+  if("noise_X" %in% names(new_data_list))  new_noise_X <- new_data_list$noise_X
+  
   # extending Vecchia approx and new PP
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
   extended_PP_noise <- extendPP(object$hierarchical_model$noise$PP, extended_vecchia_approx)
@@ -227,6 +250,7 @@ predict.GeoNonStat <-  function(
   )
   log_range <- matrix(0, ncol(extended_vecchia_approx$NNarray), 1 + 2*object$hierarchical_model$anisotropic)
   range_beta <- object$records$chain_1[[1]]$range_beta
+  # TODO tenter de paralleliser avec future. 
   for (i in seq_len(nrow(records$field))) {
     # getting range high level parameters
     range_beta[,1] <- (records$`range_beta range`[i,])
