@@ -43,10 +43,9 @@ fake_data = simulateGnsData(
 
 gnsDemo = GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = fake_data$observed_field, X = X,
+  data_list = fake_data$observed, 
   matern_smoothness = 1.5, anisotropic = T,
   n_chains = 3,
-  noise_X = NULL, range_X = NULL,
   noise_PP = PP_noise,
   range_PP = PP_range
 )
@@ -58,9 +57,7 @@ save(gnsDemo, file="data/gnsDemo.rda", compress="xz")
 set.seed(123)
 processedGnsDemo = GeoNonStatMcmc(
   object = gnsDemo,
-  n_chains_in_parallel = 1,
   n_threads_per_chain = 1,
-  n_iterations = 65,
-  seed = 1
+  n_iterations = 65
 )
 save(processedGnsDemo, file="data/processedGnsDemo.rda", compress="xz")
