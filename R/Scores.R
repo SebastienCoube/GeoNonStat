@@ -102,7 +102,7 @@ trainScores <- function(object, burn_in){
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
 #' @param test_datalist TODO 
-#' @param num_threads 
+#' @param num_threads numeric TODO
 #'
 #' @description
 #'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
@@ -110,6 +110,19 @@ trainScores <- function(object, burn_in){
 #'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
 #'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
 #'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
+#'  @export
+#'  
+#' @examples
+#' # Recreating new data with less observations but same structure as example data
+#' locs <- cbind(rnorm(200), rnorm(200))
+#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
+#' colnames(X) <- paste0("V", 1:4)
+#' Yobs <- rnorm(200)
+#' testdata <- list("locs" = locs, 
+#'                  "X" = X, 
+#'                  noise_X=X,
+#'                  observed_field=Yobs)  
+#' testScores(processedGnsDemo, test_datalist=testdata)
 testScores <- function(object, 
                        burn_in = 0.1, 
                        test_datalist,
@@ -126,13 +139,12 @@ testScores <- function(object,
   test_locs <- test_datalist$locs
   
   test_X <- test_noise_X <- test_range_X <- NULL
-  if("X" %in% names(data_list))  test_X <- data_list$X
-  if("range_X" %in% names(data_list))  test_range_X <- data_list$range_X
-  if("noise_X" %in% names(data_list))  test_noise_X <- data_list$noise_X
+  if("X" %in% names(test_datalist))  test_X <- test_datalist$X
+  if("range_X" %in% names(test_datalist))  test_range_X <- test_datalist$range_X
+  if("noise_X" %in% names(test_datalist))  test_noise_X <- test_datalist$noise_X
   
   prediction <- predict.GeoNonStat(
-    object = object, new_locs = test_locs, new_X = test_X, 
-    new_noise_X = test_noise_X, new_range_X = test_range_X, burn_in = burn_in, 
+    object = object, new_data_list=test_datalist, burn_in = burn_in, 
     num_threads = num_threads)
   allScores(
     true_y = test_observed_field, 
