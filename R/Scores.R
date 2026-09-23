@@ -126,12 +126,13 @@ testScores <- function(object, burn_in, test_locs, test_observed_field,
 #' greater than prop_test. If NULL, set to 0.1.
 #' @returns A list of train and test indices
 #' @export
+#' @keywords internal
+#' 
 #' @examples
 #' # duplicated observed locations
 #' observed_locs <- cbind(runif(2000), runif(2000))
 #' observed_locs <- rbind(observed_locs, observed_locs[1:1000, ])
 #' idx <- getIndexesClose(observed_locs, prop_test = 0.1)
-#' plotSplit(observed_locs, idx)
 getIndexesClose <- function(locs, prop_test = 0.1) {
   if (!inBounds(c(0, 1), prop_test, includeBounds = FALSE)) {
     stop("prop_clust and prop_test must be >0 and <1")
@@ -177,6 +178,7 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
 #' Default to 0.01.
 #' @returns A list of train and test indices
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' observed_locs <- round(cbind(runif(10000), runif(10000)), 3)
