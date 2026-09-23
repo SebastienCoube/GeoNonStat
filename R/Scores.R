@@ -238,7 +238,6 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
   ulocs <- unique(locs)
   K <- kmeans(ulocs, centers = n_clust)
   n_test <- floor(n_clust * prop_test)
-  print(n_test)
   if(n_test<=0) stop("n_clust * prop_test should be > 0")
   test_clust <- GpGp::order_maxmin(K$centers)[seq(n_test)]
   test <- FNN::knnx.index(data = ulocs, k = 1, query = K$centers[test_clust, ])
@@ -307,7 +306,7 @@ splitSummary <- function(list_locs) {
 #'                  "test" = list(locs=locs[1901:2000,]))
 #' plotSplit(locslist)
 plotSplit <- function(list_locs,
-                      pch = c(16, 16),
+                      pch = 16,
                       cex = c(0.3, 1),
                       col = c("black", "red")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
@@ -315,6 +314,7 @@ plotSplit <- function(list_locs,
     stop("all list_locs entries should have a 'locs' element")
   
   n <- length(list_locs)
+  nlocsmax <- sapply(list_locs, function(x) nrow(x$locs))
   if (length(pch) != n) pch <- rep(pch[1], n)
   if (length(cex) != n) cex <- rep(cex[1], n)
   if (length(col) != n) col <- c("black", grDevices::rainbow(n-1))
@@ -324,7 +324,8 @@ plotSplit <- function(list_locs,
     par(mar = def.par$mar + c(0, 0, 4-def.par$mar[3], 0), xpd = NA)
   }
   plot(list_locs[[1]]$locs,
-       pch = pch[1], cex = cex[1], col = col[1],
+       pch = ifelse(nrow(list_locs[[1]]$locs)>=50000, ".", pch[1]), 
+       cex = cex[1], col = col[1],
        xlab = "locs[,1]",
        ylab = "locs[,2]"
   )
@@ -339,8 +340,8 @@ plotSplit <- function(list_locs,
   if (!is.null(names(list_locs))) {
     summary <- splitSummary(list_locs)
     legend_labels <- paste0(
-      summary$groupe, " (n=", summary$observations,
-      ", ", sprintf("%.1f", 100 * summary$proportion), "%)"
+      summary$Group, " (n=", summary$Observations,
+      ", ", sprintf("%.1f", 100 * summary$Proportion), "%)"
     )
     u <- par("usr")
     legend(
