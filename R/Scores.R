@@ -238,6 +238,8 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
   ulocs <- unique(locs)
   K <- kmeans(ulocs, centers = n_clust)
   n_test <- floor(n_clust * prop_test)
+  print(n_test)
+  if(n_test<=0) stop("n_clust * prop_test should be > 0")
   test_clust <- GpGp::order_maxmin(K$centers)[seq(n_test)]
   test <- FNN::knnx.index(data = ulocs, k = 1, query = K$centers[test_clust, ])
   discarded <- setdiff(which(K$cluster %in% test_clust), test)
@@ -275,6 +277,17 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 #' @returns a plot
 #' @export
 #'
+splitSummary <- function(list_locs) {
+  n_obs <- vapply(list_locs, function(x) nrow(x$locs), integer(1))
+  total <- sum(n_obs)
+  data.frame(
+    groupe = names(list_locs),
+    observations = n_obs,
+    proportion = n_obs / total,
+    row.names = NULL
+  )
+}
+
 #' @examples
 #' locs <- cbind(runif(2000), runif(2000))
 #' locslist <- list("train" = list("locs"=locs[1:1900,]), 
@@ -294,8 +307,8 @@ plotSplit <- function(list_locs,
   if (length(col) != n) col <- c("black", grDevices::rainbow(n-1))
   # plot locations
   def.par <- par(no.readonly = TRUE)
-  if(def.par$mar[3]<=0) {
-    par(mar = def.par$mar + c(0, 0, 0.5, 0), xpd = NA)
+  if(def.par$mar[3]<=4) {
+    par(mar = def.par$mar + c(0, 0, 4-def.par$mar[3], 0), xpd = NA)
   }
   plot(list_locs[[1]]$locs,
        pch = pch[1], cex = cex[1], col = col[1],
@@ -311,18 +324,23 @@ plotSplit <- function(list_locs,
     }
   }
   if (!is.null(names(list_locs))) {
+    summary <- splitSummary(list_locs)
+    legend_labels <- paste0(
+      summary$groupe, " (n=", summary$observations,
+      ", ", sprintf("%.1f", 100 * summary$proportion), "%)"
+    )
     u <- par("usr")
     legend(
       x = u[1],
       y = u[4],
-      legend = names(list_locs),
+      legend = legend_labels,
       pt.cex = 0, 
       y.intersp = 1,
       yjust=0,
       xpd = NA,
       text.col = col,
       text.width = 0.1,
-      horiz = TRUE,
+      horiz = FALSE,
       bty = "n"
     )
   }
@@ -337,7 +355,8 @@ plotSplit <- function(list_locs,
 #' train/test
 #' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
 #' @param prop_test the proportion of clusters used as test locations.
-#' Default to 0.01.
+#' Default to 0.01. Can be of length 2 to change proportions between far 
+#' and close test locations (far first, then close)
 #' @export
 #'
 #' @examples
@@ -382,6 +401,7 @@ splitData <- function(locs, data,
     col = c("black", "red", "orange"),
     cex = c(0.3, 0.8, 0.8)
   )
-  # TODO print summary. 
+  cat("Summary of split data\n")
+  print(splitSummary(output))
   return(output)
 }
