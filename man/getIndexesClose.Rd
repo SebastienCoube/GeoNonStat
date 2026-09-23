@@ -26,5 +26,5 @@ A max-min heuristic is used to scatter the test locations across space,
 observed_locs <- cbind(runif(2000), runif(2000))
 observed_locs <- rbind(observed_locs, observed_locs[1:1000, ])
 idx <- getIndexesClose(observed_locs, prop_test = 0.1)
-plotSplit(observed_locs, idx)
 }
+\keyword{internal}

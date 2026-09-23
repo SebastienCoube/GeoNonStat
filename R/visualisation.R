@@ -186,11 +186,11 @@ plotKnotsPP <- function(x,
 #' @examples
 #' locs <- matrix(rnorm(20), ncol = 2)
 #' log_range <- matrix(rnorm(30), ncol = 3)
-#' plotEllipses(locs, log_range, shrink = 0.1)
+#' plotRangeEllipses(locs, log_range, shrink = 0.1)
 #'
 #' locs <- matrix(rnorm(20), ncol = 2)
 #' log_range <- matrix(rnorm(10), ncol = 1)
-#' plotEllipses(locs, log_range, shrink = 0.1)
+#' plotRangeEllipses(locs, log_range, shrink = 0.1)
 plotRangeEllipses <- function(locs,
                          log_range,
                          shrink = NULL,
@@ -324,9 +324,9 @@ plotRangeEllipses <- function(locs,
 # print(paste("theorhetical rho = ", round(ra * sqrt(8*nu), 3)))
 
 
-#' Title getColors TODO
+#' Function to get a color vector to map values of a numerical vector. 
 #'
-#' @param x a vector
+#' @param x a numerical vector
 #' @param alpha logical, default to TRUE. Add transparency to colors ?
 #'
 #' @returns a vector of colors of length `length(x)`

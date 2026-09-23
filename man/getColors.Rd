@@ -2,12 +2,12 @@
 % Please edit documentation in R/visualisation.R
 \name{getColors}
 \alias{getColors}
-\title{Title getColors TODO}
+\title{Function to get a color vector to map values of a numerical vector.}
 \usage{
 getColors(x, alpha = FALSE)
 }
 \arguments{
-\item{x}{a vector}
+\item{x}{a numerical vector}
 
 \item{alpha}{logical, default to TRUE. Add transparency to colors ?}
 }
@@ -15,7 +15,7 @@ getColors(x, alpha = FALSE)
 a vector of colors of length `length(x)`
 }
 \description{
-Title getColors TODO
+Function to get a color vector to map values of a numerical vector.
 }
 \examples{
 getColors(c(1, 2, 3))

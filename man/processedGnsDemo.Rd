@@ -26,10 +26,8 @@ The data have been generated with the following code :
   set.seed(123)
   processedGnsDemo = GeoNonStatMcmc(
     object = gnsDemo,
-    n_chains_in_parallel = 1,
     n_threads_per_chain = 1,
-    n_iterations = 55,
-    seed = 1
+    n_iterations = 55
   )
 }
 }

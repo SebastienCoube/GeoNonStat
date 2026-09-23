@@ -12,15 +12,12 @@
 \usage{
 GeoNonStat(
   vecchia_approx,
-  observed_field,
-  X = NULL,
+  data_list,
   matern_smoothness = 1.5,
   anisotropic = FALSE,
   n_chains = 2,
-  range_X = NULL,
   range_PP = NULL,
   range_log_scale_bounds = NULL,
-  noise_X = NULL,
   noise_PP = NULL,
   noise_log_scale_bounds = NULL
 )
@@ -29,25 +26,22 @@ GeoNonStat(
 
 \method{summary}{GeoNonStat}(object, burn_in = 0.1, ...)
 
-\method{predict}{GeoNonStat}(
-  object,
-  new_locs,
-  new_X = NULL,
-  new_noise_X = NULL,
-  new_range_X = NULL,
-  burn_in = 0.2,
-  num_threads = 5,
-  ...
-)
+\method{predict}{GeoNonStat}(object, new_data_list, burn_in = 0.2, num_threads = 5, ...)
 }
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()` from the
 N spatial coordinates of the observations}
 
-\item{observed_field}{a vector of N observations of the interest variable}
-
-\item{X}{a data.frame of N observations from covariates explaining the
-interest variable through fixed linear effects}
+\item{data_list}{a list of elements of oberved data with :
+`observed_field` a vector of N observations of the interest variable,
+`X` (optional) a data.frame of N observations from covariates explaining the
+interest variable through fixed linear effects
+`range_X` (optional) a data.frame of N observations from covariates explaining the
+Gaussian process range through fixed linear effects, if not provided
+the range is constant (i.e. the field is stationary).
+`noise_X` (optional) a data.frame of N observations from covariates explaining the
+Gaussian noise variance through fixed linear effects, or NULL.
+The Intercept is automatically added even if X_noise is not provided.}
 
 \item{matern_smoothness}{numerical value, a Matérn smoothness parameter,
 either 0.5 (aka ``exponential kernel'') or 1.5}
@@ -56,20 +50,12 @@ either 0.5 (aka ``exponential kernel'') or 1.5}
 
 \item{n_chains}{number of MCMC chains}
 
-\item{range_X}{a data.frame of N observations from covariates explaining the
-Gaussian process range through fixed linear effects, or NULL in which case
-the range is constant (i.e. the field is stationary).}
-
 \item{range_PP}{an object of class `PP` used to model spatial variations of
 the range of the latent field, or NULL.
 The Intercept is automatically added even if X_range is NULL.}
 
 \item{range_log_scale_bounds}{numeric vector of size 2. Real valued bounds
 for the uniform prior of the latent field marginal variance}
-
-\item{noise_X}{a data.frame of N observations from covariates explaining the
-Gaussian noise variance through fixed linear effects, or NULL.
-The Intercept is automatically added even if X_noise is NULL.}
 
 \item{noise_PP}{either an object of class PP used to model the field of
 log-noise parameters, or NULL.}
@@ -87,13 +73,11 @@ or NULL in which case the bounds are set automatically.}
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed. Default to 0.1}
 
-\item{new_locs}{new locations}
-
-\item{new_X}{new X}
-
-\item{new_noise_X}{new X for noise parameters}
-
-\item{new_range_X}{new X for range parameters}
+\item{new_data_list}{a list of new data. The list should have 
+a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
+a 'X' entry, for new covariates
+a 'noise_X' entry (optional) for new X noise parameters
+a 'range_X' entry (optional) for new X range parameters}
 
 \item{num_threads}{number of threads. Integer.}
 }
@@ -167,22 +151,28 @@ noise_PP <- createPP(
 noise_log_scale_bounds <- c(-8, 3)
 
 X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
-range_X <- as.data.frame(observed_locs)
-noise_X <- X
-
+my_data <- list(
+observed_field = observed_field,
+X = X,
+range_X = as.data.frame(observed_locs),
+noise_X  = X
+)
 myobj <- GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = observed_field, # spatial locations
-  X = X, # Response variable
+  data_list = my_data,
   matern_smoothness = 1.5, # Matern smoothness
   anisotropic = FALSE,
   n_chains = 3,
-  noise_X = X,
   noise_PP = noise_PP,
   noise_log_scale_bounds = noise_log_scale_bounds,
-  range_X = range_X,
   range_PP = NULL
 )
 summary(myobj)
 myobj
+# Recreating new data with less observations but same structure as example data
+locs <- cbind(rnorm(200), rnorm(200))
+X <- data.frame(matrix(rnorm(200*4), ncol=4))
+colnames(X) <- paste0("V", 1:4)
+testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+predict(processedGnsDemo, new_data_list=testdata)
 }

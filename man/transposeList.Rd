@@ -4,7 +4,7 @@
 \alias{transposeList}
 \title{Transpose a list}
 \usage{
-transposeList(list)
+transposeList(a_list)
 }
 \arguments{
 \item{list}{a list containing sublists (all having the same structure).}

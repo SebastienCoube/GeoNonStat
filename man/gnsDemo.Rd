@@ -67,10 +67,9 @@ fake_data = simulateGnsData(
 
 gnsDemo = GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = fake_data$observed_field, X = X,
+  data_list = fake_data$observed, 
   matern_smoothness = 1.5, anisotropic = T,
   n_chains = 3,
-  noise_X = NULL, range_X = NULL,
   noise_PP = PP_noise,
   range_PP = PP_range
 )

@@ -31,5 +31,5 @@ A K-means algorithm is run in order to parition the spatial locations into
 \examples{
 observed_locs <- round(cbind(runif(10000), runif(10000)), 3)
 idx <- getIndexesFar(observed_locs)
-plotSplit(observed_locs, idx)
 }
+\keyword{internal}

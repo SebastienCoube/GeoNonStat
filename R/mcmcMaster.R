@@ -268,12 +268,16 @@ GeoNonStatMcmc <- function(
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' # Testing with bad criteria so it run fast. 
 #' processedGns <- automaticMcmc(
 #'   object = gnsDemo,
 #'   n_threads_per_chain = 1, # example in sequential
-#'   iter_per_step=10, 
-#'       satisfying_ESS = 4, satisfying_Gelman_Rubin = 30, 
+#'   iter_per_step=100, 
+#'   satisfying_ESS = 4, 
+#'   satisfying_Gelman_Rubin = 30
 #' )
+#' }
 automaticMcmc <- function(
     object,
     n_threads_per_chain = 5, 

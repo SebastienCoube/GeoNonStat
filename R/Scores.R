@@ -63,7 +63,7 @@ squaredError <- function(true_y, mean_samples) {
 #' true_y <- rnorm(100)
 #' mean_samples <- matrix(rep(0, 1000 * length(true_y)), length(true_y))
 #' sd_samples <- matrix(rep(1, 1000 * length(true_y)), length(true_y))
-#' score(true_y, mean_samples, sd_samples)
+#' allScores(true_y, mean_samples, sd_samples)
 allScores <- function(true_y, mean_samples, sd_samples) {
   y_samples <- mean_samples + sd_samples * rnorm(length(sd_samples))
   per_obs <- matrix(0, length(true_y), 4)
@@ -82,12 +82,21 @@ allScores <- function(true_y, mean_samples, sd_samples) {
 
 
 #' Model scoring for train data
+#'
+#' @param object a GeoNonStat object
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
+#'
 #' @description
-#'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
-#'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
-#'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
-#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
-#'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
+#' Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
+#' the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
+#' the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
+#' and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
+#' Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
+#' @export
+#' 
+#' @examples
+#' trainScores(processedGnsDemo)
 trainScores <- function(object, burn_in){
   estimates <- estimate(object)
   allScores(
@@ -105,12 +114,12 @@ trainScores <- function(object, burn_in){
 #' @param num_threads numeric TODO
 #'
 #' @description
-#'  Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
-#'  the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
-#'  the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
-#'  and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
-#'  Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-#'  @export
+#' Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
+#' the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
+#' the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
+#' and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
+#' Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
+#' @export
 #'  
 #' @examples
 #' # Recreating new data with less observations but same structure as example data
@@ -220,7 +229,6 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
 #' @examples
 #' observed_locs <- round(cbind(runif(10000), runif(10000)), 3)
 #' idx <- getIndexesFar(observed_locs)
-#' plotSplit(observed_locs, idx)
 getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
   if (is.null(n_clust)) n_clust <- floor(nrow(locs) / 100)
   if (!inBounds(c(0, nrow(locs)), n_clust, includeBounds = FALSE) ||

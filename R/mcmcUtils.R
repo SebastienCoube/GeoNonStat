@@ -106,7 +106,7 @@ updateFisher <- function(iter, iter_start, dens_grad, dens_grad_back, ratio, emp
 #' momentumDens(rnorm(3))
 momentumDens <- function(momentum)-.5*sum(momentum^2)
 
-# MALA forward step
+#' MALA forward step
 #' @param stepsize a positive numeric for the step size
 #' @param cond_mat a conditioning matrix
 #' @param current_params a vector of current value of the parameters
@@ -153,9 +153,6 @@ momentumBack <- function(
 #' @param PP_coeff value of the PP coefficient
 #' @param grad_PP_coeff gradient of the density evaluated at the PP coefficients
 #' @returns a vector of momentum variables
-#' @export
-#' @keywords internal
-#' @examples
 logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
   res <- .5 * PP_coeff * grad_PP_coeff
   if(ncol(PP_coeff)==3)return(c(sum(res[,1]), sum(res[,-1])))

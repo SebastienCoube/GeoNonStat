@@ -4,26 +4,20 @@
 \alias{plotSplit}
 \title{Plot the locations of a data split}
 \usage{
-plotSplit(
-  locs,
-  indexes,
-  pch = c(16, 16),
-  cex = c(0.3, 1),
-  col = c("blue", "red")
-)
+plotSplit(list_locs, pch = c(16, 16), cex = c(0.3, 1), col = c("black", "red"))
 }
 \arguments{
-\item{locs}{a matrix (or data.frame or array) with 2 columns containing
+\item{list_locs}{a list of length n, each entries having a 'locs' component
+that should be a matrix (or data.frame or array) with 2 columns containing
 spatial locations}
 
-\item{indexes}{a list of length n, containing usually train and test indices,
-among row indexes of `locs`}
+\item{pch}{a vector of pch for points shape of length 1 (will be repeated) or n. 
+Passed to `plot`}
 
-\item{pch}{a vector of pch for points shape of length 1 or 2. Passed to `plot`}
+\item{cex}{a numeric vector for points size of length 1 (will be repeated) or n. 
+Passed to `plot`}
 
-\item{cex}{a numeric vector for points size of length 1 or 2. Passed to `plot`}
-
-\item{col}{a vector for points color of length 1 or 2. Passed to `plot`}
+\item{col}{a vector for points color of length n. Passed to `plot`}
 }
 \value{
 a plot
@@ -32,7 +26,8 @@ a plot
 Plot the locations of a data split
 }
 \examples{
-locs <- cbind(runif(220), runif(220))
-idx <- list("train" = 1:200, "test" = 201:220)
-plotSplit(locs, idx)
+locs <- cbind(runif(2000), runif(2000))
+locslist <- list("train" = list("locs"=locs[1:1900,]), 
+                 "test" = list(locs=locs[1901:2000,]))
+plotSplit(locslist)
 }

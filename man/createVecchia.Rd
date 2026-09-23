@@ -4,7 +4,7 @@
 \alias{createVecchia}
 \title{Vecchia approximation setup}
 \usage{
-createVecchia(observed_locs, m = 6, ncores = 1, round_locs = 0)
+createVecchia(observed_locs, m = 6, ncores = 1)
 }
 \arguments{
 \item{observed_locs}{a matrix of spatial coordinates where observations are done}
