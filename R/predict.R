@@ -295,7 +295,7 @@ predict.GeoNonStat <-  function(
   samples$denoised <- samples$field + samples$fixed_effects
   # getting summaries
   summaries <- list()
-  for(name in names(samples)) summaries[[name]] <- GeoNonStat::summarizeRecords(samples[[name]])
+  for(name in names(samples)) summaries[[name]] <- summarizeRecords(samples[[name]])
   res <- list(samples = samples, summaries = summaries)
   return(res)
 }
