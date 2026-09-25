@@ -361,7 +361,7 @@ rangeReparamMat <- function(hierarchical_model){
 priorFisherRange <- function(range_X, hierarchical_model, type){
   if(type=="sufficient")cross_fisher_mult <- -.5
   if(type=="ancillary")cross_fisher_mult <-   0
-  fisher_var_factor <- 5
+  fisher_var_factor <- .1
   # Prior Fisher information is XTX like in OLS
   res <- Matrix::bdiag(
     range_X$crossprod_X[1,1] * fisher_var_factor, 

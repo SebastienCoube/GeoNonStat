@@ -67,7 +67,7 @@ initStateParams <- function(stateParams) {
 #' 
 #' condMat(diag(runif(10)), diag(runif(10)), 300, 1, 50, 400)
 condMat <- function(empirical_fisher, prior_fisher, iter, iter_start, begin = 400, end = 600){
-  mix <- pmax(0, pmin(.98, (iter+iter_start - begin)/(end-begin)))
+  mix <- pmax(0, pmin(.995, (iter+iter_start - begin)/(end-begin)))
   renorm <- function(M)M/(sum(Matrix::diag(M))+1e-6) # Trace Norm
   (solve(chol(
     (mix) *     renorm(empirical_fisher) +

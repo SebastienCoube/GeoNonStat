@@ -48,10 +48,12 @@ runOneChainMcmc <- function(
     }
   )
   # settings for MCMC 
-  fisher_noise = list(begin_learn = 10, begin_introduce = 20, end_introduce = 30)
   begin_range_update <- 10
-  fisher_range = list(begin_learn = begin_range_update, begin_introduce = begin_range_update + 20, end_introduce = begin_range_update + 40)
   MALA_range_beta <- 4
+  fisher_noise = list(begin_learn = 10, begin_introduce = 20, end_introduce = 30)
+  fisher_range = list(begin_learn = begin_range_update, 
+                      begin_introduce = begin_range_update + 20, 
+                      end_introduce = begin_range_update + 40)
   for (iter in seq_len(n_iterations)) {
     # Regression coefficients #################################
     state$params$field <- updateLatentField(
@@ -63,31 +65,32 @@ runOneChainMcmc <- function(
     state$params <- res$params
     state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     
-    # Range beta ###############################
-    # Just field variance
-    # state$params$field <- updateLatentField(
-    #   state = state, hierarchical_model = hierarchical_model,
-    #   vecchia_approx = vecchia_approx, observed_field = observed_field,
-    #   iter = iter, num_threads = num_threads
-    # )$field
-    if (iter + iter_start > begin_range_update) {
+    # Field variance in the first iterations ###############################
+    if (iter + iter_start < 15) {
       state$params$field <- updateLatentField(
         state = state, hierarchical_model = hierarchical_model,
         vecchia_approx = vecchia_approx, observed_field = observed_field,
         iter = iter, num_threads = num_threads
       )$field
       state <- updateFieldLogVarS(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+      state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    }
+    # Range beta ###############################
+    if (iter + iter_start > begin_range_update) {
+      state$params$field <- updateLatentField(
+        state = state, hierarchical_model = hierarchical_model,
+        vecchia_approx = vecchia_approx, observed_field = observed_field,
+        iter = iter, num_threads = num_threads
+      )$field
       state <- rangeBetaS(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher_range, n_MALA = MALA_range_beta
+         n_MALA = MALA_range_beta, fisher = fisher_range
          )
-      
-      state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
       state <- rangeBetaA(
          state, hierarchical_model, vecchia_approx, 
          range_X = covariates$range_X, iter, iter_start, num_threads,
-         fisher = fisher_range, n_MALA = MALA_range_beta
+         n_MALA = MALA_range_beta, fisher = fisher_range
          )
     }
     # Variance of the  range PP ###############################
@@ -98,15 +101,9 @@ runOneChainMcmc <- function(
           vecchia_approx = vecchia_approx, observed_field = observed_field,
           iter = iter, num_threads = num_threads
         )$field
-        state <- rangeLogScaleS(
-          state, hierarchical_model, vecchia_approx, 
-          range_X = covariates$range_X, iter, iter_start, num_threads)
         state$params$range_log_scale <- updateVarPPSuff(
           hm4params = hierarchical_model$range, 
           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
-        state <- rangeLogScaleA(
-          state, hierarchical_model, vecchia_approx, 
-          range_X = covariates$range_X, iter, iter_start, num_threads)
         state$params$range_log_scale <- updateVarPPSuff(
           hm4params = hierarchical_model$range, 
           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
