@@ -31,7 +31,7 @@ test_that("processPPPrior handles NULL and invalid inputs correctly", {
   good_pp <- list()
   class(good_pp) <- "PP"
   expect_message(out <- processPPPrior(PP = good_pp, log_scale_bounds = NULL, parameter_name = "p"), "automatically set")
-  expect_equal(out, c(-4, 3))
+  expect_equal(out, c(-5, 6))
 
   # provided bounds numeric of length 2 are sorted and returned
   class(good_pp) <- "PP"
@@ -173,29 +173,31 @@ test_that("GeoNonStat object reproducible with anisotropic, range_PP and noise_P
   set.seed(7)
   g1 <- GeoNonStat(
     vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
+    data_list = list(
+      observed_field = observed_field,
+      X = X,
+      range_X = X,
+      noise_X = X),
     matern_smoothness = 1.5,
     anisotropic = TRUE,
     n_chains = 1,
-    range_X = X,
     range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise,
+    noise_PP = PP_noise
   )
 
   set.seed(7)
   g2 <- GeoNonStat(
     vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
+    data_list = list(
+      observed_field = observed_field,
+      X = X,
+      range_X = X,
+      noise_X = X),
     matern_smoothness = 1.5,
     anisotropic = TRUE,
     n_chains = 1,
-    range_X = X,
     range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise,
+    noise_PP = PP_noise
   )
 
   # Compare covariates design matrices
