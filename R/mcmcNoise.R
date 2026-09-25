@@ -159,7 +159,7 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
       iter = iter,
       iter_start = iter_start,
       kernel_value = state$ker_var$noise_beta_mala,
-      mult = -.6
+      mult = -3
     )
     
     ## Testing gradient ####
@@ -193,7 +193,7 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
           iter = iter,
           iter_start = iter_start,
           kernel_value = state$ker_var$noise_beta_mala,
-          mult = 1
+          mult = 4
         )
         dens_grad[] <- new_dens_grad[]
         state$momenta$noise_beta[] <- new_momentum[]

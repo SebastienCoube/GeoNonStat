@@ -47,10 +47,11 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$lo
 
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
-  observed_field = fake_data$observed$observed_field, X = X, 
+  data_list = list(
+    observed_field= fake_data$observed$observed_field, 
+    X = X, noise_X = X, range_X = NULL),
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
-  noise_X = X, range_X = NULL,
   noise_PP = PP_noise,
   range_PP = PP_range
 )
@@ -120,7 +121,7 @@ summary(geo_non_stat)
 # parallel run
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
-  object = geo_non_stat, n_chains_in_parallel = 3, 
+  object = geo_non_stat, 
   n_threads_per_chain = 7, n_iterations = 300)
 
 tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .0)

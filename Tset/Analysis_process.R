@@ -1,5 +1,7 @@
 library(GeoNonStat)
 
+
+Rendre noise X NULL en cas de full stationary
 # loading the data set and performing basic visualization ####
 synthetic <- readRDS("Tset/synthetic_data_set.RDS")
 plotPointillistPainting(synthetic$vecchia_approx$locs, synthetic$hidden_fields$latent_field)
@@ -10,9 +12,7 @@ train_test_split <- GeoNonStat::splitData(
   data = synthetic$observed, locs = synthetic$observed$locs, n_clust = 1000, round_locs = .00, prop_test = c(.2,.1))
 
 # Model structures ####
-vecchia_approx <- createVecchia(
-  train_test_split$train$locs, m = 10
-)
+vecchia_approx <- createVecchia(train_test_split$train$locs, m = 10)
 PP_long_range <- createPP(vecchia_approx = vecchia_approx, matern_range = .25)
 PP_short_range <- createPP(vecchia_approx = vecchia_approx, matern_range = .1)
 
@@ -24,6 +24,7 @@ run_design[-1,"heterosk noise"] <- T
 run_design[-c(1,2),"nonstat range"] <- T
 run_design[-c(1,2,3),"aniso range"] <- T
 print(run_design)
+
 # running according to design
 res <- list()
 for(i in seq(nrow(run_design))){
@@ -84,3 +85,4 @@ colnames(criteria) <- c(
   paste("far", names(res[[4]]$scores$train$scores)),
   paste("close", names(res[[4]]$scores$train$scores))
   )
+criteria <- cbind(run_design, criteria)

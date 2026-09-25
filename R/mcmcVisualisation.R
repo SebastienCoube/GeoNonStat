@@ -27,6 +27,7 @@ mcmcDiags <- function(object, burn_in = 0.3, verbose = TRUE, keep = "nofield") {
         res[i,1] <- res[i,1] + coda::effectiveSize(samples[[j]])
       }
       res[i,c(2,3)] <- coda::gelman.diag(coda::mcmc.list(samples))$psrf
+      res[i,c(2,3)][is.nan(res[i,c(2,3)])] <- Inf
       i <- i+1
     }
   }

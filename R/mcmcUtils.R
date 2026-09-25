@@ -143,9 +143,9 @@ momentumBack <- function(
   solve(
     cond_mat,
     c(
-    c(current_params)
-    - c(proposed_params)
-    - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2)
+      c(current_params)
+      - c(proposed_params)
+      - as.vector(cond_mat %*% (crossprod(cond_mat, c(dens_grad_back)))) * stepsize / 2)
   )/sqrt(stepsize)
 }
 

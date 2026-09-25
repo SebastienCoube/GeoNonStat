@@ -3,11 +3,11 @@
 rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
-  # renewing momenta ####
-  state$momenta$range_beta_sufficient <-
-    renewMomentum(state$momenta$range_beta_sufficient, .6)
-  state$momenta$field_log_var_sufficient <- 
-    renewMomentum(state$momenta$field_log_var_sufficient, .6)
+  # # renewing momenta ####
+  # state$momenta$range_beta_sufficient <-
+  #   renewMomentum(state$momenta$range_beta_sufficient, .9)
+  # state$momenta$field_log_var_sufficient <- 
+  #   renewMomentum(state$momenta$field_log_var_sufficient, .9)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradS(
@@ -28,9 +28,9 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   for(mala_step in seq(n_MALA)){
     # renewing momenta ####
     state$momenta$range_beta_sufficient <-
-      renewMomentum(state$momenta$range_beta_sufficient, .99)
+      renewMomentum(state$momenta$range_beta_sufficient, .9)
     state$momenta$field_log_var_sufficient <- 
-      renewMomentum(state$momenta$field_log_var_sufficient, .99)
+      renewMomentum(state$momenta$field_log_var_sufficient, .9)
     # proposing new parameters ####
     move_forward <- moveForward(
       current_params= c(state$params$field_log_var, state$params$range_beta),
@@ -118,7 +118,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     # always lowering stepsize
     state$ker_var$range_beta_sufficient[1] <- updateKernel(
       iter = iter, iter_start = iter_start,
-      kernel_value = state$ker_var$range_beta_sufficient[1], mult = -1)  
+      kernel_value = state$ker_var$range_beta_sufficient[1], mult = -3)  
     # computing ratio
     ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
     # updating fisher matrix
@@ -132,7 +132,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
         # increasing stepsize if acceptance
         state$ker_var$range_beta_sufficient[1] <- updateKernel(
           iter = iter, iter_start = iter_start,
-          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 0.6 ^ (-1 / n_MALA)
+          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 4
         )
         # updating gradient
         dens_grad[] <- dens_grad_back
@@ -164,11 +164,11 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
 rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
-  # renewing momenta ####
-  state$momenta$range_beta_ancillary =
-    renewMomentum(state$momenta$range_beta_ancillary, .6)
-  state$momenta$field_log_var_ancillary =
-    renewMomentum(state$momenta$field_log_var_ancillary, .6)
+  # # renewing momenta ####
+  # state$momenta$range_beta_ancillary =
+  #   renewMomentum(state$momenta$range_beta_ancillary, .9)
+  # state$momenta$field_log_var_ancillary =
+  #   renewMomentum(state$momenta$field_log_var_ancillary, .9)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
@@ -192,9 +192,9 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   for(mala_step in seq(n_MALA)){
   # renewing momenta ####
   state$momenta$range_beta_ancillary =
-    renewMomentum(state$momenta$range_beta_ancillary, .99)
+    renewMomentum(state$momenta$range_beta_ancillary, .9)
   state$momenta$field_log_var_ancillary =
-    renewMomentum(state$momenta$field_log_var_ancillary, .99)
+    renewMomentum(state$momenta$field_log_var_ancillary, .9)
   # proposing new parameters ####
   move_forward <- moveForward(
     current_params = c(state$params$field_log_var, state$params$range_beta),
@@ -288,7 +288,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   # always lowering stepsize
   state$ker_var$range_beta_ancillary[1] <- updateKernel(
     iter = iter, iter_start = iter_start,
-    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -1
+    kernel_value = state$ker_var$range_beta_ancillary[1], mult = -3
   )
   # computing ratio
   ratio <- proposed_dens - current_dens + proposed_momentum_dens - current_momentum_dens
@@ -303,7 +303,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 0.6 ^ (-1 / n_MALA)
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 4
       )
       # updating gradient 
       dens_grad[] <- dens_grad_back[]
@@ -361,7 +361,7 @@ rangeReparamMat <- function(hierarchical_model){
 priorFisherRange <- function(range_X, hierarchical_model, type){
   if(type=="sufficient")cross_fisher_mult <- -.5
   if(type=="ancillary")cross_fisher_mult <-   0
-  fisher_var_factor <- 1
+  fisher_var_factor <- 5
   # Prior Fisher information is XTX like in OLS
   res <- Matrix::bdiag(
     range_X$crossprod_X[1,1] * fisher_var_factor, 

@@ -83,8 +83,7 @@ updateLatentField <- function(state, vecchia_approx, hierarchical_model, observe
 }
 
 # Update the log variance of the field, using ancillary-sufficient Interweaving
-updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
-  # ancillary
+updateFieldLogVarA <- function(state, scale, vecchia_approx, iter, iter_start) {
   for (field_log_var_idx in seq_len(3)) {
    new_field_log_var <- state$params$field_log_var[1, 1] + exp(.5 * state$ker_var$field_log_var_ancillary) * rnorm(1)
    new_field <- state$params$field * exp(.5 * (new_field_log_var - state$params$field_log_var[1, 1]))
@@ -120,7 +119,10 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
      state$params$field[] <- new_field[]
    }
   }
+  return(state)
+}
 
+updateFieldLogVarS <- function(state, scale, vecchia_approx, iter, iter_start) {
   # Sufficient
   fieldT_cholT_chol_field <- sum((state$stuff$sparse_chol %*% state$params$field)^2)
     for (field_log_var_idx in seq_len(40)) {
@@ -158,7 +160,6 @@ updateFieldLogVar <- function(state, scale, vecchia_approx, iter, iter_start) {
         state$params$field_log_var[1, 1] <- new_field_log_var
       }
     }
-  
   return(state)
 }
 
