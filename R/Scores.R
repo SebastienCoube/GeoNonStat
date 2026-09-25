@@ -307,8 +307,8 @@ splitSummary <- function(list_locs) {
 #' plotSplit(locslist)
 plotSplit <- function(list_locs,
                       pch = 16,
-                      cex = c(0.3, 1),
-                      col = c("black", "red")) {
+                      cex = c(0.3, 1, 1),
+                      col = c("black", "red", "orange")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
   if(!all(sapply(list_locs, function(x) "locs" %in% names(x)))) 
     stop("all list_locs entries should have a 'locs' element")

@@ -77,19 +77,16 @@ aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_
 #' tt <- matrix(rnorm(200), ncol = 20)
 #' summarizeRecords(tt)
 summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)) {
-  n_stats <- 2 + length(quant)
-  matstat <- matrix(NA, nrow = n_stats, ncol = ncol(mat))
-  
-  for (j in seq_len(ncol(mat))) {
-    v <- mat[, j]
-    vstat <- c(
-      mean(v),
-      sd(v),
-      quantile(v, quant, names = FALSE)
-    )
-    matstat[, j] <- signif(vstat, 3)
+  means <- matrixStats::colMeans2(mat)
+  sds   <- matrixStats::colSds(mat)
+  qs    <- matrixStats::colQuantiles(mat, probs = quant)  # ncol(mat) x length(quant)
+  if(ncol(mat)>1) {
+    matstat <- rbind(means, sds, t(qs))
+  } else {
+    matstat <- matrix(c(means, sds, qs), nrow = 2 + length(quant), ncol = ncol(mat))
+    
   }
-  
+  matstat <- signif(matstat, 3)
   colnames(matstat) <- colnames(mat)
   rownames(matstat) <- c("mean", "sd", names(quant))
   return(matstat)

@@ -1,7 +1,8 @@
 load(file ="NDVI_real_data_analysis/data_cleaned_small_expanded.RData")
 
-train_test_split <- createSplitData(
-  data = list(y = data_cleaned_small$NDVI), 
+data_cleaned_small2 <- data_cleaned_small[sample(1:nrow(data_cleaned_small), size = 10000, replace = FALSE),]
+train_test_split <- splitData(
+  data = list(observed_field = data_cleaned_small$NDVI), 
   locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y), 
   n_clust = 1000, 
   prop_test = c(.15, .02), 
@@ -9,14 +10,14 @@ train_test_split <- createSplitData(
 
 plotPointillistPainting(
   train_test_split$train$locs, 
-  train_test_split$train$y)
+  train_test_split$train$observed_field)
 
 # creating model
 vecchia_approx <- createVecchia(train_test_split$train$locs, m = 6)
 range_PP <- createPP(vecchia_approx, .16)
 noise_PP <- createPP(vecchia_approx, .08)
 geo_non_stat_full_monty <- GeoNonStat(
-  vecchia_approx = vecchia_approx, observed_field = train_test_split$train$y,
+  vecchia_approx = vecchia_approx, data_list = train_test_split$train,
   noise_PP = noise_PP, range_PP = range_PP, n_chains = 3, anisotropic = T)
 
 
@@ -24,7 +25,7 @@ geo_non_stat_full_monty <- GeoNonStat(
  future::plan(strategy = "multisession", workers = 3)
  geo_non_stat_full_monty <- GeoNonStatMcmc(
    geo_non_stat_full_monty, n_iterations = 600, 
-   n_chains_in_parallel = 3, n_threads_per_chain = 8)
+   n_threads_per_chain = 8)
  run_time = run_time - Sys.time()
  
  

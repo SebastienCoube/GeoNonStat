@@ -158,20 +158,15 @@ runOneChainMcmc <- function(
 #' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{
-#'  if (n_chains_in_parallel == 1) {
-#'    # For no parallelisation
+#'    # For no parallelisation use :
 #'    future::plan(future::sequential)
-#'  } else {
 #'    # For multisession or multicore (prefered):
 #'    if (parallelly::supportsMulticore()) {
 #'      future::plan(future::multicore, workers = n_chains_in_parallel)
-#'    } else {
 #'      future::plan(future::multisession, workers = n_chains_in_parallel)
 #'    }
-#'  }
-#' }
 #' You can see `?future::plan` to define your plan more precisely.
-#'
+#' }
 #' @returns a GeoNonStat object, with updated state (last state by chain)
 #' and records (params records for all iterations, by chain)
 #' @export
@@ -249,20 +244,16 @@ GeoNonStatMcmc <- function(
 #' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{
-#'  if (n_chains_in_parallel == 1) {
-#'    # For no parallelisation
+#'    # For no parallelisation use :
 #'    future::plan(future::sequential)
-#'  } else {
 #'    # For multisession or multicore (prefered):
 #'    if (parallelly::supportsMulticore()) {
 #'      future::plan(future::multicore, workers = n_chains_in_parallel)
-#'    } else {
 #'      future::plan(future::multisession, workers = n_chains_in_parallel)
 #'    }
-#'  }
-#' }
 #' You can see `?future::plan` to define your plan more precisely.
-#'
+#' }
+#' 
 #' @returns a GeoNonStat object, with updated state (last state by chain)
 #' and records (params records for all iterations, by chain)
 #' @export
