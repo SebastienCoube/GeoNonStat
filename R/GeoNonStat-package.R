@@ -22,6 +22,7 @@
 #' @import Rcpp
 #' @importFrom abind abind
 #' @importFrom Matrix Diagonal crossprod solve sparseMatrix t tcrossprod chol
+#' @importFrom matrixStats colMeans2 colSds colQuantiles rowQuantiles
 #' @importFrom GpGp find_ordered_nn order_maxmin vecchia_Linv matern_isotropic fast_Gp_sim
 #' @import fields
 #' @importFrom ellipse ellipse

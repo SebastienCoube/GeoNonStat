@@ -3,33 +3,35 @@ test_that("runOneChainMcmc returns expected structure and is reproducible for fi
   nlocs <- 30
   obs_locs <- cbind(runif(nlocs), runif(nlocs))
   vecchia_approx <- createVecchia(obs_locs, m = 3)
-
+  
   # small reproducible PP objects
   set.seed(11)
   PP_range <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
   set.seed(11)
   PP_noise <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
-
+  
   X <- as.data.frame(cbind(runif(nlocs), rnorm(nlocs)))
   observed_field <- rnorm(nlocs)
-
+  
   # Build GeoNonStat object with 1 chain and small PPs
   set.seed(7)
   g <- GeoNonStat(
     vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
+    data_list=list(
+      observed_field = observed_field,
+      X = X,
+      range_X = X,
+      noise_X = X
+    ),
     matern_smoothness = 1.5,
     anisotropic = TRUE,
     n_chains = 1,
-    range_X = X,
     range_PP = PP_range,
-    noise_X = X,
     noise_PP = PP_noise
   )
-
+  
   state <- g$states$chain_1
-
+  
   # Run a short chain (no parallelism) and check structure
   set.seed(42)
   res1 <- runOneChainMcmc(
@@ -42,11 +44,11 @@ test_that("runOneChainMcmc returns expected structure and is reproducible for fi
     num_threads = 1,
     iter_start = 0
   )
-
+  
   expect_type(res1, "list")
   expect_true(all(c("state", "params_records") %in% names(res1)))
   expect_length(res1$params_records, 3)
-
+  
   # Re-run with same inputs and expect same numeric results
   set.seed(42)
   res2 <- runOneChainMcmc(
@@ -59,7 +61,7 @@ test_that("runOneChainMcmc returns expected structure and is reproducible for fi
     num_threads = 1,
     iter_start = 0
   )
-
+  
   # Compare numeric parts of the returned states and records
   expect_equal(res1$params_records[[3]]$field, res2$params_records[[3]]$field)
   expect_equal(res1, res2)
@@ -70,42 +72,55 @@ test_that("runOneChainMcmc is reproducible after more iterations", {
   nlocs <- 24
   obs_locs <- cbind(runif(nlocs), runif(nlocs))
   vecchia_approx <- createVecchia(obs_locs, m = 3)
-
+  
   set.seed(11)
-  PP_range <- createPP(vecchia_approx, knots = 3, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  suppressMessages(
+    PP_range <- createPP(vecchia_approx, knots = 3, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  )
+  
   set.seed(11)
-  PP_noise <- createPP(vecchia_approx, knots = 3, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
-
+  suppressMessages(
+    PP_noise <- createPP(vecchia_approx, knots = 3, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  )
   X <- as.data.frame(cbind(runif(nlocs), rnorm(nlocs)))
   observed_field <- rnorm(nlocs)
-
+  
   set.seed(7)
-  g1 <- GeoNonStat(
-    vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
-    matern_smoothness = 1.5,
-    anisotropic = TRUE,
-    n_chains = 1,
-    range_X = X,
-    range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise
+  suppressMessages(
+    g1 <- GeoNonStat(
+      vecchia_approx = vecchia_approx,
+      data_list=list(
+        observed_field = observed_field,
+        X = X,
+        range_X = X,
+        noise_X = X
+      ),
+      matern_smoothness = 1.5,
+      anisotropic = TRUE,
+      n_chains = 1,
+      range_PP = PP_range,
+      noise_PP = PP_noise
+    )
   )
+  
   set.seed(7)
-  g2 <- GeoNonStat(
-    vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
-    matern_smoothness = 1.5,
-    anisotropic = TRUE,
-    n_chains = 1,
-    range_X = X,
-    range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise
+  suppressMessages(
+    g2 <- GeoNonStat(
+      vecchia_approx = vecchia_approx,
+      data_list=list(
+        observed_field = observed_field,
+        X = X,
+        range_X = X,
+        noise_X = X
+      ),
+      matern_smoothness = 1.5,
+      anisotropic = TRUE,
+      n_chains = 1,
+      range_PP = PP_range,
+      noise_PP = PP_noise
+    )
   )
-
+  
   set.seed(123)
   res1 <- runOneChainMcmc(
     covariates = g1$covariates,
@@ -117,7 +132,7 @@ test_that("runOneChainMcmc is reproducible after more iterations", {
     num_threads = 1,
     iter_start = 0
   )
-
+  
   set.seed(123)
   res2 <- runOneChainMcmc(
     covariates = g2$covariates,
@@ -129,7 +144,7 @@ test_that("runOneChainMcmc is reproducible after more iterations", {
     num_threads = 1,
     iter_start = 0
   )
-
+  
   expect_equal(res1, res2)
 })
 
@@ -138,59 +153,79 @@ test_that("GeoNonStatMcmc is reproducible when run twice with same seed", {
   nlocs <- 30
   obs_locs <- cbind(runif(nlocs), runif(nlocs))
   vecchia_approx <- createVecchia(obs_locs, m = 3)
-
+  
   set.seed(13)
-  PP_range <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  suppressMessages(
+    PP_range <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  )
+  
   set.seed(13)
-  PP_noise <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
-
+  suppressMessages(
+    PP_noise <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+  )
+  
   X <- as.data.frame(cbind(runif(nlocs), rnorm(nlocs)))
   observed_field <- rnorm(nlocs)
-
+  
   set.seed(9)
-  g <- GeoNonStat(
-    vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
-    matern_smoothness = 1.5,
-    anisotropic = TRUE,
-    n_chains = 2,
-    range_X = X,
-    range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise
+  suppressMessages(
+    g <- GeoNonStat(
+      vecchia_approx = vecchia_approx,
+      data_list=list(
+        observed_field = observed_field,
+        X = X,
+        noise_X = X,
+        range_X = X
+      ),
+      matern_smoothness = 1.5,
+      anisotropic = TRUE,
+      n_chains = 2,
+      range_PP = PP_range,
+      noise_PP = PP_noise
+    )
   )
-
-  # run twice with same seed; function warns for n_iterations < 60
+  
+  # run twice with same seed; function works for n_iterations < 60
   set.seed(100)
-  expect_warning(
-    out1 <- GeoNonStatMcmc(g, n_chains_in_parallel = 1, n_threads_per_chain = 1, n_iterations = 5),
-    "The algorithm is implemented to update the spatial range parameters"
+  expect_error(
+    out1 <- GeoNonStatMcmc(g, n_threads_per_chain = 1, n_iterations = 5),
+    NA
   )
   
   set.seed(9)
-  g2 <- GeoNonStat(
-    vecchia_approx = vecchia_approx,
-    observed_field = observed_field,
-    X = X,
-    matern_smoothness = 1.5,
-    anisotropic = TRUE,
-    n_chains = 2,
-    range_X = X,
-    range_PP = PP_range,
-    noise_X = X,
-    noise_PP = PP_noise
+  suppressMessages(
+    g2 <- GeoNonStat(
+      vecchia_approx = vecchia_approx,
+      data_list=list(
+        observed_field = observed_field,
+        X = X,
+        noise_X = X,
+        range_X = X
+      ),
+      matern_smoothness = 1.5,
+      anisotropic = TRUE,
+      n_chains = 2,
+      range_PP = PP_range,
+      noise_PP = PP_noise
+    )
   )
+  
   # run twice with same seed; function warns for n_iterations < 60
   set.seed(100)
-  out1 <- GeoNonStatMcmc(g, n_chains_in_parallel = 3, 
-                         n_threads_per_chain = 1, 
-                         n_iterations = 65)
+  expect_error(
+    out1 <- GeoNonStatMcmc(g,
+                           n_threads_per_chain = 1, 
+                           n_iterations = 65),
+    NA
+  )
   
   set.seed(100)
-  out2 <- GeoNonStatMcmc(g2, n_chains_in_parallel = 3, 
-                         n_threads_per_chain = 1, 
-                         n_iterations = 65)
+  expect_error(
+    out2 <- GeoNonStatMcmc(g2, 
+                           n_threads_per_chain = 1, 
+                           n_iterations = 65),
+    NA
+  )
   
   # Compare numeric records across runs
   expect_equal(lapply(out1$records, function(x) lapply(x, function(p) p$noise_beta)), 

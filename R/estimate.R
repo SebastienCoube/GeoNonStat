@@ -16,7 +16,7 @@
 #' @keywords internal
 #'
 #' @examples
-#' GeoNonStat::aggregateRecords(processedGnsDemo$records)
+#' aggregateRecords(processedGnsDemo$records)
 aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_chains = FALSE){
   n_iter <- length(records[[1]])
   if(burn_in<0)stop("burn_in must either be a proportion between 0 and 1 or a number of iterations greater than 1")
@@ -123,7 +123,7 @@ estimate <- function(object, burn_in = 0.2) {
   }
   
   summaries <- list()
-  for(name in names(samples)) summaries[[name]] <- GeoNonStat::summarizeRecords(samples[[name]])
+  for(name in names(samples)) summaries[[name]] <- summarizeRecords(samples[[name]])
   return(list(samples = samples, summaries = summaries))
 }
 
