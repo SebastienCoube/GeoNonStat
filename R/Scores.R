@@ -11,13 +11,8 @@
 #' y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
 #' coverage(true_y, y_samples)
 coverage <- function(true_y, y_samples) {
-  quantiles <- apply(y_samples, 1, function(x) quantile(x, c(.025, .975)))
-  per_obs <- mapply(
-    inBounds,
-    x = true_y,
-    bounds = split(quantiles, col(quantiles))
-  )
-  return(per_obs)
+  bounds <- matrixStats::rowQuantiles(y_samples, probs = c(.025, .975))  # nrow x 2
+  return(inBounds(bounds, true_y, includeBounds=FALSE))
 }
 
 #' Predictive Density
