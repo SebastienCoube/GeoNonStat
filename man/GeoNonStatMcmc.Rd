@@ -6,7 +6,12 @@
 \usage{
 GeoNonStatMcmc(
   object,
+<<<<<<< HEAD
   n_threads_per_chain = 1,
+=======
+  n_chains_in_parallel = NULL,
+  n_threads_per_chain = 5,
+>>>>>>> 6e2bb64 (Some doc)
   n_iterations = 100,
   verbose = T
 )

@@ -46,7 +46,7 @@ geo_non_stat = GeoNonStat(
 # Running the model (with very low ESS and Gelman Rubin targets)
 future::plan(strategy = "multisession", workers = 2)
 geo_non_stat <- automaticMcmc(
-  geo_non_stat, n_chains_in_parallel = 2, n_threads_per_chain = 3, satisfying_ESS = 10, satisfying_Gelman_Rubin = 10)
+  geo_non_stat, n_threads_per_chain = 3, satisfying_ESS = 10, satisfying_Gelman_Rubin = 10)
 # Investigating MCMC 
 tracePlots(geo_non_stat, keep = "field_log_var")
 mcmcDiags(geo_non_stat)

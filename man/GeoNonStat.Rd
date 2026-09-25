@@ -26,7 +26,20 @@ GeoNonStat(
 
 \method{summary}{GeoNonStat}(object, burn_in = 0.1, ...)
 
+<<<<<<< HEAD
 \method{predict}{GeoNonStat}(object, new_data_list, burn_in = 0.2, num_threads = 5, ...)
+=======
+\method{predict}{GeoNonStat}(
+  object,
+  new_locs = NULL,
+  new_X = NULL,
+  new_noise_X = NULL,
+  new_range_X = NULL,
+  burn_in = 0.2,
+  num_threads = 5,
+  ...
+)
+>>>>>>> 6e2bb64 (Some doc)
 }
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()` from the
