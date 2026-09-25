@@ -442,7 +442,7 @@ printFuturePlan <- function(verbose=TRUE) {
 #' Is a numeric included in an interval ?
 #'
 #' @param bounds Numeric of length 2, bounds of the interval.
-#' @param x a numeric value to test (or a vector)
+#' @param x a numeric value to test (or a vector, or a matrix)
 #' @param includeBounds logical (of length 1 or 2). Are the bounds included in the interval ?
 #'
 #' @returns a logical value, of same length as x
@@ -453,19 +453,20 @@ printFuturePlan <- function(verbose=TRUE) {
 #' inBounds(c(0, 12), 0, includeBounds = FALSE)
 #' inBounds(c(0, 12), 12, includeBounds = TRUE)
 inBounds <- function(bounds, x, includeBounds = FALSE) {
-  if (length(bounds) != 2 || !is.numeric(bounds)) stop("bounds should be a numeric of length 2")
+  if (!is.numeric(bounds) || (is.matrix(bounds) && ncol(bounds) != 2) || 
+      (!is.matrix(bounds) && length(bounds) != 2)) {
+    stop("bounds should be a numeric of length 2, or a 2-column matrix")
+  }
   if (length(includeBounds) == 1) includeBounds <- rep(includeBounds, 2)
   if (length(includeBounds) != 2 || !is.logical(includeBounds)) stop("includeBounds should be a logical of length 1 or 2")
-  includeBounds <- 1 * includeBounds + 1
-  res1 <- switch(includeBounds[1],
-                 (x > bounds[1]),
-                 (x >= bounds[1])
-  )
-  res2 <- switch(includeBounds[2],
-                 (x < bounds[2]),
-                 (x <= bounds[2])
-  )
-  res <- (res1 & res2)
-  return(res)
+  
+  if (is.matrix(bounds)) {
+    lower <- bounds[, 1]; upper <- bounds[, 2]
+  } else {
+    lower <- bounds[1]; upper <- bounds[2]
+  }
+  
+  res1 <- if (includeBounds[1]) x >= lower else x > lower
+  res2 <- if (includeBounds[2]) x <= upper else x < upper
+  res1 & res2
 }
-
