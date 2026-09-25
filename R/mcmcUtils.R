@@ -190,39 +190,6 @@ movePPCoeff <- function(beta, log_scale, new_log_scale, n_knots){
 }
 
 
-#' Is a numeric included in an interval ?
-#'
-#' @param bounds Numeric of length 2, bounds of the interval.
-#' @param x a numeric value to test (or a vector)
-#' @param includeBounds logical (of length 1 or 2). Are the bounds included in the interval ?
-#'
-#' @returns a logical value, of same length as x
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' inBounds(c(0, 12), 0, includeBounds = FALSE)
-#' inBounds(c(0, 12), 12, includeBounds = TRUE)
-inBounds <- function(bounds, x, includeBounds = FALSE) {
-  if (length(bounds) != 2 || !is.numeric(bounds)) stop("bounds should be a numeric of length 2")
-  if (length(includeBounds) == 1) includeBounds <- rep(includeBounds, 2)
-  if (length(includeBounds) != 2 || !is.logical(includeBounds)) stop("includeBounds should be a logical of length 1 or 2")
-  includeBounds <- 1 * includeBounds + 1
-  res1 <- switch(includeBounds[1],
-                 (x > bounds[1]),
-                 (x >= bounds[1])
-  )
-  res2 <- switch(includeBounds[2],
-                 (x < bounds[2]),
-                 (x <= bounds[2])
-  )
-  res <- (res1 & res2)
-  return(res)
-}
-
-
-
-
 
 #' Compute prior logarithmic density of a matrix
 #'
