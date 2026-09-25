@@ -352,15 +352,16 @@ xPPCrossprod <- function(X,
     stop("To permutate PP to observed values vecchia_approx needs to be provided.")
   }
   if (!is.null(PP)) {
+    if (is.null(vecchia_approx)) {
+      stop("PP provided, vecchia_approx should be provided too")
+    }
     if(!is.null(X)){if ((nrow(X) != nrow(PP$vecchia_locs)) & (!permutate_PP_to_obs)) {
       stop("X should have the same number of rows as locations in vecchia (permutate_PP_to_obs = FALSE)")
     }}
     if(!is.null(X)){if ((nrow(X) != vecchia_approx$n_obs) & (permutate_PP_to_obs)) {
       stop("X should have the same number of rows as observations in vecchia (permutate_PP_to_obs = TRUE)")
     }}
-    if (is.null(vecchia_approx)) {
-      stop("PP provided, vecchia_approx should be provided too")
-    }
+  
     if (vecchia_approx$n_locs != nrow(PP$vecchia_locs)) {
       stop("vecchia_approx should have the same number of locations as the locations of PP")
     }
