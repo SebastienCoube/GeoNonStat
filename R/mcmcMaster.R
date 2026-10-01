@@ -101,9 +101,17 @@ runOneChainMcmc <- function(
           vecchia_approx = vecchia_approx, observed_field = observed_field,
           iter = iter, num_threads = num_threads
         )$field
+        state <- rangeLogScaleS(
+          state = state, hierarchical_model = hierarchical_model, 
+          vecchia_approx = vecchia_approx, range_X = covariates$range_X, 
+          iter = iter, iter_start = iter_start, num_threads = num_threads)
         state$params$range_log_scale <- updateVarPPSuff(
           hm4params = hierarchical_model$range, 
           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
+        state <- rangeLogScaleA(
+          state = state, hierarchical_model = hierarchical_model, 
+          vecchia_approx = vecchia_approx, range_X = covariates$range_X, 
+          iter = iter, iter_start = iter_start, num_threads = num_threads)
         state$params$range_log_scale <- updateVarPPSuff(
           hm4params = hierarchical_model$range, 
           beta4params = state$params$range_beta, current_range_log_scale = state$params$range_log_scale)
