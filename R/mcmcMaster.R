@@ -49,7 +49,7 @@ runOneChainMcmc <- function(
   )
   # settings for MCMC 
   begin_range_update <- 10
-  MALA_range_beta <- 4
+  MALA_range_beta <- 5
   fisher_noise = list(begin_learn = 10, begin_introduce = 20, end_introduce = 30)
   fisher_range = list(begin_learn = begin_range_update, 
                       begin_introduce = begin_range_update + 20, 
@@ -65,8 +65,8 @@ runOneChainMcmc <- function(
     state$params <- res$params
     state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     
-    # Field variance in the first iterations ###############################
-    if (iter + iter_start < 15) {
+    # Field variance ###############################
+    if(iter+ iter_start < begin_range_update + 20){
       state$params$field <- updateLatentField(
         state = state, hierarchical_model = hierarchical_model,
         vecchia_approx = vecchia_approx, observed_field = observed_field,

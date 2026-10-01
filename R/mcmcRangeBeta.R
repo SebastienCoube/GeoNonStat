@@ -4,10 +4,10 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
   # # renewing momenta ####
-  # state$momenta$range_beta_sufficient <-
-  #   renewMomentum(state$momenta$range_beta_sufficient, .9)
-  # state$momenta$field_log_var_sufficient <- 
-  #   renewMomentum(state$momenta$field_log_var_sufficient, .9)
+  state$momenta$range_beta_sufficient <-
+    renewMomentum(state$momenta$range_beta_sufficient, .6)
+  state$momenta$field_log_var_sufficient <-
+    renewMomentum(state$momenta$field_log_var_sufficient, .6)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradS(
@@ -28,9 +28,9 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   for(mala_step in seq(n_MALA)){
     # renewing momenta ####
     state$momenta$range_beta_sufficient <-
-      renewMomentum(state$momenta$range_beta_sufficient, .9)
+      renewMomentum(state$momenta$range_beta_sufficient, .95)
     state$momenta$field_log_var_sufficient <- 
-      renewMomentum(state$momenta$field_log_var_sufficient, .9)
+      renewMomentum(state$momenta$field_log_var_sufficient, .95)
     # proposing new parameters ####
     move_forward <- moveForward(
       current_params= c(state$params$field_log_var, state$params$range_beta),
@@ -132,7 +132,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
         # increasing stepsize if acceptance
         state$ker_var$range_beta_sufficient[1] <- updateKernel(
           iter = iter, iter_start = iter_start,
-          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 4
+          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 3.5
         )
         # updating gradient
         dens_grad[] <- dens_grad_back
@@ -165,10 +165,10 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
   # # renewing momenta ####
-  # state$momenta$range_beta_ancillary =
-  #   renewMomentum(state$momenta$range_beta_ancillary, .9)
-  # state$momenta$field_log_var_ancillary =
-  #   renewMomentum(state$momenta$field_log_var_ancillary, .9)
+  state$momenta$range_beta_ancillary =
+    renewMomentum(state$momenta$range_beta_ancillary, .6)
+  state$momenta$field_log_var_ancillary =
+    renewMomentum(state$momenta$field_log_var_ancillary, .6)
   # initial density gradient ####
   range_reparam_mat <- rangeReparamMat(hierarchical_model)
   dens_grad <- rangeBetaDensGradA(
@@ -192,9 +192,9 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   for(mala_step in seq(n_MALA)){
   # renewing momenta ####
   state$momenta$range_beta_ancillary =
-    renewMomentum(state$momenta$range_beta_ancillary, .9)
+    renewMomentum(state$momenta$range_beta_ancillary, .95)
   state$momenta$field_log_var_ancillary =
-    renewMomentum(state$momenta$field_log_var_ancillary, .9)
+    renewMomentum(state$momenta$field_log_var_ancillary, .95)
   # proposing new parameters ####
   move_forward <- moveForward(
     current_params = c(state$params$field_log_var, state$params$range_beta),
@@ -303,7 +303,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 4
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 3.5
       )
       # updating gradient 
       dens_grad[] <- dens_grad_back[]
@@ -359,17 +359,18 @@ rangeReparamMat <- function(hierarchical_model){
 
 #' Default Fisher information matrix for range beta and field log var
 priorFisherRange <- function(range_X, hierarchical_model, type){
-  if(type=="sufficient")cross_fisher_mult <- -.5
-  if(type=="ancillary")cross_fisher_mult <-   0
-  fisher_var_factor <- .1
-  # Prior Fisher information is XTX like in OLS
-  res <- Matrix::bdiag(
-    range_X$crossprod_X[1,1] * fisher_var_factor, 
-    (diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% range_X$crossprod_X)
-  )
-  res[1,-1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
-  res[-1,1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
-  res
+  # if(type=="sufficient")cross_fisher_mult <- -.5
+  # if(type=="ancillary")cross_fisher_mult <-   0
+  # fisher_var_factor <- .001
+  # # Prior Fisher information is XTX like in OLS
+  # res <- Matrix::bdiag(
+  #   range_X$crossprod_X[1,1] * fisher_var_factor, 
+  #   (diag(rep(1, 1 + 2*hierarchical_model$anisotropic)) %x% range_X$crossprod_X)
+  # )
+  # res[1,-1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
+  # res[-1,1] <- cross_fisher_mult * res[2, -1]*sqrt(fisher_var_factor)
+  # res
+  diag(rep(1, 1 + (1 + 2*hierarchical_model$anisotropic) * ncol(range_X$crossprod_X)))
 }
 
 #' Gradient of the posterior density of the range and field log variance

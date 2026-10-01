@@ -35,7 +35,7 @@ coeff_list = createGnsSimulatorParameters(
   field_log_var = field_log_var)
 coeff_list$range_X_coeff[] = 0
 #coeff_list$range_PP_coeff[] = 0
-coeff_list$range_X_coeff[1,1] = -5
+coeff_list$range_X_coeff[1,1] = -3.5
 coeff_list$noise_X_coeff[-1] = .1*rnorm(4)
 set.seed(2)
 fake_data = simulateGnsData(gns_simulator = gns_simulator, gns_params = coeff_list)
@@ -139,7 +139,7 @@ tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .1)
+MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .2)
 
 # prediction
 # new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 

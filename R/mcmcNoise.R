@@ -106,7 +106,7 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
   #cond_mat <- noise_X$t_chol_solve_crossprod_X
   fisher_record <- list(dens_grad = NULL, dens_grad_back = NULL, ratio = NULL)
   cond_mat <-
-    condMat(prior_fisher =noise_X$crossprod_X,
+    condMat(prior_fisher = diag(rep(1, ncol(noise_X$crossprod_X))),
             iter_start = iter_start, iter = iter,
             empirical_fisher = state$stuff$noise_beta_empirical_fisher, 
             end = fisher$end_introduce, begin = fisher$begin_introduce)
