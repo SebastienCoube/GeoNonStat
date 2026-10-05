@@ -207,33 +207,74 @@ splitSummary <- function(list_locs) {
 #'                  "test" = list(locs=locs[1901:2000,]))
 #' plotSplit(locslist)
 plotSplit <- function(list_locs,
-                      pch = 16,
-                      cex_train = 1,
-                      cex_discarded = 1,
-                      cex_close = .5,
-                      cex_far = .5,
-                      col_train = "gray", 
-                      col_discarded = "blue",
-                      col_close = "orange",
-                      col_far = "red", 
+                      col = c("gray", "red", "orange", "blue"),
+                      cex = c(1, .5, .5, 1),
+                      pch = list(".", 15, 15, "."),
                       legend_position = "topleft") {
   if(!is.list(list_locs)) stop("list_locs should be a list")
-  trainlocs = unique(list_locs$train$locs)
-  discardedlocs = unique(list_locs$discarded$locs)
-  closelocs = unique(list_locs$test_close$locs)
-  farlocs = unique(list_locs$test_far$locs)
-  plot(rbind(
-    trainlocs,
-    discardedlocs,
-    closelocs,
-    farlocs
-  ), type = "n", xlab ="", ylab ="")
-  points(trainlocs, col = col_train, pch = ".", cex = cex_train)
-  points(discardedlocs, col = col_discarded, pch = ".", cex = cex_discarded)
-  points(farlocs, col = col_far, pch = 15, cex = cex_far)
-  points(closelocs, col = col_close, pch = 15, cex = cex_close)
-  legend(legend_position, legend = c("train", "discarded", "test far", "test close"),
-         fill = c(col_train, col_discarded, col_close, col_far))
+  if("info" %in% names(list_locs)) list_locs[["info"]] <- NULL
+  if(!all(sapply(list_locs, function(x) "locs" %in% names(x))))
+    stop("Except info, all list_locs entries should have a 'locs' element")
+  list_locs <- lapply(list_locs, function(x) x[["locs"]])
+  nblist <- length(list_locs)
+  nameslocs <- names(list_locs)
+  
+  replaceparam <- function(arg, user, is_missing) {
+    def <- eval(formals(plotSplit)[[arg]])
+    out <- rep_len(def, nblist)
+    names(out) <- nameslocs
+      if (is.null(names(user))) { # unnammed -> recycled.
+        out <- rep_len(user, nblist)
+        names(out) <- nameslocs
+      } else { # named -> replaced
+        for (k in intersect(names(user), nameslocs)) 
+          out[[k]] <- user[[k]]
+      }
+    out
+  }
+  col <- replaceparam("col", col, missing(col))
+  cex <- replaceparam("cex", cex, missing(cex))
+  pch <- replaceparam("pch", pch, missing(pch))
+  
+  lims <- sapply(list_locs, function(m) apply(m, 2, range))
+  xlim <- range(lims[1:2, ])
+  ylim <- range(lims[3:4, ])
+  
+  xlab <- "locs[,1]"
+  ylab <- "locs[,2]"
+  if (!is.null(colnames(list_locs[[1]]))) {
+    xlab <- colnames(list_locs[[1]])[1]
+    ylab <- colnames(list_locs[[1]])[2]
+  }
+  
+  def.par <- par(no.readonly = TRUE)
+  if(def.par$mar[3]<=3) {
+    par(mar = def.par$mar + c(0, 0, 3-def.par$mar[3], 0), xpd = NA)
+  }
+  
+  plot(NA, xlim = xlim, ylim = ylim, xlab = xlab, ylab = ylab)
+  
+  for (k in nameslocs)
+    points(list_locs[[k]], col = col[[k]], pch = pch[[k]], cex = cex[[k]])
+  
+
+  if (!is.null(names(list_locs))) {
+    legend_labels <- nameslocs
+    u <- par("usr")
+    legend(
+      x = u[1],
+      y = u[4],
+      legend = legend_labels,
+      y.intersp = 1,
+      yjust=0,
+      xpd = NA,
+      ncol = 2,
+      fill=col,
+      horiz = FALSE,
+      bty = "n"
+    )
+  }
+  par(def.par)
 }
   
 
@@ -249,6 +290,7 @@ plotSplit <- function(list_locs,
 #' For "far" validation, the proportion is the proportion of spatial clusters. 
 #' Default to 0.01. Can be of length 2 to change proportions between far 
 #' and close test locations (far first, then close)
+#' @param round_locs numeric, default to 0. rounding factor for locations coordinates. 
 #' @export
 #'
 #' @examples
@@ -281,7 +323,7 @@ splitData <- function(locs, data,
     c(idx_close$n_locs_test,       idx_close$n_obs_test),
     c(idx_far$n_locs_discarded,    idx_far$n_obs_discarded))
   info = rbind(info, apply(info, 2, sum))
-  row.names(info) = c("train", "far", "close", "discarded", "total")
+  row.names(info) = c("train", "test_far", "test_close", "discarded", "total")
   colnames(info) = c("spatial locations", "observations")
   output <- list(
     "train" = c(
