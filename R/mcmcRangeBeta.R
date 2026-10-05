@@ -132,7 +132,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
         # increasing stepsize if acceptance
         state$ker_var$range_beta_sufficient[1] <- updateKernel(
           iter = iter, iter_start = iter_start,
-          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 3.5
+          kernel_value = state$ker_var$range_beta_sufficient[1], mult = 5
         )
         # updating gradient
         dens_grad[] <- dens_grad_back
@@ -303,7 +303,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
       # increasing stepsize if acceptance
       state$ker_var$range_beta_ancillary[1] <- updateKernel(
         iter = iter, iter_start = iter_start,
-        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 3.5
+        kernel_value = state$ker_var$range_beta_ancillary[1], mult = 5
       )
       # updating gradient 
       dens_grad[] <- dens_grad_back[]

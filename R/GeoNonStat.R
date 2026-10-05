@@ -636,7 +636,7 @@ processStates <- function(hm,
       range_X = covariates$range_X,
       PP = hm$range$PP
     )),
-    num_threads = min(5, max(parallel::detectCores() - 1, 1)),
+    num_threads = min(parallel::detectCores()-2, 5),
     locs = vecchia_approx$t_locs,
     NNarray = vecchia_approx$NNarray,
     compute_derivative = TRUE,

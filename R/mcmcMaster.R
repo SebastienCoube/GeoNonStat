@@ -49,7 +49,7 @@ runOneChainMcmc <- function(
   )
   # settings for MCMC 
   begin_range_update <- 10
-  MALA_range_beta <- 5
+  MALA_range_beta <- 6
   fisher_noise = list(begin_learn = 10, begin_introduce = 20, end_introduce = 30)
   fisher_range = list(begin_learn = begin_range_update, 
                       begin_introduce = begin_range_update + 20, 
@@ -66,15 +66,15 @@ runOneChainMcmc <- function(
     state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     
     # Field variance ###############################
-    if(iter+ iter_start < begin_range_update + 20){
-      state$params$field <- updateLatentField(
-        state = state, hierarchical_model = hierarchical_model,
-        vecchia_approx = vecchia_approx, observed_field = observed_field,
-        iter = iter, num_threads = num_threads
-      )$field
-      state <- updateFieldLogVarS(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-      state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-    }
+    # if(iter+ iter_start < begin_range_update + 20){
+    #   state$params$field <- updateLatentField(
+    #     state = state, hierarchical_model = hierarchical_model,
+    #     vecchia_approx = vecchia_approx, observed_field = observed_field,
+    #     iter = iter, num_threads = num_threads
+    #   )$field
+    #   state <- updateFieldLogVarS(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    #   state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    # }
     # Range beta ###############################
     if (iter + iter_start > begin_range_update) {
       state$params$field <- updateLatentField(
