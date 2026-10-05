@@ -107,24 +107,72 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #'
 #' @examples
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = 0.2) {
+estimate <- function(object, burn_in = 0.3) {
+  summaries <- list()
+  scores <- list()
+  scores$per_obs <- matrix(0, 4, object$vecchia_approx$n_obs)
+  # getting MCMC samples
   samples <- aggregateRecords(object$records, burn_in = burn_in, keep ="all")
-  samples$field <- samples$field[, object$vecchia_approx$locs_match]
-  samples$fixed_effects <- as.matrix(samples$beta %*% t(object$covariates$X$X))
-  samples$denoised <- samples$field + samples$fixed_effects
-  samples$noise_log_var <- samples$denoised
-  # TODO tenter de paralleliser avec future. 
-  for(i in seq_len(nrow(samples$noise_beta))){
-    samples$noise_log_var[i,] <- log(noiseVar(
-      X = object$covariates$noise_X$X, 
-      PP = object$hierarchical_model$noise$PP, 
-      vecchia_approx = object$vecchia_approx, 
-      noise_beta = samples$noise_beta[i,]))
+  # getting samples of noise PP at unique locations
+  if(!is.null(object$hierarchical_model$noise$PP)){
+    samples$noise_PP <- samples$field
+    for(i in seq_len(nrow(samples$noise_beta))){
+      samples$noise_PP[i,] <- xPPMultRight(
+        X = NULL, vecchia_approx = object$vecchia_approx, 
+        PP = object$hierarchical_model$noise$PP, 
+        Y = t(samples$noise_beta[i, -seq(object$covariates$noise_X$n_regressors),drop=F]),
+        permutate_PP_to_obs = F
+      )
+    }
+    gc()
+  }
+  # getting summaries of MCMC samples
+  summaries$hyperparameters <- lapply(samples, summarizeRecords)
+  summaries$at_unique_locs <- list()
+  summaries$at_unique_locs$field <- summaries$hyperparameters$field; summaries$hyperparameters$field <- NULL
+  if(!is.null(object$hierarchical_model$noise$PP)){
+    summaries$at_unique_locs$noise_PP <- summaries$hyperparameters$noise_PP; summaries$hyperparameters$noise_PP <- NULL
   }
   
-  summaries <- list()
-  for(name in names(samples)) summaries[[name]] <- summarizeRecords(samples[[name]])
-  return(list(samples = samples, summaries = summaries))
+  # working on observed locations
+  summaries$at_observed_locs <- list()
+  summaries$at_observed_locs$field <- summaries$at_unique_locs$field[,object$vecchia_approx$locs_match]
+  # initializing summaries at observed locs
+  summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
+  summaries$at_observed_locs$noise_log_var <- summaries$at_observed_locs$field
+  # computing over chunks to avoid RAM filling
+  chunk_size <- 10000
+  chunks <- split(
+    seq_len(object$vecchia_approx$n_obs), 
+    seq_len(object$vecchia_approx$n_obs)%/%chunk_size)
+  for(chunk in chunks){
+    fixed_effect_sample <- samples$beta %*% t(object$covariates$X$X[chunk,])
+    latent_field_sample <- samples$field[,object$vecchia_approx$locs_match[chunk]]
+    field_and_fixed_sample <- fixed_effect_sample + latent_field_sample
+    log_noise_variance_sample <-
+      samples$noise_beta[,seq(object$covariates$noise_X$n_regressors)] %*%
+      t(object$covariates$noise_X$X[chunk,])
+    if(!is.null(object$hierarchical_model$noise$PP)){
+      log_noise_variance_sample <-
+        log_noise_variance_sample +
+        samples$noise_PP[,object$vecchia_approx$locs_match[chunk]]
+    }
+    summaries$at_observed_locs$field_and_fixed[,chunk] <-
+      summarizeRecords(field_and_fixed_sample)
+    summaries$at_observed_locs$noise_log_var[,chunk] <-
+      summarizeRecords(log_noise_variance_sample)
+    chunk_scores <- t(allScores(
+      true_y = object$observed_field[chunk], 
+      mean_samples = t(field_and_fixed_sample), 
+      sd_samples = t(exp(.5 * log_noise_variance_sample))
+    )$scores_per_obs)
+    scores$per_obs[,chunk] <- chunk_scores
+  }
+  row.names(scores$per_obs) <- row.names(chunk_scores)
+  scores$aggregated <- apply(scores$per_obs, 1, mean)
+  gc()
+
+  return(list(summaries = summaries, scores = scores))
 }
 
 

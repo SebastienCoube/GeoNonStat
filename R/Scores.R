@@ -73,90 +73,6 @@ allScores <- function(true_y, mean_samples, sd_samples) {
   return(res)
 }
 
-
-
-
-#' Model scoring for train data
-#'
-#' @param object a GeoNonStat object
-#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
-#' first records that should be removed. Default to 0.1
-#'
-#' @description
-#' Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
-#' the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
-#' the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
-#' and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
-#' Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-#' @export
-#' 
-#' @examples
-#' trainScores(processedGnsDemo)
-trainScores <- function(object, burn_in){
-  estimates <- estimate(object)
-  allScores(
-    true_y = object$observed_field, 
-    mean_samples = t(estimates$samples$denoised), 
-    sd_samples = t(exp(.5*estimates$samples$noise_log_var)))
-}
-
-#' Model scoring for test data
-#'
-#' @param object a GeoNonStat object
-#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
-#' first records that should be removed. Default to 0.1
-#' @param test_datalist TODO 
-#' @param num_threads numeric TODO
-#'
-#' @description
-#' Several scores are implemented: the \href{https://en.wikipedia.org/wiki/Coverage_probability}{Coverage by 95\% intervals},
-#' the \href{https://en.wikipedia.org/wiki/Scoring_rule#Examples_of_proper_scoring_rules}{Continuous ranked probability score} (CRPS),
-#' the \href{https://arxiv.org/abs/1507.04544}{Empirical log Predictive Pointwise Density} (ELPPD),
-#' and the \href{https://en.wikipedia.org/wiki/Mean_squared_error}{Mean Squared Error} (MSE).
-#' Train scores are computed from a GeoNonStat object, while test scores are computed from a prediction and a vector of test observations.
-#' @export
-#'  
-#' @examples
-#' # Recreating new data with less observations but same structure as example data
-#' locs <- cbind(rnorm(200), rnorm(200))
-#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
-#' colnames(X) <- paste0("V", 1:4)
-#' Yobs <- rnorm(200)
-#' testdata <- list("locs" = locs, 
-#'                  "X" = X, 
-#'                  noise_X=X,
-#'                  observed_field=Yobs)  
-#' testScores(processedGnsDemo, test_datalist=testdata)
-testScores <- function(object, 
-                       burn_in = 0.1, 
-                       test_datalist,
-                       num_threads=5){
-  
-  # getting elements
-  if(!("observed_field" %in% names(test_datalist))) {
-    stop("test_datalist should have a 'observed_field' element.")
-  }
-  test_observed_field <- test_datalist$observed_field
-  if(!("locs" %in% names(test_datalist))) {
-    stop("test_datalist should have a 'locs' element.")
-  }
-  test_locs <- test_datalist$locs
-  
-  test_X <- test_noise_X <- test_range_X <- NULL
-  if("X" %in% names(test_datalist))  test_X <- test_datalist$X
-  if("range_X" %in% names(test_datalist))  test_range_X <- test_datalist$range_X
-  if("noise_X" %in% names(test_datalist))  test_noise_X <- test_datalist$noise_X
-  
-  prediction <- predict.GeoNonStat(
-    object = object, new_data_list=test_datalist, burn_in = burn_in, 
-    num_threads = num_threads)
-  allScores(
-    true_y = test_observed_field, 
-    mean_samples = t(prediction$samples$denoised), 
-    sd_samples = t(exp(.5*prediction$samples$noise_log_var)))
-}
-  
-
 #' @title Find scattered spatial locations for train-test partition
 #' @description A max-min heuristic is used to scatter the test locations across space,
 #'  so that test locations are independent-ish from each other, and surrounded
@@ -198,7 +114,6 @@ getIndexesClose <- function(locs, prop_test = 0.1) {
     "n_obs_train" = length(idx_train)   
   ))
 }
-
 
 #' Find scattered spatial locations for train-test partition and remove
 #' train locations who are too close to test locations in order to assess long
@@ -253,7 +168,6 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
     "n_locs_discarded" =  length(discarded)
   ))
 }
-
 
 #' Plot the summary of a data split
 #'
