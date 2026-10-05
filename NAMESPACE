@@ -105,6 +105,12 @@ importFrom(graphics,
   points,
   text
 )
+importFrom(matrixStats,
+  colMeans2,
+  colQuantiles,
+  colSds,
+  rowQuantiles
+)
 importFrom(methods,
   as,
   new
