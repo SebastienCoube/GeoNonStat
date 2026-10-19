@@ -41,19 +41,15 @@ Run the MCMC on a `GeoNonStat` object, but will stop automatically if required c
 The MCMC is run using [future::plan()].
 
 \preformatted{
- if (n_chains_in_parallel == 1) {
-   # For no parallelisation
+   # For no parallelisation use :
    future::plan(future::sequential)
- } else {
    # For multisession or multicore (prefered):
    if (parallelly::supportsMulticore()) {
      future::plan(future::multicore, workers = n_chains_in_parallel)
-   } else {
      future::plan(future::multisession, workers = n_chains_in_parallel)
    }
- }
-}
 You can see `?future::plan` to define your plan more precisely.
+}
 }
 \examples{
 \dontrun{

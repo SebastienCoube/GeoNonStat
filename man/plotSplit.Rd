@@ -4,20 +4,26 @@
 \alias{plotSplit}
 \title{Plot the locations of a data split}
 \usage{
-plotSplit(list_locs, pch = c(16, 16), cex = c(0.3, 1), col = c("black", "red"))
+plotSplit(
+  list_locs,
+  col = c("gray", "red", "orange", "blue"),
+  cex = c(1, 0.5, 0.5, 1),
+  pch = list(".", 15, 15, "."),
+  legend_position = "topleft"
+)
 }
 \arguments{
 \item{list_locs}{a list of length n, each entries having a 'locs' component
 that should be a matrix (or data.frame or array) with 2 columns containing
 spatial locations}
 
-\item{pch}{a vector of pch for points shape of length 1 (will be repeated) or n. 
-Passed to `plot`}
+\item{col}{a vector for points color of length n. Passed to `plot`}
 
 \item{cex}{a numeric vector for points size of length 1 (will be repeated) or n. 
 Passed to `plot`}
 
-\item{col}{a vector for points color of length n. Passed to `plot`}
+\item{pch}{a vector of pch for points shape of length 1 (will be repeated) or n. 
+Passed to `plot`}
 }
 \value{
 a plot

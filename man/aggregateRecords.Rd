@@ -30,6 +30,6 @@ aggregated over the iterations.
 Aggregate records of a GeoNonStat object, for 1 chain
 }
 \examples{
-GeoNonStat::aggregateRecords(processedGnsDemo$records)
+aggregateRecords(processedGnsDemo$records)
 }
 \keyword{internal}

@@ -4,11 +4,7 @@
 \alias{estimate}
 \title{Estimation of the model parameters using the MCMC records of a GeoNonStat object.}
 \usage{
-<<<<<<< HEAD
-estimate(object, burn_in = 0.2)
-=======
-estimate(object, burn_in = 0.3, keep = "all")
->>>>>>> 6e2bb64 (Some doc)
+estimate(object, burn_in = 0.3)
 }
 \arguments{
 \item{object}{a GeoNonStat object containing records}
