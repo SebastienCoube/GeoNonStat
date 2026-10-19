@@ -151,11 +151,12 @@ extendCovariate <- function(
   )
 }
 
+
 # TODO a paralleliser  (noise semble déjà marcher ??)
 #' Predict a 'GeoNonStat' object on new locations
 #'
 #' @param object an object of class \code{GeoNonStat}
-#' @param new_data_list a list of new data. The list should have 
+#' @param data_list_pred a list of new data. The list should have 
 #' a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
 #' a 'X' entry, for new covariates
 #' a 'noise_X' entry (optional) for new X noise parameters
@@ -173,10 +174,10 @@ extendCovariate <- function(
 #' X <- data.frame(matrix(rnorm(200*4), ncol=4))
 #' colnames(X) <- paste0("V", 1:4)
 #' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
-#' predict(processedGnsDemo, new_data_list=testdata)
+#' predict(processedGnsDemo, data_list_pred=testdata)
 predict.GeoNonStat <-  function(
     object, 
-    new_data_list,
+    new_data_lists,
     burn_in=0.2, 
     num_threads = 5,
     ...
@@ -188,18 +189,22 @@ predict.GeoNonStat <-  function(
                 "',\ntry again after a call to ",
                 "'GeoNonStatMcmc' or 'automaticMcmc' function"))
   }
+
+  # merging data lists #### 
+  data_list_idx <- rep(seq_len(length(new_data_lists)), sapply(new_data_lists, function(x)nrow(x$locs)))
+  data_list_pred <- rbind_by_name(new_data_lists)
   
   # setup ########
   samples <- list()
   # getting elements
-  if(!("locs" %in% names(new_data_list))) {
-    stop("new_data_list should have a 'locs' element.")
+  if(!("locs" %in% names(data_list_pred))) {
+    stop("data_list_pred should have a 'locs' element.")
   }
-  new_locs <- new_data_list$locs
+  new_locs <- data_list_pred$locs
   new_X <- new_noise_X <- new_range_X <- NULL
-  if("X" %in% names(new_data_list))  new_X <- new_data_list$X
-  if("range_X" %in% names(new_data_list))  new_range_X <- new_data_list$range_X
-  if("noise_X" %in% names(new_data_list))  new_noise_X <- new_data_list$noise_X
+  if("X" %in% names(data_list_pred))  new_X <- data_list_pred$X
+  if("range_X" %in% names(data_list_pred))  new_range_X <- data_list_pred$range_X
+  if("noise_X" %in% names(data_list_pred))  new_noise_X <- data_list_pred$noise_X
   
   # extending Vecchia approx and new PP
   extended_vecchia_approx <- extendVecchia(object$vecchia_approx, new_locs)
@@ -216,6 +221,7 @@ predict.GeoNonStat <-  function(
     new_X_name = "new_range_X", existing_covariate = object$covariates$range_X,
     one_obs_per_locs = T,
     extended_vecchia_approx = extended_vecchia_approx)
+  remove(extended_PP_noise); remove(extended_PP_range); gc()
   # relevant MCMC samples
   records <- aggregateRecords(
     object$records, 

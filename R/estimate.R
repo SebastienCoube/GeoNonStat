@@ -37,7 +37,7 @@ aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_
   res = list()
   
   params_to_aggregate <- names(records[[1]][[1]])
-  if(keep[1] == "nofield") keep <- setdiff(params_to_aggregate, "field")
+  if(keep[1] == "nofield") keep <- setdiff(params_to_aggregate, c("field",  "field_whitened"))
   if(keep[1] == "all") keep <- names(records[[1]][[1]])
   params_to_aggregate <- intersect(keep, params_to_aggregate)
   # putting log scales at end
@@ -113,6 +113,7 @@ estimate <- function(object, burn_in = 0.3) {
   scores$per_obs <- matrix(0, 4, object$vecchia_approx$n_obs)
   # getting MCMC samples
   samples <- aggregateRecords(object$records, burn_in = burn_in, keep ="all")
+  samples$field_whitened <- NULL; gc()
   # getting samples of noise PP at unique locations
   if(!is.null(object$hierarchical_model$noise$PP)){
     samples$noise_PP <- samples$field
@@ -139,6 +140,7 @@ estimate <- function(object, burn_in = 0.3) {
   summaries$at_observed_locs$field <- summaries$at_unique_locs$field[,object$vecchia_approx$locs_match]
   # initializing summaries at observed locs
   summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
+  summaries$at_observed_locs$fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$noise_log_var <- summaries$at_observed_locs$field
   # computing over chunks to avoid RAM filling
   chunk_size <- 10000
@@ -146,12 +148,12 @@ estimate <- function(object, burn_in = 0.3) {
     seq_len(object$vecchia_approx$n_obs), 
     seq_len(object$vecchia_approx$n_obs)%/%chunk_size)
   for(chunk in chunks){
-    fixed_effect_sample <- samples$beta %*% t(object$covariates$X$X[chunk,])
+    fixed_effect_sample <- samples$beta %*% as.matrix(t(object$covariates$X$X[chunk,,drop=F]))
     latent_field_sample <- samples$field[,object$vecchia_approx$locs_match[chunk]]
     field_and_fixed_sample <- fixed_effect_sample + latent_field_sample
     log_noise_variance_sample <-
       samples$noise_beta[,seq(object$covariates$noise_X$n_regressors)] %*%
-      t(object$covariates$noise_X$X[chunk,])
+      as.matrix(t(object$covariates$noise_X$X[chunk,,drop=F]))
     if(!is.null(object$hierarchical_model$noise$PP)){
       log_noise_variance_sample <-
         log_noise_variance_sample +
@@ -159,6 +161,8 @@ estimate <- function(object, burn_in = 0.3) {
     }
     summaries$at_observed_locs$field_and_fixed[,chunk] <-
       summarizeRecords(field_and_fixed_sample)
+    summaries$at_observed_locs$fixed[,chunk] <-
+      summarizeRecords(fixed_effect_sample)
     summaries$at_observed_locs$noise_log_var[,chunk] <-
       summarizeRecords(log_noise_variance_sample)
     chunk_scores <- t(allScores(

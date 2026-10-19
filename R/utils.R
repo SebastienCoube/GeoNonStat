@@ -173,7 +173,7 @@ computeLogRange <- function(range_beta,
     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }
 
-  log_range <- as.matrix(
+  log_range <- #as.matrix(
     xPPMultRight(
       vecchia_approx = vecchia_approx,
       X = range_X$X_locs,
@@ -181,7 +181,7 @@ computeLogRange <- function(range_beta,
       Y = Y,
       permutate_PP_to_obs = FALSE
     )
-  )
+  #)
   return(log_range)
 }
 

@@ -556,14 +556,14 @@ testGradientRangeBetaS <- function(
     )
     sparse_chol_grad_test@x <- compressed_chol_grad_test[,,1][vecchia_approx$sparse_chol_x_reorder]
     
-    test_dens <- rangeBetaDensS(
-      field_log_var = field_log_var_grad_test, range_beta = range_beta_grad_test, # changed
-      compressed_chol = compressed_chol_grad_test, # changed
-      sparse_chol = sparse_chol_grad_test, # changed
-      range_log_scale = state$params$range_log_scale, field = state$params$field,
-      noise_var = state$stuff$noise_var,
-      hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
-    empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
+    # test_dens <- rangeBetaDensS(
+    #   field_log_var = field_log_var_grad_test, range_beta = range_beta_grad_test, # changed
+    #   compressed_chol = compressed_chol_grad_test, # changed
+    #   sparse_chol = sparse_chol_grad_test, # changed
+    #   range_log_scale = state$params$range_log_scale, field = state$params$field,
+    #   noise_var = state$stuff$noise_var,
+    #   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
+    # empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
   }
   plot(grad_to_test, empirical_grad,  main  = "sufficient")
   abline(a=0, b=1)

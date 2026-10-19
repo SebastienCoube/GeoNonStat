@@ -122,7 +122,7 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, 
-  n_threads_per_chain = 7, n_iterations = 300)
+  n_threads_per_chain = 7, n_iterations = 100)
 
 tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .0)
@@ -139,106 +139,32 @@ tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
 tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-MCMC_diags = mcmcDiags(geo_non_stat, burn_in = .2)
+MCMC_diags = mcmcDiags(object = geo_non_stat, burn_in = .5)
 
-# prediction
-# new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 
-# new_locs = rbind(new_locs, new_locs[rev(seq_len(nrow(new_locs))),])
-# extended_vecchia_approx = extendVecchia(vecchia_approx, new_locs)
-# 
-# # prediction of 1 log - noise variance realization
-# extended_PP_noise = extendPP(
-#   PP = PP_noise, 
-#   extended_vecchia_approx = extended_vecchia_approx)
-# noise_beta = geo_non_stat$states$chain_1$params$noise_beta
-# 
-# predicted_noise = predict1Noise(
-#   noise_beta, 
-#   extended_PP_noise = extended_PP_noise, 
-#   extended_vecchia_approx, 
-#   new_noise_X = matrix(1, nrow(new_locs)))
-# 
-# par(mfrow = c(2,3))
-# 
-# 
- plotPointillistPainting(
-   vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field, 
-   main = "true log noise var", pch = 16, cex=  1)
  
- plotPointillistPainting(
-   vecchia_approx$observed_locs, 
-   log(geo_non_stat$states$chain_1$stuff$noise_var), 
-   main = "sampled log noise var", pch = 16, cex=  1)
- 
-# plotPointillistPainting(
-#   extended_vecchia_approx$new_locs, predicted_noise, 
-#   main = "predicted log noise variance")
-# 
-# 
-# # prediction of 1 realization of the latent field + range field
-# 
-# 
-# range_beta = geo_non_stat$states$chain_1$params$range_beta
-# extended_PP_range = extendPP(
-#   PP = PP_range, 
-#   extended_vecchia_approx = extended_vecchia_approx)
-# complete_range_X_locs = list(X_locs = matrix(1, extended_vecchia_approx$n_locs))
-# field = geo_non_stat$states$chain_1$params$field
-# 
-# predicted_field = predict1Field(
-#   range_beta = range_beta, field = field, 
-#   extended_PP_range = extended_PP_range, 
-#   extended_vecchia_approx, 
-#   complete_range_X_locs, geo_non_stat$hierarchical_model, 
-#   num_threads = 8)
-# 
-# plotPointillistPainting(vecchia_approx$locs, fake_data$latent_field, main = "true latent field", pch = 16, cex=  1)
-# plotPointillistPainting(vecchia_approx$locs, field, main = "sampled latent field", pch = 16, cex=  1)
-# plotPointillistPainting(
-#   extended_vecchia_approx$new_locs, 
-#   predicted_field$field, 
-#   main = "predicted latent field")
-# 
-# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,1], main = "true log range", pch = 16, cex=  1)
-# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,1], main = "predicted log range")
-# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,2], main = "true log aniso 1", pch = 16, cex=  1)
-# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,2], main = "predicted log aniso 1")
-# plotPointillistPainting(vecchia_approx$locs, fake_data$log_range_field[,3], main = "true log aniso 2", pch = 16, cex=  1)
-# plotPointillistPainting(extended_vecchia_approx$new_locs, predicted_field$log_range[,3], main = "predicted log aniso 2")
-
-estimates <- estimate(object = geo_non_stat)
-plot(estimates$summaries$beta["mean",], coeff_list$X_coeff); abline(a=0, b=1)
-
-plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex= 1, pch= 15)
-plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$field[1,], cex= 1, pch= 15)
-plot(fake_data$hidden_fields$latent_field[vecchia_approx$locs_match], estimates$summaries$field[1,], xlab = "true latent field", ylab = "estimated latent field");abline(a=0, b=1)
-
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$latent_field[vecchia_approx$locs_match] + fake_data$hidden_fields$fixed_effects, cex= 1, pch= 15)
-plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$denoised[1,], cex= 1, pch= 15)
-plot(fake_data$hidden_fields$latent_field[vecchia_approx$locs_match] + fake_data$hidden_fields$fixed_effects, 
-     estimates$summaries$denoised[1,], xlab = "true denoised field", ylab = "estimated denoised field")
-abline(a=0, b=1)
-
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field)
-plotPointillistPainting(vecchia_approx$observed_locs, estimates$summaries$noise_log_var[1,])
-plot(fake_data$hidden_fields$log_noise_var_field, estimates$summaries$noise_log_var[1,], xlab = "true log noise variance", ylab = "estimated log noise variance");abline(a=0, b=1)
 
 
-new_locs = as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01))) 
-new_locs = rbind(new_locs, new_locs[rev(seq_len(nrow(new_locs))),])
-new_locs = rbind(new_locs, observed_locs[seq(100),])
-new_X = as.data.frame(
+estimation <- estimate(object = geo_non_stat)
+
+estimation$scores$aggregated
+
+plotPointillistPainting(geo_non_stat$vecchia_approx$locs, estimation$summaries$at_unique_locs$field[1,])
+plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field)
+plotPointillistPainting(fake_data$observed$locs, fake_data$observed$observed_field)
+
+new_locs <- as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01)))
+new_X <- as.data.frame(
   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
-              rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+        rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
 
-new_noise_X = new_X
-new_range_X = NULL
+
+new_data_lists <- list(prediction_grid = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X))
+
 burn_in = .3
 num_threads = 5
 
-prediction <- predict.GeoNonStat(
-  object = geo_non_stat, new_locs = new_locs, new_X = new_X, 
-  new_noise_X = new_X, num_threads = 5, new_range_X = NULL, burn_in = .2
+prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
+  object = geo_non_stat, num_threads = 5, burn_in = .2
 )
 
 # plotting latent field predictions

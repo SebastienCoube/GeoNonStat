@@ -705,7 +705,6 @@ processStates <- function(hm,
   # Latent field ###############################################################
   params$field <- c(exp(.5 * params$field_log_var)) *
     as.matrix(Matrix::solve(stuff$sparse_chol, rnorm(vecchia_approx$n_locs)))
-
   return(list(
     "params" = params,
     # parameters of interest to the model

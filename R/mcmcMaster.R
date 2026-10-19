@@ -65,15 +65,17 @@ runOneChainMcmc <- function(
     state$params <- res$params
     state$stuff$lm_fit <- res$stuff$lm_fit; state$stuff$lm_residuals <- res$stuff$lm_residuals
     
-    # Field variance ###############################
-    # if(iter+ iter_start < begin_range_update + 20){
-    #   state$params$field <- updateLatentField(
-    #     state = state, hierarchical_model = hierarchical_model,
-    #     vecchia_approx = vecchia_approx, observed_field = observed_field,
-    #     iter = iter, num_threads = num_threads
-    #   )$field
-    #   state <- updateFieldLogVarS(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
-    #   state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    # # Field variance ###############################
+    # if(iter+ iter_start > 100){
+    #   for(repp in seq(4)){
+    #     state$params$field <- updateLatentField(
+    #       state = state, hierarchical_model = hierarchical_model,
+    #       vecchia_approx = vecchia_approx, observed_field = observed_field,
+    #       iter = iter, num_threads = num_threads
+    #     )$field
+    #     state <- updateFieldLogVarS(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    #     state <- updateFieldLogVarA(state, hierarchical_model$scale, vecchia_approx, iter, iter_start)
+    #   }
     # }
     # Range beta ###############################
     if (iter + iter_start > begin_range_update) {
@@ -272,7 +274,9 @@ automaticMcmc <- function(
     satisfying_Gelman_Rubin = 1.1, 
     iter_per_step = 500,
     burn_in = .3, 
-    verbose = T
+    verbose = T,
+    save_checkpoint_model = NULL, 
+    save_checkpoint_plots = NULL
 ){
   satisfying_ESS <- max(satisfying_ESS, 0)
   satisfying_Gelman_Rubin <- max(satisfying_Gelman_Rubin, 1.01)
@@ -296,9 +300,12 @@ automaticMcmc <- function(
       verbose=FALSE
     )
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
-    tracePlots(object, 0)
+    if(!is.null(save_checkpoint_plots))pdf(save_checkpoint_plots)
+      tracePlots(object, 0)
+    if(!is.null(save_checkpoint_plots))dev.off()
     worst_gr <- mcmc_diags$worst$value[match("Point.est..Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
+    if(!is.null(save_checkpoint_model)){saveRDS(object, save_checkpoint_model)}
   }
   cat(paste("Stopping at", mcmcCount(object), "iterations, worst Gelman Rubin R-hat =", 
                 worst_gr, ", worst ESS =", worst_ess))
