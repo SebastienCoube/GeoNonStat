@@ -42,9 +42,6 @@ test_that("naiveGreedyColoring produce expected results", {
   )
 })
 
-test_that("decompressChol produce expected results", {
-  # TODO
-})
 
 test_that("expmat produce expected output", {
   coords <- c(1, 2, 3, 4, 5, 6)

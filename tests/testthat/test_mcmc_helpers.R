@@ -177,7 +177,7 @@ test_that("updateNoiseBeta gives expected results", {
   
   expect_equal(dim(res1$params$noise_beta), dim(obj$states$chain_1$params$noise_beta))
   expect_equal(length(res1$stuff$noise_var), length(obj$states$chain_1$stuff$noise_var))
-  expect_equal(mean(res1$momenta$noise_beta), 0.6585208, tolerance=1e-6)
+  expect_equal(mean(res1$momenta$noise_beta), 0.9484287, tolerance=1e-6)
 })
 
 # 

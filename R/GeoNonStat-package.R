@@ -29,6 +29,8 @@
 #' @import BH
 #' @importFrom expm expm
 #' @importFrom methods as
+#' @importFrom callr r
+#' @importFrom scoringRules crps_sample
 #' @importFrom stats rnorm runif ecdf predict
 #' @importFrom grDevices colorRampPalette rainbow
 #' @importFrom FNN get.knn

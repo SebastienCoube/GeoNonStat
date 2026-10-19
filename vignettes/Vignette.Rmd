@@ -37,20 +37,30 @@ vecchia_approx <- createVecchia(dataset$locs, m=6)
 PP_range = createPP(vecchia_approx, matern_range = .5)
 PP_noise = createPP(vecchia_approx, matern_range = .2)
 geo_non_stat = GeoNonStat(
-  observed_field = dataset$observed_field, # response
+  data_list = list(
+     observed_field = dataset$observed_field, # response
+     X = dataset$X, # explanatory variables for the response 
+     noise_X = dataset$noise_X
+  ),
   vecchia_approx = vecchia_approx, # Vecchia approximation
-  X = dataset$X, # explanatory variables for the response 
-  noise_X = dataset$noise_X, noise_PP = PP_noise,  # explanatory variables and PP for the nonstationary noise variance 
+  noise_PP = PP_noise,  # explanatory variables and PP for the nonstationary noise variance 
   range_PP = PP_range # PP for the nonstationary range 
 )
 # Running the model (with very low ESS and Gelman Rubin targets)
 future::plan(strategy = "multisession", workers = 2)
 geo_non_stat <- automaticMcmc(
   geo_non_stat, n_threads_per_chain = 3, satisfying_ESS = 10, satisfying_Gelman_Rubin = 10)
+```
+
+
+```{r}
 # Investigating MCMC 
 tracePlots(geo_non_stat, keep = "field_log_var")
-mcmcDiags(geo_non_stat)
+```
 
+
+```{r}
+mcmcDiags(geo_non_stat, burn_in = 0.1)
 ```
 
 # Model structure
@@ -365,7 +375,7 @@ The data is split between train and test data with two types of test data:
 ```{r}
 split_dataset <- splitData(
   locs = dataset$locs, 
-  data = list(observed = dataset$observed_field, 
+  data = list(observed_field = dataset$observed_field, 
               X = dataset$X, noise_X = dataset$noise_X))
 split_dataset
 ```
@@ -404,12 +414,16 @@ We start with a stationary model.
 
 ```{r}
 vanilla_model <- GeoNonStat(
+  data_list=list(
+    observed_field = split_dataset$train$observed_field, # response
+     X = split_dataset$train$X, # explanatory variables
+    range_X = NULL,
+    noise_X = NULL
+  ),
   vecchia_approx = vecchia_approx,
-  observed_field = split_dataset$train$observed, # response
-  X = split_dataset$train$X, # explanatory variables
   matern_smoothness = 1.5, anisotropic = F, # GP options
-  range_PP = NULL, range_X = NULL, # nonstationary range model
-  noise_PP = NULL, noise_X = NULL, # nonstationary noise model
+  range_PP = NULL,  # nonstationary range model
+  noise_PP = NULL, # nonstationary noise model
   n_chains = 3 # number of MCMC chains
   )
 summary(vanilla_model)
@@ -420,11 +434,10 @@ Then we create a model with nonstationary noise.
 ```{r}
 heteroskedastic_model <- GeoNonStat(
   vecchia_approx = vecchia_approx,
-  observed_field = split_dataset$train$observed, # response
-  X = split_dataset$train$X, # explanatory variables
+  data_list = split_dataset$train, # explanatory variables,
   matern_smoothness = 1.5, anisotropic = F, # GP options
-  range_PP = NULL, range_X = NULL, # nonstationary range model
-  noise_PP = noise_PP, noise_X = split_dataset$train$noise_X, # nonstationary noise model
+  range_PP = NULL, # nonstationary range model
+  noise_PP = noise_PP, # nonstationary noise model
   n_chains = 3 # number of MCMC chains
   )
 summary(heteroskedastic_model)
@@ -434,12 +447,11 @@ Then we create a model with nonstationary noise and range.
 
 ```{r}
 full_monty_model <- GeoNonStat(
+  data_list = split_dataset$train,
   vecchia_approx = vecchia_approx,
-  observed_field = split_dataset$train$observed, # response
-  X = split_dataset$train$X, # explanatory variables
   matern_smoothness = 1.5, anisotropic = F, # GP options
-  range_PP = range_PP, range_X = NULL, # nonstationary range model
-  noise_PP = noise_PP, noise_X = split_dataset$train$noise_X, # nonstationary noise model
+  range_PP = range_PP, # nonstationary range model
+  noise_PP = noise_PP, # nonstationary noise model
   n_chains = 3 # number of MCMC chains
   )
 summary(full_monty_model)
@@ -456,21 +468,21 @@ Parallelization is possible on two levels:
 - Over chains, using the R future multisession framework 
 - Within each chain, using some Rcpp low-level parallelization and openBLAS if installed. 
 
-```{r}
+```{r, eval=FALSE}
  future::plan(strategy = "multisession", workers = 3)
 
-vanilla_model <- automaticMcmc(object = vanilla_model, n_chains_in_parallel = 3, n_threads_per_chain = 8, satisfying_Gelman_Rubin = 1.0, satisfying_ESS = 100, burn_in = .3,
+vanilla_model <- automaticMcmc(object = vanilla_model, n_threads_per_chain = 8, satisfying_Gelman_Rubin = 1.0, satisfying_ESS = 100, burn_in = .3,
 iter_per_step =  500) 
  
-heteroskedastic_model <- automaticMcmc(object = heteroskedastic_model, n_chains_in_parallel = 3, n_threads_per_chain = 8)
+heteroskedastic_model <- automaticMcmc(object = heteroskedastic_model, n_threads_per_chain = 8)
  
-full_monty_model <- automaticMcmc(object = full_monty_model, n_chains_in_parallel = 3, n_threads_per_chain = 8)
+full_monty_model <- automaticMcmc(object = full_monty_model, n_threads_per_chain = 8)
 ```
 
 
 #### Monitoring MCMC
 
-```{r}
+```{r, eval=FALSE}
 tracePlots(object)
 ```
 ## 
