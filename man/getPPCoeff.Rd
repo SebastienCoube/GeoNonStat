@@ -6,9 +6,22 @@
 \usage{
 getPPCoeff(x, n_knots)
 }
+\arguments{
+\item{x}{a numeric matrix}
+
+\item{n_knots}{a numeric value, 
+number of knots (number of last rows in x that are knots)}
+}
+\value{
+a matrix
+}
 \description{
+Extracts PP coefficients from regression coefficients
+}
+\examples{
 x <- matrix(rnorm(10), 10)
 getPPCoeff(x, 8)
 x <- matrix(rnorm(30), 10)
 getPPCoeff(x, 8)
 }
+\keyword{internal}

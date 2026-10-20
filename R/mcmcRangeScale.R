@@ -1,8 +1,8 @@
 
-#' Samples the log-scale parameter of the range PP coeffs, using 
-#' ancillary parametrization of the PP coeffs 
-#' and sufficient parametrization of the latent field 
-#' (nested interweaving)
+# Samples the log-scale parameter of the range PP coeffs, using 
+# ancillary parametrization of the PP coeffs 
+# and sufficient parametrization of the latent field 
+# (nested interweaving)
 rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
                            range_X, iter, iter_start, num_threads){
   
@@ -168,10 +168,11 @@ rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
   }
   return(state)
 }
-#' Samples the log-scale parameter of the range PP coeffs, using 
-#' ancillary parametrization of the PP coeffs 
-#' and ancillary parametrization of the latent field 
-#' (nested interweaving)
+
+# Samples the log-scale parameter of the range PP coeffs, using 
+# ancillary parametrization of the PP coeffs 
+# and ancillary parametrization of the latent field 
+# (nested interweaving)
 rangeLogScaleA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads){
 
@@ -374,8 +375,8 @@ rangePPLogLikGradS <- function(
 }
 
 
-#' Gradient of the field log likelihood with respect to the PP coefficients, +
-#' with ancillary parametrization of the latent field
+# Gradient of the field log likelihood with respect to the PP coefficients, +
+# with ancillary parametrization of the latent field
 rangePPLogLikGradA <- function(
     field, lm_residuals, noise_var, 
     compressed_chol, sparse_chol, 

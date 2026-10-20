@@ -26,7 +26,7 @@ GeoNonStat(
 
 \method{summary}{GeoNonStat}(object, burn_in = 0.1, ...)
 
-\method{predict}{GeoNonStat}(object, new_data_list, burn_in = 0.2, num_threads = 5, ...)
+\method{predict}{GeoNonStat}(object, new_data_lists, burn_in = 0.2, num_threads = 5, ...)
 }
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()` from the
@@ -77,7 +77,7 @@ or NULL in which case the bounds are set automatically.}
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed. Default to 0.1}
 
-\item{new_data_list}{a list of new data. The list should have 
+\item{new_data_lists}{a list of new data. The list should have 
 a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
 a 'X' entry, for new covariates
 a 'noise_X' entry (optional) for new X noise parameters
@@ -173,10 +173,10 @@ myobj <- GeoNonStat(
 )
 summary(myobj)
 myobj
-# Recreating new data with less observations but same structure as example data
-locs <- cbind(rnorm(200), rnorm(200))
-X <- data.frame(matrix(rnorm(200*4), ncol=4))
-colnames(X) <- paste0("V", 1:4)
-testdata <- list("locs" = locs, "X" = X, noise_X=X)  
-predict(processedGnsDemo, new_data_list=testdata)
+# # Recreating new data with less observations but same structure as example data
+# locs <- cbind(rnorm(200), rnorm(200))
+# X <- data.frame(matrix(rnorm(200*4), ncol=4))
+# colnames(X) <- paste0("V", 1:4)
+# testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+# predict(processedGnsDemo, testdata)
 }

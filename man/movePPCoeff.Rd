@@ -2,22 +2,26 @@
 % Please edit documentation in R/mcmcUtils.R
 \name{movePPCoeff}
 \alias{movePPCoeff}
-\title{Moves PP coefficients if a new log scale parameter is proposed
-# Testing coherence of logScaleDensGrad formula and movePPCoeff
-hierarchical_model <- list(anisotropic = T, range = list(PP = list(n_knots = 9)))
-range_beta <- matrix(rnorm(30), 10)
-range_log_scale <- c(-1, -3)
-range_log_scale_ <- range_log_scale + 1e-6
-range_beta_ <- movePPCoeff(range_beta, range_log_scale, range_log_scale_, hierarchical_model)
-plot(
-(range_beta_ -range_beta)[-1,]*1e6,
-.5*range_beta[-1,]
-)}
+\title{Moves PP coefficients if a new log scale parameter is proposed}
 \usage{
 movePPCoeff(beta, log_scale, new_log_scale, n_knots)
 }
+\arguments{
+\item{beta}{matrix of beta coefs}
+
+\item{log_scale}{numerical vector of length 2}
+
+\item{new_log_scale}{numerical vector of length 2}
+
+\item{n_knots}{numerical value, number of knots (in beta rows)}
+}
+\value{
+a matrix
+}
 \description{
 Moves PP coefficients if a new log scale parameter is proposed
+}
+\examples{
 # Testing coherence of logScaleDensGrad formula and movePPCoeff
 hierarchical_model <- list(anisotropic = T, range = list(PP = list(n_knots = 9)))
 range_beta <- matrix(rnorm(30), 10)
@@ -29,3 +33,4 @@ plot(
 .5*range_beta[-1,]
 )
 }
+\keyword{internal}

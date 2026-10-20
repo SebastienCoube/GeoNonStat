@@ -156,7 +156,7 @@ extendCovariate <- function(
 #' Predict a 'GeoNonStat' object on new locations
 #'
 #' @param object an object of class \code{GeoNonStat}
-#' @param data_list_pred a list of new data. The list should have 
+#' @param new_data_lists a list of new data. The list should have 
 #' a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
 #' a 'X' entry, for new covariates
 #' a 'noise_X' entry (optional) for new X noise parameters
@@ -169,12 +169,12 @@ extendCovariate <- function(
 #' @export
 #' @method predict GeoNonStat
 #' @examples
-#' # Recreating new data with less observations but same structure as example data
-#' locs <- cbind(rnorm(200), rnorm(200))
-#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
-#' colnames(X) <- paste0("V", 1:4)
-#' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
-#' predict(processedGnsDemo, data_list_pred=testdata)
+#' # # Recreating new data with less observations but same structure as example data
+#' # locs <- cbind(rnorm(200), rnorm(200))
+#' # X <- data.frame(matrix(rnorm(200*4), ncol=4))
+#' # colnames(X) <- paste0("V", 1:4)
+#' # testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+#' # predict(processedGnsDemo, testdata)
 predict.GeoNonStat <-  function(
     object, 
     new_data_lists,

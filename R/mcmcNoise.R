@@ -1,5 +1,3 @@
-
-
 noiseBetaDensGrad <- function(noise_beta, noise_var, 
                           squared_residuals, noise_log_scale, 
                           hm_noise, noise_X, vecchia_approx){
@@ -219,9 +217,9 @@ noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start
 
 
 
-#' Samples the log-scale parameter of the noise variance PP coeffs, using 
-#' ancillary parametrization of the PP coeffs 
-#' (interweaving)
+# Samples the log-scale parameter of the noise variance PP coeffs, using 
+# ancillary parametrization of the PP coeffs 
+# (interweaving)
 noiseLogScaleAncillary <- function(state, hierarchical_model, vecchia_approx,
                            noise_X, iter, iter_start){
   # residuals 

@@ -18,6 +18,11 @@ renewMomentum <- function(momentum, kept_momentum = .9) {
 }
 
 #' MCMC kernel update
+#' @param iter integer, current iteration
+#' @param iter_start, integer, start iteration
+#' @param kernel_value current value of kernel, to update
+#' @param mult numeric, value to multiply kernel
+#' @return updated kernel
 updateKernel <- function(iter,
                          iter_start,
                          kernel_value,
@@ -153,7 +158,7 @@ momentumBack <- function(
 #' Computes density gradient of a log scale parameter using the Chain Rule
 #' @param PP_coeff value of the PP coefficient
 #' @param grad_PP_coeff gradient of the density evaluated at the PP coefficients
-#' @returns a vector of momentum variables
+#' @returns a vector of momentum variables 
 logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
   res <- .5 * PP_coeff * grad_PP_coeff
   if(ncol(PP_coeff)==3)return(c(sum(res[,1]), sum(res[,-1])))
@@ -161,7 +166,13 @@ logScaleDensGrad <- function(PP_coeff, grad_PP_coeff){
 }
 
 #' Extracts PP coefficients from regression coefficients
-#' 
+#' @param x a numeric matrix
+#' @param n_knots a numeric value, 
+#' number of knots (number of last rows in x that are knots)
+#' @return a matrix
+#' @export
+#' @keywords internal
+#' @examples
 #' x <- matrix(rnorm(10), 10)
 #' getPPCoeff(x, 8)
 #' x <- matrix(rnorm(30), 10)
@@ -172,6 +183,14 @@ getPPCoeff <- function(x, n_knots){
 
 
 #' Moves PP coefficients if a new log scale parameter is proposed
+#' @param beta matrix of beta coefs
+#' @param log_scale numerical vector of length 2
+#' @param new_log_scale numerical vector of length 2
+#' @param n_knots numerical value, number of knots (in beta rows)
+#' @return a matrix
+#' @export
+#' @keywords internal
+#' @examples
 #' # Testing coherence of logScaleDensGrad formula and movePPCoeff
 #' hierarchical_model <- list(anisotropic = T, range = list(PP = list(n_knots = 9)))
 #' range_beta <- matrix(rnorm(30), 10)

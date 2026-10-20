@@ -2,7 +2,7 @@
 
 #' Aggregate records of a GeoNonStat object, for 1 chain
 #'
-#' @param object a GeoNonStat object containing records
+#' @param records records from the MCMC run of a GeoNonStat object
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed If burn_in = 0.1 : the first 10% of
 #' records will be removed from the result.
@@ -98,9 +98,6 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 #' @param object a GeoNonStat object containing records
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
-#' @param keep character vector. What params should be kept. Can also be
-#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
-#' parameters, event the `field.`
 #'
 #' @returns a list of numerical summary by parameters.
 #' @export

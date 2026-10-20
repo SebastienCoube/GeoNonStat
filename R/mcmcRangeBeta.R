@@ -1,5 +1,5 @@
-#' Samples the range and variance of the latent field 
-#' using sufficient parametrization of the latent field 
+# Samples the range and variance of the latent field 
+# using sufficient parametrization of the latent field 
 rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
@@ -159,8 +159,8 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   return(state)
 }
 
-#' Samples the range and variance of the latent field 
-#' using ancillary parametrization of the latent field 
+# Samples the range and variance of the latent field 
+# using ancillary parametrization of the latent field 
 rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads, 
                        fisher, n_MALA){
@@ -330,7 +330,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   return(state)
 }
 
-#' Log likelihood of the latent field with sufficient parametrization
+# Log likelihood of the latent field with sufficient parametrization
 rangeLogLikS <- function(field, sparse_chol, field_log_var){
   return(
     - .5 * sum((sparse_chol %*% (field / exp(.5 * field_log_var[1, 1])))^2)
@@ -339,12 +339,12 @@ rangeLogLikS <- function(field, sparse_chol, field_log_var){
   )
 }
 
-#'Log likelihood of the latent field with ancillary parametrization
+# Log likelihood of the latent field with ancillary parametrization
 rangeLogLikA <- function(field, lm_residuals, noise_var, vecchia_approx){
   - .5 * sum((lm_residuals - field[vecchia_approx$locs_match])^2 / noise_var) # observation ll
 }
 
-#' Log matrix reparametrization between interpretable basis in R and sparse basis in C++
+# Log matrix reparametrization between interpretable basis in R and sparse basis in C++
 rangeReparamMat <- function(hierarchical_model){
   range_reparam_mat <- matrix(2)
   if (hierarchical_model$anisotropic) {
@@ -357,7 +357,7 @@ rangeReparamMat <- function(hierarchical_model){
   range_reparam_mat
 }
 
-#' Default Fisher information matrix for range beta and field log var
+# Default Fisher information matrix for range beta and field log var
 priorFisherRange <- function(range_X, hierarchical_model, type){
   # if(type=="sufficient")cross_fisher_mult <- -.5
   # if(type=="ancillary")cross_fisher_mult <-   0
@@ -373,8 +373,8 @@ priorFisherRange <- function(range_X, hierarchical_model, type){
   diag(rep(1, 1 + (1 + 2*hierarchical_model$anisotropic) * ncol(range_X$crossprod_X)))
 }
 
-#' Gradient of the posterior density of the range and field log variance
-#' using sufficient parametrization of the latent field
+# Gradient of the posterior density of the range and field log variance
+# using sufficient parametrization of the latent field
 rangeBetaDensGradS <- function(
     field_log_var, range_beta, field,
     range_log_scale,
@@ -419,8 +419,8 @@ rangeBetaDensGradS <- function(
   )
 }
 
-#' Posterior density of the range and field log variance
-#' using sufficient parametrization of the latent field
+# Posterior density of the range and field log variance
+# using sufficient parametrization of the latent field
 rangeBetaDensS <- function(
     field_log_var, range_beta, field, range_log_scale,
     compressed_chol, sparse_chol,
@@ -445,8 +445,8 @@ rangeBetaDensS <- function(
   )
 }
 
-#' Gradient of the posterior density of the range and field log variance
-#' using ancillary parametrization of the latent field
+# Gradient of the posterior density of the range and field log variance
+# using ancillary parametrization of the latent field
 rangeBetaDensGradA <- function(
     field_log_var, range_beta, field, compressed_chol, sparse_chol,
     range_log_scale, lm_residuals, noise_var,
@@ -495,8 +495,8 @@ rangeBetaDensGradA <- function(
   )
 }
 
-#' Posterior density of the range and field log variance
-#' using ancillary parametrization of the latent field
+# Posterior density of the range and field log variance
+# using ancillary parametrization of the latent field
 rangeBetaDensA <- function(
     field_log_var, range_beta, field, compressed_chol, sparse_chol,
     range_log_scale, lm_residuals, noise_var,
@@ -523,8 +523,8 @@ rangeBetaDensA <- function(
   
 }
 
-#' Testing function for the gradient of the density of the range and field log variance,
-#' sufficient case
+# Testing function for the gradient of the density of the range and field log variance,
+# sufficient case
 testGradientRangeBetaS <- function(
     range_beta, field_log_var,
     compressed_chol, sparse_chol,
@@ -571,8 +571,8 @@ testGradientRangeBetaS <- function(
   abline(v=0)
 }
 
-#' Testing function for the gradient of the density of the range and field log var, 
-#' ancillary case
+# Testing function for the gradient of the density of the range and field log var, 
+# ancillary case
 testGradientRangeBetaA <- function(
     range_beta, field_log_var,
     compressed_chol, sparse_chol,

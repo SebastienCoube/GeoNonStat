@@ -12,6 +12,8 @@ aggregateRecords(
 )
 }
 \arguments{
+\item{records}{records from the MCMC run of a GeoNonStat object}
+
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed If burn_in = 0.1 : the first 10% of
 records will be removed from the result.}
@@ -19,8 +21,6 @@ records will be removed from the result.}
 \item{keep}{character vector. What params should be kept. Can also be
 `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
 parameters, event the `field.`}
-
-\item{object}{a GeoNonStat object containing records}
 }
 \value{
 a list containing matrices of parameters,

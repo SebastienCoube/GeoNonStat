@@ -11,7 +11,9 @@ automaticMcmc(
   satisfying_Gelman_Rubin = 1.1,
   iter_per_step = 500,
   burn_in = 0.3,
-  verbose = T
+  verbose = T,
+  save_checkpoint_model = NULL,
+  save_checkpoint_plots = NULL
 )
 }
 \arguments{
@@ -29,6 +31,9 @@ automaticMcmc(
 first records that should be removed before computing diagnostics. Default to 0.1}
 
 \item{verbose}{logical, default to TRUE. Should additional informations be printed ?}
+
+\item{save_checkpoint_model}{character, default to NULL. Path and name of the file
+to save model checkpoints}
 }
 \value{
 a GeoNonStat object, with updated state (last state by chain)

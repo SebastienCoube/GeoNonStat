@@ -239,6 +239,8 @@ GeoNonStatMcmc <- function(
 #' @param burn_in  numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed before computing diagnostics. Default to 0.1
 #' @param verbose logical, default to TRUE. Should additional informations be printed ?
+#' @param save_checkpoint_model character, default to NULL. Path and name of the file
+#' to save model checkpoints
 #' @details The MCMC is run using [future::plan()].
 #'
 #' \preformatted{

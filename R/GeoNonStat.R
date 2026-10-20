@@ -3,8 +3,7 @@
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
 #' @param ncores number of cores to run in parallel, default to 5.
-#' @param round_locs maximal distance to round locations coordinates, resulting in leaner Vecchia's approximations
-#'
+#' 
 #' @returns a list of Vecchia approximation objects and metadata.
 #' \describe{
 #'   \item{\code{n_locs}}{Number of unique locations}

@@ -11,10 +11,6 @@ estimate(object, burn_in = 0.3)
 
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed. Default to 0.1}
-
-\item{keep}{character vector. What params should be kept. Can also be
-`"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
-parameters, event the `field.`}
 }
 \value{
 a list of numerical summary by parameters.
