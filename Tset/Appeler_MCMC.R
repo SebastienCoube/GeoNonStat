@@ -145,20 +145,22 @@ MCMC_diags = mcmcDiags(object = geo_non_stat, burn_in = .5)
 
 
 estimation <- estimate(object = geo_non_stat)
-
+estimation$summaries$hyperparameters
 estimation$scores$aggregated
 
-plotPointillistPainting(geo_non_stat$vecchia_approx$locs, estimation$summaries$at_unique_locs$field[1,])
+plotPointillistPainting(geo_non_stat$vecchia_approx$locs, estimation$summaries$at_unique_locs$field[,1])
 plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field)
 plotPointillistPainting(fake_data$observed$locs, fake_data$observed$observed_field)
 
-new_locs <- as.matrix(expand.grid(seq(0, 1, .01), seq(0, 1, .01)))
+new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
 new_X <- as.data.frame(
   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
         rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
 
-
-new_data_lists <- list(prediction_grid = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X))
+new_data_lists <- list(
+  prediction_grid1 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
+  prediction_grid2 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X)
+  )
 
 burn_in = .3
 num_threads = 5
@@ -167,16 +169,9 @@ prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
   object = geo_non_stat, num_threads = 5, burn_in = .2
 )
 
-# plotting latent field predictions
-plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field, cex=  5)
-plotPointillistPainting(new_locs, prediction$samples$field[100,], cex=  10)
-plotPointillistPainting(new_locs, prediction$summaries$field[1,], cex=  10)
-
-
 # plotting noise variance predictions
-plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field)
-plotPointillistPainting(new_locs, prediction$samples$noise_log_var[100,])
-plotPointillistPainting(new_locs, prediction$summaries$noise_log_var["mean",])
+plotPointillistPainting(new_locs, prediction$prediction_grid1$summaries$field[,"mean"])
+plotPointillistPainting(new_locs, prediction$prediction_grid2$summaries$noise_log_var[,"mean"])
 
 
 

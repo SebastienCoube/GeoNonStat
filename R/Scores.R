@@ -61,14 +61,19 @@ squaredError <- function(true_y, mean_samples) {
 #' allScores(true_y, mean_samples, sd_samples)
 allScores <- function(true_y, mean_samples, sd_samples) {
   y_samples <- mean_samples + sd_samples * rnorm(length(sd_samples))
-  per_obs <- matrix(0, length(true_y), 4)
+  per_obs <- matrix(NA_real_, length(true_y), 4)
   colnames(per_obs) <- c("95% coverage", "CRPS", "predictive density", "squared error")
-  per_obs[, "95% coverage"] <- coverage(true_y, y_samples)
-  per_obs[, "CRPS"] <- scoringRules::crps_sample(true_y, y_samples)
-  per_obs[, "predictive density"] <- predictiveDensity(true_y, mean_samples, sd_samples)
-  per_obs[, "squared error"] <- squaredError(true_y, mean_samples)
+  
+  ok <- !is.na(true_y)
+  if (any(ok)) {
+    per_obs[ok, "95% coverage"] <- coverage(true_y[ok], y_samples[ok,])
+    per_obs[ok, "CRPS"] <- scoringRules::crps_sample(true_y[ok], y_samples[ok,])
+    per_obs[ok, "predictive density"] <- predictiveDensity(true_y[ok], mean_samples[ok,], sd_samples[ok,])
+    per_obs[ok, "squared error"] <- squaredError(true_y[ok], mean_samples[ok,])
+  }
+  
   res <- list()
-  res$scores <- signif(apply(per_obs, 2, mean), 2)
+  res$scores <- signif(apply(per_obs, 2, mean, na.rm = TRUE), 2)
   res$scores_per_obs <- per_obs
   return(res)
 }

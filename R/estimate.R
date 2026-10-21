@@ -76,7 +76,7 @@ aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_
 #' @examples
 #' tt <- matrix(rnorm(200), ncol = 20)
 #' summarizeRecords(tt)
-summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 97.5%" = .975)) {
+summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 97.5%" = .975)) {
   means <- matrixStats::colMeans2(mat)
   sds   <- matrixStats::colSds(mat)
   qs    <- matrixStats::colQuantiles(mat, probs = quant)  # ncol(mat) x length(quant)
@@ -84,12 +84,11 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
     matstat <- rbind(means, sds, t(qs))
   } else {
     matstat <- matrix(c(means, sds, qs), nrow = 2 + length(quant), ncol = ncol(mat))
-    
   }
-  matstat <- signif(matstat, 3)
+  matstat <- apply(matstat, 2, signif, digits = 3)
   colnames(matstat) <- colnames(mat)
   rownames(matstat) <- c("mean", "sd", names(quant))
-  return(matstat)
+  return(t(matstat))
 }
 
 
@@ -107,7 +106,7 @@ summarizeRecords <- function(mat, quant = c("q 2.5%" = .025, "median" = .5, "q 9
 estimate <- function(object, burn_in = 0.3) {
   summaries <- list()
   scores <- list()
-  scores$per_obs <- matrix(0, 4, object$vecchia_approx$n_obs)
+  scores$per_obs <- matrix(0, object$vecchia_approx$n_obs, 4)
   # getting MCMC samples
   samples <- aggregateRecords(object$records, burn_in = burn_in, keep ="all")
   samples$field_whitened <- NULL; gc()
@@ -134,7 +133,7 @@ estimate <- function(object, burn_in = 0.3) {
   
   # working on observed locations
   summaries$at_observed_locs <- list()
-  summaries$at_observed_locs$field <- summaries$at_unique_locs$field[,object$vecchia_approx$locs_match]
+  summaries$at_observed_locs$field <- summaries$at_unique_locs$field[object$vecchia_approx$locs_match,]
   # initializing summaries at observed locs
   summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$fixed <- summaries$at_observed_locs$field
@@ -144,6 +143,10 @@ estimate <- function(object, burn_in = 0.3) {
   chunks <- split(
     seq_len(object$vecchia_approx$n_obs), 
     seq_len(object$vecchia_approx$n_obs)%/%chunk_size)
+  if(length(chunks[[length(chunks)]])==1){
+    chunks[[length(chunks)-1]] <- c(chunks[[length(chunks)-1]], chunks[[length(chunks)]])
+    chunks[[length(chunks)]] <- NULL}
+  
   for(chunk in chunks){
     fixed_effect_sample <- samples$beta %*% as.matrix(t(object$covariates$X$X[chunk,,drop=F]))
     latent_field_sample <- samples$field[,object$vecchia_approx$locs_match[chunk]]
@@ -156,21 +159,22 @@ estimate <- function(object, burn_in = 0.3) {
         log_noise_variance_sample +
         samples$noise_PP[,object$vecchia_approx$locs_match[chunk]]
     }
-    summaries$at_observed_locs$field_and_fixed[,chunk] <-
+    summaries$at_observed_locs$field_and_fixed[chunk,] <-
       summarizeRecords(field_and_fixed_sample)
-    summaries$at_observed_locs$fixed[,chunk] <-
+    summaries$at_observed_locs$fixed[chunk,] <-
       summarizeRecords(fixed_effect_sample)
-    summaries$at_observed_locs$noise_log_var[,chunk] <-
+    summaries$at_observed_locs$noise_log_var[chunk,] <-
       summarizeRecords(log_noise_variance_sample)
-    chunk_scores <- t(allScores(
+    chunk_scores <- (allScores(
       true_y = object$observed_field[chunk], 
       mean_samples = t(field_and_fixed_sample), 
       sd_samples = t(exp(.5 * log_noise_variance_sample))
     )$scores_per_obs)
-    scores$per_obs[,chunk] <- chunk_scores
+    scores$per_obs[chunk,] <- chunk_scores
+    colnames(scores$per_obs) <- colnames(chunk_scores)
   }
-  row.names(scores$per_obs) <- row.names(chunk_scores)
-  scores$aggregated <- apply(scores$per_obs, 1, mean)
+  # colnames(scores$per_obs) <- colnames(chunk_scores)
+  scores$aggregated <- apply(scores$per_obs, 2, mean)
   gc()
 
   return(list(summaries = summaries, scores = scores))
