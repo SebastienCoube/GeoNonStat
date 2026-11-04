@@ -55,6 +55,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// expRange_
+arma::mat expRange_(const arma::mat& log_range, bool compute_derivative, int num_threads);
+RcppExport SEXP _GeoNonStat_expRange_(SEXP log_rangeSEXP, SEXP compute_derivativeSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type log_range(log_rangeSEXP);
+    Rcpp::traits::input_parameter< bool >::type compute_derivative(compute_derivativeSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(expRange_(log_range, compute_derivative, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecchia_
 void vecchia_(arma::mat log_range, arma::mat locs, arma::mat NNarray, int num_threads, int start_idx, double smoothness, bool compute_derivative, arma::cube& result);
 RcppExport SEXP _GeoNonStat_vecchia_(SEXP log_rangeSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP start_idxSEXP, SEXP smoothnessSEXP, SEXP compute_derivativeSEXP, SEXP resultSEXP) {
@@ -88,6 +101,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// expRanges
+arma::mat expRanges(const arma::mat& log_range);
+RcppExport SEXP _GeoNonStat_expRanges(SEXP log_rangeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type log_range(log_rangeSEXP);
+    rcpp_result_gen = Rcpp::wrap(expRanges(log_range));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecchia_predict
 void vecchia_predict(const arma::mat& log_range, const arma::mat& predicted_log_range, const arma::mat& locs, const arma::mat& predicted_locs, const arma::mat& NNarray, int num_threads, arma::mat& result, double smoothness);
 RcppExport SEXP _GeoNonStat_vecchia_predict(SEXP log_rangeSEXP, SEXP predicted_log_rangeSEXP, SEXP locsSEXP, SEXP predicted_locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP resultSEXP, SEXP smoothnessSEXP) {
@@ -110,8 +134,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_GeoNonStat_vecchia", (DL_FUNC) &_GeoNonStat_vecchia, 6},
     {"_GeoNonStat_derivative_sandwiches", (DL_FUNC) &_GeoNonStat_derivative_sandwiches, 6},
     {"_GeoNonStat_maternThingy_", (DL_FUNC) &_GeoNonStat_maternThingy_, 2},
+    {"_GeoNonStat_expRange_", (DL_FUNC) &_GeoNonStat_expRange_, 3},
     {"_GeoNonStat_vecchia_", (DL_FUNC) &_GeoNonStat_vecchia_, 8},
     {"_GeoNonStat_derivativeSandwiches_", (DL_FUNC) &_GeoNonStat_derivativeSandwiches_, 6},
+    {"_GeoNonStat_expRanges", (DL_FUNC) &_GeoNonStat_expRanges, 1},
     {"_GeoNonStat_vecchia_predict", (DL_FUNC) &_GeoNonStat_vecchia_predict, 8},
     {NULL, NULL, 0}
 };

@@ -82,8 +82,6 @@ a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
 a 'X' entry, for new covariates
 a 'noise_X' entry (optional) for new X noise parameters
 a 'range_X' entry (optional) for new X range parameters}
-
-\item{num_threads}{number of threads. Integer.}
 }
 \value{
 An object of class `GeoNonStat`

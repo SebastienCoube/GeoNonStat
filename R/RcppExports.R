@@ -13,12 +13,20 @@ maternThingy_ <- function(mahala_dist, smoothness15) {
     .Call(`_GeoNonStat_maternThingy_`, mahala_dist, smoothness15)
 }
 
+expRange_ <- function(log_range, compute_derivative = FALSE, num_threads = 1L) {
+    .Call(`_GeoNonStat_expRange_`, log_range, compute_derivative, num_threads)
+}
+
 vecchia_ <- function(log_range, locs, NNarray, num_threads, start_idx, smoothness, compute_derivative, result) {
     invisible(.Call(`_GeoNonStat_vecchia_`, log_range, locs, NNarray, num_threads, start_idx, smoothness, compute_derivative, result))
 }
 
 derivativeSandwiches_ <- function(vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads) {
     .Call(`_GeoNonStat_derivativeSandwiches_`, vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads)
+}
+
+expRanges <- function(log_range) {
+    .Call(`_GeoNonStat_expRanges`, log_range)
 }
 
 vecchia_predict <- function(log_range, predicted_log_range, locs, predicted_locs, NNarray, num_threads, result, smoothness) {
