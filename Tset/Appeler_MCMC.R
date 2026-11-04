@@ -1,4 +1,7 @@
 library(GeoNonStat)
+
+# Synthetic data simulation
+
 set.seed(2)
 nobs = 30000
 nlocs = 15000
@@ -7,7 +10,6 @@ observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs
 vecchia_approx = createVecchia(observed_locs, m = 6)
 set.seed(2)
 
-# fixed effects
 X = as.data.frame(cbind(vecchia_approx$locs[vecchia_approx$locs_match,1], vecchia_approx$observed_locs[,1] + rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
 
 PP_range = createPP(vecchia_approx, matern_range = .5, plot = F)
@@ -46,6 +48,8 @@ plotPointillistPainting(vecchia_approx$observed_locs, fake_data$observed$observe
 
 plotPointillistPainting(vecchia_approx$observed_locs, fake_data$hidden_fields$log_noise_var_field, cex= 1, pch= 15)
 
+# Model initialization
+
 geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   data_list = list(
@@ -56,10 +60,12 @@ geo_non_stat = GeoNonStat(
   noise_PP = PP_noise,
   range_PP = PP_range
 )
-
-
 summary(geo_non_stat)
-# 
+
+
+# dark stuff
+
+
 # # # # ### # #Run MCMC chain for 40 iterations
 #    list2env(geo_non_stat, environment())
 #    state = geo_non_stat$states$chain_1
@@ -119,7 +125,11 @@ summary(geo_non_stat)
 #  plot(field_log_var_samples, main = "field log var")
 #  abline(h = field_log_var)
 
+
+
+
 # parallel run
+
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, 
@@ -133,26 +143,18 @@ tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .0)
 tracePlots(geo_non_stat, keep = "field_log_var", burn_in = .0)
 print("DOOOONE")
 
-
-
-# plotting and diagnostics
-tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "range_beta", burn_in = .3)
-tracePlots(geo_non_stat, keep = "range_log_scale", burn_in = .3)
-tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .3)
-MCMC_diags = mcmcDiags(object = geo_non_stat, burn_in = .5)
-
- 
-
+# Estimation
 
 estimation <- estimate(object = geo_non_stat)
-estimation$summaries$hyperparameters
-estimation$scores$aggregated
+plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
+                         which_parameter = "field", which_summary = "mean")
+plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
+                         which_parameter = "field", which_summary = "sd")
+plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
+                         which_parameter = "noise_PP", which_summary = "mean")
+plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
+                         which_parameter = "noise_log_var", which_summary = "mean")
 
-plotPointillistPainting(geo_non_stat$vecchia_approx$locs, estimation$summaries$at_unique_locs$field[,1])
-plotPointillistPainting(vecchia_approx$locs, fake_data$hidden_fields$latent_field)
-plotPointillistPainting(fake_data$observed$locs, fake_data$observed$observed_field)
 
 new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
 new_X <- as.data.frame(
@@ -179,7 +181,8 @@ prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
 )
 
 # plotting noise variance predictions
-plotPointillistPainting(new_locs, prediction$prediction_grid1$summaries$field[,"mean"])
-drawEllpises(geo_non_stat, prediction_block = prediction$ellipse_grid, correlation_level = .5)
-
+plotGeoNonStatPrediction(prediction_block = prediction$prediction_grid1, 
+                         which_parameter = "field", which_summary = "mean")
+drawEllpises(object = geo_non_stat, prediction_block = prediction$ellipse_grid, 
+             correlation_level = .5)
 

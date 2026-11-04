@@ -125,16 +125,15 @@ estimate <- function(object, burn_in = 0.3) {
   }
   # getting summaries of MCMC samples
   summaries$hyperparameters <- lapply(samples, summarizeRecords)
-  summaries$at_unique_locs <- list()
-  summaries$at_unique_locs$field <- summaries$hyperparameters$field; summaries$hyperparameters$field <- NULL
-  if(!is.null(object$hierarchical_model$noise$PP)){
-    summaries$at_unique_locs$noise_PP <- summaries$hyperparameters$noise_PP; summaries$hyperparameters$noise_PP <- NULL
-  }
-  
-  # working on observed locations
+  # summaries at observed locations
   summaries$at_observed_locs <- list()
-  summaries$at_observed_locs$field <- summaries$at_unique_locs$field[object$vecchia_approx$locs_match,]
-  # initializing summaries at observed locs
+  summaries$at_observed_locs$field <- summaries$hyperparameters$field[object$vecchia_approx$locs_match,] 
+  summaries$hyperparameters$field <- NULL 
+  if(!is.null(object$hierarchical_model$noise$PP)){
+    summaries$at_observed_locs$noise_PP <- summaries$hyperparameters$noise_PP[object$vecchia_approx$locs_match,] 
+    summaries$hyperparameters$noise_PP <- NULL
+  }
+  # initializing other summaries at observed locs
   summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$noise_log_var <- summaries$at_observed_locs$field

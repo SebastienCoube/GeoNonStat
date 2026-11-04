@@ -171,59 +171,6 @@ plotKnotsPP <- function(x,
   par(mar = omar, mgp = def.par[["mgp"]])
 }
 
-#' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
-#' @param locs ellipses centers coordinates. A matrix with 2 columns, 1 row for each ellipse
-#' @param log_range log_range at the ellipse centers, can have 1 or 3 columns. A matrix with 1 row (? TODO) and 1 or 3 columns.
-#' @param add logical, default to FALSE. Add on existing plot ?
-#' @param shrink numeric, shrinks or inflates the ellipses. shrink = 1 gives the
-#' Mahalanobis distance = 1. Shrink = sqrt(8*matern_smoothness) gives the ellipses corresponding to
-#' correlation  = .1 (rho following INLA's terminology)
-#' @param ... additional graphical parameters, sent to `plot` if `add=FALSE`
-#'
-#' @returns a plot object
-#' @export
-#'
-#' @examples
-#' locs <- matrix(rnorm(20), ncol = 2)
-#' log_range <- matrix(rnorm(30), ncol = 3)
-#' plotRangeEllipses(locs, log_range, shrink = 0.1)
-#'
-#' locs <- matrix(rnorm(20), ncol = 2)
-#' log_range <- matrix(rnorm(10), ncol = 1)
-#' plotRangeEllipses(locs, log_range, shrink = 0.1)
-plotRangeEllipses <- function(locs,
-                         log_range,
-                         shrink = NULL,
-                         add = FALSE,
-                         matern_smoothness = NULL, 
-                         ...) {
-  if (ncol(log_range) == 3) {
-    # to match parametrization in compute sparse chol
-    log_range <- log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 /
-      sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2)
-    matrices <- lapply(split(log_range, row(log_range)), expmat)
-  }
-  if (ncol(log_range) == 1) {
-    matrices <- lapply(log_range, function(x) {
-      diag(exp(x), 2)
-    })
-  }
-  if (!add) {
-    plot(locs, type = "n", ...)
-  }
-  for (i in seq_len(nrow(locs)))
-  {
-    # 2.447747 must be some bivariate confidence interval
-    # shrink = 1 gives the package's Mahalanobis distance
-    matrices[[i]] <- eigen(matrices[[i]])
-    matrices[[i]] <- (matrices[[i]])$vec %*% diag(matrices[[i]]$val^2) %*% t(matrices[[i]]$vec) /
-      (2.447747)^2
-    ell <- ellipse::ellipse(matrices[[i]]) * shrink
-    ell[, 1] <- ell[, 1] + locs[i, 1]
-    ell[, 2] <- ell[, 2] + locs[i, 2]
-    lines(ell)
-  }
-}
 
 
 # # test
@@ -520,4 +467,24 @@ ellipse_mahalanobis <- function(Sigma, x) {
   pts <- t(A %*% circle)
   colnames(pts) <- c("y1", "y2")
   pts
+}
+
+plotGeoNonStatPrediction <- function(
+    prediction_block, which_parameter, which_summary, main = "automatic"){
+  if(main =="automatic") main <- paste("Predicted", which_summary, "of", which_parameter)
+  plotPointillistPainting(
+    locs = prediction_block$locs, 
+    field = prediction_block$summaries[[which_parameter]][,which_summary],
+    main = main
+  )
+}
+
+plotGeoNonStatEstimation <- function(
+    object, estimation, which_parameter, which_summary, main = "automatic"){
+  if(main =="automatic") main <- paste("Estimated", which_summary, "of", which_parameter)
+  plotPointillistPainting(
+    locs = object$vecchia_approx$observed_locs, 
+    field = estimation$summaries$at_observed_locs[[which_parameter]][,which_summary], 
+    main = main
+  )
 }
