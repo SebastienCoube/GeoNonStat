@@ -5,6 +5,7 @@ nlocs = 15000
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 6)
+set.seed(2)
 
 # fixed effects
 X = as.data.frame(cbind(vecchia_approx$locs[vecchia_approx$locs_match,1], vecchia_approx$observed_locs[,1] + rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs)), rnorm(nrow(observed_locs))))
@@ -122,7 +123,8 @@ summary(geo_non_stat)
 future::plan(strategy = "multisession", workers = 3)
 geo_non_stat = GeoNonStatMcmc(
   object = geo_non_stat, 
-  n_threads_per_chain = 7, n_iterations = 100)
+  n_threads_per_chain = 7, 
+  n_iterations = 100)
 
 tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .0)
@@ -156,10 +158,17 @@ new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
 new_X <- as.data.frame(
   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
         rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+new_locs_small <- as.matrix(expand.grid(seq(.1, .9, .1), seq(.1, .9, .1)))
+new_X_small <- as.data.frame(
+  cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
+        rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+
+
 
 new_data_lists <- list(
   prediction_grid1 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
-  prediction_grid2 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X)
+  prediction_grid2 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
+  ellipse_grid = list("locs"  = new_locs_small, "X" = new_X_small, "noise_X" = new_X_small)
   )
 
 burn_in = .3
@@ -171,7 +180,6 @@ prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
 
 # plotting noise variance predictions
 plotPointillistPainting(new_locs, prediction$prediction_grid1$summaries$field[,"mean"])
-plotPointillistPainting(new_locs, prediction$prediction_grid2$summaries$noise_log_var[,"mean"])
-
+drawEllpises(geo_non_stat, prediction_block = prediction$ellipse_grid, correlation_level = .5)
 
 

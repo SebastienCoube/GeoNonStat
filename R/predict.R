@@ -82,11 +82,13 @@ predict.GeoNonStat <-  function(
   empty_summary <- matrix(NA_real_, n_all, 5)
   colnames(empty_summary) <- c("mean", "sd", "q 2.5%", "median", "q 97.5%")
   predicted_stuff_names <-
-    c("field", "noise_log_var", "fixed", "fixed_and_field", "range")
+    c("field", "noise_log_var", "fixed", "field_and_fixed", "range")
   if (aniso) predicted_stuff_names <- c(predicted_stuff_names, "aniso1", "aniso2")
   summaries <- lapply(predicted_stuff_names, function(x) empty_summary)
   names(summaries) <- predicted_stuff_names
   scores <- matrix(NA_real_, n_all, 4)
+  colnames(scores) <- c("95% coverage", "CRPS", "predictive density", "squared error")
+  
   
   # relevant MCMC samples
   records <- aggregateRecords(
@@ -107,7 +109,7 @@ predict.GeoNonStat <-  function(
   pred_locs_match <- match(locs_key, locs_key[first_occurrence])
   
   # chunk of non duplicated locations
-  chunk_size <- 10000
+  chunk_size <- 1000
   n_unique <- nrow(unique_pred_locs)
   chunks <- split(seq_len(n_unique), ceiling(seq_len(n_unique) / chunk_size))
   
@@ -138,7 +140,7 @@ predict.GeoNonStat <-  function(
       vecchia_approx = object$vecchia_approx
     )[]
   }
-  
+
   # subsetting potentially duplicated locations using non-duplicated locations
   for (chunk in chunks) {
     # setup
@@ -161,10 +163,10 @@ predict.GeoNonStat <-  function(
     # allocating MCMC samples at chunk of observed locations
     chunk_samples <- lapply(predicted_stuff_names, function(x) matrix(0, n_mcmc_iters, length(which_obs_in_chunk_idx)))
     names(chunk_samples) <- predicted_stuff_names
-    
+
     # predicting fixed effects
     chunk_samples$fixed[] <- (records$beta) %*% t(X_chunk$X)
-    
+
     # Initializing log-range arrays for prediction
     log_range_chunk <- matrix(0, length(chunk), n_range_params)
     # Initializing Vecchia approximation for prediction
@@ -173,13 +175,18 @@ predict.GeoNonStat <-  function(
       data  = object$vecchia_approx$locs,
       query = vecchia_approx_chunk$locs, k = m))
     vecchia_chunk <- matrix(0, length(chunk), m + 1)
-    
+    vecchia_chunk_expanded <- Matrix::sparseMatrix(
+      i = c(t(col(NNarray))), j = c(t((NNarray))),
+      x = c(vecchia_chunk[, -1]), repr = "T",
+      dims = c(length(chunk), object$vecchia_approx$n_locs)
+    )
+
     for (mcmc_iter in seq_len(n_mcmc_iters)) {
       # predicting noise log variance
       chunk_samples$noise_log_var[mcmc_iter, ] <- log(noiseVar(
         X = noise_X_chunk$X, PP = noise_PP_chunk,
         noise_beta = records$noise_beta[mcmc_iter, ], vecchia_approx = vecchia_approx_chunk))
-      
+
       # log-range at training locations, precomputed before the chunk loop
       log_range_train <- matrix(log_range_train_all[, , mcmc_iter], n_train, n_range_params)
       log_range_chunk[] <- computeLogRange(
@@ -187,13 +194,7 @@ predict.GeoNonStat <-  function(
         range_X = range_X_chunk, PP = range_PP_chunk,
         vecchia_approx = vecchia_approx_chunk
       )[]
-      # storing samples of log-range
-      chunk_samples$range[mcmc_iter, ] <- log_range_chunk[vecchia_approx_chunk$locs_match, 1]
-      if (aniso) {
-        chunk_samples$aniso1[mcmc_iter, ] <- log_range_chunk[vecchia_approx_chunk$locs_match, 2]
-        chunk_samples$aniso2[mcmc_iter, ] <- log_range_chunk[vecchia_approx_chunk$locs_match, 3]
-      }
-      
+
       # Vecchia approximation
       vecchia_predict(
         log_range = t(log_range_train),
@@ -203,20 +204,25 @@ predict.GeoNonStat <-  function(
         NNarray = NNarray, num_threads = num_threads,
         result = vecchia_chunk,
         smoothness = object$hierarchical_model$matern_smoothness)
-      vecchia_chunk_expanded <- Matrix::sparseMatrix(
-        i = c(t(col(NNarray))), j = c(t((NNarray))),
-        x = c(vecchia_chunk[, -1]), repr = "T",
-        dims = c(length(chunk), object$vecchia_approx$n_locs)
-      )
-      
+      vecchia_chunk_expanded@x <- c(vecchia_chunk[, -1])
       chunk_samples$field[mcmc_iter, ] <- (
         as.vector(
           - (vecchia_chunk_expanded) %*% records$field[mcmc_iter, ] +
             rnorm(vecchia_approx_chunk$n_locs)
         ) / vecchia_chunk[, 1]
       )[vecchia_approx_chunk$locs_match]
+      # storing samples of log-range
+      if (!aniso) {
+        chunk_samples$range[mcmc_iter, ] <-  log_range_chunk[vecchia_approx_chunk$locs_match, 1]/2
+      }else{
+        # reparametrizing to range / aniso format
+        log_range_chunk <- log_range_chunk %*% solve(matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2)
+        chunk_samples$range[mcmc_iter, ] <-  log_range_chunk[vecchia_approx_chunk$locs_match, 1]
+        chunk_samples$aniso1[mcmc_iter, ] <- log_range_chunk[vecchia_approx_chunk$locs_match, 2]
+        chunk_samples$aniso2[mcmc_iter, ] <- log_range_chunk[vecchia_approx_chunk$locs_match, 3]
+      }
     }
-    chunk_samples$fixed_and_field[] <-
+    chunk_samples$field_and_fixed[] <-
       chunk_samples$fixed[] + chunk_samples$field[]
     for (name in predicted_stuff_names) {
       summaries[[name]][which_obs_in_chunk_idx, ] <- summarizeRecords(chunk_samples[[name]])
@@ -224,10 +230,10 @@ predict.GeoNonStat <-  function(
     scores[which_obs_in_chunk_idx, ] <- allScores(
       true_y = data_list_pred$observed_field[which_obs_in_chunk_idx],
       sd_samples   = t(exp(.5 * chunk_samples$noise_log_var)),
-      mean_samples = t(chunk_samples$fixed_and_field)
+      mean_samples = t(chunk_samples$field_and_fixed)
     )$scores_per_obs
   }
-  
+
   res <- list()
   for (i in seq_along(new_data_lists)) {
     idx_i <- which(data_list_idx == i)
@@ -235,7 +241,8 @@ predict.GeoNonStat <-  function(
     res[[i]]$summaries <- lapply(summaries, function(summa) summa[idx_i, , drop = FALSE])
     res[[i]]$scores <- list()
     res[[i]]$scores$per_obs <- scores[idx_i, , drop = FALSE]
-    res[[i]]$scores$aggregated <- apply(res[[i]]$scores$per_obs, 2, mean, na.rm = TRUE)
+    res[[i]]$scores$aggregated <- signif(apply(res[[i]]$scores$per_obs, 2, mean, na.rm = TRUE), digits = 2)
+    res[[i]]$locs <- new_data_lists[[i]]$locs
   }
   names(res) <- names(new_data_lists)
   return(res)

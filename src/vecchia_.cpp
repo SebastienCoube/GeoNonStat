@@ -43,90 +43,116 @@ void DetInvSym22(double a, double d, double b, double res[4]){
 }
 
 
-using namespace arma;
 //[[Rcpp::depends(RcppArmadillo)]]
+#include <RcppArmadillo.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+using namespace arma;
 using namespace Rcpp;
+
+// ---------------------------------------------------------------------------
+// expRange_ : matrix exponentials of the log range parameters
+//   isotropic   (1 row)  -> 1 x n  : exp(log_range)
+//   anisotropic (3 rows) -> 3 x n  (12 x n if compute_derivative)
+//     rows 0-2  : (0,0), (1,1), (0,1) entries of expm(log range matrix)
+//     rows 3-5  : same, diff_term added to log_range(0)
+//     rows 6-8  : same, diff_term added to log_range(1)
+//     rows 9-11 : same, diff_term/sqrt2 added to log_range(2)
+// ---------------------------------------------------------------------------
+//[[Rcpp::export]]
+arma::mat expRange_(const arma::mat& log_range,
+                    bool compute_derivative = false,
+                    int num_threads = 1) {
+#ifdef _OPENMP
+  omp_set_num_threads(num_threads);
+#endif
+  const double diff_term = 0.0001;
+  const double sqrt2 = std::sqrt(2.0);
+  const int n = log_range.n_cols;
+  
+  if (log_range.n_rows != 1 && log_range.n_rows != 3)
+    stop("log_range must have 1 (isotropic) or 3 (anisotropic) rows");
+  
+  if (log_range.n_rows == 1) return arma::exp(log_range);
+  
+  const int exprange_nrow = 3 + 9 * compute_derivative;
+  arma::mat exprange(exprange_nrow, n);
+  
+#pragma omp parallel for schedule(dynamic)
+  for (int i = 0; i < n; i++) {
+    arma::mat lograngemat(2, 2);
+    arma::mat rangemat(2, 2);
+    arma::vec log_range_col = log_range.col(i);
+    
+    lograngemat(0, 0) = log_range_col(0);
+    lograngemat(1, 1) = log_range_col(1);
+    lograngemat(1, 0) = log_range_col(2) / sqrt2;
+    lograngemat(0, 1) = lograngemat(1, 0);
+    rangemat = expmat_sym(lograngemat);
+    
+    exprange(0, i) = rangemat(0, 0);
+    exprange(1, i) = rangemat(1, 1);
+    exprange(2, i) = rangemat(0, 1);
+    if (compute_derivative) {
+      lograngemat(0, 0) += diff_term;
+      rangemat = expmat_sym(lograngemat);
+      exprange(3, i) = rangemat(0, 0);
+      exprange(4, i) = rangemat(1, 1);
+      exprange(5, i) = rangemat(0, 1);
+      lograngemat(0, 0) -= diff_term;
+      
+      lograngemat(1, 1) += diff_term;
+      rangemat = expmat_sym(lograngemat);
+      exprange(6, i) = rangemat(0, 0);
+      exprange(7, i) = rangemat(1, 1);
+      exprange(8, i) = rangemat(0, 1);
+      lograngemat(1, 1) -= diff_term;
+      
+      lograngemat(0, 1) += diff_term / sqrt2;
+      lograngemat(1, 0) = lograngemat(0, 1);
+      rangemat = expmat_sym(lograngemat);
+      exprange(9, i)  = rangemat(0, 0);
+      exprange(10, i) = rangemat(1, 1);
+      exprange(11, i) = rangemat(0, 1);
+    }
+  }
+  return exprange;
+}
+
+// ---------------------------------------------------------------------------
+// vecchia_ : Vecchia approximation (and derivatives); computes exprange itself
+// ---------------------------------------------------------------------------
 //[[Rcpp::export]]
 void vecchia_(
     arma::mat log_range,
     arma::mat locs,
-    arma::mat NNarray, 
+    arma::mat NNarray,
     int num_threads,
     int start_idx,
     double smoothness,
-    bool compute_derivative, 
+    bool compute_derivative,
     arma::cube &result){
 #if _OPENMP
   omp_set_num_threads(num_threads);
 #endif
-  bool smoothness15 = false; 
-  if (smoothness == 1.5)smoothness15 = true;
-  double diag_term = 1.001;
-  double diff_term = 0.0001;
-  double sqrt2 = sqrt(2); 
-  // initializing stuff
-  int n = locs.n_cols;
-  int m = NNarray.n_rows;
-  //arma::cube result(m, 1 + log_range.n_rows * m * compute_derivative, n);
+  const bool smoothness15 = (smoothness == 1.5);
+  const double diag_term = 1 + 1e-4;
+  const double diff_term = 0.0001;
+  const int n = locs.n_cols;
+  const int m = NNarray.n_rows;
+  const int n_params = log_range.n_rows;   // 1 (isotropic) or 3 (anisotropic)
+  
   result(0,0,0) = 1;
   
-  // pre-compute expensive matrix exponentials in case of aniso 
-  int exprange_nrow = 1;
-  int exprange_ncol = n;
-  if(log_range.n_rows == 3){
-    exprange_nrow = 3 + 9*compute_derivative;
-  }
-  arma::mat exprange(exprange_nrow, exprange_ncol);
-  if(log_range.n_rows == 1){
-    // loop over every observation  
-    exprange = exp(log_range);
-  }
-  if(log_range.n_rows == 3){
-    // loop over every observation  
-    
-#pragma omp parallel for schedule(dynamic)
-    for(int i=0; i<n; i++){
-      arma::mat lograngemat(2,2);
-      arma::mat rangemat(2,2);
-      arma::vec log_range_col = log_range.col(i); 
-      
-      lograngemat(0,0) = log_range_col(0);
-      lograngemat(1,1) = log_range_col(1);
-      lograngemat(1,0) = log_range_col(2)/sqrt2;
-      lograngemat(0,1) = lograngemat(1,0);
-      rangemat = expmat_sym(lograngemat);
-      
-      exprange(0, i) = rangemat(0,0); 
-      exprange(1, i) = rangemat(1,1); 
-      exprange(2, i) = rangemat(0,1); 
-      if(compute_derivative){
-        lograngemat(0,0) = lograngemat(0,0) + diff_term;
-        rangemat = expmat_sym(lograngemat);
-        exprange(3, i) = rangemat(0,0); 
-        exprange(4, i) = rangemat(1,1); 
-        exprange(5, i) = rangemat(0,1); 
-        lograngemat(0,0) = lograngemat(0,0) - diff_term;
-        lograngemat(1,1) = lograngemat(1,1) + diff_term;
-        rangemat = expmat_sym(lograngemat);
-        exprange(6, i) = rangemat(0,0); 
-        exprange(7, i) = rangemat(1,1); 
-        exprange(8, i) = rangemat(0,1); 
-        lograngemat(1,1) = lograngemat(1,1) - diff_term;
-        lograngemat(0,1) = lograngemat(0,1) + diff_term/sqrt2;
-        lograngemat(1,0) = lograngemat(0,1);
-        rangemat = expmat_sym(lograngemat);
-        exprange(9, i)  = rangemat(0,0); 
-        exprange(10, i) = rangemat(1,1); 
-        exprange(11, i) = rangemat(0,1); 
-      }
-    }
-    
-  }
+  // matrix exponentials (done once, before the parallel region below)
+  arma::mat exprange = expRange_(log_range, compute_derivative, num_threads);
+  const int exprange_nrow = exprange.n_rows;
   
   // Computing Vecchia approx
-#pragma omp parallel 
-  {
-  arma::mat out(m, 1 + log_range.n_rows * m * compute_derivative);
+#pragma omp parallel
+{
+  arma::mat out(m, 1 + n_params * m * compute_derivative);
 #pragma omp for
   for(int i=start_idx; i<n; i++){
     // Fill subsets of locations, range
@@ -135,25 +161,22 @@ void vecchia_(
     arma::mat rangesub(exprange_nrow, bsize);
     for(int j=0; j<bsize; j++){
       int idx = NNarray(j,i);
-      // subsets of locations
-      locsub.col(j) = locs.col(idx - 1); 
-      // subsets of range
-      rangesub.col(j) = exprange.col(idx - 1); 
+      locsub.col(j) = locs.col(idx - 1);
+      rangesub.col(j) = exprange.col(idx - 1);
     }
-    // initialize recipient for result
-    // computing covariance 
+    // computing covariance
     double mahala_dist;
     double det_inv_hybrid_range[4];
     arma::mat  sigma11(bsize-1, bsize-1);
     arma::vec  sigma12(bsize-1);
     // anisotropic case
-    if(log_range.n_rows == 3){
+    if(n_params == 3){
       for(int j1=1; j1<bsize; j1++){
         //filling sigma11
         for(int j2=1; j2<j1; j2++){
-          DetInvSym22((rangesub(0, j1) + rangesub(0, j2))*.5,  
-                      (rangesub(1, j1) + rangesub(1, j2))*.5,  
-                      (rangesub(2, j1) + rangesub(2, j2))*.5, 
+          DetInvSym22((rangesub(0, j1) + rangesub(0, j2))*.5,
+                      (rangesub(1, j1) + rangesub(1, j2))*.5,
+                      (rangesub(2, j1) + rangesub(2, j2))*.5,
                       det_inv_hybrid_range);
           
           mahala_dist = sqrt(
@@ -161,64 +184,63 @@ void vecchia_(
           + (locsub(1, j1)-locsub(1, j2)) * (locsub(1, j1)-locsub(1, j2)) * det_inv_hybrid_range[1]
           + 2*( locsub(0, j1)-locsub(0, j2)) * (locsub(1, j1)-locsub(1, j2)) * det_inv_hybrid_range[2]
           );
-          sigma11 (j1-1, j2-1) = 
+          sigma11 (j1-1, j2-1) =
             sqrt(sqrt(
-                (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
+                (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) *
                   (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
-                  (det_inv_hybrid_range[3])) * 
+                  (det_inv_hybrid_range[3])) *
                   maternThingy_(mahala_dist, smoothness15);
-          sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
-          
+          sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ;
         }
         sigma11 (j1-1, j1-1) = diag_term;
         //filling sigma12
-        DetInvSym22((rangesub(0, j1) + rangesub(0, 0))*.5, 
-                    (rangesub(1, j1) + rangesub(1, 0))*.5, 
+        DetInvSym22((rangesub(0, j1) + rangesub(0, 0))*.5,
+                    (rangesub(1, j1) + rangesub(1, 0))*.5,
                     (rangesub(2, j1) + rangesub(2, 0))*.5, det_inv_hybrid_range);
         mahala_dist = sqrt(
           (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) * det_inv_hybrid_range[0]
         +(locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[1]
         + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
         );
-        sigma12 (j1-1) = 
+        sigma12 (j1-1) =
           sqrt(sqrt(
-              (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
+              (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) *
                 (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
-                (det_inv_hybrid_range[3])) * 
+                (det_inv_hybrid_range[3])) *
                 maternThingy_(mahala_dist, smoothness15);
       }
     }
     // isotropic case
-    if(log_range.n_rows == 1){
+    if(n_params == 1){
       for(int j1=1; j1<bsize; j1++){
         //filling sigma11
         for(int j2=1; j2<j1; j2++){
-          mahala_dist = sqrt( 
-            ( 
-                (locsub(0, j1)-locsub(0, j2)) * (locsub(0, j1)-locsub(0, j2)) + 
+          mahala_dist = sqrt(
+            (
+                (locsub(0, j1)-locsub(0, j2)) * (locsub(0, j1)-locsub(0, j2)) +
                   (locsub(1, j1)-locsub(1, j2)) * (locsub(1, j1)-locsub(1, j2))
             )
           /(rangesub(0, j1)*.5 + rangesub(0, j2)*.5));
-          sigma11 (j1-1, j2-1) = 
-          sqrt(sqrt(rangesub(0, j1) *    rangesub(0, j2))/ 
-          (rangesub(0, j1)*.5 + rangesub(0, j2)*.5)) * 
-          maternThingy_(mahala_dist, smoothness15);
-          sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ; 
+          sigma11 (j1-1, j2-1) =
+          sqrt(sqrt(rangesub(0, j1) *    rangesub(0, j2))/
+            (rangesub(0, j1)*.5 + rangesub(0, j2)*.5)) *
+              maternThingy_(mahala_dist, smoothness15);
+          sigma11 (j2-1, j1-1) = sigma11 (j1-1, j2-1) ;
         }
         sigma11 (j1-1, j1-1) = diag_term;
-        mahala_dist = sqrt( 
+        mahala_dist = sqrt(
           ( (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)) )
           /(rangesub(0, j1)*.5 + rangesub(0, 0)*.5));
-        sigma12 (j1-1) = 
-        sqrt(sqrt(rangesub(0, j1) *    rangesub(0, 0)) / 
-        (rangesub(0, j1)*.5 + rangesub(0, 0)*.5)) * 
-        maternThingy_(mahala_dist, smoothness15);
+        sigma12 (j1-1) =
+        sqrt(sqrt(rangesub(0, j1) *    rangesub(0, 0)) /
+          (rangesub(0, j1)*.5 + rangesub(0, 0)*.5)) *
+            maternThingy_(mahala_dist, smoothness15);
       }
     }
     
     // solving sigma11
     arma::mat agmis11  = arma::inv_sympd(sigma11) ;
-    // computing a vector used everyvhere
+    // computing a vector used everywhere
     arma::mat salt  = agmis11 * sigma12 ;
     //computing Vecchia approx itself
     double inverse_cond_sd = 1/sqrt(diag_term- arma::dot(salt, sigma12));
@@ -228,26 +250,18 @@ void vecchia_(
       out(j,0) = - salt(j-1) * inverse_cond_sd;
     }
     
-    // computing derivative of Vecchia approx 
+    // computing derivative of Vecchia approx
     if(compute_derivative){
-      // derivative of sigma 11 wrt to parent range parameters
       arma::mat dsigma11(bsize-1, bsize-1);
-      // derivative of sigma 12 wrt to parent range parameters
       arma::vec dpsigma12(bsize-1);
-      // derivative of sigma 12 wrt to child range parameters
       arma::vec dcsigma12(bsize-1);
-      // result of multiplications
       arma::vec salt_dsigma11(bsize-1);
       arma::vec the_rest(bsize-1);
       arma::vec salt_dsigma11_agmis11(bsize-1);
-      //for(int d_idx=0; d_idx<log_range.n_rows; d_idx++){
-      for(int d_idx=0; d_idx<log_range.n_rows; d_idx++){
-        
-        // computing derivative of covariance
-        // column j1 of dsigma11 contains d(sigma11(,j1))/d(range(j1))
+      for(int d_idx=0; d_idx<n_params; d_idx++){
         
         // anisotropic case
-        if(log_range.n_rows == 3){
+        if(n_params == 3){
           for(int j1=1; j1<bsize; j1++){
             //filling dsigma11
             for(int j2=1; j2<bsize; j2++){
@@ -261,34 +275,34 @@ void vecchia_(
               +((locsub(1, j1)-locsub(1, j2))) * ((locsub(1, j1)-locsub(1, j2))) * det_inv_hybrid_range[1]
               + 2*( locsub(0, j1)-locsub(0, j2)) * (locsub(1, j1)-locsub(1, j2)) * det_inv_hybrid_range[2]
               );
-              dsigma11 (j1-1, j2-1) = 
+              dsigma11 (j1-1, j2-1) =
                 sqrt(sqrt(
-                    (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
+                    (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) *
                       (rangesub(0, j2)*rangesub(1, j2) - rangesub(2, j2)*rangesub(2, j2))) * //determinants
-                      (det_inv_hybrid_range[3])) * 
+                      (det_inv_hybrid_range[3])) *
                       maternThingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
             DetInvSym22(
-              (rangesub((d_idx + 1) * 3 + 0, j1) + rangesub(0, 0))*.5,  
-              (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5, 
-              (rangesub((d_idx + 1) * 3 + 2, j1) + rangesub(2, 0))*.5, 
+              (rangesub((d_idx + 1) * 3 + 0, j1) + rangesub(0, 0))*.5,
+              (rangesub((d_idx + 1) * 3 + 1, j1) + rangesub(1, 0))*.5,
+              (rangesub((d_idx + 1) * 3 + 2, j1) + rangesub(2, 0))*.5,
               det_inv_hybrid_range);
             mahala_dist = sqrt(
               (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) * det_inv_hybrid_range[0]
             +(locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[1]
             + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
             );
-            dpsigma12 (j1-1) = 
+            dpsigma12 (j1-1) =
               sqrt(sqrt(
-                  (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) * 
+                  (rangesub((d_idx + 1) * 3 + 0, j1)*rangesub((d_idx + 1) * 3 + 1, j1) - rangesub((d_idx + 1) * 3 + 2, j1)*rangesub((d_idx + 1) * 3 + 2, j1)) *
                     (rangesub(0, 0)*rangesub(1, 0) - rangesub(2, 0)*rangesub(2, 0))) * //determinants
-                    (det_inv_hybrid_range[3])) * 
+                    (det_inv_hybrid_range[3])) *
                     maternThingy_(mahala_dist, smoothness15);
             //filling dcsigma12
-            DetInvSym22((rangesub(0, j1) + rangesub((d_idx + 1) * 3 + 0, 0))*.5, 
-                        (rangesub(1, j1) + rangesub((d_idx + 1) * 3 + 1, 0))*.5, 
+            DetInvSym22((rangesub(0, j1) + rangesub((d_idx + 1) * 3 + 0, 0))*.5,
+                        (rangesub(1, j1) + rangesub((d_idx + 1) * 3 + 1, 0))*.5,
                         (rangesub(2, j1) + rangesub((d_idx + 1) * 3 + 2, 0))*.5,
                         det_inv_hybrid_range);
             mahala_dist = sqrt(
@@ -296,84 +310,70 @@ void vecchia_(
             + ((locsub(1, j1)-locsub(1, 0))) * ((locsub(1, j1)-locsub(1, 0))) * det_inv_hybrid_range[1]
             + 2*( locsub(0, j1)-locsub(0, 0)) * (locsub(1, j1)-locsub(1, 0)) * det_inv_hybrid_range[2]
             );
-            dcsigma12 (j1-1) = 
+            dcsigma12 (j1-1) =
               sqrt(sqrt(
-                  (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) * 
-                    (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) - 
+                  (rangesub(0, j1)*rangesub(1, j1) - rangesub(2, j1)*rangesub(2, j1)) *
+                    (rangesub((d_idx + 1) * 3 + 0, 0 )*rangesub((d_idx + 1) * 3 + 1, 0 ) -
                     rangesub((d_idx + 1) * 3 + 2, 0 )*rangesub((d_idx + 1) * 3 + 2, 0 ))) * //determinants
-                    (det_inv_hybrid_range[3])) * 
+                    (det_inv_hybrid_range[3])) *
                     maternThingy_(mahala_dist, smoothness15);
-            
           }
         }
         // isotropic case
-        if(log_range.n_rows == 1){
+        if(n_params == 1){
           for(int j1=1; j1<bsize; j1++){
             //filling dsigma11
             for(int j2=1; j2<bsize; j2++){
-              mahala_dist = sqrt( 
-                ( (locsub(0, j1)-locsub(0, j2)) * (locsub(0, j1)-locsub(0, j2)) + 
+              mahala_dist = sqrt(
+                ( (locsub(0, j1)-locsub(0, j2)) * (locsub(0, j1)-locsub(0, j2)) +
                   (locsub(1, j1)-locsub(1, j2)) * (locsub(1, j1)-locsub(1, j2)) )
               /(rangesub(0, j1)*.5*(1 + diff_term) + rangesub(0, j2)*.5));
-              dsigma11 (j1-1, j2-1) = 
-              sqrt(sqrt(rangesub(0, j1) * (1 + diff_term) * rangesub(0, j2)) / 
-              (rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5)) * 
-              maternThingy_(mahala_dist, smoothness15);
+              dsigma11 (j1-1, j2-1) =
+              sqrt(sqrt(rangesub(0, j1) * (1 + diff_term) * rangesub(0, j2)) /
+                (rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, j2)*.5)) *
+                  maternThingy_(mahala_dist, smoothness15);
             }
             dsigma11 (j1-1, j1-1) = diag_term;
             //filling dpsigma12
-            mahala_dist = sqrt( 
+            mahala_dist = sqrt(
               ( (locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)))
               /(rangesub(0, j1) * (1 + diff_term) *.5 + rangesub(0, 0)*.5));
-            dpsigma12 (j1-1) = 
-            sqrt(sqrt(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)) / 
-            (rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5)) * 
-            maternThingy_(mahala_dist, smoothness15);
+            dpsigma12 (j1-1) =
+            sqrt(sqrt(rangesub(0, j1)  * (1 + diff_term)  *    rangesub(0, 0)) /
+              (rangesub(0, j1)  * (1 + diff_term) *.5 + rangesub(0, 0)*.5)) *
+                maternThingy_(mahala_dist, smoothness15);
             
             //filling dcsigma12
-            mahala_dist = sqrt( 
+            mahala_dist = sqrt(
               ((locsub(0, j1)-locsub(0, 0)) * (locsub(0, j1)-locsub(0, 0)) + (locsub(1, j1)-locsub(1, 0)) * (locsub(1, j1)-locsub(1, 0)))
               /(rangesub(0, j1) *.5 + rangesub(0, 0)*.5 * (1 + diff_term)));
-            dcsigma12 (j1-1) = 
-            sqrt(sqrt(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term)) / 
-            (rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5)) * 
-            maternThingy_(mahala_dist, smoothness15);
-            
+            dcsigma12 (j1-1) =
+            sqrt(sqrt(rangesub(0, j1)  *    rangesub(0, 0)  * (1 + diff_term)) /
+              (rangesub(0, j1) *.5 + rangesub(0, 0)  * (1 + diff_term) *.5)) *
+                maternThingy_(mahala_dist, smoothness15);
           }
         }
         
         dsigma11 = (dsigma11 - sigma11)/diff_term;
         dpsigma12 = (dpsigma12 - sigma12)/diff_term;
         dcsigma12 = -(dcsigma12 - sigma12)/diff_term;
-        // computing derivative of Vecchia approx 
         
-        // case child range is differentiated 
-        //diagonal coefficient
-        out(0, 1 + m*(d_idx)) = 
-          //a = 0, see article's annex
+        // case child range is differentiated
+        // diagonal coefficient
+        out(0, 1 + m*(d_idx)) =
           - arma::dot(salt, dcsigma12) * pow_invcondsd_3; // b
-          //c = 0
-          //rest of the coefficients
-          the_rest = 
+          // rest of the coefficients
+          the_rest =
           agmis11 *  dcsigma12 * inverse_cond_sd // d
-          //e = 0
           - salt * out(0, 1 + m*d_idx); //f
           for(int j2 = 1; j2<bsize; j2++)
           {
             out(j2, 1 + m*d_idx) = the_rest(j2-1);
           }
           
-          // case parents' ranges are differentiated 
+          // case parents' ranges are differentiated
           for(int j1 = 1; j1<bsize;  j1++)
           {
-            // computing stuff         
-            //                d(sigma11)/d(range(j1)) 
-            //                     |     .    | 
-            //                     |     .    | 
-            //                     |     .    | 
-            //                     | .........|     
-            //         (--------)  |     .    |
-            //           salt
             salt_dsigma11.fill(0);
             for(int j2 = 0; j2<bsize-1; j2++)
             {
@@ -382,12 +382,11 @@ void vecchia_(
             }
             
             //diagonal coefficient
-            out(0, 1 + j1+ m*d_idx) = 
-              // a = 0
-              dpsigma12(j1-1) * salt(j1-1)  * pow_invcondsd_3 // b 
+            out(0, 1 + j1+ m*d_idx) =
+              dpsigma12(j1-1) * salt(j1-1)  * pow_invcondsd_3 // b
             - arma::dot(salt_dsigma11, salt) * pow_invcondsd_3/2 ; // c
             
-            salt_dsigma11_agmis11 =   agmis11 * salt_dsigma11 ; 
+            salt_dsigma11_agmis11 =   agmis11 * salt_dsigma11 ;
             //rest of the coefficients
             for(int j2 = 1; j2<bsize; j2++)
             {
@@ -398,11 +397,9 @@ void vecchia_(
           }
       }
     }
-    //# pragma omp critical
     result.col(i) = out;
   }
 }
-  //return(result);
 }
 
 //[[Rcpp::depends(RcppArmadillo)]]
@@ -481,7 +478,8 @@ inline void expSym22(double a, double d, double b,
 }
 
 // exp(range) at every location: 1 x n (isotropic) or 3 x n (aniso: 11, 22, 12)
-inline arma::mat expRanges(const arma::mat& log_range) {
+// [[Rcpp::export]]
+arma::mat expRanges(const arma::mat& log_range) {
   const int n = log_range.n_cols;
   if (log_range.n_rows == 1) return arma::exp(log_range);
   const double sqrt2 = std::sqrt(2.0);

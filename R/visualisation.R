@@ -394,38 +394,33 @@ plotPointillistPainting <- function(locs,
                                     field,
                                     add = FALSE,
                                     alpha = TRUE,
-                                    legend = TRUE, 
+                                    legend = TRUE,
                                     ...) {
   args <- list(...)
-  if (is.null(args$pch)) args[["pch"]] <- "."
-  if (is.null(args$cex)) args[["cex"]] <- 4
+  if (is.null(args$pch))  args[["pch"]]  <- "."
+  if (is.null(args$cex))  args[["cex"]]  <- 4
   if (is.null(args$xlab)) args[["xlab"]] <- NA
   if (is.null(args$ylab)) args[["ylab"]] <- NA
-  args$col <- getColors(field, alpha = TRUE)
-
-# gestion de la mise en page
-  if (legend && !add) {
-    oldpar <- par(no.readonly = TRUE)
-    on.exit(par(oldpar))
-    if(legend){
-      layout(
-        matrix(c(1, 2), nrow = 1),
-        widths = c(6, 1)
-      )
-    }
-  }
-
+  args$col <- getColors(field, alpha = alpha)
+  
   if (add) {
+    # the main plot is still the active one: just add to it
     do.call("points", c(list(x = locs), args))
-  } else {
-    par(mar = c(2, 2, 4, 0))
-    do.call("plot", c(list(x = locs), args))
+    return(invisible(NULL))
   }
-
-# légende
-  if (legend && !add) {
-    pointillistColorscale(field)
+  
+  # new plot: reset any previous layout
+  layout(1)
+  
+  if (legend) {
+    # figure 1 = legend (right), figure 2 = main plot (left)
+    layout(matrix(c(2, 1), nrow = 1), widths = c(6, 1))
+    pointillistColorscale(field)      # drawn first (figure 1)
   }
+  
+  par(mar = c(2, 2, 4, 0))
+  do.call("plot", c(list(x = locs), args))   # drawn last: stays active
+  invisible(NULL)
 }
 
 
@@ -476,4 +471,53 @@ pointillistColorscale <- function(field, scalename = "") {
     cex = 0.8
   )
   par(mar = origmar, lwd = origlwd)
+}
+
+
+
+# Draw correlation ellipses at a set of locations
+drawEllpises = function(object, prediction_block, correlation_level = .1)
+{
+  log_range <- cbind(
+    prediction_block$summaries$range[,"median"],
+    prediction_block$summaries$aniso1[,"median"],
+    prediction_block$summaries$aniso2[,"median"]
+  )
+  if(ncol(log_range) ==3){
+    #to match parametrization in compute sparse chol
+    log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
+  }else if (ncol(log_range) == 1) {
+    Y <- range_beta * 2
+  }
+  
+  range <- t(expRanges(t(log_range)))
+  matrices = lapply(split(range, row(range)), function(x){
+    res <- matrix(0,2,2)
+    res[1] <- x[1]; res[4] <- x[2]; res[2] <- res[3] <- x[3]
+    res
+  })
+  locs <- prediction_block$locs
+  shrink <-
+    (uniroot(f = function(x)maternThingy_(
+      x, smoothness15 = object$hierarchical_model$matern_smoothness == 1.5) - correlation_level,
+      lower = 0, upper = 1e12)$root)
+  for(i in seq(nrow(locs))){
+    ell = ellipse_mahalanobis(matrices[[i]], shrink^2)
+    ell[,1] = ell[,1]+locs[i, 1]
+    ell[,2] = ell[,2]+locs[i, 2]
+    lines(ell)
+  }
+}
+
+
+ellipse_mahalanobis <- function(Sigma, x) {
+  eig   <- eigen(Sigma, symmetric = TRUE)
+  A     <- eig$vectors %*% diag(sqrt(eig$values * x), nrow = 2)
+  
+  theta  <- seq(0, 2 * pi, length.out = 200)
+  circle <- rbind(cos(theta), sin(theta))      # 2 x n
+  
+  pts <- t(A %*% circle)
+  colnames(pts) <- c("y1", "y2")
+  pts
 }

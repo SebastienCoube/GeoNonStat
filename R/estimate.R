@@ -174,7 +174,7 @@ estimate <- function(object, burn_in = 0.3) {
     colnames(scores$per_obs) <- colnames(chunk_scores)
   }
   # colnames(scores$per_obs) <- colnames(chunk_scores)
-  scores$aggregated <- apply(scores$per_obs, 2, mean)
+  scores$aggregated <- signif(apply(scores$per_obs, 2, mean), digits = 2)
   gc()
 
   return(list(summaries = summaries, scores = scores))
