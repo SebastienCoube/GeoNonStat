@@ -479,8 +479,6 @@ processHierarchicalModel <- function(vecchia_approx,
 #' @param init a numeric value, default to -4
 #' @returns a list
 #' @description
-#' TODO : revoir la description
-#' Transition kernel state
 #' transition kernel variance is given as the log
 #' can be used in both stationary and nonstationary cases respectively
 #' as a random walk Metropolis or MALA step size have an ancillary and

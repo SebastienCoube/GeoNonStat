@@ -423,8 +423,8 @@ pointillistColorscale <- function(field, scalename = "") {
 #' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 #' @param object a GeoNonstat object
 #' @param prediction_block block of prediction on wich to draw ellipses
-#' @param correlation_level numeric, shrinks or inflates the ellipses. 
-#' Default to .1 (rho following INLA's terminology) TODO
+#' @param correlation_level numeric value, between 0 and 1, resize the ellipses according 
+#' to correlation of the spatial kernel. Default to .1
 #'
 #' @returns a plot object
 #' @export

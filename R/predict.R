@@ -26,7 +26,6 @@ PPPredict <- function(PP, vecchia_approx_chunk) {
 }
 
 
-# TODO a paralleliser  (noise semble déjà marcher ??)
 #' Predict a 'GeoNonStat' object on new locations
 #'
 #' @param object an object of class \code{GeoNonStat}
