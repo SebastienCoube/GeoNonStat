@@ -4,12 +4,19 @@
 \alias{posterior_coverage}
 \title{Coverage intervals of the response variable}
 \usage{
+<<<<<<< HEAD
 posterior_coverage(true_y, y_samples)
 }
 \arguments{
 \item{true_y}{a vector of true observations of the response variable}
 
 \item{y_samples}{samples of y observations}
+=======
+posterior_coverage(true_y, mu, sd, level = 0.95)
+}
+\arguments{
+\item{true_y}{a vector of true observations of the response variable}
+>>>>>>> 7e2483e (commit Rd)
 }
 \value{
 a vector of Booleans indicating if each true observation is within the predicted coverage interval
@@ -17,3 +24,7 @@ a vector of Booleans indicating if each true observation is within the predicted
 \description{
 Coverage intervals of the response variable
 }
+<<<<<<< HEAD
+=======
+\keyword{internal}
+>>>>>>> 7e2483e (commit Rd)

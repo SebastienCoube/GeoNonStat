@@ -23,10 +23,22 @@ Moves PP coefficients if a new log scale parameter is proposed
 }
 \examples{
 # Testing coherence of logScaleDensGrad formula and movePPCoeff
+<<<<<<< HEAD
 range_beta <- matrix(rnorm(30), 10)
 range_log_scale <- c(-1, -3)
 new_range_log_scale <- range_log_scale + 1e-6
 new_range_beta <- movePPCoeff(range_beta, range_log_scale, new_range_log_scale, 9)
 plot((new_range_beta -range_beta)[-1,]*1e6, .5*range_beta[-1,])
+=======
+hierarchical_model <- list(anisotropic = T, range = list(PP = list(n_knots = 9)))
+range_beta <- matrix(rnorm(30), 10)
+range_log_scale <- c(-1, -3)
+range_log_scale_ <- range_log_scale + 1e-6
+range_beta_ <- movePPCoeff(range_beta, range_log_scale, range_log_scale_, hierarchical_model)
+plot(
+(range_beta_ -range_beta)[-1,]*1e6,
+.5*range_beta[-1,]
+)
+>>>>>>> 7e2483e (commit Rd)
 }
 \keyword{internal}
