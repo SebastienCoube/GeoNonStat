@@ -101,7 +101,7 @@ summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 9
 #' @returns a list of numerical summary by parameters.
 #' @rdname GeoNonStat
 #' @export
-#' @method predict GeoNonStat
+#' @method estimate GeoNonStat
 #'
 #' @examples
 #' estimate(processedGnsDemo)
