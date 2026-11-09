@@ -229,3 +229,175 @@ testGradientLogScaleA <- function(
   abline(h=0)
   abline(v=0)
 }
+
+
+# Testing function for the gradient of the density of the range and field log variance,
+# sufficient case
+testGradientRangeBetaS <- function(
+    range_beta, field_log_var,
+    compressed_chol, sparse_chol,
+    grad_to_test, dens_to_test, num_threads,
+    range_X, hierarchical_model, vecchia_approx,
+    state
+){
+  empirical_grad = c()
+  sparse_chol_grad_test = sparse_chol
+  compressed_chol_grad_test = compressed_chol
+  for(i in seq(length(range_beta)+1)){
+    range_beta_grad_test <- range_beta
+    field_log_var_grad_test <- field_log_var
+    if(i==1) field_log_var_grad_test = field_log_var_grad_test + 1e-6
+    if(i>1) range_beta_grad_test[i-1] = range_beta_grad_test[i-1] + 1e-6
+    
+    # re-computing Vecchia approx
+    log_range <- computeLogRange(
+      range_beta = range_beta_grad_test,
+      PP = hierarchical_model$range$PP,
+      vecchia_approx = vecchia_approx,
+      range_X = range_X
+    )
+    vecchia_(start_idx = 1,
+             log_range = t(log_range), locs = vecchia_approx$t_locs,
+             NNarray = vecchia_approx$NNarray,
+             smoothness = hierarchical_model$matern_smoothness,
+             compute_derivative = TRUE, num_threads = num_threads, result = compressed_chol_grad_test
+    )
+    sparse_chol_grad_test@x <- compressed_chol_grad_test[,,1][vecchia_approx$sparse_chol_x_reorder]
+    
+    # test_dens <- rangeBetaDensS(
+    #   field_log_var = field_log_var_grad_test, range_beta = range_beta_grad_test, # changed
+    #   compressed_chol = compressed_chol_grad_test, # changed
+    #   sparse_chol = sparse_chol_grad_test, # changed
+    #   range_log_scale = state$params$range_log_scale, field = state$params$field,
+    #   noise_var = state$stuff$noise_var,
+    #   hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx)
+    # empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
+  }
+  plot(grad_to_test, empirical_grad,  main  = "sufficient")
+  abline(a=0, b=1)
+  abline(h=0)
+  abline(v=0)
+}
+
+
+
+
+
+# Testing function for the gradient of the density of the range and field log var, 
+# ancillary case
+testGradientRangeBetaA <- function(
+    range_beta, field_log_var,
+    compressed_chol, sparse_chol,
+    field,
+    grad_to_test, dens_to_test, num_threads,
+    range_X, hierarchical_model, vecchia_approx,
+    state
+){
+  empirical_grad = c()
+  sparse_chol_grad_test = sparse_chol
+  compressed_chol_grad_test = compressed_chol
+  for(i in seq(length(range_beta)+1)){
+    range_beta_grad_test <- range_beta
+    field_log_var_grad_test <- field_log_var
+    if(i==1) field_log_var_grad_test[] = field_log_var_grad_test[] + 1e-6
+    if(i>1) range_beta_grad_test[i-1] = range_beta_grad_test[i-1] + 1e-6
+    
+    # re-computing Vecchia approx
+    log_range <- computeLogRange(
+      range_beta = range_beta_grad_test,
+      PP = hierarchical_model$range$PP,
+      vecchia_approx = vecchia_approx,
+      range_X = range_X
+    )
+    vecchia_(start_idx = 1,
+             log_range = t(log_range), locs = vecchia_approx$t_locs,
+             NNarray = vecchia_approx$NNarray,
+             smoothness = hierarchical_model$matern_smoothness,
+             compute_derivative = TRUE, num_threads = num_threads,
+             result = compressed_chol_grad_test
+    )
+    sparse_chol_grad_test@x <- compressed_chol_grad_test[,,1][vecchia_approx$sparse_chol_x_reorder]
+    field_grad_test <-
+      exp(.5*(field_log_var_grad_test[1,1] - field_log_var[1,1])) *
+      as.vector(Matrix::solve(sparse_chol_grad_test, sparse_chol %*% field))
+    test_dens <- rangeBetaDensA(
+      field_log_var = field_log_var_grad_test,
+      range_beta = range_beta_grad_test, # changed
+      compressed_chol = compressed_chol_grad_test, # changed
+      field = field_grad_test, sparse_chol = sparse_chol_grad_test, # changed
+      range_log_scale = state$params$range_log_scale,
+      lm_residuals = state$stuff$lm_residuals, noise_var = state$stuff$noise_var,
+      hierarchical_model = hierarchical_model, vecchia_approx = vecchia_approx,
+      range_reparam_mat = range_reparam_mat, range_X = range_X)
+    empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
+  }
+  plot(grad_to_test, empirical_grad,  main  = "ancillary")
+  abline(a=0, b=1)
+  abline(h=0)
+  abline(v=0)
+}
+
+
+
+testGradientNoise <- function(
+    noise_beta, noise_var, 
+    grad_to_test, dens_to_test, squared_residuals,
+    noise_X, hm_noise, vecchia_approx, noise_log_scale, 
+    main
+){
+  empirical_grad = c()
+  for(i in seq(length(noise_beta))){
+    noise_beta_grad_test <- noise_beta 
+    noise_beta_grad_test[i] = noise_beta_grad_test[i] + 1e-6
+    
+    # re-computing Vecchia approx
+    noise_var_test <- noiseVar(
+      X = noise_X$X, PP = hm_noise$PP,
+      vecchia_approx = vecchia_approx, noise_beta = noise_beta_grad_test
+    )
+    
+    test_dens <- noiseBetaDens(
+      noise_beta = noise_beta_grad_test, noise_var = noise_var_test, 
+      squared_residuals = squared_residuals, noise_log_scale = noise_log_scale,
+      hm_noise = hm_noise
+    )
+    empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
+  }
+  plot(grad_to_test, empirical_grad,  main  =  main)
+  abline(a=0, b=1)
+  abline(h=0)
+  abline(v=0)
+}
+
+
+# Testing function for the gradient of PP
+testNoisePPLogLikGrad <- function(
+    noise_beta, field, 
+    grad_to_test ,
+    dens_to_test ,
+    hierarchical_model, noise_X,
+    vecchia_approx, state){
+  squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
+  empirical_grad = c()
+  for(i in seq(nrow(noise_beta) - hierarchical_model$noise$PP$n_knots+1, nrow(noise_beta))){
+    # moving noise beta 
+    noise_beta_test <- noise_beta
+    noise_beta_test[i] <- noise_beta_test[i]+1e-6
+    # re-computing noise_var
+    noise_var_grad_test <- noiseVar(
+      X = noise_X$X, PP = hierarchical_model$noise$PP,
+      vecchia_approx = vecchia_approx, noise_beta = noise_beta_test
+    )
+    # re-computing density
+    test_dens <- noiseLogLik(noise_var_grad_test, squared_residuals)
+    # empitical gradient
+    empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
+  }
+  plot(grad_to_test, empirical_grad,  main  = "PP sufficient gradient test")
+  abline(a=0, b=1)
+  abline(h=0)
+  abline(v=0)
+}
+
+
+

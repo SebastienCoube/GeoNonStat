@@ -55,37 +55,6 @@ noisePPLogLikGrad <- function(noise_var,
   )
 }
 
-testGradientNoise <- function(
-    noise_beta, noise_var, 
-    grad_to_test, dens_to_test, squared_residuals,
-    noise_X, hm_noise, vecchia_approx, noise_log_scale, 
-    main
-){
-  empirical_grad = c()
-  for(i in seq(length(noise_beta))){
-    noise_beta_grad_test <- noise_beta 
-    noise_beta_grad_test[i] = noise_beta_grad_test[i] + 1e-6
-    
-    # re-computing Vecchia approx
-    noise_var_test <- noiseVar(
-      X = noise_X$X, PP = hm_noise$PP,
-      vecchia_approx = vecchia_approx, noise_beta = noise_beta_grad_test
-    )
-    
-    test_dens <- noiseBetaDens(
-      noise_beta = noise_beta_grad_test, noise_var = noise_var_test, 
-      squared_residuals = squared_residuals, noise_log_scale = noise_log_scale,
-      hm_noise = hm_noise
-    )
-    empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
-  }
-  plot(grad_to_test, empirical_grad,  main  =  main)
-  abline(a=0, b=1)
-  abline(h=0)
-  abline(v=0)
-}
-
-
 
 
 noiseBeta <- function(state, hm_noise, noise_X, vecchia_approx, iter, iter_start, fisher) {
@@ -340,33 +309,4 @@ noiseLogScaleAncillary <- function(state, hierarchical_model, vecchia_approx,
      state$momenta$noise_log_scale <- -state$momenta$noise_log_scale
   }
   return(state)
-}
-
-# Testing function for the gradient of PP
-testNoisePPLogLikGrad <- function(
-    noise_beta, field, 
-    grad_to_test ,
-    dens_to_test ,
-    hierarchical_model, noise_X,
-    vecchia_approx, state){
-  squared_residuals <- as.matrix(state$stuff$lm_residuals - state$params$field[vecchia_approx$locs_match])^2
-  empirical_grad = c()
-    for(i in seq(nrow(noise_beta) - hierarchical_model$noise$PP$n_knots+1, nrow(noise_beta))){
-      # moving noise beta 
-      noise_beta_test <- noise_beta
-      noise_beta_test[i] <- noise_beta_test[i]+1e-6
-      # re-computing noise_var
-      noise_var_grad_test <- noiseVar(
-        X = noise_X$X, PP = hierarchical_model$noise$PP,
-        vecchia_approx = vecchia_approx, noise_beta = noise_beta_test
-      )
-      # re-computing density
-      test_dens <- noiseLogLik(noise_var_grad_test, squared_residuals)
-      # empitical gradient
-      empirical_grad = c(empirical_grad,  (test_dens - dens_to_test)*1e6)
-    }
-  plot(grad_to_test, empirical_grad,  main  = "PP sufficient gradient test")
-  abline(a=0, b=1)
-  abline(h=0)
-  abline(v=0)
 }
