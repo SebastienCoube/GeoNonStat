@@ -1,7 +1,6 @@
 library(GeoNonStat)
 
 
-Rendre noise X NULL en cas de full stationary
 # loading the data set and performing basic visualization ####
 synthetic <- readRDS("Tset/synthetic_data_set.RDS")
 plotPointillistPainting(synthetic$vecchia_approx$locs, synthetic$hidden_fields$latent_field)

@@ -67,7 +67,7 @@ arma::mat expRange_(const arma::mat& log_range,
 #ifdef _OPENMP
   omp_set_num_threads(num_threads);
 #endif
-  const double diff_term = 0.0001;
+  const double diff_term = 0.0005;
   const double sqrt2 = std::sqrt(2.0);
   const int n = log_range.n_cols;
   

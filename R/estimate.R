@@ -151,8 +151,8 @@ estimate <- function(object, burn_in = 0.3) {
     latent_field_sample <- samples$field[,object$vecchia_approx$locs_match[chunk]]
     field_and_fixed_sample <- fixed_effect_sample + latent_field_sample
     log_noise_variance_sample <-
-      samples$noise_beta[,seq(object$covariates$noise_X$n_regressors)] %*%
-      as.matrix(t(object$covariates$noise_X$X[chunk,,drop=F]))
+      samples$noise_beta[,seq(object$covariates$noise_X$n_regressors),drop=FALSE] %*%
+      as.matrix(t(object$covariates$noise_X$X[chunk,,drop=FALSE]))
     if(!is.null(object$hierarchical_model$noise$PP)){
       log_noise_variance_sample <-
         log_noise_variance_sample +

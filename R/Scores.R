@@ -1,18 +1,14 @@
 #' Coverage intervals of the response variable
 #' @param true_y a vector of true observations of the response variable
-#' @param y_samples a matrix of pseudo-observations sampled following the model
+#' @param TODO
 #'
 #' @returns a vector of Booleans indicating if each true observation is within the predicted coverage interval
 #' @export
 #' @keywords internal
 #'
-#' @examples
-#' true_y <- rnorm(100)
-#' y_samples <- matrix(rnorm(1000 * length(true_y)), length(true_y))
-#' coverage(true_y, y_samples)
-coverage <- function(true_y, y_samples) {
-  bounds <- matrixStats::rowQuantiles(y_samples, probs = c(.025, .975))  # nrow x 2
-  return(inBounds(bounds, true_y, includeBounds=FALSE))
+posterior_coverage <- function(true_y, y_samples) {
+  predicted_quantiles <- rowQuantiles(y_samples, probs = c(.025, .975))
+  inBounds(predicted_quantiles, true_y)
 }
 
 #' Predictive Density
@@ -66,7 +62,7 @@ allScores <- function(true_y, mean_samples, sd_samples) {
   
   ok <- !is.na(true_y)
   if (any(ok)) {
-    per_obs[ok, "95% coverage"] <- coverage(true_y[ok], y_samples[ok,])
+    per_obs[ok, "95% coverage"] <- posterior_coverage(true_y = true_y[ok], y_samples = y_samples[ok,])
     per_obs[ok, "CRPS"] <- scoringRules::crps_sample(true_y[ok], y_samples[ok,])
     per_obs[ok, "predictive density"] <- predictiveDensity(true_y[ok], mean_samples[ok,], sd_samples[ok,])
     per_obs[ok, "squared error"] <- squaredError(true_y[ok], mean_samples[ok,])
