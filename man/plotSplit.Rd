@@ -8,12 +8,7 @@ plotSplit(
   list_locs,
   col = c("gray", "red", "orange", "blue"),
   cex = c(1, 0.5, 0.5, 1),
-<<<<<<< HEAD
   pch = list(".", 15, 15, ".")
-=======
-  pch = list(".", 15, 15, "."),
-  legend_position = "topleft"
->>>>>>> 7e2483e (commit Rd)
 )
 }
 \arguments{

@@ -4,20 +4,13 @@
 \alias{estimate}
 \title{Estimation of the model parameters using the MCMC records of a GeoNonStat object.}
 \usage{
-estimate(object, burn_in = 0.3)
+estimate(object, ...)
 }
 \arguments{
-\item{object}{a GeoNonStat object containing records}
+\item{object}{an object of class GeoNonStat}
 
-\item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
-first records that should be removed. Default to 0.1}
-}
-\value{
-a list of numerical summary by parameters.
+\item{...}{additional argument (unused)}
 }
 \description{
 Estimation of the model parameters using the MCMC records of a GeoNonStat object.
-}
-\examples{
-estimate(processedGnsDemo)
 }

@@ -91,6 +91,14 @@ summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 9
   return(t(matstat))
 }
 
+#' Estimation of the model parameters using the MCMC records of a GeoNonStat object.
+#'
+#' @param object an object of class GeoNonStat
+#' @param ... additional argument (unused)
+#' @export
+estimate <- function(object, ...) {
+  UseMethod("estimate")
+}
 
 #' Estimation of the model parameters using the MCMC records of a GeoNonStat object.
 #'
@@ -104,8 +112,9 @@ summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 9
 #' @method estimate GeoNonStat
 #'
 #' @examples
+#' # Exstimation of model parameters, after MCMC :
 #' estimate(processedGnsDemo)
-estimate <- function(object, burn_in = 0.3) {
+estimate.GeoNonStat <- function(object, burn_in = 0.3) {
   if (mcmcCount(object) <= 0) {
     objname <- deparse(substitute(object))
     stop(paste0("MCMC doesn't seem to have run on '",
