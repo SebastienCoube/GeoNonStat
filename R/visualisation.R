@@ -431,7 +431,7 @@ pointillistColorscale <- function(field, scalename = "") {
 #'
 #' @examples
 #' #TODO
-drawEllpises = function(object, prediction_block, correlation_level = .1)
+drawEllipses = function(object, prediction_block, correlation_level = .1)
 {
   log_range <- cbind(
     prediction_block$summaries$range[,"median"],
@@ -462,7 +462,7 @@ drawEllpises = function(object, prediction_block, correlation_level = .1)
       lower = 0, 
       upper = 1e12)$root
   for(i in seq(nrow(locs))){
-    ell = ellipse_mahalanobis(matrices[[i]], shrink^2)
+    ell = ellipseMahalanobis(matrices[[i]], shrink^2)
     ell[,1] = ell[,1]+locs[i, 1]
     ell[,2] = ell[,2]+locs[i, 2]
     lines(ell)
@@ -470,7 +470,7 @@ drawEllpises = function(object, prediction_block, correlation_level = .1)
 }
 
 
-ellipse_mahalanobis <- function(Sigma, x) {
+ellipseMahalanobis <- function(Sigma, x) {
   eig   <- eigen(Sigma, symmetric = TRUE)
   A     <- eig$vectors %*% diag(sqrt(eig$values * x), nrow = 2)
   
