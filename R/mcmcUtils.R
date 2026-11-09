@@ -192,15 +192,11 @@ getPPCoeff <- function(x, n_knots){
 #' @keywords internal
 #' @examples
 #' # Testing coherence of logScaleDensGrad formula and movePPCoeff
-#' hierarchical_model <- list(anisotropic = T, range = list(PP = list(n_knots = 9)))
 #' range_beta <- matrix(rnorm(30), 10)
 #' range_log_scale <- c(-1, -3)
-#' range_log_scale_ <- range_log_scale + 1e-6
-#' range_beta_ <- movePPCoeff(range_beta, range_log_scale, range_log_scale_, hierarchical_model)
-#' plot(
-#' (range_beta_ -range_beta)[-1,]*1e6,
-#' .5*range_beta[-1,]
-#' )
+#' new_range_log_scale <- range_log_scale + 1e-6
+#' new_range_beta <- movePPCoeff(range_beta, range_log_scale, new_range_log_scale, 9)
+#' plot((new_range_beta -range_beta)[-1,]*1e6, .5*range_beta[-1,])
 movePPCoeff <- function(beta, log_scale, new_log_scale, n_knots){
   log_scale_change <- c(exp(.5*(new_log_scale - log_scale)) [c(1, rep(2, 2*(ncol(beta)==3)))])
   beta[-seq_len(nrow(beta) - n_knots),] <-

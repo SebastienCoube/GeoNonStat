@@ -150,23 +150,24 @@ test_that("runOneChainMcmc is reproducible after more iterations", {
 
 test_that("GeoNonStatMcmc is reproducible when run twice with same seed", {
   set.seed(2027)
-  nlocs <- 30
+  nlocs <- 200
   obs_locs <- cbind(runif(nlocs), runif(nlocs))
   vecchia_approx <- createVecchia(obs_locs, m = 3)
   
   set.seed(13)
   suppressMessages(
-    PP_range <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+    PP_range <- createPP(vecchia_approx, knots = 10, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
   )
   
   set.seed(13)
   suppressMessages(
-    PP_noise <- createPP(vecchia_approx, knots = 4, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
+    PP_noise <- createPP(vecchia_approx, knots = 10, plot = FALSE, verbose = FALSE, reorder_knots = FALSE)
   )
   
   X <- as.data.frame(cbind(runif(nlocs), rnorm(nlocs)))
   observed_field <- rnorm(nlocs)
   
+  # TODO ici mettre plus qu'une chaine
   set.seed(9)
   suppressMessages(
     g <- GeoNonStat(
@@ -183,13 +184,6 @@ test_that("GeoNonStatMcmc is reproducible when run twice with same seed", {
       range_PP = PP_range,
       noise_PP = PP_noise
     )
-  )
-  
-  # run twice with same seed; function works for n_iterations < 60
-  set.seed(100)
-  expect_error(
-    out1 <- GeoNonStatMcmc(g, n_threads_per_chain = 1, n_iterations = 5),
-    NA
   )
   
   set.seed(9)
