@@ -11,38 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// vecchia
-arma::cube vecchia(arma::mat log_range, arma::mat locs, arma::mat NNarray, int num_threads, double smoothness, bool compute_derivative);
-RcppExport SEXP _GeoNonStat_vecchia(SEXP log_rangeSEXP, SEXP locsSEXP, SEXP NNarraySEXP, SEXP num_threadsSEXP, SEXP smoothnessSEXP, SEXP compute_derivativeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type log_range(log_rangeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type NNarray(NNarraySEXP);
-    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    Rcpp::traits::input_parameter< double >::type smoothness(smoothnessSEXP);
-    Rcpp::traits::input_parameter< bool >::type compute_derivative(compute_derivativeSEXP);
-    rcpp_result_gen = Rcpp::wrap(vecchia(log_range, locs, NNarray, num_threads, smoothness, compute_derivative));
-    return rcpp_result_gen;
-END_RCPP
-}
-// derivative_sandwiches
-arma::mat derivative_sandwiches(arma::cube vecchia, arma::vec left_vector, arma::vec right_vector, arma::mat NNarray, bool sauce_determinant_chef, int num_threads);
-RcppExport SEXP _GeoNonStat_derivative_sandwiches(SEXP vecchiaSEXP, SEXP left_vectorSEXP, SEXP right_vectorSEXP, SEXP NNarraySEXP, SEXP sauce_determinant_chefSEXP, SEXP num_threadsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::cube >::type vecchia(vecchiaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type left_vector(left_vectorSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type right_vector(right_vectorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type NNarray(NNarraySEXP);
-    Rcpp::traits::input_parameter< bool >::type sauce_determinant_chef(sauce_determinant_chefSEXP);
-    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(derivative_sandwiches(vecchia, left_vector, right_vector, NNarray, sauce_determinant_chef, num_threads));
-    return rcpp_result_gen;
-END_RCPP
-}
 // maternThingy_
 double maternThingy_(double mahala_dist, bool smoothness15);
 RcppExport SEXP _GeoNonStat_maternThingy_(SEXP mahala_distSEXP, SEXP smoothness15SEXP) {
@@ -131,8 +99,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_GeoNonStat_vecchia", (DL_FUNC) &_GeoNonStat_vecchia, 6},
-    {"_GeoNonStat_derivative_sandwiches", (DL_FUNC) &_GeoNonStat_derivative_sandwiches, 6},
     {"_GeoNonStat_maternThingy_", (DL_FUNC) &_GeoNonStat_maternThingy_, 2},
     {"_GeoNonStat_expRange_", (DL_FUNC) &_GeoNonStat_expRange_, 3},
     {"_GeoNonStat_vecchia_", (DL_FUNC) &_GeoNonStat_vecchia_, 8},
