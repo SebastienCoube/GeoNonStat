@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{decompressChol}
 \alias{decompressChol}
-\title{Title TODO}
+\title{decompress cholesky matrix}
 \usage{
 decompressChol(vecchia_approx, compressed_sparse_chol)
 }
@@ -15,6 +15,5 @@ decompressChol(vecchia_approx, compressed_sparse_chol)
 a sparse triangular matrix
 }
 \description{
-Title TODO
+decompress cholesky matrix
 }
-\keyword{internal}

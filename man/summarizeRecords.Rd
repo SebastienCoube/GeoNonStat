@@ -6,7 +6,7 @@
 \usage{
 summarizeRecords(
   mat,
-  quant = c(`q 2.5\%` = 0.025, median = 0.5, `q 97.5\%` = 0.975)
+  quant = c(median = 0.5, `q 2.5\%` = 0.025, `q 97.5\%` = 0.975)
 )
 }
 \arguments{

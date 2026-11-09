@@ -14,13 +14,13 @@ train/test}
 
 \item{n_clust}{the number of clusters. If NULL, will be set to 1\% of the data.}
 
-\item{round_locs}{numeric, default to 0. rounding factor for locations coordinates.}
-
-\item{prop_test_locs}{the proportion observsations used for validation. 
+\item{prop_test}{the proportion observsations used for validation. 
 For "close" validation, the proportion is the proportion of spatial locations from the train data set
 For "far" validation, the proportion is the proportion of spatial clusters. 
 Default to 0.01. Can be of length 2 to change proportions between far 
 and close test locations (far first, then close)}
+
+\item{round_locs}{numeric, default to 0. rounding factor for locations coordinates.}
 }
 \description{
 Split a GeoNonStat object between test and train samples

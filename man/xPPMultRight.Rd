@@ -21,7 +21,7 @@ xPPMultRight(
 
 \item{Y}{the matrix who multiplies the covariates and the PP}
 
-\item{permutate_PP_to_obs}{logical, default to FALSE. TODO}
+\item{permutate_PP_to_obs}{logical, default to FALSE. Permutate PP ?}
 }
 \value{
 a matrix
@@ -52,24 +52,6 @@ res3 <- xPPMultRight(
 )
 plotPointillistPainting(vecchia_approx$locs, res3,
   main = "PP + covariates,\n one covariate for each location", pch = 15
-)
-
-# TODO Nun functional example
-# # multiplying PP and matrix of covariates with an index
-# X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-# res4 <- xPPMultRight(X = X_by_obs, PP = PP,
-#                        Y = c(covariate_coefficients, knots_coeffs),
-#                        vecchia_approx = vecchia_approx)
-# plotPointillistPainting(vecchia_approx$observed_locs,
-#                           res4,
-#                           main = "PP + covariates,\n  one covariate for each observation")
-
-# multiplying
-res5 <- xPPMultRight(
-  X = NULL, PP = PP,
-  Y = diag(1, PP$n_knots),
-  vecchia_approx = vecchia_approx,
-  permutate_PP_to_obs = TRUE
 )
 }
 \keyword{internal}

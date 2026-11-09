@@ -17,49 +17,7 @@ subsetData <- function(data, idx) {
   })
 }
 
-#' Exponential of a square matrix, adding a small numeric value on the diagonal
-#'
-#' @param coords a numeric vector, of length such as
-#' `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer
-#' @param eps a numeric value, default to .0001
-#'
-#' @returns a square matrix
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' expmat(c(1, 2, 3, 4, 5, 6))
-expmat <- function(coords, eps = 0.0001) {
-  res <- expm::expm(symmat(coords))
-  res + diag(eps, nrow(res), ncol(res))
-}
-
-
-#' Create symetric matrix from coordinates
-#'
-#' @param coords a numeric vector, of length such as
-#' `(sqrt(8 * length(coords) + 1) - 1) / 2` is an integer
-#'
-#' @returns a matrix
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' symmat(c(1, 2, 3, 4, 5, 6))
-symmat <- function(coords) {
-  # check if length of vector is compatible
-  n <- (sqrt(8 * length(coords) + 1) - 1) / 2
-  if (as.integer(n) != n || n <= 0) {
-    stop("length of coords incompatible with a symetric matrix")
-  }
-  symmat <- matrix(0, nrow = n, ncol = n)
-  diag(symmat) <- coords[1:n]
-  symmat[lower.tri(symmat)] <- coords[-seq_len(n)]
-  symmat[upper.tri(symmat)] <- symmat[lower.tri(symmat)]
-  return(symmat)
-}
-
-#' Title
+#' Naïve greedy coloring of the moral graph
 #'
 #' @param M a SparseMatrix
 #'

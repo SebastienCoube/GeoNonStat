@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{naiveGreedyColoring}
 \alias{naiveGreedyColoring}
-\title{Title}
+\title{Naïve greedy coloring of the moral graph}
 \usage{
 naiveGreedyColoring(M)
 }
@@ -13,7 +13,7 @@ naiveGreedyColoring(M)
 a vector of colors, of length the number of rows of M
 }
 \description{
-Title
+Naïve greedy coloring of the moral graph
 }
 \examples{
 n <- 5

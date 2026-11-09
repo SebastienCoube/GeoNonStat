@@ -21,7 +21,7 @@ xPPCrossprod(
 
 \item{vecchia_approx}{an object created by `vecchia_approx()`}
 
-\item{permutate_PP_to_obs}{logical, default to FALSE. TODO}
+\item{permutate_PP_to_obs}{logical, default to FALSE. Permutate PP ?}
 }
 \value{
 a matrix

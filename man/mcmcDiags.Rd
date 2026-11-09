@@ -20,6 +20,5 @@ summary of MCMC diagnostics
 }
 \examples{
 MCMC_diags <- mcmcDiags(processedGnsDemo)
-# TODO - quid des NA ?
 }
 \keyword{internal}

@@ -1,11 +1,8 @@
 #' Coverage intervals of the response variable
 #' @param true_y a vector of true observations of the response variable
-#' @param TODO
+#' @param y_samples samples of y observations
 #'
 #' @returns a vector of Booleans indicating if each true observation is within the predicted coverage interval
-#' @export
-#' @keywords internal
-#'
 posterior_coverage <- function(true_y, y_samples) {
   predicted_quantiles <- rowQuantiles(y_samples, probs = c(.025, .975))
   inBounds(predicted_quantiles, true_y)
