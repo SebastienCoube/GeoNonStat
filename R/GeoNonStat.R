@@ -17,8 +17,6 @@
 #'   \item{\code{hctam_scol_1}}{sapply(hctam_scol, function(x) x[1])}
 #'   \item{\code{obs_per_loc}}{count how many observations correspond to one location))}
 #'   \item{\code{NNarray}}{nearest neighbours for Vecchia approximation}
-#'   \item{\code{NNarray_non_NA}}{!is.na(NNarray)}
-#'   # TODO voir au final dans predict si c'est utile de trainer NNarray_non_NA ou si le calculer à la volée suffit
 #'   \item{\code{sparse_chol_i}}{sparse_mat at i+1}
 #'   \item{\code{sparse_chol_p}}{sparse_mat at p}
 #'   \item{\code{sparse_chol_x_reorder}}{sparse_chol_x_reorder}
@@ -111,7 +109,6 @@ createVecchia <- function(observed_locs,
       }),
       obs_per_loc = unlist(sapply(hctam_scol, length)),
       NNarray = NNarray,
-      NNarray_non_NA = NNNoNA,
       sparse_chol_i = sparse_mat@i + 1L,
       sparse_chol_p = sparse_mat@p,
       sparse_chol_x_reorder = sparse_chol_x_reorder,
