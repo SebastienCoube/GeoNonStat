@@ -97,14 +97,12 @@ naiveGreedyColoring <- function(M) {
   return(cols)
 }
 
-#' Title TODO
+#' decompress cholesky matrix
 #'
 #' @param vecchia_approx  an object created by `vecchia_approx()`
 #' @param compressed_sparse_chol an object created with `compute_sparse_chol()`
 #'
 #' @returns a sparse triangular matrix
-#' @export
-#' @keywords internal
 decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
   n <- length(vecchia_approx$sparse_chol_p) - 1L
   return(
@@ -195,7 +193,7 @@ computeLogRange <- function(range_beta,
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param Y the matrix who multiplies the covariates and the PP
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param permutate_PP_to_obs logical, default to FALSE. TODO
+#' @param permutate_PP_to_obs logical, default to FALSE. Permutate PP ?
 #'
 #' @returns a matrix
 #' @export
@@ -223,24 +221,6 @@ computeLogRange <- function(range_beta,
 #' )
 #' plotPointillistPainting(vecchia_approx$locs, res3,
 #'   main = "PP + covariates,\n one covariate for each location", pch = 15
-#' )
-#'
-#' # TODO Nun functional example
-#' # # multiplying PP and matrix of covariates with an index
-#' # X_by_obs = cbind(1, vecchia_approx$observed_locs, rnorm(vecchia_approx$n_obs))
-#' # res4 <- xPPMultRight(X = X_by_obs, PP = PP,
-#' #                        Y = c(covariate_coefficients, knots_coeffs),
-#' #                        vecchia_approx = vecchia_approx)
-#' # plotPointillistPainting(vecchia_approx$observed_locs,
-#' #                           res4,
-#' #                           main = "PP + covariates,\n  one covariate for each observation")
-#'
-#' # multiplying
-#' res5 <- xPPMultRight(
-#'   X = NULL, PP = PP,
-#'   Y = diag(1, PP$n_knots),
-#'   vecchia_approx = vecchia_approx,
-#'   permutate_PP_to_obs = TRUE
 #' )
 xPPMultRight <- function(X = NULL,
                          PP = NULL,
@@ -309,7 +289,7 @@ xPPMultRight <- function(X = NULL,
 #' @param PP either a PP whose basis will be multiplied by the last columns of Y
 #' @param Y the matrix who multiplies the covariates and the PP
 #' @param vecchia_approx an object created by `vecchia_approx()`
-#' @param permutate_PP_to_obs logical, default to FALSE. TODO
+#' @param permutate_PP_to_obs logical, default to FALSE. Permutate PP ?
 #'
 #' @returns a matrix
 #' @export
@@ -383,35 +363,6 @@ xPPCrossprod <- function(X,
   if (!is.matrix(res)) {
     res <- as.matrix(res)
   }
-  return(res)
-}
-
-
-#' Transpose a list
-#'
-#' @param list a list containing sublists (all having the same structure).
-#'
-#' @returns a list, transposed
-#' @export
-#' @keywords internal
-#'
-#' @examples
-#' A <- list("R1" = "a1", "R2" = "a2", "R3" = "a3")
-#' B <- list("R1" = "b1", "R2" = "b2", "R3" = "b3")
-#' C <- list("R1" = "c1", "R2" = "c2", "R3" = "c3")
-#' transposeList(list("A" = A, "B" = B, "C" = C))
-transposeList <- function(a_list) {
-  res <- callr::r(
-    args = list(a_list), 
-    function(a_list){
-      nameslist <- names(a_list[[1]])
-      tl <- lapply(
-        seq_along(a_list[[1]]),
-        function(i) lapply(a_list, `[[`, i)
-      )
-      names(tl) <- nameslist
-      return(tl)
-    })
   return(res)
 }
 

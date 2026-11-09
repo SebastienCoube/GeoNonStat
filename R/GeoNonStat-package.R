@@ -32,7 +32,7 @@
 #' @importFrom callr r
 #' @importFrom scoringRules crps_sample
 #' @importFrom stats rnorm runif ecdf predict
-#' @importFrom grDevices colorRampPalette rainbow
+#' @importFrom grDevices colorRampPalette rainbow dev.off pdf
 #' @importFrom FNN get.knn
 #' @importFrom coda effectiveSize
 #' @importFrom stats dist dnorm kmeans lm median model.matrix quantile sd var vcov

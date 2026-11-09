@@ -171,8 +171,6 @@ plotKnotsPP <- function(x,
   par(mar = omar, mgp = def.par[["mgp"]])
 }
 
-
-
 # # test
 # nu = .5
 # locs = as.matrix(expand.grid(seq(0, 1, .02), seq(0, 1, .02)))
@@ -422,7 +420,17 @@ pointillistColorscale <- function(field, scalename = "") {
 
 
 
-# Draw correlation ellipses at a set of locations
+#' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
+#' @param object a GeoNonstat object
+#' @param prediction_block block of prediction on wich to draw ellipses
+#' @param correlation_level numeric, shrinks or inflates the ellipses. 
+#' Default to .1 (rho following INLA's terminology) TODO
+#'
+#' @returns a plot object
+#' @export
+#'
+#' @examples
+#' #TODO
 drawEllpises = function(object, prediction_block, correlation_level = .1)
 {
   log_range <- cbind(
@@ -433,21 +441,26 @@ drawEllpises = function(object, prediction_block, correlation_level = .1)
   if(ncol(log_range) ==3){
     #to match parametrization in compute sparse chol
     log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
-  }else if (ncol(log_range) == 1) {
-    Y <- range_beta * 2
+  } else if (ncol(log_range) == 1) {
+    log_range <- log_range * 2
   }
   
   range <- t(expRanges(t(log_range)))
   matrices = lapply(split(range, row(range)), function(x){
     res <- matrix(0,2,2)
-    res[1] <- x[1]; res[4] <- x[2]; res[2] <- res[3] <- x[3]
+    res[1] <- x[1];
+    res[4] <- x[2]; 
+    res[2] <- res[3] <- x[3]
     res
   })
   locs <- prediction_block$locs
   shrink <-
-    (uniroot(f = function(x)maternThingy_(
-      x, smoothness15 = object$hierarchical_model$matern_smoothness == 1.5) - correlation_level,
-      lower = 0, upper = 1e12)$root)
+    stats::uniroot(
+      f = function(x) maternThingy_(x, 
+                                    smoothness15 = object$hierarchical_model$matern_smoothness == 1.5) - 
+        correlation_level,
+      lower = 0, 
+      upper = 1e12)$root
   for(i in seq(nrow(locs))){
     ell = ellipse_mahalanobis(matrices[[i]], shrink^2)
     ell[,1] = ell[,1]+locs[i, 1]

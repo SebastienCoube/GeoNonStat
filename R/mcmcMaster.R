@@ -302,9 +302,9 @@ automaticMcmc <- function(
       verbose=FALSE
     )
     mcmc_diags <- mcmcDiags(object, burn_in, verbose = F)
-    if(!is.null(save_checkpoint_plots))pdf(save_checkpoint_plots)
+    if(!is.null(save_checkpoint_plots)) grDevices::pdf(save_checkpoint_plots)
       tracePlots(object, 0)
-    if(!is.null(save_checkpoint_plots))dev.off()
+    if(!is.null(save_checkpoint_plots)) grDevices::dev.off()
     worst_gr <- mcmc_diags$worst$value[match("Point.est..Gelman", mcmc_diags$worst$criterium)]
     worst_ess <- mcmc_diags$worst$value[match("ess", mcmc_diags$worst$criterium)]
     if(!is.null(save_checkpoint_model)){saveRDS(object, save_checkpoint_model)}

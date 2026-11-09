@@ -210,8 +210,7 @@ splitSummary <- function(list_locs) {
 plotSplit <- function(list_locs,
                       col = c("gray", "red", "orange", "blue"),
                       cex = c(1, .5, .5, 1),
-                      pch = list(".", 15, 15, "."),
-                      legend_position = "topleft") {
+                      pch = list(".", 15, 15, ".")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
   if("info" %in% names(list_locs)) list_locs[["info"]] <- NULL
   if(!all(sapply(list_locs, function(x) "locs" %in% names(x))))
@@ -286,7 +285,7 @@ plotSplit <- function(list_locs,
 #' @param data a list containing vectors or data.frames to split into
 #' train/test
 #' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
-#' @param prop_test_locs the proportion observsations used for validation. 
+#' @param prop_test the proportion observsations used for validation. 
 #' For "close" validation, the proportion is the proportion of spatial locations from the train data set
 #' For "far" validation, the proportion is the proportion of spatial clusters. 
 #' Default to 0.01. Can be of length 2 to change proportions between far 

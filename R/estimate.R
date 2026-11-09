@@ -99,11 +99,20 @@ summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 9
 #' first records that should be removed. Default to 0.1
 #'
 #' @returns a list of numerical summary by parameters.
+#' @rdname GeoNonStat
 #' @export
+#' @method predict GeoNonStat
 #'
 #' @examples
 #' estimate(processedGnsDemo)
 estimate <- function(object, burn_in = 0.3) {
+  if (mcmcCount(object) <= 0) {
+    objname <- deparse(substitute(object))
+    stop(paste0("MCMC doesn't seem to have run on '",
+                objname,
+                "',\ntry again after a call to ",
+                "'GeoNonStatMcmc' or 'automaticMcmc' function"))
+  }
   summaries <- list()
   scores <- list()
   scores$per_obs <- matrix(0, object$vecchia_approx$n_obs, 4)

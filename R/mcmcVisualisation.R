@@ -11,7 +11,6 @@ getRecordVarNames <- function(records)unname(sapply(unlist(mapply(paste, names(r
 #' @keywords internal
 #' @examples
 #' MCMC_diags <- mcmcDiags(processedGnsDemo)
-#' # TODO - quid des NA ?
 mcmcDiags <- function(object, burn_in = 0.3, verbose = TRUE, keep = "nofield") {
   # only two significant digits are kept
   records <- aggregateRecords(object$records, burn_in = burn_in, keep = keep, keep_separate_chains = TRUE)

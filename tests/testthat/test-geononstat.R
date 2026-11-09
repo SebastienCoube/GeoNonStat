@@ -215,3 +215,187 @@ test_that("GeoNonStat object reproducible with anisotropic, range_PP and noise_P
   expect_equal(g1$states$chain_1$params$range_beta, g2$states$chain_1$params$range_beta)
 })
 
+
+
+
+make_setup <- function(nlocs = 100, nobs = 200, m = 10) {
+  set.seed(123)
+  unique_locs <- cbind(runif(nlocs), runif(nlocs))
+  # chaque localisation apparait au moins une fois, avec des doublons
+  idx <- c(seq_len(nlocs), sample(nlocs, nobs - nlocs, replace = TRUE))
+  observed_locs <- unique_locs[idx, ]
+  X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
+  vecchia_approx <- createVecchia(observed_locs, m)
+  PP <- createPP(vecchia_approx, plot = FALSE)
+  list(
+    nobs = nobs,
+    observed_locs = observed_locs,
+    X = X,
+    vecchia_approx = vecchia_approx,
+    PP = PP
+  )
+}
+
+s <- make_setup()
+nobs <- s$nobs
+vecchia_approx <- s$vecchia_approx
+PP <- s$PP
+X <- s$X
+n_unique_locs <- length(vecchia_approx$hctam_scol_1)
+
+test_that("processCovariates works with no PP and no X (intercept only)", {
+  res <- processCovariates(
+    X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+  )
+  
+  expect_type(res, "list")
+  expect_null(res$arg)
+  expect_true(methods::is(res$X, "sparseMatrix"))
+  expect_equal(dim(res$X), c(nobs, 1))
+  expect_equal(colnames(res$X), "(Intercept)")
+  expect_equal(res$n_regressors, 1)
+  expect_equal(res$which_locs, 1)
+  expect_equal(dim(res$X_locs), c(n_unique_locs, 1))
+  expect_equal(colnames(res$X_locs), "(Intercept)")
+  expect_equal(dim(res$crossprod_X), c(1, 1))
+  expect_equal(as.numeric(as.matrix(res$crossprod_X)), nobs)
+})
+
+test_that("processCovariates works with no PP and an X", {
+  res <- processCovariates(
+    X = X, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+  )
+  
+  expect_identical(res$arg, X)
+  expect_true(methods::is(res$X, "sparseMatrix"))
+  expect_equal(dim(res$X), c(nobs, ncol(X) + 1))
+  expect_equal(colnames(res$X)[1], "(Intercept)")
+  expect_equal(res$n_regressors, ncol(X) + 1)
+  # random covariates vary within a location:
+  # only the intercept is constant within locations
+  expect_equal(res$which_locs, 1)
+  expect_equal(dim(res$X_locs), c(n_unique_locs, 1))
+  expect_equal(dim(res$crossprod_X), rep(ncol(X) + 1, 2))
+})
+
+test_that("processCovariates works with a PP and an X (crossprod_X includes PP basis)", {
+  res <- processCovariates(
+    X = X, vecchia_approx, PP = PP, one_obs_per_locs = FALSE
+  )
+  
+  expect_identical(res$arg, X)
+  expect_equal(res$n_regressors, ncol(X) + 1)
+  expect_equal(dim(res$crossprod_X), rep(ncol(X) + 1 + PP$n_knots, 2))
+  # X_locs does not contain the PP columns
+  expect_equal(ncol(res$X_locs), length(res$which_locs))
+})
+
+test_that("processCovariates works with a PP and no X", {
+  res <- processCovariates(
+    X = NULL, vecchia_approx, PP = PP, one_obs_per_locs = FALSE
+  )
+  
+  expect_null(res$arg)
+  expect_equal(res$n_regressors, 1)
+  expect_equal(dim(res$crossprod_X), rep(1 + PP$n_knots, 2))
+})
+
+test_that("processCovariates works with one_obs_per_locs = TRUE and covariates constant within locations", {
+  locs <- vecchia_approx$observed_locs
+  X_loc <- as.data.frame(cbind(locs, locs[, 1]^2 + locs[, 2]^2))
+  
+  res <- processCovariates(
+    X = X_loc, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+  )
+  
+  expect_identical(res$arg, X_loc)
+  expect_true(is(res$X, "Matrix")) # removed when one_obs_per_locs = TRUE
+  expect_equal(res$which_locs, seq_len(ncol(X_loc) + 1))
+  expect_equal(dim(res$X_locs), c(n_unique_locs, ncol(X_loc) + 1))
+  expect_equal(colnames(res$X_locs)[1], "(Intercept)")
+  expect_equal(dim(res$crossprod_X), rep(ncol(X_loc) + 1, 2))
+})
+
+test_that("processCovariates works with one_obs_per_locs = TRUE and no X (intercept only)", {
+  res <- processCovariates(
+    X = NULL, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+  )
+  
+  expect_true("list" %in% class(res))
+  expect_true(is(res$X_locs, "Matrix"))
+  expect_identical(dim(res$X_locs), c(100L, 1L))
+})
+
+# Error cases ------------------------------------------------------------------
+
+test_that("processCovariates errors if X varies within a location and one_obs_per_locs = TRUE", {
+  expect_error(
+    processCovariates(
+      X = X, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+    ),
+    "cannot vary within one spatial location"
+  )
+})
+
+test_that("processCovariates errors if X has the wrong number of rows", {
+  X_bad <- X[-1, ]
+  expect_error(
+    processCovariates(
+      X = X_bad, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+    ),
+    "should have the same number of rows"
+  )
+  expect_error(
+    processCovariates(
+      X = X_bad, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+    ),
+    "should have the same number of rows"
+  )
+})
+
+test_that("processCovariates errors if X is not a data.frame", {
+  X_matrix <- as.matrix(X)
+  expect_error(
+    processCovariates(
+      X = X_matrix, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+    ),
+    "should be a data.frame or NULL"
+  )
+  expect_error(
+    processCovariates(
+      X = X_matrix, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+    ),
+    "should be a data.frame or NULL"
+  )
+})
+
+test_that("processCovariates errors if covariates are not independent", {
+  locs <- vecchia_approx$observed_locs
+  X_collinear <- as.data.frame(
+    cbind(locs, locs, locs[, 1]^2 + locs[, 2]^2)
+  )
+  expect_error(
+    processCovariates(
+      X = X_collinear, vecchia_approx, PP = NULL, one_obs_per_locs = TRUE
+    ),
+    "does not induce an independent collection of covariates"
+  )
+  expect_error(
+    processCovariates(
+      X = X_collinear, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+    ),
+    "does not induce an independent collection of covariates"
+  )
+})
+
+test_that("processCovariates errors if X has a constant column (collinear with the intercept)", {
+  X_const <- data.frame(a = rep(1, nobs))
+  expect_error(
+    processCovariates(
+      X = X_const, vecchia_approx, PP = NULL, one_obs_per_locs = FALSE
+    ),
+    "does not induce an independent collection of covariates"
+  )
+})
+
+
