@@ -34,6 +34,6 @@ a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 Plots a spatial variable like a \href{https://en.wikipedia.org/wiki/Pointillism}{pointillist painting}, the color intensity being the variable value.
 }
 \examples{
-locs <- matrix(rnorm(2000), ncol = 2)
+locs <- matrix(runif(2000), ncol = 2)
 plotPointillistPainting(locs = locs, field = rnorm(1000))
 }

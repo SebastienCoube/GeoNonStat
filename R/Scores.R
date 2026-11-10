@@ -250,8 +250,8 @@ plotSplit <- function(list_locs,
   
   oldpar <- par(c("mar", "xpd"))
   on.exit(par(mar=oldpar$mar, xpd=oldpar$xpd))
-  if(def.par$mar[3]<=3) {
-    par(mar = def.par$mar + c(0, 0, 3-def.par$mar[3], 0), xpd = NA)
+  if(oldpar$mar[3]<=3) {
+    par(mar = oldpar$mar + c(0, 0, 3-oldpar$mar[3], 0), xpd = NA)
   }
   
   plot(NA, xlim = xlim, ylim = ylim, xlab = xlab, ylab = ylab)
@@ -279,21 +279,21 @@ plotSplit <- function(list_locs,
   
 
 #' Split data between train and test
-#' @description Split a GeoNonStat object between test and train samples
 #'
 #' @param locs a matrix of spatial locations.
-#' @param data a list containing vectors or data.frames to split into
+#' @param datalist a list containing vectors or data.frames to split into
 #' train/test
-#' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
 #' @param prop_test_close the proportion of observations used for "close" 
 #' validation, among "not far" data. Default to 0.1
 #' @param prop_test_far the proportion of observations used for "far" 
 #' validation, as a proportion of spatial clusters. Default to 0.1
 #' @param n_clust_far number of spatial clusters for "far" validation. 
-#' Default to NULL, set to 1% of the data
+#' Default to NULL, set to 1\% of the data
 #' @param round_locs numeric, default to 0. rounding factor for locations coordinates. 
+#' @param plot logical, default to TRUE. Should the split produce a plot ? 
+#' @returns a list of lists, each child having the same structure as datalist
 #' @export
-#'
+#' 
 #' @examples
 #' n <- 10000
 #' observed_locs <- round(cbind(runif(n), runif(n)), 3)
@@ -309,7 +309,8 @@ splitData <- function(locs,
                       prop_test_close = 0.1,
                       prop_test_far = 0.1, 
                       n_clust_far = NULL,
-                      round_locs = 0){
+                      round_locs = 0, 
+                      plot = TRUE){
   if (round_locs > 0) locs <- round_locs * round(locs / round_locs)
   
   # Split "far" : désactivé si n_clust_far = 0 ou prop_test_far = 0
@@ -357,6 +358,6 @@ splitData <- function(locs,
 
   cat("Summary of split data\n")
   splitSummary(output)
-  plotSplit(output)
+  if(plot) plotSplit(output)
   return(output)
 }

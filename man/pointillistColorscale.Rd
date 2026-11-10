@@ -4,7 +4,7 @@
 \alias{pointillistColorscale}
 \title{Plot the scale of colors for a given variable}
 \usage{
-pointillistColorscale(field, scalename = "")
+pointillistColorscale(field, scalename = "", n = 50, rel_x = c(0.01, 0.07))
 }
 \arguments{
 \item{field}{numerical vector, interest variable to define color of points}

@@ -4,26 +4,40 @@
 \alias{splitData}
 \title{Split data between train and test}
 \usage{
-splitData(locs, data, n_clust = NULL, prop_test = 0.1, round_locs = 0)
+splitData(
+  locs,
+  datalist,
+  prop_test_close = 0.1,
+  prop_test_far = 0.1,
+  n_clust_far = NULL,
+  round_locs = 0,
+  plot = TRUE
+)
 }
 \arguments{
 \item{locs}{a matrix of spatial locations.}
 
-\item{data}{a list containing vectors or data.frames to split into
+\item{datalist}{a list containing vectors or data.frames to split into
 train/test}
 
-\item{n_clust}{the number of clusters. If NULL, will be set to 1\% of the data.}
+\item{prop_test_close}{the proportion of observations used for "close" 
+validation, among "not far" data. Default to 0.1}
 
-\item{prop_test}{the proportion observsations used for validation. 
-For "close" validation, the proportion is the proportion of spatial locations from the train data set
-For "far" validation, the proportion is the proportion of spatial clusters. 
-Default to 0.01. Can be of length 2 to change proportions between far 
-and close test locations (far first, then close)}
+\item{prop_test_far}{the proportion of observations used for "far" 
+validation, as a proportion of spatial clusters. Default to 0.1}
+
+\item{n_clust_far}{number of spatial clusters for "far" validation. 
+Default to NULL, set to 1\% of the data}
 
 \item{round_locs}{numeric, default to 0. rounding factor for locations coordinates.}
+
+\item{plot}{logical, default to TRUE. Should the split produce a plot ?}
+}
+\value{
+a list of lists, each child having the same structure as datalist
 }
 \description{
-Split a GeoNonStat object between test and train samples
+Split data between train and test
 }
 \examples{
 n <- 10000
@@ -33,5 +47,6 @@ range_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 y <- rnorm(n)
 datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
-traintest <- splitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
+traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1)
+traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1, prop_test_far=0.1)
 }

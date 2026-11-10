@@ -9,10 +9,11 @@ drawEllipses(object, prediction_block, correlation_level = 0.1)
 \arguments{
 \item{object}{a GeoNonstat object}
 
-\item{prediction_block}{block of prediction on wich to draw ellipses}
+\item{prediction_block}{block of prediction on wich to draw ellipses, usually an element of 
+the output of `predict.GeoNonStat`}
 
-\item{correlation_level}{numeric, shrinks or inflates the ellipses. 
-Default to .1 (rho following INLA's terminology) TODO}
+\item{correlation_level}{numeric value, between 0 and 1, resize the ellipses according 
+to correlation of the spatial kernel. Default to .1}
 }
 \value{
 a plot object
@@ -21,5 +22,13 @@ a plot object
 Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 }
 \examples{
-#TODO
+# Recreating new data with less observations but same structure as example data
+locs <-processedGnsDemo$vecchia_approx$observed_locs
+X <- processedGnsDemo$covariates$X$arg
+suppressWarnings(
+  testdata <- splitData(locs,  list("X" = X, "noise_X"=X), plot=FALSE)
+)
+testpredictions <- predict(processedGnsDemo, testdata)
+plotPointillistPainting(locs = locs, field = X[,1], cex=20)
+drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
 }

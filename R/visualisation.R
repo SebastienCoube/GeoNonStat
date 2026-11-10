@@ -348,23 +348,17 @@ plotPointillistPainting <- function(locs,
   args$col <- getColors(field, alpha = alpha)
   
   if (add) {
-    # the main plot is still the active one: just add to it
     do.call("points", c(list(x = locs), args))
     return(invisible(NULL))
   }
-
-  if (legend) {
-    # figure 1 = legend (right), figure 2 = main plot (left)
-    layout(matrix(c(2, 1), nrow = 1), widths = c(6, 1))
-    pointillistColorscale(field)   
-  } 
-  oldmar <- par("mar")
-  on.exit(par(mar=oldmar))
-  par(mar = c(2, 2, 4, 0))
-  do.call("plot", c(list(x = locs), args))  
+  
+  # margin for legend, if needed
+  par(mar = c(2, 2, 4, if (legend) 8 else 0))
+  do.call("plot", c(list(x = locs), args))
+  
+  if (legend) pointillistColorscale(field)
   invisible(NULL)
 }
-
 
 #' Plot the scale of colors for a given variable
 #'
@@ -377,48 +371,44 @@ plotPointillistPainting <- function(locs,
 #'
 #' @examples
 #' pointillistColorscale(field = c(1, 2, 3))
-pointillistColorscale <- function(field, scalename = "") {
-  oldpar <- par(c("mar", "lwd"))
-  on.exit(par(mar = oldpar$mar, lwd = oldpar$lwd))
-  par(mar = c(2, 0, 4, 0))
-  par(lwd = 0.5)
+pointillistColorscale <- function(field, scalename = "",
+                                  n = 50,
+                                  rel_x = c(0.01, 0.07)) {
   field <- field[!is.na(field)]
-  if (length(field) == 0) {
-    stop("only NA values in field")
-  }
-  barplot(
-    rep(0.3, 50),
-    col = getColors(1:50),
-    width = rep(1, 50),
-    space = 0,
-    # lwd = 0.1,
-    xlab = scalename,
-    ylab = "",
-    main = "",
-    border = FALSE,
-    ylim = c(0, 50),
-    horiz = TRUE,
-    xlim = c(-0.2, 0.1),
-    axes = FALSE,
-    mgp = c(0, 0, 0),
-  )
-  pos <- seq(0, 1, by = 0.25)
+  if (length(field) == 0) stop("only NA values in field")
+  
+  usr <- par("usr")
+  dx  <- usr[2] - usr[1]
+  x0  <- usr[2] + rel_x[1] * dx
+  x1  <- usr[2] + rel_x[2] * dx
+  ys  <- seq(usr[3], usr[4], length.out = n + 1)
+  
+  old_xpd <- par(xpd = NA)          # to draw in margin
+  on.exit(par(old_xpd))
+
+  # Color bar
+  rect(x0, ys[-(n + 1)], x1, ys[-1], col = getColors(1:n), border = 0.3)
+  
+  # text
+  pos    <- seq(0, 1, by = 0.25)
   values <- stats::quantile(field, probs = pos)
-  text(
-    y = 1 + pos * (50 - 1),
-    x = -0.01,
-    adj = c(0.95, 1),
-    # format(signif(values), digits=4),
-    round(values, 3),
-    cex = 0.8
-  )
+  text(x1 + 0.005 * dx,
+       usr[3] + pos * (usr[4] - usr[3]),
+       labels = round(values, 3),
+       adj = c(0, 0.5), cex = 0.8)
+  
+  # scale name
+  if (nzchar(scalename))
+    text((x0 + x1) / 2, usr[3] - 0.03 * (usr[4] - usr[3]),
+         labels = scalename, adj = c(0.5, 1), cex = 0.8)
 }
 
 
 
 #' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 #' @param object a GeoNonstat object
-#' @param prediction_block block of prediction on wich to draw ellipses
+#' @param prediction_block block of prediction on wich to draw ellipses, usually an element of 
+#' the output of `predict.GeoNonStat`
 #' @param correlation_level numeric value, between 0 and 1, resize the ellipses according 
 #' to correlation of the spatial kernel. Default to .1
 #'
@@ -427,14 +417,13 @@ pointillistColorscale <- function(field, scalename = "") {
 #'
 #' @examples
 #' # Recreating new data with less observations but same structure as example data
-#' locs <- cbind(runif(1000), runif(1000))
-#' X <- data.frame(matrix(rnorm(1000*4), ncol=4))
-#' colnames(X) <- paste0("V", 1:4)
+#' locs <-processedGnsDemo$vecchia_approx$observed_locs
+#' X <- processedGnsDemo$covariates$X$arg
 #' suppressWarnings(
-#'   testdata <- splitData(locs,  list("X" = X, noise_X=X))
+#'   testdata <- splitData(locs,  list("X" = X, "noise_X"=X), plot=FALSE)
 #' )
 #' testpredictions <- predict(processedGnsDemo, testdata)
-#' plotPointillistPainting(locs = locs, field = X[,1])
+#' plotPointillistPainting(locs = locs, field = X[,1], cex=20)
 #' drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
 drawEllipses = function(object, prediction_block, correlation_level = .1)
 {
