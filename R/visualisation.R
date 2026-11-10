@@ -20,7 +20,8 @@ plot.PP <- function(x,
                     mar_var_loss = TRUE,
                     samples = TRUE,
                     separate = FALSE) {
-  def.par <- par(no.readonly = TRUE)
+  oldpar <- par(c("mar", "mgp", "mfrow"))
+  on.exit(par(mar=oldpar$mar, mgp=oldpar$mgp, mfrow=oldpar$mfrow))
   par(mar = c(3, 3, 3, 1) + 0.5)
   par(mgp = c(2, 1, 0))
   if (mar_var_loss & !separate) {
@@ -39,25 +40,24 @@ plot.PP <- function(x,
     )
   }
   if(samples){
-    par(mfrow = c(2,2))
+    if(!separate) par(mfrow = c(2,2))
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "A PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (1/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "Another PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (2/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "Yet another PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (3/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "A last PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (4/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
   }
-  par(def.par)
 }
 
 
@@ -78,8 +78,10 @@ plotKnotsPP <- function(x,
                         mar_var_loss = NULL,
                         show_knots = TRUE) {
   # Graphical parameters
-  def.par <- par(no.readonly = TRUE)
-  omar <- def.par[["mar"]]
+  oldpar <- par(c("mar", "mgp", "xpd"))
+  on.exit(par(mar = oldpar$mar, mgp = oldpar[["mgp"]], xpd=oldpar$xpd))
+  
+  omar <- oldpar$mar
   par(mgp = c(2, 1, 0))
   if (omar[2] >= omar[4] & (show_knots | !is.null(mar_var_loss))) {
     par(mar = omar + c(1, 1, 1, 4 * 1.5), xpd = TRUE)
@@ -166,9 +168,6 @@ plotKnotsPP <- function(x,
       bty = "n"
     )
   }
-
-  #### Restaure margins
-  par(mar = omar, mgp = def.par[["mgp"]])
 }
 
 # # test
@@ -333,7 +332,7 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(2000), ncol = 2)
+#' locs <- matrix(runif(2000), ncol = 2)
 #' plotPointillistPainting(locs = locs, field = rnorm(1000))
 plotPointillistPainting <- function(locs,
                                     field,
@@ -353,18 +352,16 @@ plotPointillistPainting <- function(locs,
     do.call("points", c(list(x = locs), args))
     return(invisible(NULL))
   }
-  
-  # new plot: reset any previous layout
-  layout(1)
-  
+
   if (legend) {
     # figure 1 = legend (right), figure 2 = main plot (left)
     layout(matrix(c(2, 1), nrow = 1), widths = c(6, 1))
-    pointillistColorscale(field)      # drawn first (figure 1)
-  }
-  
+    pointillistColorscale(field)   
+  } 
+  oldmar <- par("mar")
+  on.exit(par(mar=oldmar))
   par(mar = c(2, 2, 4, 0))
-  do.call("plot", c(list(x = locs), args))   # drawn last: stays active
+  do.call("plot", c(list(x = locs), args))  
   invisible(NULL)
 }
 
@@ -381,8 +378,8 @@ plotPointillistPainting <- function(locs,
 #' @examples
 #' pointillistColorscale(field = c(1, 2, 3))
 pointillistColorscale <- function(field, scalename = "") {
-  origmar <- par("mar")
-  origlwd <- par("lwd")
+  oldpar <- par(c("mar", "lwd"))
+  on.exit(par(mar = oldpar$mar, lwd = oldpar$lwd))
   par(mar = c(2, 0, 4, 0))
   par(lwd = 0.5)
   field <- field[!is.na(field)]
@@ -415,7 +412,6 @@ pointillistColorscale <- function(field, scalename = "") {
     round(values, 3),
     cex = 0.8
   )
-  par(mar = origmar, lwd = origlwd)
 }
 
 
@@ -430,7 +426,16 @@ pointillistColorscale <- function(field, scalename = "") {
 #' @export
 #'
 #' @examples
-#' #TODO
+#' # Recreating new data with less observations but same structure as example data
+#' locs <- cbind(runif(1000), runif(1000))
+#' X <- data.frame(matrix(rnorm(1000*4), ncol=4))
+#' colnames(X) <- paste0("V", 1:4)
+#' suppressWarnings(
+#'   testdata <- splitData(locs,  list("X" = X, noise_X=X))
+#' )
+#' testpredictions <- predict(processedGnsDemo, testdata)
+#' plotPointillistPainting(locs = locs, field = X[,1])
+#' drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
 drawEllipses = function(object, prediction_block, correlation_level = .1)
 {
   log_range <- cbind(
@@ -482,6 +487,29 @@ ellipseMahalanobis <- function(Sigma, x) {
   pts
 }
 
+
+#' Plot the prediction of a 'GeoNonStat' object on new locations
+#'
+#' @param object an object of class \code{GeoNonStat}
+#' @param new_data_lists a list of new data. The list should have 
+#' a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
+#' a 'X' entry, for new covariates
+#' a 'noise_X' entry (optional) for new X noise parameters
+#' a 'range_X' entry (optional) for new X range parameters
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
+#' @param num_threads number of threads. Integer.
+#' @param ... additional arguments (unused)
+#' @rdname GeoNonStat
+#' @export
+#' @method predict GeoNonStat
+#' @examples
+#' # Recreating new data with less observations but same structure as example data
+#' locs <- cbind(rnorm(200), rnorm(200))
+#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
+#' colnames(X) <- paste0("V", 1:4)
+#' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+#' testpredictions <- predict(processedGnsDemo, list(testdata))
 plotGeoNonStatPrediction <- function(
     prediction_block, which_parameter, which_summary, main = "automatic"){
   if(main =="automatic") main <- paste("Predicted", which_summary, "of", which_parameter)

@@ -136,8 +136,8 @@ tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   )
 
   # How to plot
-  ormfrow <- par("mfrow")
-  omar <- par("mar")
+  oldpar <- par(c("mfrow", "mar"))
+  on.exit(par(mar=oldpar$mar, mfrow=oldpar$mfrow))
   par(mar = c(2.1, 3.1, 3.1, 1.1))
   n_iters <- nMcmc
   names_params <- names(records[[1]])
@@ -178,7 +178,5 @@ tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   }
   cat("...", nplots, "plots produced. ")
   # Resetting original parameters mfrow
-  par("mfrow" = ormfrow)
-  par("mar" = omar)
   return(invisible(NULL))
 }

@@ -144,6 +144,10 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
   ulocs <- unique(locs)
   K <- kmeans(ulocs, centers = n_clust)
   n_test <- floor(n_clust * prop_test)
+  if(n_test < 3 ) {
+    warning("Not enough observations to produce far test sample")
+    return(NULL)
+  }
   if(n_test<=0) stop("n_clust * prop_test should be > 0")
   test_clust <- GpGp::order_maxmin(K$centers)[seq(n_test)]
   test <- FNN::knnx.index(data = ulocs, k = 1, query = K$centers[test_clust, ])
@@ -181,9 +185,10 @@ getIndexesFar <- function(locs, n_clust = NULL, prop_test = 0.1) {
 #'                  "test" = list(locs=locs[1901:2000,]))
 #' splitSummary(locslist)
 splitSummary <- function(list_locs) {
-  print(paste("Train test split of a spatial data set with", list_locs$info["total", "observations"], 
-              "observations on", list_locs$info["total", "spatial locations"], "distinct spatial locations"))
-  print(list_locs$info)
+  info <- attr(list_locs, "info")
+  print(paste("Train test split of a spatial data set with", info["total", "observations"], 
+              "observations on", info["total", "spatial locations"], "distinct spatial locations"))
+  print(info)
 }
 
 #' Plot the locations of a data split
@@ -209,7 +214,6 @@ plotSplit <- function(list_locs,
                       cex = c(1, .5, .5, 1),
                       pch = list(".", 15, 15, ".")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
-  if("info" %in% names(list_locs)) list_locs[["info"]] <- NULL
   if(!all(sapply(list_locs, function(x) "locs" %in% names(x))))
     stop("Except info, all list_locs entries should have a 'locs' element")
   list_locs <- lapply(list_locs, function(x) x[["locs"]])
@@ -244,7 +248,8 @@ plotSplit <- function(list_locs,
     ylab <- colnames(list_locs[[1]])[2]
   }
   
-  def.par <- par(no.readonly = TRUE)
+  oldpar <- par(c("mar", "xpd"))
+  on.exit(par(mar=oldpar$mar, xpd=oldpar$xpd))
   if(def.par$mar[3]<=3) {
     par(mar = def.par$mar + c(0, 0, 3-def.par$mar[3], 0), xpd = NA)
   }
@@ -254,7 +259,6 @@ plotSplit <- function(list_locs,
   for (k in nameslocs)
     points(list_locs[[k]], col = col[[k]], pch = pch[[k]], cex = cex[[k]])
   
-
   if (!is.null(names(list_locs))) {
     legend_labels <- nameslocs
     u <- par("usr")
@@ -271,7 +275,6 @@ plotSplit <- function(list_locs,
       bty = "n"
     )
   }
-  par(def.par)
 }
   
 
@@ -282,11 +285,12 @@ plotSplit <- function(list_locs,
 #' @param data a list containing vectors or data.frames to split into
 #' train/test
 #' @param n_clust the number of clusters. If NULL, will be set to 1\% of the data.
-#' @param prop_test the proportion observsations used for validation. 
-#' For "close" validation, the proportion is the proportion of spatial locations from the train data set
-#' For "far" validation, the proportion is the proportion of spatial clusters. 
-#' Default to 0.01. Can be of length 2 to change proportions between far 
-#' and close test locations (far first, then close)
+#' @param prop_test_close the proportion of observations used for "close" 
+#' validation, among "not far" data. Default to 0.1
+#' @param prop_test_far the proportion of observations used for "far" 
+#' validation, as a proportion of spatial clusters. Default to 0.1
+#' @param n_clust_far number of spatial clusters for "far" validation. 
+#' Default to NULL, set to 1% of the data
 #' @param round_locs numeric, default to 0. rounding factor for locations coordinates. 
 #' @export
 #'
@@ -298,49 +302,59 @@ plotSplit <- function(list_locs,
 #' noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 #' y <- rnorm(n)
 #' datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
-#' traintest <- splitData(observed_locs, datalist, prop_test = c(0.1, 0.01))
-splitData <- function(locs, data,
-                            n_clust = NULL,
-                            prop_test = 0.1, 
-                            round_locs = 0){
-  if (length(prop_test) == 1) prop_test <- rep(prop_test, 2)
+#' traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1)
+#' traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1, prop_test_far=0.1)
+splitData <- function(locs, 
+                      datalist,
+                      prop_test_close = 0.1,
+                      prop_test_far = 0.1, 
+                      n_clust_far = NULL,
+                      round_locs = 0){
   if (round_locs > 0) locs <- round_locs * round(locs / round_locs)
+  
+  # Split "far" : désactivé si n_clust_far = 0 ou prop_test_far = 0
+  idx_far <- NULL
+  if ((n_clust_far > 0 || is.null(n_clust_far)) && prop_test_far > 0) {
+    idx_far <- getIndexesFar(locs, n_clust = n_clust_far, prop_test = prop_test_far)
+  }
+  has_far <- !is.null(idx_far)
+  
   # Create indexes for train, test far and test close
-  idx_far <- getIndexesFar(locs, n_clust = n_clust, prop_test = prop_test[1])
-  idx_close <- getIndexesClose(locs = locs[idx_far$train, ], prop_test = prop_test[2])
+  idx_avail <- if (has_far) idx_far$train else seq_len(nrow(locs))
+  idx_close <- getIndexesClose(locs = locs[idx_avail, ], prop_test = prop_test_close)
+  
   final_split <- list(
-    "train" = idx_far$train[idx_close$train],
-    "test_far" = idx_far$test,
-    "test_close" = idx_far$train[idx_close$test],
-    "discarded" = idx_far$discarded
+    "train"      = idx_avail[idx_close$train],
+    "test_close" = idx_avail[idx_close$test]
   )
-  info = rbind(
-    c(idx_close$n_locs_train,      idx_close$n_obs_train),
-    c(idx_far$n_locs_test,         idx_far$n_obs_test),
-    c(idx_close$n_locs_test,       idx_close$n_obs_test),
-    c(idx_far$n_locs_discarded,    idx_far$n_obs_discarded))
-  info = rbind(info, apply(info, 2, sum))
-  row.names(info) = c("train", "test_far", "test_close", "discarded", "total")
-  colnames(info) = c("spatial locations", "observations")
-  output <- list(
-    "train" = c(
-      list(locs = locs[final_split$train, ]),
-      subsetData(data, final_split$train)
-    ),
-    "test_far" = c(
-      list(locs = locs[final_split$test_far, ]),
-      subsetData(data, final_split$test_far)
-    ),
-    "test_close" = c(
-      list(locs = locs[final_split$test_close, ]),
-      subsetData(data, final_split$test_close)
-    ), 
-    "discarded" = c(
-      list(locs = locs[final_split$discarded, ]),
-      subsetData(data, final_split$discarded)
-    ), 
-    "info" = info
+  info <- rbind(
+    "train"      = c(idx_close$n_locs_train, idx_close$n_obs_train),
+    "test_close" = c(idx_close$n_locs_test,  idx_close$n_obs_test)
   )
+  
+  if (has_far) {
+    final_split$test_far  <- idx_far$test
+    final_split$discarded <- idx_far$discarded
+    info <- rbind(
+      "train"      = info["train", , drop = FALSE],
+      "test_close" = info["test_close", , drop = FALSE],
+      "test_far"   = c(idx_far$n_locs_test,      idx_far$n_obs_test),
+      "discarded"  = c(idx_far$n_locs_discarded, idx_far$n_obs_discarded)
+    )
+  }
+  info <- rbind(info, "total" = colSums(info))
+  colnames(info) <- c("spatial locations", "observations")
+
+
+  makeBlock <- function(idx) c(list(locs = locs[idx, , drop = FALSE]), subsetData(datalist, idx))
+  output <- list("train" = makeBlock(final_split$train),
+                 "test_close" = makeBlock(final_split$test_close))
+  if (has_far) {
+    output$test_far <- makeBlock(final_split$test_far)
+    output$discarded <- makeBlock(final_split$discarded)
+  }
+  attr(output, "info") <- info
+
   cat("Summary of split data\n")
   splitSummary(output)
   plotSplit(output)
