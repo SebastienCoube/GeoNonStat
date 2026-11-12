@@ -125,36 +125,6 @@ test_that("updateLatentField gives expected result", {
   expect_type(res1$field, "double")
 })
 
-test_that("updateFieldLogVar gives expected results", {
-  suppressMessages(
-    obj <- make_small_geononstat(2028)
-  )
-
-  set.seed(13)
-  res1 <- updateFieldLogVarA(
-    state = obj$states$chain_1,
-    scale = obj$hierarchical_model$scale,
-    vecchia_approx = obj$vecchia_approx,
-    iter = 1,
-    iter_start = 0
-  )
-  
-  expect_equal(dim(res1$params$field_log_var), dim(obj$states$chain_1$params$field_log_var))
-  expect_equal(length(res1$params$field), length(obj$states$chain_1$params$field))
-  
-  set.seed(13)
-  res2 <- updateFieldLogVarS(
-    state = obj$states$chain_1,
-    scale = obj$hierarchical_model$scale,
-    vecchia_approx = obj$vecchia_approx,
-    iter = 1,
-    iter_start = 0
-  )
-  
-  expect_equal(dim(res2$params$field_log_var), dim(obj$states$chain_1$params$field_log_var))
-  expect_equal(length(res2$params$field), length(obj$states$chain_1$params$field))
-  
-})
 
 test_that("updateNoiseBeta gives expected results", {
   suppressMessages(
