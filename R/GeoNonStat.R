@@ -2,7 +2,6 @@
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
-#' @param ncores number of cores to run in parallel, default to 5.
 #' 
 #' @returns a list of Vecchia approximation objects and metadata.
 #' \describe{
@@ -30,8 +29,7 @@
 #' observed_locs <- cbind(runif(size), runif(size))
 #' res <- createVecchia(observed_locs, m = 10)
 createVecchia <- function(observed_locs,
-                          m = 6,
-                          ncores = 1) {
+                          m = 6) {
   # message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects

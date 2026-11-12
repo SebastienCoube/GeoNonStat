@@ -4,14 +4,12 @@
 \alias{createVecchia}
 \title{Vecchia approximation setup}
 \usage{
-createVecchia(observed_locs, m = 6, ncores = 1)
+createVecchia(observed_locs, m = 6)
 }
 \arguments{
 \item{observed_locs}{a matrix of spatial coordinates where observations are done}
 
 \item{m}{number of nearest neighbors to do Vecchia's approximation}
-
-\item{ncores}{number of cores to run in parallel, default to 5.}
 }
 \value{
 a list of Vecchia approximation objects and metadata.
