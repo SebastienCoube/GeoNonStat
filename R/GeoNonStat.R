@@ -325,7 +325,7 @@ processCovariates <- function(X,
 #'
 #' @examples
 #' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
-#' myPP <- createPP(vecchia_approx)
+#' myPP <- createPP(vecchia_approx, plot=FALSE)
 #' PPPP <- processPPPrior(myPP, c(1, 2), "example")
 processPPPrior <- function(PP = NULL,
                            log_scale_bounds = NULL,
@@ -400,7 +400,7 @@ processPPPrior <- function(PP = NULL,
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
 #' observed_field <- rnorm(nobs)
 #' vecchia_approx <- createVecchia(observed_locs)
-#' PP <- createPP(vecchia_approx)
+#' PP <- createPP(vecchia_approx, plot=FALSE)
 #' X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 #' covariates <- list()
 #' covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx)
@@ -522,7 +522,7 @@ processTransitionKernels <- function(init = -4) {
 #'
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' vecchia_approx <- createVecchia(observed_locs, 12)
-#' PP <- createPP(vecchia_approx)
+#' PP <- createPP(vecchia_approx, plot=FALSE)
 #'
 #' covariates <- list(
 #'   X = processCovariates(X = X, vecchia_approx),

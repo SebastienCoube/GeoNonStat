@@ -34,8 +34,8 @@
 #'   V4 = rnorm(nrow(observed_locs))
 #' )
 #'
-#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3)
-#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06)
+#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3, plot=FALSE)
+#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06, plot=FALSE)
 #'
 #' gns_simulator <- createGnsSimulator(
 #'   vecchia_approx = vecchia_approx,
@@ -117,8 +117,8 @@ createGnsSimulator <- function(vecchia_approx,
 #'
 #' # X_range = as.data.frame(observed_locs)
 #'
-#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3)
-#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06)
+#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3, plot=FALSE)
+#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06, plot=FALSE)
 #'
 #'
 #' # full monty
@@ -357,8 +357,8 @@ createGnsSimulatorParameters <- function(gns_simulator,
 #'   V4 = rnorm(nrow(observed_locs))
 #' )
 #'
-#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3)
-#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06)
+#' PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3, plot=FALSE)
+#' PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06, plot=FALSE)
 #'
 #' # full monty
 #' gns_simulator <- createGnsSimulator(
