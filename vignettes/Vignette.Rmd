@@ -33,3 +33,73 @@ options(warn=-1)
 library(GeoNonStat)
 ```
 
+
+Generating fake observations: locations, observed variable (field) and covariates (to explain field, range and noise), for example purpose.
+
+```{r}
+set.seed(100)
+nobs <- 10000
+observed_locs <- cbind(runif(5000), runif(5000))
+observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
+observed_field <- rnorm(nobs)
+Xfield <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+Xrange <- as.data.frame(cbind(runif(nobs), rnorm(nobs)))
+Xnoise <- as.data.frame(cbind(runif(nobs), rnorm(nobs)))
+```
+
+You can create a vecchia approximation associated with your locations,
+choosing the number of nearest neighbors:
+
+```{r}
+my_vecchia_approx <- createVecchia(observed_locs, m=6)
+```
+
+From the vecchia approximation, you can model prediction points (PP) 
+for the noise and range of you locations, based on the vecchia approximation, 
+if needed.
+TODO : expliquer pourquoi on ne le ferait pas ? 
+
+Here we will model only PP for noise. 
+
+```{r}
+noise_PP <- createPP(
+  vecchia_approx = vecchia_approx,
+  matern_range = .1,
+  knots = 50,
+  plot = FALSE
+)
+```
+
+We can now create a GeoNonStat object that will be used to model and 
+predict the observed field :
+
+```{r}
+my_data <- list(
+  observed_field = observed_field,
+  X = Xfield,
+  range_X = Xrange,
+  noise_X  = Xnoise
+)
+
+myobj <- GeoNonStat(
+  vecchia_approx = vecchia_approx,
+  data_list = my_data,
+  matern_smoothness = 1.5, # Matern smoothness
+  anisotropic = FALSE,
+  n_chains = 3,
+  noise_PP = noise_PP,
+  noise_log_scale_bounds = c(-8, 3),
+  range_PP = NULL
+)
+
+summary(myobj)
+myobj
+estimate(processedGnsDemo)
+# Recreating new data with less observations but same structure as example data
+locs <- cbind(rnorm(200), rnorm(200))
+X <- data.frame(matrix(rnorm(200*4), ncol=4))
+colnames(X) <- paste0("V", 1:4)
+testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+testpredictions <- predict(processedGnsDemo, list(testdata))
+```
+
