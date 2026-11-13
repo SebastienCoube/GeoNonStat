@@ -202,6 +202,7 @@ splitSummary <- function(list_locs) {
 #' Passed to `plot`
 #' @param col a vector for points color of length n. Passed to `plot`
 #' @returns a plot
+#' @family {functions for model validation}
 #' @export
 #' 
 #' @examples
@@ -210,16 +211,15 @@ splitSummary <- function(list_locs) {
 #'                  "test" = list(locs=locs[1901:2000,]))
 #' plotSplit(locslist)
 plotSplit <- function(list_locs,
-                      col = c("gray", "red", "orange", "blue"),
-                      cex = c(1, .5, .5, 1),
-                      pch = list(".", 15, 15, ".")) {
+                      col = c("#BBBBBB", "#1F77B4", "#2CA02C", "#E73F74"),
+                      cex = c(0.5, 0.8, 0.8, 0.5),
+                      pch = list(19, 19, 19, 19)) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
   if(!all(sapply(list_locs, function(x) "locs" %in% names(x))))
     stop("Except info, all list_locs entries should have a 'locs' element")
   list_locs <- lapply(list_locs, function(x) x[["locs"]])
   nblist <- length(list_locs)
   nameslocs <- names(list_locs)
-  
   replaceparam <- function(arg, user, is_missing) {
     def <- eval(formals(plotSplit)[[arg]])
     out <- rep_len(def, nblist)
@@ -256,8 +256,11 @@ plotSplit <- function(list_locs,
   
   plot(NA, xlim = xlim, ylim = ylim, xlab = xlab, ylab = ylab)
   
-  for (k in nameslocs)
+  for (k in nameslocs) {
+    if(nrow(list_locs[[k]]) > 1000000) pch[[k]] <- "."
     points(list_locs[[k]], col = col[[k]], pch = pch[[k]], cex = cex[[k]])
+  }
+    
   
   if (!is.null(names(list_locs))) {
     legend_labels <- nameslocs
@@ -278,7 +281,7 @@ plotSplit <- function(list_locs,
 }
   
 
-#' Split data between train and test
+#' Split data between train and test (spatially far or not) observations
 #'
 #' @param locs a matrix of spatial locations.
 #' @param datalist a list containing vectors or data.frames to split into
@@ -292,6 +295,7 @@ plotSplit <- function(list_locs,
 #' @param round_locs numeric, default to 0. rounding factor for locations coordinates. 
 #' @param plot logical, default to TRUE. Should the split produce a plot ? 
 #' @returns a list of lists, each child having the same structure as datalist
+#' @family {functions for model validation}
 #' @export
 #' 
 #' @examples

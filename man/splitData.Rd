@@ -2,7 +2,7 @@
 % Please edit documentation in R/Scores.R
 \name{splitData}
 \alias{splitData}
-\title{Split data between train and test}
+\title{Split data between train and test (spatially far or not) observations}
 \usage{
 splitData(
   locs,
@@ -37,7 +37,7 @@ Default to NULL, set to 1\% of the data}
 a list of lists, each child having the same structure as datalist
 }
 \description{
-Split data between train and test
+Split data between train and test (spatially far or not) observations
 }
 \examples{
 n <- 10000
@@ -50,3 +50,9 @@ datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
 traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1)
 traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1, prop_test_far=0.1)
 }
+\seealso{
+Other {functions for model validation}:
+\code{\link[=plotSplit]{plotSplit()}},
+\code{\link[=predict.GeoNonStat]{predict.GeoNonStat()}}
+}
+\concept{{functions for model validation}}

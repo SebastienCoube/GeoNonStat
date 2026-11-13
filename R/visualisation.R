@@ -479,17 +479,16 @@ ellipseMahalanobis <- function(Sigma, x) {
 
 #' Plot the prediction of a 'GeoNonStat' object on new locations
 #'
-#' @param object an object of class \code{GeoNonStat}
-#' @param new_data_lists a list of new data. The list should have 
-#' a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
-#' a 'X' entry, for new covariates
-#' a 'noise_X' entry (optional) for new X noise parameters
-#' a 'range_X' entry (optional) for new X range parameters
-#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
-#' first records that should be removed. Default to 0.1
-#' @param num_threads number of threads. Integer.
-#' @param ... additional arguments (unused)
-#' @rdname GeoNonStat
+#' @param prediction_block an element of the output of the 
+#' `predict.GeoNonStat()` function. 
+#' @param which_parameter parameter to plot, default to NULL.
+#' Should be one of `names(prediction_block)`
+#' @param which_summary summary to plot, default to "mean". On of the available 
+#' statistics of the summaries of the prediction object : 
+#' "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' @param main character, title of the plot. 
+#' 
+#' @returns a plot
 #' @export
 #' @method predict GeoNonStat
 #' @examples
@@ -498,9 +497,18 @@ ellipseMahalanobis <- function(Sigma, x) {
 #' X <- data.frame(matrix(rnorm(200*4), ncol=4))
 #' colnames(X) <- paste0("V", 1:4)
 #' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
-#' testpredictions <- predict(processedGnsDemo, list(testdata))
+#' testpredictions <- predict(processedGnsDemo, list("testdata" = testdata))
+#' plotGeoNonStatPrediction(testpredictions$testdata,  "field", "mean")
 plotGeoNonStatPrediction <- function(
     prediction_block, which_parameter, which_summary, main = "automatic"){
+  sums <- prediction_block$summaries
+  if(is.null(which_parameter) || !(which_parameter %in% names(sums))) {
+    stop("`which_parameter` should be on of ", paste(names(sums), collapse=", "))
+  }
+  if(is.null(which_summary) || !(which_summary %in% colnames(sums[[which_parameter]]))) {
+    stop("`which_summary` should be on of ", 
+         paste(colnames(sums[[which_parameter]]), collapse=", "))
+  }
   if(main =="automatic") main <- paste("Predicted", which_summary, "of", which_parameter)
   plotPointillistPainting(
     locs = prediction_block$locs, 
@@ -509,12 +517,43 @@ plotGeoNonStatPrediction <- function(
   )
 }
 
+#' Plot the estimation of a GeoNonStat object
+#'
+#' @param object an object of class \code{GeoNonStat}
+#' @param estimation an output of the estimation function on object. 
+#' If time consuming, it is adviced to pre-compute estimation and pass it as 
+#' an argument. Default to NULL otherwise (recomputed before plot)
+#' @param which_parameter parameter to plot, default to NULL.
+#' Should be one of `names(estimation)`
+#' @param which_summary summary to plot, default to "mean". On of the available 
+#' statistics of estimation object : "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' @param main character, title of the plot. 
+#'
+#' @returns a plot
+#' @export
+#'
+#' @examples
+#' plotGeoNonStatEstimation(object = processedGnsDemo, 
+#'                          which_parameter = "field", which_summary = "mean")
 plotGeoNonStatEstimation <- function(
-    object, estimation, which_parameter, which_summary, main = "automatic"){
+    object, 
+    estimation = NULL, 
+    which_parameter = NULL, 
+    which_summary = "mean", 
+    main = "automatic"){
+  if(is.null(estimation)) estimation <- estimate(object)
+  est <- estimation$summaries$at_observed_locs
+  if(is.null(which_parameter) || !(which_parameter %in% names(est))) {
+    stop("`which_parameter` should be on of ", paste(names(est), collapse=", "))
+  }
+  if(is.null(which_summary) || !(which_summary %in% colnames(est[[which_parameter]]))) {
+    stop("`which_summary` should be on of ", 
+         paste(colnames(est[[which_parameter]]), collapse=", "))
+  }
   if(main =="automatic") main <- paste("Estimated", which_summary, "of", which_parameter)
   plotPointillistPainting(
     locs = object$vecchia_approx$observed_locs, 
-    field = estimation$summaries$at_observed_locs[[which_parameter]][,which_summary], 
+    field = est[[which_parameter]][,which_summary], 
     main = main
   )
 }

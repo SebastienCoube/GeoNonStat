@@ -6,9 +6,9 @@
 \usage{
 plotSplit(
   list_locs,
-  col = c("gray", "red", "orange", "blue"),
-  cex = c(1, 0.5, 0.5, 1),
-  pch = list(".", 15, 15, ".")
+  col = c("#BBBBBB", "#1F77B4", "#2CA02C", "#E73F74"),
+  cex = c(0.5, 0.8, 0.8, 0.5),
+  pch = list(19, 19, 19, 19)
 )
 }
 \arguments{
@@ -36,3 +36,9 @@ locslist <- list("train" = list("locs"=locs[1:1900,]),
                  "test" = list(locs=locs[1901:2000,]))
 plotSplit(locslist)
 }
+\seealso{
+Other {functions for model validation}:
+\code{\link[=predict.GeoNonStat]{predict.GeoNonStat()}},
+\code{\link[=splitData]{splitData()}}
+}
+\concept{{functions for model validation}}
