@@ -32,3 +32,10 @@ testpredictions <- predict(processedGnsDemo, testdata)
 plotPointillistPainting(locs = locs, field = X[,1], cex=20)
 drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
 }
+\seealso{
+Other {Visualisations}:
+\code{\link[=plotGeoNonStatEstimation]{plotGeoNonStatEstimation()}},
+\code{\link[=plotGeoNonStatPrediction]{plotGeoNonStatPrediction()}},
+\code{\link[=plotPointillistPainting]{plotPointillistPainting()}}
+}
+\concept{{Visualisations}}

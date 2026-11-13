@@ -327,7 +327,7 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' @param legend logical, default to TRUE. Add legend ?
 #' @param ... additional graphical parameters, sent to `plot` or,
 #' if `add=TRUE`, to `points`
-#'
+#' @family {Visualisations}
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
 #'
@@ -411,7 +411,7 @@ pointillistColorscale <- function(field, scalename = "",
 #' the output of `predict.GeoNonStat`
 #' @param correlation_level numeric value, between 0 and 1, resize the ellipses according 
 #' to correlation of the spatial kernel. Default to .1
-#'
+#' @family {Visualisations}
 #' @returns a plot object
 #' @export
 #'
@@ -487,7 +487,7 @@ ellipseMahalanobis <- function(Sigma, x) {
 #' statistics of the summaries of the prediction object : 
 #' "mean", "sd", "median", "q 2.5%" or "q 97.5%".
 #' @param main character, title of the plot. 
-#' 
+#' @family {Visualisations}
 #' @returns a plot
 #' @export
 #' @method predict GeoNonStat
@@ -528,7 +528,7 @@ plotGeoNonStatPrediction <- function(
 #' @param which_summary summary to plot, default to "mean". On of the available 
 #' statistics of estimation object : "mean", "sd", "median", "q 2.5%" or "q 97.5%".
 #' @param main character, title of the plot. 
-#'
+#' @family {Visualisations}
 #' @returns a plot
 #' @export
 #'

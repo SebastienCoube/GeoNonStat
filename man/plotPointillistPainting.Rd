@@ -37,3 +37,10 @@ Plots a spatial variable like a \href{https://en.wikipedia.org/wiki/Pointillism}
 locs <- matrix(runif(2000), ncol = 2)
 plotPointillistPainting(locs = locs, field = rnorm(1000))
 }
+\seealso{
+Other {Visualisations}:
+\code{\link[=drawEllipses]{drawEllipses()}},
+\code{\link[=plotGeoNonStatEstimation]{plotGeoNonStatEstimation()}},
+\code{\link[=plotGeoNonStatPrediction]{plotGeoNonStatPrediction()}}
+}
+\concept{{Visualisations}}
