@@ -4,7 +4,12 @@
 \alias{plotGeoNonStatPrediction}
 \title{Plot the prediction of a 'GeoNonStat' object on new locations}
 \usage{
-\method{predict}{GeoNonStat}(prediction_block, which_parameter, which_summary, main = "automatic")
+plotGeoNonStatPrediction(
+  prediction_block,
+  which_parameter,
+  which_summary,
+  main = "automatic"
+)
 }
 \arguments{
 \item{prediction_block}{an element of the output of the 

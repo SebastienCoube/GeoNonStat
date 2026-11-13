@@ -7,8 +7,8 @@
 #' first records that should be removed If burn_in = 0.1 : the first 10% of
 #' records will be removed from the result.
 #' @param keep character vector. What params should be kept. Can also be
-#' `"all"`, to keep all parameters, or `"all_even_the_field"` to keep all
-#' parameters, event the `field.`
+#' `"all"`, to keep all parameters, or `"nofield"` to keep all
+#' parameters, except the `field.`
 #'
 #' @returns a list containing matrices of parameters,
 #' aggregated over the iterations.
@@ -17,7 +17,8 @@
 #'
 #' @examples
 #' aggregateRecords(processedGnsDemo$records)
-aggregateRecords <- function(records, burn_in = .3, keep = "all", keep_separate_chains = FALSE){
+aggregateRecords <- function(records, burn_in = .3, keep = "all", 
+                             keep_separate_chains = FALSE){
   n_iter <- length(records[[1]])
   if(burn_in<0)stop("burn_in must either be a proportion between 0 and 1 or a number of iterations greater than 1")
   if(burn_in>1)burn_in <- burn_in/n_iter

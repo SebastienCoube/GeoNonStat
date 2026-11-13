@@ -34,6 +34,8 @@ library(GeoNonStat)
 ```
 
 
+## Example data
+
 Generating fake observations: locations, observed variable (field) and covariates (to explain field, range and noise), for example purpose.
 
 ```{r}
@@ -62,6 +64,8 @@ traintest <- splitData(locs = observed_locs,
 ```
 
 
+## Vecchia approximation and predictive process
+
 You can create a vecchia approximation associated with your locations,
 choosing the number of nearest neighbors:
 
@@ -85,6 +89,8 @@ noise_PP <- createPP(
 )
 ```
 
+## geoNonStat object
+
 We can now create a GeoNonStat object that will be used to model and 
 predict the observed field :
 
@@ -104,6 +110,8 @@ summary(myobj)
 ```
 
 
+## MCMC 
+
 Then you can run MCMC on your GeoNonStat object. You can run :
 
 - `GeoNonStatMcmc` function by setting the number of MCMC iterations, or
@@ -115,6 +123,13 @@ The MCMC is time consumming. If needed, you can re-run MCMC after a first launch
 myobj <- GeoNonStatMcmc(myobj, n_iterations = 100)
 ```
 
+## Explore the output of MCMC 
+
+```{r}
+tracePlots(myobj)
+```
+
+
 Then we can estimate TODO je sais pas expliquer ici. 
 
 ```{r}
@@ -122,7 +137,9 @@ myest <- estimate(myobj)
 plotGeoNonStatEstimation(myobj, myest, which_parameter = "field", which_summary = "mean")
 ```
 
-And finally we can predict the model on new observations :
+## Predict the model on new datasets
+
+And finally we can predict the model on new observations. Here we take the "test_close" and "test_far" we previously constructed: 
 
 ```{r}
 testpredictions <- predict(myobj, list("testclose" = traintest$test_close,

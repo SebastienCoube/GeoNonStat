@@ -490,7 +490,7 @@ ellipseMahalanobis <- function(Sigma, x) {
 #' @family {Visualisations}
 #' @returns a plot
 #' @export
-#' @method predict GeoNonStat
+#' 
 #' @examples
 #' # Recreating new data with less observations but same structure as example data
 #' locs <- cbind(rnorm(200), rnorm(200))
