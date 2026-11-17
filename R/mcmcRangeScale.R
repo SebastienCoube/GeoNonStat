@@ -46,7 +46,6 @@ rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
       n_knots = hierarchical_model$range$PP$n_knots)
     # computing new Vecchia from new parameters ####
     vecchia_(
-      start_idx = 1,
       log_range = t(computeLogRange(
         range_beta = new_range_beta, PP = hierarchical_model$range$PP,
         vecchia_approx = vecchia_approx, range_X = range_X)),
@@ -216,7 +215,6 @@ rangeLogScaleA <- function(state, hierarchical_model, vecchia_approx,
       n_knots = hierarchical_model$range$PP$n_knots)
     # computing new Vecchia from new parameters ####
     vecchia_(
-      start_idx = 1,
       log_range = t(computeLogRange(
         range_beta = new_range_beta, PP = hierarchical_model$range$PP,
         vecchia_approx = vecchia_approx, range_X = range_X)),

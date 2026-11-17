@@ -20,7 +20,7 @@ log_range = matrix(0, n, 1)
 log_range[,1] = -8 + 3*locs[,1]
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, 
-  compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
+  compute_derivative = T, smoothness = 1.5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # nominally anisotropic, with smoothness = 1.5
@@ -28,7 +28,7 @@ set.seed(1)
 log_range = cbind(log_range[,1], log_range[,1], 0)
 tatato = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 vecchia_(
-  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
+  log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, compute_derivative = T, smoothness = 1.5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # actually anisotropic, with smoothness = 1.5
@@ -37,7 +37,7 @@ log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, 
-  compute_derivative = T, smoothness = 1.5, result = tatato, start_idx = 1)
+  compute_derivative = T, smoothness = 1.5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 #isotropic, with smoothness = 0.5
@@ -47,7 +47,7 @@ log_range = matrix(0, n, 1)
 log_range[,1] = -8 + 3*locs[,1]
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8, 
-  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
+  compute_derivative = T, smoothness = .5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # nominally anisotropic, with smoothness = .5
@@ -56,7 +56,7 @@ log_range = cbind(log_range[,1], log_range[,1], 0)
 tatato = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 8,
-  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
+  compute_derivative = T, smoothness = .5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 # actually anisotropic, with smoothness = 0.5
@@ -65,7 +65,7 @@ log_range[,2] = -10 + 3*locs[,2]
 log_range[,3] = locs[,2] - 2*locs[,1]
 vecchia_(
   log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, 
-  compute_derivative = T, smoothness = .5, result = tatato, start_idx = 1)
+  compute_derivative = T, smoothness = .5, result = tatato)
 GeoNonStat::plotPointillistPainting(pch = ".", cex = 2,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
 
 
@@ -95,7 +95,7 @@ tatato_ = array(0, dim = c(ncol(NNarray), n, 1 + 3*ncol(NNarray)))
 for(sm in smoothness){
   # computing vecchia_ 
   vecchia_(
-    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, tatato)
+    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato)
   # computing new vecchia_ approx with a new range parameter
   range_row_idx = 30
   range_col_idx = 2
@@ -104,7 +104,8 @@ for(sm in smoothness){
     log_range_ = log_range 
     log_range_[range_row_idx, range_col_idx] = log_range_[range_row_idx, range_col_idx] + .001
     vecchia_(
-      log_range = t(log_range_), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, tatato_)
+      log_range = t(log_range_), locs = t(locs), NNarray = t(NNarray), 
+      num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato_)
     
     # testing impact when impacted range is child in the DAG
     plot(
@@ -379,7 +380,7 @@ tatato_ = array(0, dim = c(ncol(NNarray), n, 1 + 1*ncol(NNarray)))
 for(sm in smoothness){
   # computing vecchia_ 
   vecchia_(
-    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato, start_idx = 1)
+    log_range = t(log_range), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato)
   GeoNonStat::plotPointillistPainting(pch = 16, cex = .8,locs, GpGp::fast_Gp_sim_Linv (t(tatato[,,1]), NNarray))
   
   
@@ -390,7 +391,7 @@ for(sm in smoothness){
   # computing new vecchia_ approx and derivatrives
   log_range_ = log_range 
   log_range_[range_row_idx, range_col_idx] = log_range_[range_row_idx, range_col_idx] + .00001
-  vecchia_(log_range = t(log_range_), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato_, start_idx = 1)
+  vecchia_(log_range = t(log_range_), locs = t(locs), NNarray = t(NNarray), num_threads = 1, compute_derivative = T, smoothness = sm, result = tatato_)
   
   # testing impact when impacted range is child in the DAG
   plot(

@@ -41,7 +41,6 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
     new_field_log_var <- state$params$field_log_var; new_field_log_var[] <- move_forward[1]
     # computing new Vecchia from new parameters ####
     vecchia_(
-      start_idx = 1,
       log_range = t(computeLogRange(
         range_beta = new_range_beta, PP = hierarchical_model$range$PP,
         vecchia_approx = vecchia_approx, range_X = range_X)),
@@ -207,7 +206,6 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   new_field_log_var[] <- move_forward[1]
   # computing new Vecchia from new parameters ####
   vecchia_(
-    start_idx = 1,
     log_range = t(computeLogRange(
       range_beta = new_range_beta, PP = hierarchical_model$range$PP,
       vecchia_approx = vecchia_approx, range_X = range_X)),

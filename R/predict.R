@@ -223,10 +223,11 @@ chunk <- chunks[[1]]
         smoothness = object$hierarchical_model$matern_smoothness)
       vecchia_chunk_expanded@x <- c(vecchia_chunk[, -1])
       # predicting latent field at new locations
+      current_field_sd <- exp(records$field_log_var[mcmc_iter]/2)
       chunk_samples$field[mcmc_iter, ] <- (
         as.vector(
           - (vecchia_chunk_expanded) %*% records$field[mcmc_iter, ] +
-            rnorm(vecchia_approx_chunk$n_locs)
+            rnorm(vecchia_approx_chunk$n_locs)*current_field_sd
         ) / (vecchia_chunk[, 1])
       )[vecchia_approx_chunk$locs_match]
       # storing samples of log-range

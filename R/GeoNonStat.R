@@ -621,7 +621,6 @@ processStates <- function(hm,
     1 + (1 + 2 * hm$anisotropic) * nrow(vecchia_approx$NNarray)
   ))
   vecchia_(
-    start_idx = 1,
     log_range = t(computeLogRange(
       range_beta = params$range_beta,
       vecchia_approx = vecchia_approx,

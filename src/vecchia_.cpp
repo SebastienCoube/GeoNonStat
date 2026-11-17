@@ -62,12 +62,12 @@ using namespace Rcpp;
 // ---------------------------------------------------------------------------
 //[[Rcpp::export]]
 arma::mat expRange_(const arma::mat& log_range,
-                    bool compute_derivative = false,
+                    bool compute_derivative = false, 
+                    double diff_term = 0.0001,
                     int num_threads = 1) {
 #ifdef _OPENMP
   omp_set_num_threads(num_threads);
 #endif
-  const double diff_term = 0.0005;
   const double sqrt2 = std::sqrt(2.0);
   const int n = log_range.n_cols;
   
@@ -129,7 +129,6 @@ void vecchia_(
     arma::mat locs,
     arma::mat NNarray,
     int num_threads,
-    int start_idx,
     double smoothness,
     bool compute_derivative,
     arma::cube &result){
@@ -146,7 +145,7 @@ void vecchia_(
   result(0,0,0) = 1;
   
   // matrix exponentials (done once, before the parallel region below)
-  arma::mat exprange = expRange_(log_range, compute_derivative, num_threads);
+  arma::mat exprange = expRange_(log_range, compute_derivative, diff_term, num_threads);
   const int exprange_nrow = exprange.n_rows;
   
   // Computing Vecchia approx
@@ -154,7 +153,7 @@ void vecchia_(
 {
   arma::mat out(m, 1 + n_params * m * compute_derivative);
 #pragma omp for
-  for(int i=start_idx; i<n; i++){
+  for(int i=1; i<n; i++){
     // Fill subsets of locations, range
     int bsize = std::min(i+1,m);
     arma::mat locsub(2, bsize);
