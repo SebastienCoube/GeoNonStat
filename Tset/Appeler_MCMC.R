@@ -156,33 +156,52 @@ plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
                          which_parameter = "noise_log_var", which_summary = "mean")
 
 
-new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
-new_X <- as.data.frame(
-  cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
-        rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
-new_locs_small <- as.matrix(expand.grid(seq(.1, .9, .1), seq(.1, .9, .1)))
-new_X_small <- as.data.frame(
-  cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
-        rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+# new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
+# new_X <- as.data.frame(
+#   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
+#         rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+# new_locs_small <- as.matrix(expand.grid(seq(.1, .9, .1), seq(.1, .9, .1)))
+# new_X_small <- as.data.frame(
+#   cbind(new_locs[,1], new_locs[,1]+ rnorm(nrow(new_locs)), 
+#         rnorm(nrow(new_locs)), rnorm(nrow(new_locs))))
+# 
+# 
+# 
+# new_data_lists <- list(
+#   prediction_grid1 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
+#   prediction_grid2 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
+#   ellipse_grid = list("locs"  = new_locs_small, "X" = new_X_small, "noise_X" = new_X_small)
+#   )
+# 
+# burn_in = .3
+# num_threads = 5
+# 
+# prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
+#   object = geo_non_stat, num_threads = 5, burn_in = .2
+# )
+# 
+# # plotting noise variance predictions
+# plotGeoNonStatPrediction(prediction_block = prediction$prediction_grid1, 
+#                          which_parameter = "field", which_summary = "mean")
+# drawEllpises(object = geo_non_stat, prediction_block = prediction$ellipse_grid, 
+#              correlation_level = .5)
 
 
-
-new_data_lists <- list(
-  prediction_grid1 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
-  prediction_grid2 = list("locs"  = new_locs, "X" = new_X, "noise_X" = new_X),
-  ellipse_grid = list("locs"  = new_locs_small, "X" = new_X_small, "noise_X" = new_X_small)
+prediction <- predict.GeoNonStat(
+  new_data_lists = list("pred_at_observed_locs" = list(
+  locs = vecchia_approx$observed_locs + rnorm(length(vecchia_approx$observed_locs)) * 1e-6,
+  observed_field= fake_data$observed$observed_field, 
+  X = X, noise_X = X, range_X = NULL)), 
+  object = geo_non_stat, num_threads = 5, burn_in = .2
   )
 
-burn_in = .3
-num_threads = 5
+plot(
+  prediction$pred_at_observed_locs$summaries$field[,"mean"],
+  estimation$summaries$at_observed_locs$field[,"mean"])
 
-prediction <- predict.GeoNonStat(new_data_lists = new_data_lists,
-  object = geo_non_stat, num_threads = 5, burn_in = .2
-)
+plot(
+  prediction$pred_at_observed_locs$summaries$field[,"sd"],
+  estimation$summaries$at_observed_locs$field[,"sd"])
 
-# plotting noise variance predictions
-plotGeoNonStatPrediction(prediction_block = prediction$prediction_grid1, 
-                         which_parameter = "field", which_summary = "mean")
-drawEllpises(object = geo_non_stat, prediction_block = prediction$ellipse_grid, 
-             correlation_level = .5)
 
+abline(a=0, b=1)

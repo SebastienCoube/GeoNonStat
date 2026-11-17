@@ -137,7 +137,7 @@ void vecchia_(
   omp_set_num_threads(num_threads);
 #endif
   const bool smoothness15 = (smoothness == 1.5);
-  const double diag_term = 1 + 1e-4;
+  const double diag_term = 1 + 1e-6;
   const double diff_term = 0.0001;
   const int n = locs.n_cols;
   const int m = NNarray.n_rows;
@@ -505,7 +505,7 @@ void vecchia_predict(
   omp_set_num_threads(num_threads);
 #endif
   const bool smoothness15 = (smoothness == 1.5);
-  const double diag_term = 1.001;
+  const double diag_term = 1 + 1e-6;
   
   const int n_obs  = locs.n_cols;
   const int n_pred = predicted_locs.n_cols;

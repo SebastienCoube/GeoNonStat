@@ -66,7 +66,7 @@ allScores <- function(true_y, mean_samples, sd_samples) {
   }
   
   res <- list()
-  res$scores <- signif(apply(per_obs, 2, mean, na.rm = TRUE), 2)
+  res$scores <- apply(per_obs, 2, mean, na.rm = TRUE)
   res$scores_per_obs <- per_obs
   return(res)
 }
