@@ -35,8 +35,8 @@ X <- data.frame(
   V4 = rnorm(nrow(observed_locs))
 )
 
-PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3)
-PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06)
+PP_range <- createPP(vecchia_approx, knots = 16, matern_range = .3, plot=FALSE)
+PP_noise <- createPP(vecchia_approx, knots = 500, matern_range = .06, plot=FALSE)
 
 # full monty
 gns_simulator <- createGnsSimulator(

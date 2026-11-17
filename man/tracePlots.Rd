@@ -4,7 +4,7 @@
 \alias{tracePlots}
 \title{Trace the records of a processed GeoNonStat object}
 \usage{
-tracePlots(object, burn_in = 0.3, keep = "nofield")
+tracePlots(object, burn_in = 0.3, keep = "nofield", colors = NULL)
 }
 \arguments{
 \item{object}{a processed GeoNonStat object}
@@ -12,11 +12,17 @@ tracePlots(object, burn_in = 0.3, keep = "nofield")
 \item{burn_in}{numeric, value, between 0 and 1. Gives the proportion of
 first records that should be removed. Default to 0.1}
 
-\item{keep}{names of paramaters to plot}
+\item{keep}{names of paramaters to plot. Can also be '"all"', 
+to keep all parameters, or '"nofield"'  to keep all parameters, 
+except the 'field.'}
+
+\item{colors}{a color vector of the same length as the number of chains in
+object}
 }
 \description{
 Trace the records of a processed GeoNonStat object
 }
 \examples{
+# Each line is a chain. 
 tracePlots(processedGnsDemo)
 }

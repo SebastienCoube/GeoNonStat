@@ -2,7 +2,6 @@
 #'
 #' @param observed_locs a matrix of spatial coordinates where observations are done
 #' @param m number of nearest neighbors to do Vecchia's approximation
-#' @param ncores number of cores to run in parallel, default to 5.
 #' 
 #' @returns a list of Vecchia approximation objects and metadata.
 #' \describe{
@@ -30,8 +29,7 @@
 #' observed_locs <- cbind(runif(size), runif(size))
 #' res <- createVecchia(observed_locs, m = 10)
 createVecchia <- function(observed_locs,
-                          m = 6,
-                          ncores = 1) {
+                          m = 6) {
   # message("building DAGs and indices for Vecchia approximation...")
   # Vecchia approximation ##########################################################################
   # This object gathers the NNarray table used by GpGp package and related objects
@@ -325,7 +323,7 @@ processCovariates <- function(X,
 #'
 #' @examples
 #' vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
-#' myPP <- createPP(vecchia_approx)
+#' myPP <- createPP(vecchia_approx, plot=FALSE)
 #' PPPP <- processPPPrior(myPP, c(1, 2), "example")
 processPPPrior <- function(PP = NULL,
                            log_scale_bounds = NULL,
@@ -400,7 +398,7 @@ processPPPrior <- function(PP = NULL,
 #' observed_locs <- cbind(runif(nobs), runif(nobs))
 #' observed_field <- rnorm(nobs)
 #' vecchia_approx <- createVecchia(observed_locs)
-#' PP <- createPP(vecchia_approx)
+#' PP <- createPP(vecchia_approx, plot=FALSE)
 #' X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 #' covariates <- list()
 #' covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx)
@@ -479,8 +477,6 @@ processHierarchicalModel <- function(vecchia_approx,
 #' @param init a numeric value, default to -4
 #' @returns a list
 #' @description
-#' TODO : revoir la description
-#' Transition kernel state
 #' transition kernel variance is given as the log
 #' can be used in both stationary and nonstationary cases respectively
 #' as a random walk Metropolis or MALA step size have an ancillary and
@@ -524,7 +520,7 @@ processTransitionKernels <- function(init = -4) {
 #'
 #' X <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 5)))
 #' vecchia_approx <- createVecchia(observed_locs, 12)
-#' PP <- createPP(vecchia_approx)
+#' PP <- createPP(vecchia_approx, plot=FALSE)
 #'
 #' covariates <- list(
 #'   X = processCovariates(X = X, vecchia_approx),

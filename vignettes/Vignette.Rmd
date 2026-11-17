@@ -33,3 +33,118 @@ options(warn=-1)
 library(GeoNonStat)
 ```
 
+
+## Example data
+
+Generating fake observations: locations, observed variable (field) and covariates (to explain field, range and noise), for example purpose.
+
+```{r}
+set.seed(100)
+nobs <- 10000
+observed_locs <- cbind(runif(5000), runif(5000))
+observed_locs <- observed_locs[sample(seq_len(5000), nobs, replace = TRUE), ]
+observed_field <- rnorm(nobs)
+# Covariates for field
+Xfield <- as.data.frame(cbind(runif(nobs), rnorm(nobs), rpois(nobs, 3)))
+# Covariates for range
+Xrange <- as.data.frame(cbind(runif(nobs), rnorm(nobs)))
+# covariates for noise
+Xnoise <- as.data.frame(cbind(runif(nobs), rnorm(nobs)))
+```
+
+
+If you want, you can split your data in several train/test datasets with the `splitData` function. With enough observations, you can produce two test datasets : a test dataset with "far" observations", i.e. the test observations are spatially far from train observations, and a test dataset with "close" observations, i.e. randomly selected among "not far" observations. 
+
+```{r}
+traintest <- splitData(locs = observed_locs, 
+                       datalist = list(observed_field = observed_field,
+                                       Xfield = Xfield,
+                                       Xrange = Xrange,
+                                       Xnoise = Xnoise))
+```
+
+
+## Vecchia approximation and predictive process
+
+You can create a vecchia approximation associated with your locations,
+choosing the number of nearest neighbors:
+
+```{r}
+my_vecchia <- createVecchia(traintest$train$locs, m=6)
+```
+
+From the vecchia approximation, you can model a Predictive Process (PP) 
+for the noise and range of you locations, based on the vecchia approximation, 
+if needed.
+TODO : expliquer ici pourquoi on ne le ferait pas ? 
+
+Here we will model PP only for noise. 
+
+```{r}
+noise_PP <- createPP(
+  vecchia_approx = my_vecchia,
+  matern_range = .1,
+  knots = 50,
+  plot = FALSE
+)
+```
+
+## geoNonStat object
+
+We can now create a GeoNonStat object that will be used to model and 
+predict the observed field :
+
+```{r}
+myobj <- GeoNonStat(
+  vecchia_approx = my_vecchia,
+  data_list = traintest$train,
+  matern_smoothness = 1.5, # Matern smoothness
+  anisotropic = FALSE,
+  n_chains = 3,
+  noise_PP = noise_PP,
+  noise_log_scale_bounds = c(-8, 3),
+  range_PP = NULL
+)
+
+summary(myobj)
+```
+
+
+## MCMC 
+
+Then you can run MCMC on your GeoNonStat object. You can run :
+
+- `GeoNonStatMcmc` function by setting the number of MCMC iterations, or
+- `automaticMcmc` function by setting several satisfying criteria. 
+
+The MCMC is time consumming. If needed, you can re-run MCMC after a first launch to run additional iterations. On the example, the `GeoNonStat` object is overwritten by the function’s output, as only parameters from iterations changes. 
+
+```{r}
+myobj <- GeoNonStatMcmc(myobj, n_iterations = 100)
+```
+
+## Explore the output of MCMC 
+
+```{r}
+tracePlots(myobj)
+```
+
+
+Then we can estimate TODO je sais pas expliquer ici. 
+
+```{r}
+myest <- estimate(myobj)
+plotGeoNonStatEstimation(myobj, myest, which_parameter = "field", which_summary = "mean")
+```
+
+## Predict the model on new datasets
+
+And finally we can predict the model on new observations. Here we take the "test_close" and "test_far" we previously constructed: 
+
+```{r}
+testpredictions <- predict(myobj, list("testclose" = traintest$test_close,
+                                       "testfar" = traintest$test_far))
+plotGeoNonStatPrediction(testpredictions$testclose, which_parameter = "field", which_summary = "mean")
+plotGeoNonStatPrediction(testpredictions$testfar, which_parameter = "field", which_summary = "mean")
+```
+

@@ -26,7 +26,6 @@ PPPredict <- function(PP, vecchia_approx_chunk) {
 }
 
 
-# TODO a paralleliser  (noise semble déjà marcher ??)
 #' Predict a 'GeoNonStat' object on new locations
 #'
 #' @param object an object of class \code{GeoNonStat}
@@ -39,7 +38,7 @@ PPPredict <- function(PP, vecchia_approx_chunk) {
 #' first records that should be removed. Default to 0.1
 #' @param num_threads number of threads. Integer.
 #' @param ... additional arguments (unused)
-#' @rdname GeoNonStat
+#' @family {functions for model validation}
 #' @export
 #' @method predict GeoNonStat
 #' @examples

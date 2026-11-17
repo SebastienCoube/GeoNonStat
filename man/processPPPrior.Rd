@@ -18,7 +18,7 @@ Safety checks and automatic treatment of PP objects and their marginal variance 
 }
 \examples{
 vecchia_approx <- createVecchia(cbind(runif(100), runif(100)), 10)
-myPP <- createPP(vecchia_approx)
+myPP <- createPP(vecchia_approx, plot=FALSE)
 PPPP <- processPPPrior(myPP, c(1, 2), "example")
 }
 \keyword{internal}

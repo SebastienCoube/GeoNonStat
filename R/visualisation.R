@@ -20,7 +20,8 @@ plot.PP <- function(x,
                     mar_var_loss = TRUE,
                     samples = TRUE,
                     separate = FALSE) {
-  def.par <- par(no.readonly = TRUE)
+  oldpar <- par(c("mar", "mgp", "mfrow"))
+  on.exit(par(mar=oldpar$mar, mgp=oldpar$mgp, mfrow=oldpar$mfrow))
   par(mar = c(3, 3, 3, 1) + 0.5)
   par(mgp = c(2, 1, 0))
   if (mar_var_loss & !separate) {
@@ -39,25 +40,24 @@ plot.PP <- function(x,
     )
   }
   if(samples){
-    par(mfrow = c(2,2))
+    if(!separate) par(mfrow = c(2,2))
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "A PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (1/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "Another PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (2/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "Yet another PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (3/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
     plotPointillistPainting(
-      x$vecchia_locs,  legend = F, main = "A last PP sample",
+      x$vecchia_locs,  legend = F, main = "Example of PP sample (4/4)",
       Matrix::solve(x$sparse_chol, c(rnorm(x$n_knots), rep(0, nrow(x$vecchia_locs))))[-seq(x$n_knots)]
     )
   }
-  par(def.par)
 }
 
 
@@ -78,8 +78,10 @@ plotKnotsPP <- function(x,
                         mar_var_loss = NULL,
                         show_knots = TRUE) {
   # Graphical parameters
-  def.par <- par(no.readonly = TRUE)
-  omar <- def.par[["mar"]]
+  oldpar <- par(c("mar", "mgp", "xpd"))
+  on.exit(par(mar = oldpar$mar, mgp = oldpar[["mgp"]], xpd=oldpar$xpd))
+  
+  omar <- oldpar$mar
   par(mgp = c(2, 1, 0))
   if (omar[2] >= omar[4] & (show_knots | !is.null(mar_var_loss))) {
     par(mar = omar + c(1, 1, 1, 4 * 1.5), xpd = TRUE)
@@ -166,9 +168,6 @@ plotKnotsPP <- function(x,
       bty = "n"
     )
   }
-
-  #### Restaure margins
-  par(mar = omar, mgp = def.par[["mgp"]])
 }
 
 # # test
@@ -328,12 +327,12 @@ getColorsCat <- function(n, alpha = FALSE) {
 #' @param legend logical, default to TRUE. Add legend ?
 #' @param ... additional graphical parameters, sent to `plot` or,
 #' if `add=TRUE`, to `points`
-#'
+#' @family {Visualisations}
 #' @returns a plot component (a `plot` if `add == FALSE`, `points` if `add ==TRUE`)
 #' @export
 #'
 #' @examples
-#' locs <- matrix(rnorm(2000), ncol = 2)
+#' locs <- matrix(runif(2000), ncol = 2)
 #' plotPointillistPainting(locs = locs, field = rnorm(1000))
 plotPointillistPainting <- function(locs,
                                     field,
@@ -349,25 +348,17 @@ plotPointillistPainting <- function(locs,
   args$col <- getColors(field, alpha = alpha)
   
   if (add) {
-    # the main plot is still the active one: just add to it
     do.call("points", c(list(x = locs), args))
     return(invisible(NULL))
   }
   
-  # new plot: reset any previous layout
-  layout(1)
+  # margin for legend, if needed
+  par(mar = c(2, 2, 4, if (legend) 8 else 0))
+  do.call("plot", c(list(x = locs), args))
   
-  if (legend) {
-    # figure 1 = legend (right), figure 2 = main plot (left)
-    layout(matrix(c(2, 1), nrow = 1), widths = c(6, 1))
-    pointillistColorscale(field)      # drawn first (figure 1)
-  }
-  
-  par(mar = c(2, 2, 4, 0))
-  do.call("plot", c(list(x = locs), args))   # drawn last: stays active
+  if (legend) pointillistColorscale(field)
   invisible(NULL)
 }
-
 
 #' Plot the scale of colors for a given variable
 #'
@@ -380,57 +371,60 @@ plotPointillistPainting <- function(locs,
 #'
 #' @examples
 #' pointillistColorscale(field = c(1, 2, 3))
-pointillistColorscale <- function(field, scalename = "") {
-  origmar <- par("mar")
-  origlwd <- par("lwd")
-  par(mar = c(2, 0, 4, 0))
-  par(lwd = 0.5)
+pointillistColorscale <- function(field, scalename = "",
+                                  n = 50,
+                                  rel_x = c(0.01, 0.07)) {
   field <- field[!is.na(field)]
-  if (length(field) == 0) {
-    stop("only NA values in field")
-  }
-  barplot(
-    rep(0.3, 50),
-    col = getColors(1:50),
-    width = rep(1, 50),
-    space = 0,
-    # lwd = 0.1,
-    xlab = scalename,
-    ylab = "",
-    main = "",
-    border = FALSE,
-    ylim = c(0, 50),
-    horiz = TRUE,
-    xlim = c(-0.2, 0.1),
-    axes = FALSE,
-    mgp = c(0, 0, 0),
-  )
-  pos <- seq(0, 1, by = 0.25)
+  if (length(field) == 0) stop("only NA values in field")
+  
+  usr <- par("usr")
+  dx  <- usr[2] - usr[1]
+  x0  <- usr[2] + rel_x[1] * dx
+  x1  <- usr[2] + rel_x[2] * dx
+  ys  <- seq(usr[3], usr[4], length.out = n + 1)
+  
+  old_xpd <- par(xpd = NA)          # to draw in margin
+  on.exit(par(old_xpd))
+
+  # Color bar
+  rect(x0, ys[-(n + 1)], x1, ys[-1], col = getColors(1:n), border = 0.3)
+  
+  # text
+  pos    <- seq(0, 1, by = 0.25)
   values <- stats::quantile(field, probs = pos)
-  text(
-    y = 1 + pos * (50 - 1),
-    x = -0.01,
-    adj = c(0.95, 1),
-    # format(signif(values), digits=4),
-    round(values, 3),
-    cex = 0.8
-  )
-  par(mar = origmar, lwd = origlwd)
+  text(x1 + 0.005 * dx,
+       usr[3] + pos * (usr[4] - usr[3]),
+       labels = round(values, 3),
+       adj = c(0, 0.5), cex = 0.8)
+  
+  # scale name
+  if (nzchar(scalename))
+    text((x0 + x1) / 2, usr[3] - 0.03 * (usr[4] - usr[3]),
+         labels = scalename, adj = c(0.5, 1), cex = 0.8)
 }
 
 
 
 #' Plots range ellipses for nonstationary covariance functions. Default is 0.1 correlation.
 #' @param object a GeoNonstat object
-#' @param prediction_block block of prediction on wich to draw ellipses
-#' @param correlation_level numeric, shrinks or inflates the ellipses. 
-#' Default to .1 (rho following INLA's terminology) TODO
-#'
+#' @param prediction_block block of prediction on wich to draw ellipses, usually an element of 
+#' the output of `predict.GeoNonStat`
+#' @param correlation_level numeric value, between 0 and 1, resize the ellipses according 
+#' to correlation of the spatial kernel. Default to .1
+#' @family {Visualisations}
 #' @returns a plot object
 #' @export
 #'
 #' @examples
-#' #TODO
+#' # Recreating new data with less observations but same structure as example data
+#' locs <-processedGnsDemo$vecchia_approx$observed_locs
+#' X <- processedGnsDemo$covariates$X$arg
+#' suppressWarnings(
+#'   testdata <- splitData(locs,  list("X" = X, "noise_X"=X), plot=FALSE)
+#' )
+#' testpredictions <- predict(processedGnsDemo, testdata)
+#' plotPointillistPainting(locs = locs, field = X[,1], cex=20)
+#' drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
 drawEllipses = function(object, prediction_block, correlation_level = .1)
 {
   log_range <- cbind(
@@ -482,8 +476,39 @@ ellipseMahalanobis <- function(Sigma, x) {
   pts
 }
 
+
+#' Plot the prediction of a 'GeoNonStat' object on new locations
+#'
+#' @param prediction_block an element of the output of the 
+#' `predict.GeoNonStat()` function. 
+#' @param which_parameter parameter to plot, default to NULL.
+#' Should be one of `names(prediction_block)`
+#' @param which_summary summary to plot, default to "mean". On of the available 
+#' statistics of the summaries of the prediction object : 
+#' "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' @param main character, title of the plot. 
+#' @family {Visualisations}
+#' @returns a plot
+#' @export
+#' 
+#' @examples
+#' # Recreating new data with less observations but same structure as example data
+#' locs <- cbind(rnorm(200), rnorm(200))
+#' X <- data.frame(matrix(rnorm(200*4), ncol=4))
+#' colnames(X) <- paste0("V", 1:4)
+#' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+#' testpredictions <- predict(processedGnsDemo, list("testdata" = testdata))
+#' plotGeoNonStatPrediction(testpredictions$testdata,  "field", "mean")
 plotGeoNonStatPrediction <- function(
     prediction_block, which_parameter, which_summary, main = "automatic"){
+  sums <- prediction_block$summaries
+  if(is.null(which_parameter) || !(which_parameter %in% names(sums))) {
+    stop("`which_parameter` should be on of ", paste(names(sums), collapse=", "))
+  }
+  if(is.null(which_summary) || !(which_summary %in% colnames(sums[[which_parameter]]))) {
+    stop("`which_summary` should be on of ", 
+         paste(colnames(sums[[which_parameter]]), collapse=", "))
+  }
   if(main =="automatic") main <- paste("Predicted", which_summary, "of", which_parameter)
   plotPointillistPainting(
     locs = prediction_block$locs, 
@@ -492,12 +517,43 @@ plotGeoNonStatPrediction <- function(
   )
 }
 
+#' Plot the estimation of a GeoNonStat object
+#'
+#' @param object an object of class \code{GeoNonStat}
+#' @param estimation an output of the estimation function on object. 
+#' If time consuming, it is adviced to pre-compute estimation and pass it as 
+#' an argument. Default to NULL otherwise (recomputed before plot)
+#' @param which_parameter parameter to plot, default to NULL.
+#' Should be one of `names(estimation)`
+#' @param which_summary summary to plot, default to "mean". On of the available 
+#' statistics of estimation object : "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' @param main character, title of the plot. 
+#' @family {Visualisations}
+#' @returns a plot
+#' @export
+#'
+#' @examples
+#' plotGeoNonStatEstimation(object = processedGnsDemo, 
+#'                          which_parameter = "field", which_summary = "mean")
 plotGeoNonStatEstimation <- function(
-    object, estimation, which_parameter, which_summary, main = "automatic"){
+    object, 
+    estimation = NULL, 
+    which_parameter = NULL, 
+    which_summary = "mean", 
+    main = "automatic"){
+  if(is.null(estimation)) estimation <- estimate(object)
+  est <- estimation$summaries$at_observed_locs
+  if(is.null(which_parameter) || !(which_parameter %in% names(est))) {
+    stop("`which_parameter` should be on of ", paste(names(est), collapse=", "))
+  }
+  if(is.null(which_summary) || !(which_summary %in% colnames(est[[which_parameter]]))) {
+    stop("`which_summary` should be on of ", 
+         paste(colnames(est[[which_parameter]]), collapse=", "))
+  }
   if(main =="automatic") main <- paste("Estimated", which_summary, "of", which_parameter)
   plotPointillistPainting(
     locs = object$vecchia_approx$observed_locs, 
-    field = estimation$summaries$at_observed_locs[[which_parameter]][,which_summary], 
+    field = est[[which_parameter]][,which_summary], 
     main = main
   )
 }

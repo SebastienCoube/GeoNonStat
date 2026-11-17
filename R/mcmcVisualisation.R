@@ -110,14 +110,19 @@ splitIntervals <- function(total_size, starts, nmax = 16) {
 #' @param object a processed GeoNonStat object
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
-#' @param keep names of paramaters to plot
+#' @param keep names of paramaters to plot. Can also be '"all"', 
+#' to keep all parameters, or '"nofield"'  to keep all parameters, 
+#' except the 'field.'
+#' @param colors a color vector of the same length as the number of chains in
+#' object 
 #'
 #' @returns NULL
 #' @export
 #'
 #' @examples
+#' # Each line is a chain. 
 #' tracePlots(processedGnsDemo)
-tracePlots <- function(object, burn_in = .3, keep = "nofield") {
+tracePlots <- function(object, burn_in = .3, keep = "nofield", colors=NULL) {
   # Checks
   nMcmc <- mcmcCount(object)
   if (nMcmc <= 0) {
@@ -136,15 +141,24 @@ tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   )
 
   # How to plot
-  ormfrow <- par("mfrow")
-  omar <- par("mar")
+  oldpar <- par(c("mfrow", "mar"))
+  on.exit(par(mar=oldpar$mar, mfrow=oldpar$mfrow))
   par(mar = c(2.1, 3.1, 3.1, 1.1))
   n_iters <- nMcmc
   names_params <- names(records[[1]])
   plotted_iters <- seq(max(0, floor(n_iters * burn_in)) + 1, n_iters)
 
   xlim <- c(min(plotted_iters), max(plotted_iters))
-  color_lines <- getColorsCat(3)
+  
+   color_lines <- getColorsCat(length(records))
+   if(!is.null(colors)) {
+    if(length(colors) != length(records)) {
+      warning("`colors` should be of length ", length(records), 
+              "- setting default colors")
+    } else {
+      color_lines <- colors
+    }
+  }
   nplots <- 0
   for (name in names_params) {
     refparams <- records[[1]][[name]]
@@ -178,7 +192,5 @@ tracePlots <- function(object, burn_in = .3, keep = "nofield") {
   }
   cat("...", nplots, "plots produced. ")
   # Resetting original parameters mfrow
-  par("mfrow" = ormfrow)
-  par("mar" = omar)
   return(invisible(NULL))
 }

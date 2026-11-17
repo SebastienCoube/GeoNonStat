@@ -55,7 +55,7 @@ nobs <- 10000
 observed_locs <- cbind(runif(nobs), runif(nobs))
 observed_field <- rnorm(nobs)
 vecchia_approx <- createVecchia(observed_locs)
-PP <- createPP(vecchia_approx)
+PP <- createPP(vecchia_approx, plot=FALSE)
 X <- as.data.frame(cbind(observed_locs, observed_locs^2))
 covariates <- list()
 covariates$X <- processCovariates(X, vecchia_approx = vecchia_approx)
