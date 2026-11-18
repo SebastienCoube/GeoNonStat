@@ -14,7 +14,7 @@ load(file.path(out_dir, "data_cleaned_small_expanded.RData"))
 train_test_split <- GeoNonStat::splitData(
   data = list(observed_field = data_cleaned_small$NDVI),
   locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y),
-  n_clust = 6000, round_locs = 1/100, prop_test = c(.05, .06)
+  round_locs = 1/400, n_clust_far = 6000, prop_test_far = .1, prop_test_close = .1  
 )
 train_test_split$train$X <-      as.data.frame(train_test_split$train$locs)
 train_test_split$test_far$X <-   as.data.frame(train_test_split$test_far$locs)
@@ -26,8 +26,8 @@ plotPointillistPainting(train_test_split$train$locs,
 
 # Model structures ####
 vecchia_approx <- createVecchia(train_test_split$train$locs, m = number_NNGP_neighbors)
-PP_large <- createPP(vecchia_approx = vecchia_approx, matern_range = .08)
-PP_small <- createPP(vecchia_approx = vecchia_approx, matern_range = .08)
+PP_large <- createPP(vecchia_approx = vecchia_approx, matern_range = .1)
+PP_small <- createPP(vecchia_approx = vecchia_approx, matern_range = .05)
 
 # Run design ####
 run_design <- matrix(F, 4, 3)
@@ -40,6 +40,7 @@ print(run_design)
 # Run, predict and score according to the design ####
 scores <- NULL
 
+i=1
 for (i in seq(1, 4)) {
   noise_PP <- NULL
   noise_log_scale_bounds = NULL
@@ -68,7 +69,7 @@ for (i in seq(1, 4)) {
     object = geo_non_stat,
     n_threads_per_chain = n_threads,
     satisfying_ESS = 100, burn_in = .3,
-    satisfying_Gelman_Rubin = 1.1, iter_per_step = 100,
+    satisfying_Gelman_Rubin = 1.1, iter_per_step = 300,
     save_checkpoint_model = model_save_name,
     save_checkpoint_plots = diags_save_name
   )
@@ -88,7 +89,7 @@ for (i in seq(1, 4)) {
   scores <- rbind(scores, c(estimation$scores$aggregated,
                             prediction$test_close$scores$aggregated,
                             prediction$test_far$scores$aggregated))
-  colnames(scores) <- paste(rep(c("train", "close", "far"), each = 4),
+  colnames(scores) <- paste(rep(c("close", "far"), each = 4),
                             colnames(prediction$test_close$scores$per_obs))
   print(scores)
   rm(geo_non_stat, prediction, estimation)

@@ -90,7 +90,7 @@ predict.GeoNonStat <-  function(
   empty_summary <- matrix(NA_real_, n_all, 5)
   colnames(empty_summary) <- c("mean", "sd", "q 2.5%", "median", "q 97.5%")
   predicted_stuff_names <-
-    c("field", "noise_log_var", "fixed", "field_and_fixed", "range")
+    c("field", "noise_log_var", "fixed", "field_and_fixed", "range", "observed_field")
   if (aniso) predicted_stuff_names <- c(predicted_stuff_names, "aniso1", "aniso2")
   summaries <- lapply(predicted_stuff_names, function(x) empty_summary)
   names(summaries) <- predicted_stuff_names
@@ -188,11 +188,6 @@ chunk <- chunks[[1]]
     
     # predicting fixed effects
     chunk_samples$fixed[] <- (records$beta) %*% t(X_chunk$X)
-# t(chunk_samples$fixed) - 
-# object$covariates$X$X[which_obs_in_chunk_idx,] %*% t(records$beta)
-#     
-    # predicting noise, range, latent field
-# mcmc_iter = 1
     for (mcmc_iter in seq_len(n_mcmc_iters)) {
       # predicting noise log variance
       chunk_samples$noise_log_var[mcmc_iter, ] <- log(noiseVar(
@@ -207,11 +202,6 @@ chunk <- chunks[[1]]
         range_X = range_X_chunk, PP = range_PP_chunk,
         vecchia_approx = vecchia_approx_chunk
       )[]
-# plot(
-#   log_range_train[object$vecchia_approx$locs_match,][which_obs_in_chunk_idx,],
-#   log_range_chunk[vecchia_approx_chunk$locs_match,]
-# )
-# abline(a=0, b=1)
       # Vecchia approximation
       vecchia_predict(
         log_range = t(log_range_train),
@@ -245,9 +235,15 @@ chunk <- chunks[[1]]
     # combining field and fixed samples 
     chunk_samples$field_and_fixed[] <-
       chunk_samples$fixed[] + chunk_samples$field[]
+    # combining field, fixed samples, and noise to retrieve the response 
+    chunk_samples$observed_field[] <-
+      chunk_samples$field_and_fixed[]  + exp(.5*chunk_samples$noise_log_var) * 
+      rnorm(length(chunk_samples$noise_log_var))
+    # summaries 
     for (name in predicted_stuff_names) {
       summaries[[name]][which_obs_in_chunk_idx, ] <- summarizeRecords(chunk_samples[[name]])
     }
+    # computing the scores
     scores[which_obs_in_chunk_idx, ] <- allScores(
       true_y = data_list_pred$observed_field[which_obs_in_chunk_idx],
       sd_samples   = t(exp(.5 * chunk_samples$noise_log_var)),
