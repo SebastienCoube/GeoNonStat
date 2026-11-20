@@ -75,6 +75,21 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
   )
 }
 
+#' Reparametrization matrix for the range parameters
+#' @returns a matrix with 3 columns if anisotropic, 1 if isotropic
+rangeReparamMat <- function(anisotropic = F)
+{
+  if(!anisotropic)return(2) 
+  if(anisotropic)return(matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2) 
+}
+
+#' Inverse reparametrization matrix for the range parameters
+#' @returns a matrix with 3 columns if anisotropic, 1 if isotropic
+solveRangeReparamMat <- function(anisotropic = F){
+  solve(rangeReparamMat(anisotropic))
+}
+
+
 #' Computes a Vecchia sparse Cholesky factor and its derivatives
 #'
 #' @param range_beta parameter for the range.
@@ -120,11 +135,13 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 computeLogRange <- function(range_beta,
                             vecchia_approx,
                             range_X,
+                            reparametrize = T,
                             PP = NULL) {
+  Y <- range_beta
   if (ncol(range_beta) == 3) {
-    Y <- range_beta %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
+    if(reparametrize)Y <- range_beta %*% rangeReparamMat(T)
   } else if (ncol(range_beta) == 1) {
-    Y <- range_beta * 2
+    if(reparametrize)Y <- range_beta * rangeReparamMat(F)
   } else {
     stop("range_beta is expected to have 1 (isotropic case) or 3 (anisotropic case) columns")
   }

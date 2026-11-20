@@ -382,6 +382,15 @@ simulateGnsData <- function(gns_simulator,
     range_X = gns_simulator$covariates$range_X,
     PP = gns_simulator$range_PP
   )
+  log_range_field_interpretable <- computeLogRange(
+    range_beta = rbind(
+      gns_params$range_X_coeff,
+      gns_params$range_PP_coeff
+    ), reparametrize = F,
+    vecchia_approx = gns_simulator$vecchia_approx,
+    range_X = gns_simulator$covariates$range_X,
+    PP = gns_simulator$range_PP
+  )
 
 
   log_noise_field <- xPPMultRight(
@@ -427,7 +436,8 @@ simulateGnsData <- function(gns_simulator,
 
   res <- list()
   res$hidden_fields <- list(
-    "log_range_field" = log_range_field,
+    "log_range_field" = log_range_field_interpretable[gns_simulator$vecchia_approx$locs_match,],
+    "log_range_field_for_vecchia" = log_range_field,
     "log_noise_var_field" = log_noise_field,
     "noise" = noise,
     "fixed_effects" = fixed_effects,

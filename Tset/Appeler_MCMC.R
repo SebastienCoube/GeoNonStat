@@ -24,7 +24,7 @@ gns_simulator = createGnsSimulator(
 )
 
 
-field_log_var=  0
+field_log_var=  4
 # case with nice non-stationarity and little noise. 
 range_log_scale = c(-1, -0)
 noise_intercept = -1
@@ -136,6 +136,7 @@ geo_non_stat = GeoNonStatMcmc(
   n_threads_per_chain = 7, 
   n_iterations = 100)
 
+
 tracePlots(geo_non_stat, keep = "noise_beta", burn_in = .0)
 tracePlots(geo_non_stat, keep = "noise_log_scale", burn_in = .0)
 tracePlots(geo_non_stat, keep = "range_beta", burn_in = .0)
@@ -154,7 +155,15 @@ plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
                          which_parameter = "noise_PP", which_summary = "mean")
 plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
                          which_parameter = "noise_log_var", which_summary = "mean")
-
+plotGeoNonStatEstimation(object = geo_non_stat, estimation = estimation,
+                         which_parameter = "range", which_summary = "mean")
+dev.off()
+plot(fake_data$hidden_fields$log_range_field[,1], estimation$summaries$at_observed_locs$range[,"mean"])
+abline(a=0, b=1)
+plot(fake_data$hidden_fields$log_range_field[,2], estimation$summaries$at_observed_locs$aniso1[,"mean"])
+abline(a=0, b=1)
+plot(fake_data$hidden_fields$log_range_field[,3], estimation$summaries$at_observed_locs$aniso2[,"mean"])
+abline(a=0, b=1)
 
 # new_locs <- as.matrix(expand.grid(seq(0, 1, .005), seq(0, 1, .005)))
 # new_X <- as.data.frame(
@@ -192,16 +201,15 @@ prediction <- predict.GeoNonStat(
   locs = vecchia_approx$observed_locs + rnorm(length(vecchia_approx$observed_locs)) * 1e-6,
   observed_field= fake_data$observed$observed_field, 
   X = X, noise_X = X, range_X = NULL)), 
-  object = geo_non_stat, num_threads = 5, burn_in = .2
+  object = geo_non_stat, num_threads = 5, burn_in = .3
   )
 
 plot(
   prediction$pred_at_observed_locs$summaries$field[,"mean"],
   estimation$summaries$at_observed_locs$field[,"mean"])
+abline(a=0, b=1)
 
 plot(
   prediction$pred_at_observed_locs$summaries$field[,"sd"],
   estimation$summaries$at_observed_locs$field[,"sd"])
-
-
 abline(a=0, b=1)

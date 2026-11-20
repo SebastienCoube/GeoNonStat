@@ -116,6 +116,10 @@ estimate <- function(object, ...) {
 #' # Exstimation of model parameters, after MCMC :
 #' estimate(processedGnsDemo)
 estimate.GeoNonStat <- function(object, burn_in = 0.3) {
+  #########
+  # Setup #
+  #########
+  aniso <- object$hierarchical_model$anisotropic
   if (mcmcCount(object) <= 0) {
     objname <- deparse(substitute(object))
     stop(paste0("MCMC doesn't seem to have run on '",
@@ -126,13 +130,15 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3) {
   summaries <- list()
   scores <- list()
   scores$per_obs <- matrix(0, object$vecchia_approx$n_obs, 4)
-  # getting MCMC samples
+  ########################
+  # getting MCMC samples #
+  ########################
   samples <- aggregateRecords(object$records, burn_in = burn_in, keep ="all")
-  samples$field_whitened <- NULL; gc()
+  n_mcmc_iter <- nrow(samples$beta)
   # getting samples of noise PP at unique locations
   if(!is.null(object$hierarchical_model$noise$PP)){
     samples$noise_PP <- samples$field
-    for(i in seq_len(nrow(samples$noise_beta))){
+    for(i in seq_len(n_mcmc_iter)){
       samples$noise_PP[i,] <- xPPMultRight(
         X = NULL, vecchia_approx = object$vecchia_approx, 
         PP = object$hierarchical_model$noise$PP, 
@@ -142,33 +148,68 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3) {
     }
     gc()
   }
-  # getting summaries of MCMC samples
+  # getting samples of range at unique locations
+  n_range_params <- 1 + 2 * aniso
+  n_train <- object$vecchia_approx$n_locs
+  log_range_train_all <- array(0, dim = c(n_train, n_range_params, n_mcmc_iter))
+  for (mcmc_iter in seq_len(n_mcmc_iter)) {
+    log_range_train_all[, , mcmc_iter] <- computeLogRange(
+      range_beta = getRangeBeta(mcmc_iter, aniso = aniso, records = samples),
+      range_X = object$covariates$range_X,
+      PP = object$hierarchical_model$range$PP,
+      vecchia_approx = object$vecchia_approx, 
+      reparametrize = FALSE
+    )[]
+  }
+  
+  
+  ################################
+  # Summaries of hyperparameters #
+  ################################
   summaries$hyperparameters <- lapply(samples, summarizeRecords)
-  # summaries at observed locations
+  ###################################
+  # Summaries at observed locations #
+  ###################################
+  # starting with the latent field
   summaries$at_observed_locs <- list()
   summaries$at_observed_locs$field <- summaries$hyperparameters$field[object$vecchia_approx$locs_match,] 
   summaries$hyperparameters$field <- NULL 
+  # initializing other summaries at observed locs
   if(!is.null(object$hierarchical_model$noise$PP)){
     summaries$at_observed_locs$noise_PP <- summaries$hyperparameters$noise_PP[object$vecchia_approx$locs_match,] 
     summaries$hyperparameters$noise_PP <- NULL
   }
-  # initializing other summaries at observed locs
   summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$noise_log_var <- summaries$at_observed_locs$field
-  # computing over chunks to avoid RAM filling
-  chunk_size <- 10000
+  # summarizing the range
+  summaries$at_observed_locs$range <- summarizeRecords(t(log_range_train_all[,1,]))[vecchia_approx$locs_match,]
+  if (aniso) {
+    summaries$at_observed_locs$aniso1 <- summarizeRecords(t(log_range_train_all[,2,]))[vecchia_approx$locs_match,]
+    summaries$at_observed_locs$aniso2 <- summarizeRecords(t(log_range_train_all[,3,]))[vecchia_approx$locs_match,]
+  }
+  ##############################################################
+  # Computing summaries and scores over chunks of observations #
+  ##############################################################
+  chunk_size <- 20000
   chunks <- split(
     seq_len(object$vecchia_approx$n_obs), 
     seq_len(object$vecchia_approx$n_obs)%/%chunk_size)
   if(length(chunks[[length(chunks)]])==1){
     chunks[[length(chunks)-1]] <- c(chunks[[length(chunks)-1]], chunks[[length(chunks)]])
     chunks[[length(chunks)]] <- NULL}
-  
   for(chunk in chunks){
+    #############
+    # summaries #
+    #############
+    # fixed
     fixed_effect_sample <- samples$beta %*% as.matrix(t(object$covariates$X$X[chunk,,drop=F]))
-    latent_field_sample <- samples$field[,object$vecchia_approx$locs_match[chunk]]
-    field_and_fixed_sample <- fixed_effect_sample + latent_field_sample
+    summaries$at_observed_locs$fixed[chunk,] <- summarizeRecords(fixed_effect_sample)
+    # fixed effect + field
+    field_and_fixed_sample <- fixed_effect_sample + samples$field[,object$vecchia_approx$locs_match[chunk]]
+    summaries$at_observed_locs$field_and_fixed[chunk,] <-
+      summarizeRecords(field_and_fixed_sample)
+    # noise variance
     log_noise_variance_sample <-
       samples$noise_beta[,seq(object$covariates$noise_X$n_regressors),drop=FALSE] %*%
       as.matrix(t(object$covariates$noise_X$X[chunk,,drop=FALSE]))
@@ -177,12 +218,9 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3) {
         log_noise_variance_sample +
         samples$noise_PP[,object$vecchia_approx$locs_match[chunk]]
     }
-    summaries$at_observed_locs$field_and_fixed[chunk,] <-
-      summarizeRecords(field_and_fixed_sample)
-    summaries$at_observed_locs$fixed[chunk,] <-
-      summarizeRecords(fixed_effect_sample)
     summaries$at_observed_locs$noise_log_var[chunk,] <-
       summarizeRecords(log_noise_variance_sample)
+    # scores
     chunk_scores <- (allScores(
       true_y = object$observed_field[chunk], 
       mean_samples = t(field_and_fixed_sample), 
@@ -198,4 +236,17 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3) {
   return(list(summaries = summaries, scores = scores))
 }
 
+
+
+#' range coefficients at one MCMC iteration (isotropic models have no aniso coefficients)
+getRangeBeta <- function(mcmc_iter, aniso, records) {
+  if (aniso) {
+    cbind(
+      records$`range_beta range`[mcmc_iter, ],
+      records$`range_beta aniso1`[mcmc_iter, ],
+      records$`range_beta aniso2`[mcmc_iter, ])
+  } else {
+    cbind(records$`range_beta range`[mcmc_iter, ])
+  }
+}
 

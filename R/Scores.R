@@ -1,3 +1,9 @@
+# TODO : modify train test split so that either or both proportions can be 0
+# TODO : change error messages
+# TODO : revert plot 
+# TODO : revert check dims in train test split
+# TODO : anova based rounding of covariates in train test split 
+
 #' Coverage intervals of the response variable
 #' @param true_y a vector of true observations of the response variable
 #' @param y_samples samples of y observations
@@ -315,7 +321,13 @@ splitData <- function(locs,
                       n_clust_far = NULL,
                       round_locs = 0, 
                       plot = TRUE){
+  # Rounding
   if (round_locs > 0) locs <- round_locs * round(locs / round_locs)
+  locs_match <- match(split(locs, row(locs)), split(unique(locs), row(unique(locs))))
+  for(X_name in names(datalist)[grep("X", names(datalist))]){
+    vars <- apply(datalist[[X_name]], 2, var)
+    mean_per_unique_locs <- apply(datalist[[X_name]], 2, function(x)tapply(x, FUN = mean, INDEX =  locs_match))
+  }
   
   # Split "far" : désactivé si n_clust_far = 0 ou prop_test_far = 0
   idx_far <- NULL
