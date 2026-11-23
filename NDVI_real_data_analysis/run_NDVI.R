@@ -13,7 +13,7 @@ load(file.path(out_dir, "data_cleaned_small_expanded.RData"))
 # Splitting between train and test ####
 train_test_split <- GeoNonStat::splitData(
   datalist = list(observed_field = data_cleaned_small$NDVI, X = as.data.frame(cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y))),
-  locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y),
+  observed_locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y),
   round_locs = 1/250, n_clust_far = 6000, prop_test_far = .1, prop_test_close = .1  
 )
 saveRDS(train_test_split, file.path(out_dir, "train_test_split.RDS"))

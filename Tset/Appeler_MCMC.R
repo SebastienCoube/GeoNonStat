@@ -54,7 +54,7 @@ geo_non_stat = GeoNonStat(
   vecchia_approx = vecchia_approx, 
   data_list = list(
     observed_field= fake_data$observed$observed_field, 
-    X = X, noise_X = X, range_X = NULL),
+    X = X, noise_X = X),
   matern_smoothness = 1.5, anisotropic = T, 
   n_chains = 3, 
   noise_PP = PP_noise,
@@ -197,12 +197,16 @@ abline(a=0, b=1)
 
 
 prediction <- predict.GeoNonStat(
-  new_data_lists = list("pred_at_observed_locs" = list(
-  locs = vecchia_approx$observed_locs + rnorm(length(vecchia_approx$observed_locs)) * 1e-6,
-  observed_field= fake_data$observed$observed_field, 
-  X = X, noise_X = X, range_X = NULL)), 
+  new_data_lists = 
+    list(
+      "pred_at_observed_locs" = list(
+        "observed_locs" = vecchia_approx$observed_locs,
+        "data_list" = list(
+          observed_field= fake_data$observed$observed_field, 
+          X = X, noise_X = X))
+    ), 
   object = geo_non_stat, num_threads = 5, burn_in = .3
-  )
+)
 
 plot(
   prediction$pred_at_observed_locs$summaries$field[,"mean"],
@@ -213,3 +217,9 @@ plot(
   prediction$pred_at_observed_locs$summaries$field[,"sd"],
   estimation$summaries$at_observed_locs$field[,"sd"])
 abline(a=0, b=1)
+
+plot(
+  prediction$pred_at_observed_locs$summaries$range[,"mean"],
+  estimation$summaries$at_observed_locs$range[,"mean"])
+abline(a=0, b=1)
+

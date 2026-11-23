@@ -1,4 +1,5 @@
 # TODO some documentation ?
+# TODO Checker que les X dans predict ont la meme taille que ceux dans initialization ?
 
 rbind_by_name <- function(x) {
   nms <- names(x[[1]])
@@ -69,17 +70,26 @@ predict.GeoNonStat <-  function(
                 "'GeoNonStatMcmc' or 'automaticMcmc' function"))
   }
   aniso <- isTRUE(object$hierarchical_model$anisotropic)
-  # putting NAs if no observed field
+  # checking 
+  if(!is.list(new_data_lists))stop("new_data_lists must be a list.")
+  if(any(!sapply(new_data_lists, is.list)))stop("Each element of new_data_lists must be a list.")
+  if(any(sapply(new_data_lists, function(x)is.null(x$observed_locs))))stop("Each element of new_data_lists must contain a matrix named `observed_locs`.")
+  if(any(sapply(new_data_lists, function(x)is.null(x$data_list))))stop("Each element of new_data_lists must contain a list named `data_list`.")
+  # putting NAs if no observed field and checking
+  cat("Checking data lists... ")
   for (i in seq_along(new_data_lists)) {
-    if (is.null(new_data_lists[[i]]$observed_field)) {
-      new_data_lists[[i]]$observed_field <- rep(NA_real_, nrow(new_data_lists[[i]]$locs))
+    if (is.null(new_data_lists[[i]]$data_list$observed_field)) {
+      new_data_lists[[i]]$data_list$observed_field <- rep(NA_real_, nrow(new_data_lists[[i]]$observed_locs))
     }
+    checkDataList(data_list = new_data_lists[[i]]$data_list, observed_locs = new_data_lists[[i]]$observed_locs)
+    cat(names(new_data_lists)[i], " (", i, "/", length(new_data_lists), ") OK.", sep = "")
   }
+  new_data_lists <- lapply(new_data_lists, function(x)c(x$data_list, "observed_locs" = list(x$observed_locs)))
   # merging data lists + matching of duplicated locations #
-  data_list_idx <- rep(seq_along(new_data_lists), sapply(new_data_lists, function(x) nrow(x$locs)))
+  data_list_idx <- rep(seq_along(new_data_lists), sapply(new_data_lists, function(x) nrow(x$observed_locs)))
   data_list_pred <- rbind_by_name(new_data_lists)
   n_all <- length(data_list_idx)
-  pred_locs <- as.matrix(data_list_pred$locs)
+  pred_locs <- as.matrix(data_list_pred$observed_locs)
   locs_key <- do.call(paste, c(
     lapply(seq_len(ncol(pred_locs)), function(j) sprintf("%.17g", pred_locs[, j])),
     sep = "|"))
@@ -232,7 +242,7 @@ predict.GeoNonStat <-  function(
     res[[i]]$scores <- list()
     res[[i]]$scores$per_obs <- scores[idx_i, , drop = FALSE]
     res[[i]]$scores$aggregated <- signif(apply(res[[i]]$scores$per_obs, 2, mean, na.rm = TRUE), digits = 2)
-    res[[i]]$locs <- new_data_lists[[i]]$locs
+    res[[i]]$observed_locs <- new_data_lists[[i]]$observed_locs
   }
   names(res) <- names(new_data_lists)
   return(res)

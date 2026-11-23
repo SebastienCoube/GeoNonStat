@@ -1,8 +1,5 @@
-# TODO : modify train test split so that either or both proportions can be 0
 # TODO : change error messages
 # TODO : revert plot 
-# TODO : revert check dims in train test split
-# TODO : anova based rounding of covariates in train test split 
 
 #' Coverage intervals of the response variable
 #' @param true_y a vector of true observations of the response variable
@@ -221,9 +218,9 @@ plotSplit <- function(list_locs,
                       cex = c(0.5, 0.8, 0.8, 0.5),
                       pch = list(".", 19, 19, ".")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
-  if(!all(sapply(list_locs, function(x) "locs" %in% names(x))))
-    stop("Except info, all list_locs entries should have a 'locs' element")
-  list_locs <- lapply(list_locs, function(x) x[["locs"]])
+  if(!all(sapply(list_locs, function(x) "observed_locs" %in% names(x))))
+    stop("Except info, all list_locs entries should have an 'observed_locs' element")
+  list_locs <- lapply(list_locs, function(x) x[["observed_locs"]])
   nblist <- length(list_locs)
   nameslocs <- names(list_locs)
   replaceparam <- function(arg, user, is_missing) {
@@ -247,8 +244,8 @@ plotSplit <- function(list_locs,
   xlim <- range(lims[1:2, ])
   ylim <- range(lims[3:4, ])
   
-  xlab <- "locs[,1]"
-  ylab <- "locs[,2]"
+  xlab <- "observed_locs[,1]"
+  ylab <- "observed_locs[,2]"
   if (!is.null(colnames(list_locs[[1]]))) {
     xlab <- colnames(list_locs[[1]])[1]
     ylab <- colnames(list_locs[[1]])[2]
@@ -289,8 +286,8 @@ plotSplit <- function(list_locs,
 
 #' Split data between train and test (spatially far or not) observations
 #'
-#' @param locs a matrix of spatial locations.
-#' @param datalist a list containing vectors or data.frames to split into
+#' @param observed_locs a matrix of spatial locations.
+#' @param data_list a list containing vectors or data.frames to split into
 #' train/test
 #' @param prop_test_close the proportion of observations used for "close" 
 #' validation, among "not far" data. Default to 0.1
@@ -300,7 +297,8 @@ plotSplit <- function(list_locs,
 #' Default to NULL, set to 1\% of the data
 #' @param round_locs numeric, default to 0. rounding factor for locations coordinates. 
 #' @param plot logical, default to TRUE. Should the split produce a plot ? 
-#' @returns a list of lists, each child having the same structure as datalist
+#' @param variance_average numeric, default to 0.01. Averages covariate within spatial location if within location variance is smaller than variance_average percent of the total variance 
+#' @returns a list of lists, each child having the same structure as data_list
 #' @family {functions for model validation}
 #' @export
 #' 
@@ -311,34 +309,42 @@ plotSplit <- function(list_locs,
 #' range_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 #' noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 #' y <- rnorm(n)
-#' datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
-#' traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1)
-#' traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1, prop_test_far=0.1)
-splitData <- function(locs, 
-                      datalist,
+#' data_list <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
+#' traintest <- splitData(observed_locs, data_list, prop_test_close = 0.1)
+#' traintest <- splitData(observed_locs, data_list, prop_test_close = 0.1, prop_test_far=0.1)
+splitData <- function(observed_locs, 
+                      data_list,
                       prop_test_close = 0.1,
                       prop_test_far = 0.1, 
                       n_clust_far = NULL,
                       round_locs = 0, 
-                      plot = TRUE){
+                      plot = TRUE, 
+                      variance_average = .01
+                      ){
+  # Checking format
+  checkDataList(data_list, observed_locs)
   # Rounding
-  if (round_locs > 0) locs <- round_locs * round(locs / round_locs)
-  locs_match <- match(split(locs, row(locs)), split(unique(locs), row(unique(locs))))
-  for(X_name in names(datalist)[grep("X", names(datalist))]){
-    vars <- apply(datalist[[X_name]], 2, var)
-    mean_per_unique_locs <- apply(datalist[[X_name]], 2, function(x)tapply(x, FUN = mean, INDEX =  locs_match))
+  if (round_locs > 0) observed_locs <- round_locs * round(observed_locs / round_locs)
+  locs_match <- match(split(observed_locs, row(observed_locs)), split(unique(observed_locs), row(unique(observed_locs))))
+  # averaging covariates according to within/between variance
+  for(X_name in names(data_list)[grep("X", names(data_list))]){
+    vars <- apply(data_list[[X_name]], 2, var)
+    mean_per_unique_locs <- apply(data_list[[X_name]], 2, function(x)tapply(x, FUN = mean, INDEX =  locs_match))
+    between_vars <- apply(mean_per_unique_locs[locs_match,], 2, var)
+    roundable <- which((vars-between_vars)/vars<variance_average)
+    data_list[[X_name]][,roundable] <- mean_per_unique_locs[locs_match,roundable]
   }
   
   # Split "far" : désactivé si n_clust_far = 0 ou prop_test_far = 0
   idx_far <- NULL
   if ((n_clust_far > 0 || is.null(n_clust_far)) && prop_test_far > 0) {
-    idx_far <- getIndexesFar(locs, n_clust = n_clust_far, prop_test = prop_test_far)
+    idx_far <- getIndexesFar(observed_locs, n_clust = n_clust_far, prop_test = prop_test_far)
   }
   has_far <- !is.null(idx_far)
   
   # Create indexes for train, test far and test close
-  idx_avail <- if (has_far) idx_far$train else seq_len(nrow(locs))
-  idx_close <- getIndexesClose(locs = locs[idx_avail, ], prop_test = prop_test_close)
+  idx_avail <- if (has_far) idx_far$train else seq_len(nrow(observed_locs))
+  idx_close <- getIndexesClose(locs = observed_locs[idx_avail, ], prop_test = prop_test_close)
   
   final_split <- list(
     "train"      = idx_avail[idx_close$train],
@@ -363,7 +369,7 @@ splitData <- function(locs,
   colnames(info) <- c("spatial locations", "observations")
 
 
-  makeBlock <- function(idx) c(list(locs = locs[idx, , drop = FALSE]), subsetData(datalist, idx))
+  makeBlock <- function(idx) list("observed_locs" = observed_locs[idx, , drop = FALSE], "data_list" = subsetData(data_list, idx), "idx" = idx)
   output <- list("train" = makeBlock(final_split$train),
                  "test_close" = makeBlock(final_split$test_close))
   if (has_far) {
