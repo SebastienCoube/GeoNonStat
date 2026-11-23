@@ -2,18 +2,18 @@
 
 #' Check format of data list
 checkDataList <- function(data_list, observed_locs){
-  if(!is.list(data_list))stop("Wrong format for the argument `data_list`. data_list must be a list.")
-  if(!("observed_field" %in%names(data_list))) stop("Wrong format for the argument `data_list`. data_list must contain a vector `observed_field`.")
+  if(!is.list(data_list))stop("data_list must be a list.")
+  if(!("observed_field" %in%names(data_list))) stop("data_list must contain a vector `observed_field`.")
   if(any(!(names(data_list) %in% c("observed_field", "X", "noise_X", "range_X")))){
-    stop("Wrong format for the argument `data_list`. The argument `data_list` may only contain the following elements: (`observed_field`, `X`, `noise_X`, `range_X`). (The X's are not mandatory).")
+    stop("`data_list` may only contain the following elements: (`observed_field`, `X`, `noise_X`, `range_X`). (The X's are not mandatory).")
   }
   # checking observed_field format
   if(!is.vector(data_list$observed_field))stop("Wrong format for the argument `data_list`. data_list$observed_field must be a vector.")
-  if(length(data_list$observed_field)!= nrow(observed_locs))stop("Wrong format for the argument `data_list`. The length of data_list$observed_field must be the same as the number of observed locations.")
+  if(length(data_list$observed_field)!= nrow(observed_locs))stop("The length of data_list$observed_field must be the same as the number of observed locations.")
   # checking explanatory variable format
   for(nnn in setdiff(names(data_list), "observed_field")){
-    if(!is.data.frame(data_list[[nnn]]))stop(paste("Wrong format for the argument `data_list`. data_list$", nnn, " must be a data.frame (or not be in `data_list`).", sep = ""))
-    if(nrow(data_list[[nnn]])!= nrow(observed_locs))stop(paste("Wrong format for the argument `data_list`. The number of rows in", nnn, "must be the same as the number of observed locations."))
+    if(!is.data.frame(data_list[[nnn]]))stop(paste("data_list$", nnn, " must be a data.frame (or not be in `data_list`).", sep = ""))
+    if(nrow(data_list[[nnn]])!= nrow(observed_locs))stop(paste("The number of rows in", nnn, "must be the same as the number of observed locations."))
   }
   return(invisible)
 }
