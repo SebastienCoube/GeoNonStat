@@ -1,3 +1,5 @@
+# TODO redundant checks ?
+
 #' Check format of data list
 checkDataList <- function(data_list, observed_locs){
   if(!is.list(data_list))stop("Wrong format for the argument `data_list`. data_list must be a list.")

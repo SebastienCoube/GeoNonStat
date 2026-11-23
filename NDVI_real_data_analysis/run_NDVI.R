@@ -12,17 +12,17 @@ load(file.path(out_dir, "data_cleaned_small_expanded.RData"))
 
 # Splitting between train and test ####
 train_test_split <- GeoNonStat::splitData(
-  datalist = list(observed_field = data_cleaned_small$NDVI, X = as.data.frame(cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y))),
+  data_list = list(observed_field = data_cleaned_small$NDVI, X = as.data.frame(cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y))),
   observed_locs = cbind(data_cleaned_small$scaled_x, data_cleaned_small$scaled_y),
   round_locs = 1/250, n_clust_far = 6000, prop_test_far = .1, prop_test_close = .1  
 )
 saveRDS(train_test_split, file.path(out_dir, "train_test_split.RDS"))
 
-plotPointillistPainting(train_test_split$train$locs,
-                        train_test_split$train$observed_field)
+plotPointillistPainting(train_test_split$train$observed_locs,
+                        train_test_split$train$data_list$observed_field)
 
 # Model structures ####
-vecchia_approx <- createVecchia(train_test_split$train$locs, m = number_NNGP_neighbors)
+vecchia_approx <- createVecchia(observed_locs = train_test_split$train$observed_locs, m = number_NNGP_neighbors)
 PP_large <- createPP(vecchia_approx = vecchia_approx, matern_range = .1)
 PP_small <- createPP(vecchia_approx = vecchia_approx, matern_range = .05)
 
@@ -52,7 +52,8 @@ for (i in seq(1, 4)) {
 
   # initialize
   geo_non_stat <- GeoNonStat(
-    vecchia_approx = vecchia_approx, data_list = train_test_split$train,
+    vecchia_approx = vecchia_approx, 
+    data_list = train_test_split$train$data_list,
     noise_PP = noise_PP, range_PP = range_PP, anisotropic = aniso,
     n_chains = n_MCMC_chains, matern_smoothness = 1.5,
     noise_log_scale_bounds = noise_log_scale_bounds
