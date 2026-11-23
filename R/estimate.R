@@ -95,9 +95,11 @@ summarizeRecords <- function(mat, quant = c("median" = .5, "q 2.5%" = .025, "q 9
 #' Estimation of the model parameters using the MCMC records of a GeoNonStat object.
 #'
 #' @param object an object of class GeoNonStat
+#' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
+#' first records that should be removed. Default to 0.1
 #' @param ... additional argument (unused)
 #' @export
-estimate <- function(object, ...) {
+estimate <- function(object, burn_in, ...) {
   UseMethod("estimate")
 }
 
@@ -106,6 +108,7 @@ estimate <- function(object, ...) {
 #' @param object a GeoNonStat object containing records
 #' @param burn_in numeric, value, between 0 and 1. Gives the proportion of
 #' first records that should be removed. Default to 0.1
+#' @param ... additional argument (unused)
 #'
 #' @returns a list of numerical summary by parameters.
 #' @rdname GeoNonStat
@@ -115,11 +118,7 @@ estimate <- function(object, ...) {
 #' @examples
 #' # Exstimation of model parameters, after MCMC :
 #' estimate(processedGnsDemo)
-estimate.GeoNonStat <- function(object, burn_in = 0.3) {
-  #########
-  # Setup #
-  #########
-  aniso <- object$hierarchical_model$anisotropic
+estimate.GeoNonStat <- function(object, burn_in = 0.3, ...) {
   if (mcmcCount(object) <= 0) {
     objname <- deparse(substitute(object))
     stop(paste0("MCMC doesn't seem to have run on '",
@@ -127,6 +126,7 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3) {
                 "',\ntry again after a call to ",
                 "'GeoNonStatMcmc' or 'automaticMcmc' function"))
   }
+  aniso <- object$hierarchical_model$anisotropic
   summaries <- list()
   scores <- list()
   scores$per_obs <- matrix(0, object$vecchia_approx$n_obs, 4)

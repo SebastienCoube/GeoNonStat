@@ -26,7 +26,7 @@ GeoNonStat(
 
 \method{summary}{GeoNonStat}(object, burn_in = 0.1, ...)
 
-\method{estimate}{GeoNonStat}(object, burn_in = 0.3)
+\method{estimate}{GeoNonStat}(object, burn_in = 0.3, ...)
 }
 \arguments{
 \item{vecchia_approx}{an object created by `vecchia_approx()` from the
@@ -70,7 +70,7 @@ or NULL in which case the bounds are set automatically.}
 
 \item{x}{an object of class \code{GeoNonStat}}
 
-\item{...}{additional arguments (unused)}
+\item{...}{additional argument (unused)}
 
 \item{object}{a GeoNonStat object containing records}
 
