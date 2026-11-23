@@ -4,13 +4,15 @@
 \alias{predict.GeoNonStat}
 \title{Predict a 'GeoNonStat' object on new locations}
 \usage{
-\method{predict}{GeoNonStat}(object, new_data_lists, burn_in = 0.2, num_threads = 5, ...)
+\method{predict}{GeoNonStat}(object, new_data_lists, burn_in = 0.3, num_threads = 5, ...)
 }
 \arguments{
 \item{object}{an object of class \code{GeoNonStat}}
 
-\item{new_data_lists}{a list of new data. The list should have 
-a 'locs' entry, a data.frame (or 2 column matrix) of new locations,
+\item{new_data_lists}{a list of new data, usually the output of the 
+`splitData()` function. The list should have 
+a 'observed_locs' entry, a data.frame (or 2 column matrix) of new locations,
+and a `data_list` list entry containing
 a 'X' entry, for new covariates
 a 'noise_X' entry (optional) for new X noise parameters
 a 'range_X' entry (optional) for new X range parameters}
@@ -30,7 +32,7 @@ Predict a 'GeoNonStat' object on new locations
 locs <- cbind(rnorm(200), rnorm(200))
 X <- data.frame(matrix(rnorm(200*4), ncol=4))
 colnames(X) <- paste0("V", 1:4)
-testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+testdata <- list("observed_locs" = locs, data_list=list("X" = X, noise_X=X))  
 testpredictions <- predict(processedGnsDemo, list(testdata))
 }
 \seealso{

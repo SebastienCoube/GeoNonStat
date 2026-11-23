@@ -4,7 +4,13 @@
 \alias{computeLogRange}
 \title{Computes a Vecchia sparse Cholesky factor and its derivatives}
 \usage{
-computeLogRange(range_beta, vecchia_approx, range_X, PP = NULL)
+computeLogRange(
+  range_beta,
+  vecchia_approx,
+  range_X,
+  reparametrize = T,
+  PP = NULL
+)
 }
 \arguments{
 \item{range_beta}{parameter for the range.

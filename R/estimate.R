@@ -166,27 +166,28 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3, ...) {
   ################################
   # Summaries of hyperparameters #
   ################################
+  locs_match <- object$vecchia_approx$locs_match
   summaries$hyperparameters <- lapply(samples, summarizeRecords)
   ###################################
   # Summaries at observed locations #
   ###################################
   # starting with the latent field
   summaries$at_observed_locs <- list()
-  summaries$at_observed_locs$field <- summaries$hyperparameters$field[object$vecchia_approx$locs_match,] 
+  summaries$at_observed_locs$field <- summaries$hyperparameters$field[locs_match,] 
   summaries$hyperparameters$field <- NULL 
   # initializing other summaries at observed locs
   if(!is.null(object$hierarchical_model$noise$PP)){
-    summaries$at_observed_locs$noise_PP <- summaries$hyperparameters$noise_PP[object$vecchia_approx$locs_match,] 
+    summaries$at_observed_locs$noise_PP <- summaries$hyperparameters$noise_PP[locs_match,] 
     summaries$hyperparameters$noise_PP <- NULL
   }
   summaries$at_observed_locs$field_and_fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$fixed <- summaries$at_observed_locs$field
   summaries$at_observed_locs$noise_log_var <- summaries$at_observed_locs$field
   # summarizing the range
-  summaries$at_observed_locs$range <- summarizeRecords(t(log_range_train_all[,1,]))[vecchia_approx$locs_match,]
+  summaries$at_observed_locs$range <- summarizeRecords(t(log_range_train_all[,1,]))[locs_match,]
   if (aniso) {
-    summaries$at_observed_locs$aniso1 <- summarizeRecords(t(log_range_train_all[,2,]))[vecchia_approx$locs_match,]
-    summaries$at_observed_locs$aniso2 <- summarizeRecords(t(log_range_train_all[,3,]))[vecchia_approx$locs_match,]
+    summaries$at_observed_locs$aniso1 <- summarizeRecords(t(log_range_train_all[,2,]))[locs_match,]
+    summaries$at_observed_locs$aniso2 <- summarizeRecords(t(log_range_train_all[,3,]))[locs_match,]
   }
   ##############################################################
   # Computing summaries and scores over chunks of observations #
@@ -206,7 +207,7 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3, ...) {
     fixed_effect_sample <- samples$beta %*% as.matrix(t(object$covariates$X$X[chunk,,drop=F]))
     summaries$at_observed_locs$fixed[chunk,] <- summarizeRecords(fixed_effect_sample)
     # fixed effect + field
-    field_and_fixed_sample <- fixed_effect_sample + samples$field[,object$vecchia_approx$locs_match[chunk]]
+    field_and_fixed_sample <- fixed_effect_sample + samples$field[,locs_match[chunk]]
     summaries$at_observed_locs$field_and_fixed[chunk,] <-
       summarizeRecords(field_and_fixed_sample)
     # noise variance
@@ -216,7 +217,7 @@ estimate.GeoNonStat <- function(object, burn_in = 0.3, ...) {
     if(!is.null(object$hierarchical_model$noise$PP)){
       log_noise_variance_sample <-
         log_noise_variance_sample +
-        samples$noise_PP[,object$vecchia_approx$locs_match[chunk]]
+        samples$noise_PP[,locs_match[chunk]]
     }
     summaries$at_observed_locs$noise_log_var[chunk,] <-
       summarizeRecords(log_noise_variance_sample)

@@ -77,15 +77,18 @@ decompressChol <- function(vecchia_approx, compressed_sparse_chol) {
 
 #' Reparametrization matrix for the range parameters
 #' @returns a matrix with 3 columns if anisotropic, 1 if isotropic
-rangeReparamMat <- function(anisotropic = F)
+rangeReparamMat <- function(anisotropic = FALSE)
 {
-  if(!anisotropic)return(2) 
-  if(anisotropic)return(matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2) 
+  if(anisotropic) {
+    return(matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2) 
+  } else {
+    return(2) 
+  }
 }
 
 #' Inverse reparametrization matrix for the range parameters
 #' @returns a matrix with 3 columns if anisotropic, 1 if isotropic
-solveRangeReparamMat <- function(anisotropic = F){
+solveRangeReparamMat <- function(anisotropic = FALSE){
   solve(rangeReparamMat(anisotropic))
 }
 

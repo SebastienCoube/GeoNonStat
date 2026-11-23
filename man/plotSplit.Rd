@@ -7,8 +7,8 @@
 plotSplit(
   list_locs,
   col = c("#BBBBBB", "#1F77B4", "#2CA02C", "#E73F74"),
-  cex = c(0.5, 0.8, 0.8, 0.5),
-  pch = list(19, 19, 19, 19)
+  cex = c(1, 1, 1, 1),
+  pch = list(".", 19, 19, ".")
 )
 }
 \arguments{
@@ -32,8 +32,8 @@ Plot the locations of a data split
 }
 \examples{
 locs <- cbind(runif(2000), runif(2000))
-locslist <- list("train" = list("locs"=locs[1:1900,]), 
-                 "test" = list(locs=locs[1901:2000,]))
+locslist <- list("train" = list("observed_locs"=locs[1:1900,]), 
+                 "test" = list(observed_locs=locs[1901:2000,]))
 plotSplit(locslist)
 }
 \seealso{
