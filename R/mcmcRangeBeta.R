@@ -9,7 +9,7 @@ rangeBetaS <- function(state, hierarchical_model, vecchia_approx,
   state$momenta$field_log_var_sufficient <-
     renewMomentum(state$momenta$field_log_var_sufficient, .6)
   # initial density gradient ####
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
+  range_reparam_mat <- rangeReparamMat(hierarchical_model$anisotropic)
   dens_grad <- rangeBetaDensGradS(
     field_log_var = state$params$field_log_var, range_beta = state$params$range_beta,
     compressed_chol = state$stuff$compressed_chol, sparse_chol = state$stuff$sparse_chol,
@@ -169,7 +169,7 @@ rangeBetaA <- function(state, hierarchical_model, vecchia_approx,
   state$momenta$field_log_var_ancillary =
     renewMomentum(state$momenta$field_log_var_ancillary, .6)
   # initial density gradient ####
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
+  range_reparam_mat <- rangeReparamMat(hierarchical_model$anisotropic)
   dens_grad <- rangeBetaDensGradA(
     field_log_var = state$params$field_log_var
     , range_beta = state$params$range_beta,

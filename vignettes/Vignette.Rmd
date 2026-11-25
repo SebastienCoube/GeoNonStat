@@ -53,6 +53,73 @@ Xnoise <- as.data.frame(cbind(runif(nobs), rnorm(nobs)))
 ```
 
 
+
+```{r}
+set.seed(100)
+nobs <- 10000
+n_sites <- 5000
+
+# --- Localisations (avec répétitions, comme avant) ---
+site_locs <- cbind(runif(n_sites), runif(n_sites))
+site_id <- sample(seq_len(n_sites), nobs, replace = TRUE)
+observed_locs <- site_locs[site_id, ]
+
+# --- Covariables ---
+Xfield <- data.frame(
+  x1 = runif(nobs),
+  x2 = rnorm(nobs),
+  x3 = rpois(nobs, 3)
+)
+Xrange <- data.frame(
+  r1 = runif(nobs),
+  r2 = rnorm(nobs)
+)
+Xnoise <- data.frame(
+  n1 = runif(nobs),
+  n2 = rnorm(nobs)
+)
+
+# --- 1. Effet des covariables sur le champ (moyenne) ---
+beta_field <- c(intercept = 1, x1 = 2, x2 = -1, x3 = 0.3)
+mu <- beta_field[1] +
+  as.matrix(Xfield) %*% beta_field[-1]
+
+# --- 2. Portée dépendant des covariables (log-lien) ---
+# Les covariables de portée sont définies par site pour garder un champ cohérent
+# (on prend la première observation de chaque site)
+first_obs <- match(seq_len(n_sites), site_id)
+first_obs[is.na(first_obs)] <- 1
+beta_range <- c(intercept = log(0.15), r1 = 0.5, r2 = 0.3)
+range_site <- exp(beta_range[1] +
+  as.matrix(Xrange[first_obs, ]) %*% beta_range[-1])
+
+# --- 3. Champ spatial latent aux sites (covariance de Paciorek, exponentielle) ---
+D <- as.matrix(dist(site_locs))
+rho <- as.vector(range_site)
+
+rho2 <- outer(rho^2, rho^2, "+")           # rho_i^2 + rho_j^2
+pref <- 2 * outer(rho, rho) / rho2         # facteur de normalisation
+Q    <- 2 * D^2 / rho2                     # distance de Mahalanobis au carré
+
+sigma_field <- 1
+Sigma <- sigma_field^2 * pref * exp(-sqrt(Q))
+diag(Sigma) <- diag(Sigma) + 1e-6          # simple stabilité numérique
+
+L <- chol(Sigma)
+spatial_site <- as.vector(t(L) %*% rnorm(n_sites))
+spatial_effect <- spatial_site[site_id]
+
+# --- 4. Bruit hétéroscédastique dépendant des covariables ---
+beta_noise <- c(intercept = log(0.3), n1 = 0.4, n2 = 0.2)
+sd_noise <- exp(beta_noise[1] +
+  as.matrix(Xnoise) %*% beta_noise[-1])
+noise <- rnorm(nobs, mean = 0, sd = sd_noise)
+
+# --- 5. Champ observé ---
+observed_field <- as.vector(mu) + spatial_effect + noise
+```
+
+
 If you want, you can split your data in several train/test datasets with the `splitData` function. With enough observations, you can produce two test datasets : a test dataset with "far" observations", i.e. the test observations are spatially far from train observations, and a test dataset with "close" observations, i.e. randomly selected among "not far" observations. 
 
 ```{r}
@@ -85,11 +152,11 @@ noise_PP <- createPP(
   vecchia_approx = my_vecchia,
   matern_range = .1,
   knots = 50,
-  plot = FALSE
+  plot = TRUE
 )
 ```
 
-## geoNonStat object
+## GeoNonStat object
 
 We can now create a GeoNonStat object that will be used to model and 
 predict the observed field :
@@ -146,5 +213,11 @@ testpredictions <- predict(myobj, list("testclose" = traintest$test_close,
                                        "testfar" = traintest$test_far))
 plotGeoNonStatPrediction(testpredictions$testclose, which_parameter = "field", which_summary = "mean")
 plotGeoNonStatPrediction(testpredictions$testfar, which_parameter = "field", which_summary = "mean")
+```
+
+You can combine estimations and local prediction by plotting ellipses (TODO revoir la phrase)
+```{r}
+plotGeoNonStatEstimation(myobj, myest, which_parameter = "field", which_summary = "mean")
+drawEllipses(myobj, testpredictions$testclose, correlation_level = 0.5)
 ```
 

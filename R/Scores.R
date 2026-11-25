@@ -210,12 +210,12 @@ splitSummary <- function(list_locs) {
 #' 
 #' @examples
 #' locs <- cbind(runif(2000), runif(2000))
-#' locslist <- list("train" = list("locs"=locs[1:1900,]), 
-#'                  "test" = list(locs=locs[1901:2000,]))
+#' locslist <- list("train" = list("observed_locs"=locs[1:1900,]), 
+#'                  "test" = list(observed_locs=locs[1901:2000,]))
 #' plotSplit(locslist)
 plotSplit <- function(list_locs,
                       col = c("#BBBBBB", "#1F77B4", "#2CA02C", "#E73F74"),
-                      cex = c(0.5, 0.8, 0.8, 0.5),
+                      cex = c(1, 1, 1, 1),
                       pch = list(".", 19, 19, ".")) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
   if(!all(sapply(list_locs, function(x) "observed_locs" %in% names(x))))
@@ -260,7 +260,7 @@ plotSplit <- function(list_locs,
   plot(NA, xlim = xlim, ylim = ylim, xlab = xlab, ylab = ylab)
   
   for (k in nameslocs) {
-    if(nrow(list_locs[[k]]) > 1000000) pch[[k]] <- "."
+    if(nrow(list_locs[[k]]) > 100000) pch[[k]] <- "."
     points(list_locs[[k]], col = col[[k]], pch = pch[[k]], cex = cex[[k]])
   }
     
@@ -322,7 +322,7 @@ splitData <- function(observed_locs,
                       variance_average = .01
                       ){
   # Checking format
-  checkDataList(data_list, observed_locs)
+  # checkDataList(data_list, observed_locs)
   # Rounding
   if (round_locs > 0) observed_locs <- round_locs * round(observed_locs / round_locs)
   locs_match <- match(split(observed_locs, row(observed_locs)), split(unique(observed_locs), row(unique(observed_locs))))

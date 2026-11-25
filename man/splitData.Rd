@@ -5,19 +5,20 @@
 \title{Split data between train and test (spatially far or not) observations}
 \usage{
 splitData(
-  locs,
-  datalist,
+  observed_locs,
+  data_list,
   prop_test_close = 0.1,
   prop_test_far = 0.1,
   n_clust_far = NULL,
   round_locs = 0,
-  plot = TRUE
+  plot = TRUE,
+  variance_average = 0.01
 )
 }
 \arguments{
-\item{locs}{a matrix of spatial locations.}
+\item{observed_locs}{a matrix of spatial locations.}
 
-\item{datalist}{a list containing vectors or data.frames to split into
+\item{data_list}{a list containing vectors or data.frames to split into
 train/test}
 
 \item{prop_test_close}{the proportion of observations used for "close" 
@@ -32,9 +33,11 @@ Default to NULL, set to 1\% of the data}
 \item{round_locs}{numeric, default to 0. rounding factor for locations coordinates.}
 
 \item{plot}{logical, default to TRUE. Should the split produce a plot ?}
+
+\item{variance_average}{numeric, default to 0.01. Averages covariate within spatial location if within location variance is smaller than variance_average percent of the total variance}
 }
 \value{
-a list of lists, each child having the same structure as datalist
+a list of lists, each child having the same structure as data_list
 }
 \description{
 Split data between train and test (spatially far or not) observations
@@ -46,9 +49,9 @@ X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 range_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 noise_X <- as.data.frame(matrix(rnorm(n * 4), ncol = 4))
 y <- rnorm(n)
-datalist <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
-traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1)
-traintest <- splitData(observed_locs, datalist, prop_test_close = 0.1, prop_test_far=0.1)
+data_list <- list("X" = X, "range_X" = range_X, "noise_X" = noise_X, "y" = y)
+traintest <- splitData(observed_locs, data_list, prop_test_close = 0.1)
+traintest <- splitData(observed_locs, data_list, prop_test_close = 0.1, prop_test_far=0.1)
 }
 \seealso{
 Other {functions for model validation}:

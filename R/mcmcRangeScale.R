@@ -6,7 +6,7 @@
 rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
                            range_X, iter, iter_start, num_threads){
   
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
+  range_reparam_mat <- rangeReparamMat(hierarchical_model$anisotropic)
   # initial density gradient ####
   grad_PP <- rangePPLogLikGradS(
     field_log_var = state$params$field_log_var,
@@ -175,7 +175,7 @@ rangeLogScaleS <- function(state, hierarchical_model, vecchia_approx,
 rangeLogScaleA <- function(state, hierarchical_model, vecchia_approx,
                        range_X, iter, iter_start, num_threads){
 
-  range_reparam_mat <- rangeReparamMat(hierarchical_model)
+  range_reparam_mat <- rangeReparamMat(hierarchical_model$anisotropic)
   # initial density gradient ####
   grad_PP <- rangePPLogLikGradA(
     field = state$params$field, lm_residuals = state$stuff$lm_residuals, 
