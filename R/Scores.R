@@ -373,8 +373,8 @@ splitData <- function(observed_locs,
   output <- list("train" = makeBlock(final_split$train),
                  "test_close" = makeBlock(final_split$test_close))
   if (has_far) {
-    output$test_far <- makeBlock(final_split$test_far)
     output$discarded <- makeBlock(final_split$discarded)
+    output$test_far <- makeBlock(final_split$test_far)
   }
   attr(output, "info") <- info
 
