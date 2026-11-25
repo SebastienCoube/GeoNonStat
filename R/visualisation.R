@@ -511,7 +511,7 @@ plotGeoNonStatPrediction <- function(
   }
   if(main =="automatic") main <- paste("Predicted", which_summary, "of", which_parameter)
   plotPointillistPainting(
-    locs = prediction_block$locs, 
+    locs = prediction_block$observed_locs, 
     field = prediction_block$summaries[[which_parameter]][,which_summary],
     main = main
   )
