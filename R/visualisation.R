@@ -447,7 +447,7 @@ drawEllipses = function(object, prediction_block, correlation_level = .1)
     res[2] <- res[3] <- x[3]
     res
   })
-  locs <- prediction_block$locs
+  locs <- prediction_block$observed_locs
   shrink <-
     stats::uniroot(
       f = function(x) maternThingy_(x, 
