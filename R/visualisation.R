@@ -422,9 +422,9 @@ pointillistColorscale <- function(field, scalename = "",
 #' suppressWarnings(
 #'   testdata <- splitData(locs,  list("X" = X, "noise_X"=X), plot=FALSE)
 #' )
-#' testpredictions <- predict(processedGnsDemo, testdata)
+#' testpredictions <- predict(processedGnsDemo, testdata["test_close"])
 #' plotPointillistPainting(locs = locs, field = X[,1], cex=20)
-#' drawEllipses(processedGnsDemo, testpredictions$test_close, correlation_level=0.7)
+#' drawEllipses(object = processedGnsDemo, prediction_block = testpredictions$test_close, correlation_level=0.9)
 drawEllipses = function(object, prediction_block, correlation_level = .1)
 {
   log_range <- cbind(
@@ -436,7 +436,7 @@ drawEllipses = function(object, prediction_block, correlation_level = .1)
     #to match parametrization in compute sparse chol
     log_range = log_range %*% matrix(c(1 / sqrt(2), 1 / sqrt(2), 0, 1 / sqrt(2), -1 / sqrt(2), 0, 0, 0, 1), 3) * sqrt(2) * 2
   } else if (ncol(log_range) == 1) {
-    log_range <- log_range * 2
+    log_range <- cbind(log_range * 2, log_range * 2, 0)
   }
   
   range <- t(expRanges(t(log_range)))

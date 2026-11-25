@@ -110,7 +110,10 @@ my_vecchia <- createVecchia(traintest$train$observed_locs, m=6)
 From the vecchia approximation, you can model a Predictive Process (PP) 
 for the noise and range of you locations, based on the vecchia approximation, 
 if needed.
-TODO : expliquer ici pourquoi on ne le ferait pas ? 
+
+- For the noise, it is always a good idea to try and use a PP to start with. 
+- For the range, you can try and add a PP if the number of observations is bigger than 5000. 
+If a PP's log.variance collapses to very low values during the MCMC run, just start again with a model without that PP.
 
 Here we will model PP only for noise. 
 
@@ -164,30 +167,66 @@ tracePlots(myobj)
 ```
 
 
-Then we can estimate TODO je sais pas expliquer ici. 
-
+Then we can process estimates from the model. We get:
+- Summaries of the model parameters. 
+- Model comparison criteria for the training data.
 ```{r}
 myest <- estimate(myobj)
-plotGeoNonStatEstimation(myobj, myest, which_parameter = "field", which_summary = "mean")
+names(myest)
+```
+
+The summarized parameters are: 
+  - Hyperparameters: the regression coefficients (for the noise, the range, the fixed effects), the field variance. 
+  - Ponctual estimation at the observed locations, of the field, the noise variance, the fixed effects, the fitted values (fixed + field)...
+```{r}
+head(myest$summaries$hyperparameters$noise_beta)
+```
+```
+The model comparison criteria are computed per observation, then aggregated over the train data.
+```{r}
+names(myest$scores)
+myest$scores$aggregated
+```
+
+Spatial estimates over the train locations can be plotted. The user can chose the parameter and which statistic from that parameter is represented. 
+
+```{r}
+print("possible parameters to plot")
+names(myest$summaries$at_observed_locs)
+print("possible statistics to plot from paramter")
+colnames(myest$summaries$at_observed_locs$field)
+plotGeoNonStatEstimation(object = myobj, estimation = myest, which_parameter = "field", which_summary = "mean")
 ```
 
 ## Predict the model on new datasets
 
-And finally we can predict the model on new observations. Here we take the "test_close" and "test_far" we previously constructed: 
+And finally we can predict the model on new observations. Here we take the "test_close" and "test_far" we previously constructed
 
 ```{r}
-testpredictions <- predict(myobj, list("testclose" = traintest$test_close,
-                                       "testfar" = traintest$test_far))
+ellipse_locs <- as.matrix(expand.grid(seq(.1, .9, .1), seq(.1, .9, .1)))
+
+predict_data_list <- 
+   list(
+     "testclose" = traintest$test_close, 
+     "testfar" = traintest$test_far)
+testpredictions <- predict(myobj, new_data_lists = predict_data_list)
+```
+For prediction groups who have real observations, here testclose and testfar, we can compute comparison criteria on the test data. They help to avoid overfit. 
+```{r}
+print("close prediction performance")
+testpredictions$testfar$scores$aggregated
+print("far prediction performance")
+testpredictions$testclose$scores$aggregated
 ```
 
+We can plot predictions, again by chosing the parameter and the statistic of the parameter to be plotted.
 
 ```{r}
 plotGeoNonStatPrediction(testpredictions$testclose, which_parameter = "field", which_summary = "mean")
 ```
 
 
-
-You can combine estimations and local prediction by plotting ellipses (TODO revoir la phrase)
+Correlation ellipses help visualize anisotropy. The ellipse contour corresponds to the point where the correlation with the ellipse center drops to the specified level (so the bigger the correlation, the smaller the ellipse).
 
 
 ```{r}
