@@ -123,11 +123,11 @@ observed_field <- as.vector(mu) + spatial_effect + noise
 If you want, you can split your data in several train/test datasets with the `splitData` function. With enough observations, you can produce two test datasets : a test dataset with "far" observations", i.e. the test observations are spatially far from train observations, and a test dataset with "close" observations, i.e. randomly selected among "not far" observations. 
 
 ```{r}
-traintest <- splitData(locs = observed_locs, 
-                       datalist = list(observed_field = observed_field,
-                                       Xfield = Xfield,
-                                       Xrange = Xrange,
-                                       Xnoise = Xnoise))
+traintest <- splitData(observed_locs = observed_locs, 
+                       data_list = list(observed_field = observed_field,
+                                       X = Xfield,
+                                       range_X = Xrange,
+                                       noise_X = Xnoise))
 ```
 
 
@@ -137,7 +137,7 @@ You can create a vecchia approximation associated with your locations,
 choosing the number of nearest neighbors:
 
 ```{r}
-my_vecchia <- createVecchia(traintest$train$locs, m=6)
+my_vecchia <- createVecchia(traintest$train$observed_locs, m=6)
 ```
 
 From the vecchia approximation, you can model a Predictive Process (PP) 
@@ -164,7 +164,7 @@ predict the observed field :
 ```{r}
 myobj <- GeoNonStat(
   vecchia_approx = my_vecchia,
-  data_list = traintest$train,
+  data_list = traintest$train$data_list,
   matern_smoothness = 1.5, # Matern smoothness
   anisotropic = FALSE,
   n_chains = 3,

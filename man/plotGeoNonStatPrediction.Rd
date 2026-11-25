@@ -20,7 +20,7 @@ Should be one of `names(prediction_block)`}
 
 \item{which_summary}{summary to plot, default to "mean". On of the available 
 statistics of the summaries of the prediction object : 
-"mean", "sd", "median", "q 2.5%" or "q 97.5%".}
+"mean", "sd", "median", "q 2.5\%" or "q 97.5\%".}
 
 \item{main}{character, title of the plot.}
 }
@@ -35,7 +35,7 @@ Plot the prediction of a 'GeoNonStat' object on new locations
 locs <- cbind(rnorm(200), rnorm(200))
 X <- data.frame(matrix(rnorm(200*4), ncol=4))
 colnames(X) <- paste0("V", 1:4)
-testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+testdata <- list("observed_locs" = locs, data_list=list("X" = X, noise_X=X))  
 testpredictions <- predict(processedGnsDemo, list("testdata" = testdata))
 plotGeoNonStatPrediction(testpredictions$testdata,  "field", "mean")
 }

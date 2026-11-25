@@ -216,7 +216,7 @@ splitSummary <- function(list_locs) {
 plotSplit <- function(list_locs,
                       col = c("#BBBBBB", "#1F77B4", "#2CA02C", "#E73F74"),
                       cex = c(1, 1, 1, 1),
-                      pch = list(".", 19, 19, ".")) {
+                      pch = list(19, 19, 19, 19)) {
   if(!is.list(list_locs)) stop("list_locs should be a list")
   if(!all(sapply(list_locs, function(x) "observed_locs" %in% names(x))))
     stop("Except info, all list_locs entries should have an 'observed_locs' element")

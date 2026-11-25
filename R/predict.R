@@ -53,7 +53,7 @@ PPPredict <- function(PP, vecchia_approx_chunk) {
 #' X <- data.frame(matrix(rnorm(200*4), ncol=4))
 #' colnames(X) <- paste0("V", 1:4)
 #' testdata <- list("observed_locs" = locs, data_list=list("X" = X, noise_X=X))  
-#' testpredictions <- predict(processedGnsDemo, list(testdata))
+#' testpredictions <- predict(processedGnsDemo, list("test" = testdata))
 predict.GeoNonStat <-  function(
     object, 
     new_data_lists,

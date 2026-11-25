@@ -33,7 +33,7 @@ locs <- cbind(rnorm(200), rnorm(200))
 X <- data.frame(matrix(rnorm(200*4), ncol=4))
 colnames(X) <- paste0("V", 1:4)
 testdata <- list("observed_locs" = locs, data_list=list("X" = X, noise_X=X))  
-testpredictions <- predict(processedGnsDemo, list(testdata))
+testpredictions <- predict(processedGnsDemo, list("test" = testdata))
 }
 \seealso{
 Other {functions for model validation}:

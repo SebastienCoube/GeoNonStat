@@ -23,7 +23,7 @@ an argument. Default to NULL otherwise (recomputed before plot)}
 Should be one of `names(estimation)`}
 
 \item{which_summary}{summary to plot, default to "mean". On of the available 
-statistics of estimation object : "mean", "sd", "median", "q 2.5%" or "q 97.5%".}
+statistics of estimation object : "mean", "sd", "median", "q 2.5\%" or "q 97.5\%".}
 
 \item{main}{character, title of the plot.}
 }

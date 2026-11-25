@@ -12,25 +12,27 @@ test_that("splitData produce expected results", {
     toto = matrix(rnorm(nlocs * 2), ncol = 2)
   )
   expect_error(
-    out <- splitData(locs = locs, datalist = datalist, plot=FALSE, n_clust_far = 50, prop_test_far = 0.1),
+    out <- splitData("observed_locs" = locs, 
+                     "data_list" = datalist, 
+                     plot=FALSE, n_clust_far = 50, prop_test_far = 0.1),
     NA
   )
   expect_named(out, c("train", "test_close", "test_far", "discarded"),
                ignore.order = TRUE)
   expect_true(!is.null(attr(out, "info")))
   for (b in out) {
-    expect_true("locs" %in% names(b))
-    expect_true(all(names(datalist) %in% names(b)))
-    n <- nrow(b$locs)
-    expect_equal(NROW(b$titi), n)
-    expect_equal(NROW(b$toto), n)
+    expect_true("observed_locs" %in% names(b))
+    expect_true(all(names(datalist) %in% names(b$data_list)))
+    n <- nrow(b$observed_locs)
+    expect_equal(NROW(b$data_list$titi), n)
+    expect_equal(NROW(b$data_list$toto), n)
   }
   
-  total <- sum(vapply(out, function(b) nrow(b$locs), numeric(1)))
+  total <- sum(vapply(out, function(b) nrow(b$observed_locs), numeric(1)))
   expect_equal(total, nlocs)
   # No duplicated locations  
-  expect_equal(sum(vapply(out, function(b) length(unique(rownames(b$locs))), numeric(1))), n_sites)
-  expect_equal(length(unique(unlist(sapply(out, function(b) rownames(b$locs))))), n_sites)
+  expect_equal(sum(vapply(out, function(b) length(unique(rownames(b$observed_locs))), numeric(1))), n_sites)
+  expect_equal(length(unique(unlist(sapply(out, function(b) rownames(b$observed_locs))))), n_sites)
 })
 
 
@@ -47,7 +49,9 @@ test_that("splitData produce expected results if not enough spatial clusters", {
     toto = matrix(rnorm(nlocs * 2), ncol = 2)
   )
   expect_warning(
-    out <- splitData(locs = locs, datalist = datalist, plot=FALSE, n_clust_far = 5, prop_test_far = 0.1),
+    out <- splitData("observed_locs" = locs, 
+                     "data_list" = datalist, 
+                     plot=FALSE, n_clust_far = 5, prop_test_far = 0.1),
     "Not enough observations to produce far test sample"
   )
  
@@ -55,14 +59,14 @@ test_that("splitData produce expected results if not enough spatial clusters", {
                ignore.order = TRUE)
   expect_true(!is.null(attr(out, "info")))
   for (b in out) {
-    expect_true("locs" %in% names(b))
-    expect_true(all(names(datalist) %in% names(b)))
-    n <- nrow(b$locs)
-    expect_equal(NROW(b$titi), n)
-    expect_equal(NROW(b$toto), n)
+    expect_true("observed_locs" %in% names(b))
+    expect_true(all(names(datalist) %in% names(b$data_list)))
+    n <- nrow(b$observed_locs)
+    expect_equal(NROW(b$data_list$titi), n)
+    expect_equal(NROW(b$data_list$toto), n)
   }
   
-  total <- sum(vapply(out, function(b) nrow(b$locs), numeric(1)))
+  total <- sum(vapply(out, function(b) nrow(b$observed_locs), numeric(1)))
   expect_equal(total, nlocs)
 })
 

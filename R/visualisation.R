@@ -485,7 +485,7 @@ ellipseMahalanobis <- function(Sigma, x) {
 #' Should be one of `names(prediction_block)`
 #' @param which_summary summary to plot, default to "mean". On of the available 
 #' statistics of the summaries of the prediction object : 
-#' "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' "mean", "sd", "median", "q 2.5\%" or "q 97.5\%".
 #' @param main character, title of the plot. 
 #' @family {Visualisations}
 #' @returns a plot
@@ -496,7 +496,7 @@ ellipseMahalanobis <- function(Sigma, x) {
 #' locs <- cbind(rnorm(200), rnorm(200))
 #' X <- data.frame(matrix(rnorm(200*4), ncol=4))
 #' colnames(X) <- paste0("V", 1:4)
-#' testdata <- list("locs" = locs, "X" = X, noise_X=X)  
+#' testdata <- list("observed_locs" = locs, data_list=list("X" = X, noise_X=X))  
 #' testpredictions <- predict(processedGnsDemo, list("testdata" = testdata))
 #' plotGeoNonStatPrediction(testpredictions$testdata,  "field", "mean")
 plotGeoNonStatPrediction <- function(
@@ -526,7 +526,7 @@ plotGeoNonStatPrediction <- function(
 #' @param which_parameter parameter to plot, default to NULL.
 #' Should be one of `names(estimation)`
 #' @param which_summary summary to plot, default to "mean". On of the available 
-#' statistics of estimation object : "mean", "sd", "median", "q 2.5%" or "q 97.5%".
+#' statistics of estimation object : "mean", "sd", "median", "q 2.5\%" or "q 97.5\%".
 #' @param main character, title of the plot. 
 #' @family {Visualisations}
 #' @returns a plot
