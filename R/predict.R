@@ -82,7 +82,7 @@ predict.GeoNonStat <-  function(
       new_data_lists[[i]]$data_list$observed_field <- rep(NA_real_, nrow(new_data_lists[[i]]$observed_locs))
     }
     checkDataList(data_list = new_data_lists[[i]]$data_list, observed_locs = new_data_lists[[i]]$observed_locs)
-    cat(names(new_data_lists)[i], " (", i, "/", length(new_data_lists), ") OK.", sep = "")
+    cat(names(new_data_lists)[i], " (", i, "/", length(new_data_lists), ") OK. ", sep = "")
   }
   new_data_lists <- lapply(new_data_lists, function(x)c(x$data_list, "observed_locs" = list(x$observed_locs)))
   # merging data lists + matching of duplicated locations #

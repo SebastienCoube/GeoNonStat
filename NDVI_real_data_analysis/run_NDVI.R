@@ -38,7 +38,7 @@ print(run_design)
 scores <- NULL
 
 i=1
-for (i in seq(1, 4)) {
+for (i in seq(2, 4)) {
   noise_PP <- NULL
   noise_log_scale_bounds = NULL
   if (run_design[i, "heterosk noise"]) {
@@ -87,7 +87,7 @@ for (i in seq(1, 4)) {
   scores <- rbind(scores, c(estimation$scores$aggregated,
                             prediction$test_close$scores$aggregated,
                             prediction$test_far$scores$aggregated))
-  colnames(scores) <- paste(rep(c("close", "far"), each = 4),
+  colnames(scores) <- paste(rep(c("train", "close", "far"), each = 4),
                             colnames(prediction$test_close$scores$per_obs))
   print(scores)
   rm(geo_non_stat, prediction, estimation)
