@@ -27,6 +27,6 @@ range_beta <- matrix(rnorm(30), 10)
 range_log_scale <- c(-1, -3)
 new_range_log_scale <- range_log_scale + 1e-6
 new_range_beta <- movePPCoeff(range_beta, range_log_scale, new_range_log_scale, 9)
-plot((new_range_beta -range_beta)[-1,]*1e6, .5*range_beta[-1,])
+# plot((new_range_beta -range_beta)[-1,]*1e6, .5*range_beta[-1,])
 }
 \keyword{internal}
