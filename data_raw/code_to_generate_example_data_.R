@@ -1,7 +1,7 @@
 library(GeoNonStat)
 set.seed(1)
 nobs = 750
-nlocs = 750
+nlocs = 700
 observed_locs = cbind(runif(nlocs), runif(nlocs))[c(seq(nlocs), sample(seq(nlocs), nobs - nlocs, T)),]
 
 vecchia_approx = createVecchia(observed_locs, m = 10)
@@ -54,7 +54,7 @@ save(gnsDemo, file="data/gnsDemo.rda", compress="xz")
 processedGnsDemo = GeoNonStatMcmc(
   object = gnsDemo,
   n_threads_per_chain = 5,
-  n_iterations = 25
+  n_iterations = 22
 )
 tracePlots(processedGnsDemo)
-save(gnsDemo, file="data/processedGnsDemo.rda", compress="xz")
+save(processedGnsDemo, file="data/processedGnsDemo.rda", compress="xz")
